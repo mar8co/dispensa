@@ -27,7 +27,7 @@ export default function PantryTab({
       <div className="mb-5 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
         <label className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-800 ${processing ? "opacity-60" : ""}`}>
           {processing ? (<><Loader2 className="h-4 w-4 animate-spin" /> Analisi in corso…</>)
-            : (<><Camera className="h-4 w-4" /> Carica foto scontrino</>)}
+            : (<><Camera className="h-4 w-4" /> Scansiona scontrino o spesa</>)}
           <input type="file" accept="image/*" className="hidden" onChange={handleReceipt} disabled={processing} />
         </label>
         {receiptMsg && <p className="mt-2 text-center text-xs font-medium text-emerald-700">{receiptMsg}</p>}

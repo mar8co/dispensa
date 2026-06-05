@@ -311,11 +311,11 @@ export default function Dispensa({ session }) {
         { type: "text", text: RECEIPT_PROMPT },
       ], 1000);
       const list = Array.isArray(parsed.items) ? parsed.items : [];
-      if (!list.length) setReceiptErr("Nessun alimento riconosciuto nello scontrino.");
-      else { await mergeItems(list); setReceiptMsg(`${list.length} prodotti aggiunti dallo scontrino.`); }
+      if (!list.length) setReceiptErr("Nessun alimento riconosciuto nell'immagine.");
+      else { await mergeItems(list); setReceiptMsg(`${list.length} prodotti aggiunti.`); }
     } catch (err) {
       console.error(err);
-      setReceiptErr("Impossibile leggere lo scontrino. Riprova con una foto più nitida.");
+      setReceiptErr("Impossibile leggere l'immagine. Riprova con una foto più nitida.");
     } finally {
       setProcessing(false);
       input.value = "";

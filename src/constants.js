@@ -30,12 +30,14 @@ export const MODES = [
 ];
 
 export const RECEIPT_PROMPT = `Sei un assistente per la gestione della dispensa italiana.
-Analizza lo scontrino e identifica tutti gli alimenti.
+L'immagine può essere di tre tipi: (a) uno scontrino della spesa, (b) uno screenshot con una lista di prodotti (es. riepilogo ordine di un'app), oppure (c) una foto di alimenti reali (sul tavolo, nel frigo, nella busta della spesa). Identifica TUTTI gli alimenti presenti.
+- Se è uno scontrino o un testo: leggi i nomi dei prodotti dal testo.
+- Se è una foto di prodotti reali: riconosci visivamente ogni alimento che vedi.
 Per ogni alimento estrai SOLO il nome del prodotto, rimuovendo la marca, il tipo di confezione (PET, lattina, bottiglia, busta, conf.) e le parole promozionali, ma mantenendo le qualità rilevanti (es. "greco", "integrale", "fresco", "di pera", "in scatola").
-Metti l'eventuale peso o formato nel campo "qty" (es. "500 g"), altrimenti la quantità acquistata o "1".
+Metti l'eventuale peso o formato nel campo "qty" (es. "500 g"). Se non è indicato ma riesci a contare gli oggetti nella foto, usa quel numero (es. "3" per tre mele); altrimenti "1". Usa SOLO unità metriche (g, kg, ml, l) — mai cups/oz.
 Il nome deve avere la prima lettera maiuscola e il resto minuscolo.
-Esempi: "Yoga Succo di Pera PET" -> name "Succo di pera"; "PAST.BARILL.500G" -> name "Pasta", qty "500 g"; "Meteora yogurt greco 500g" -> name "Yogurt greco", qty "500 g".
-Ignora prodotti non alimentari.
+Esempi: "Yoga Succo di Pera PET" -> name "Succo di pera"; "PAST.BARILL.500G" -> name "Pasta", qty "500 g"; "Meteora yogurt greco 500g" -> name "Yogurt greco", qty "500 g"; foto con tre banane -> name "Banane", qty "3".
+Ignora prodotti non alimentari. Se non riconosci alcun alimento, restituisci una lista vuota.
 Rispondi SOLO con JSON valido senza markdown:
 {"items":[{"name":"...","qty":"...","category":"..."}]}
 Categorie possibili: Pasta e Cereali, Legumi e Conserve, Frutta Secca,
