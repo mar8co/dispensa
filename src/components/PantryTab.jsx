@@ -1,0 +1,178 @@
+// Scheda Dispensa: caricamento scontrino, lista prodotti raggruppati per
+// categoria (collassabili e riordinabili via drag), modifica/eliminazione
+// in-line, form di aggiunta manuale con contatore + toggle "gr".
+import {
+  Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
+  ChevronDown, ChevronRight, GripVertical,
+} from "lucide-react";
+import { CATEGORIES, CAT_ICON } from "../constants.js";
+
+export default function PantryTab({
+  inputCls,
+  // scontrino
+  processing, receiptMsg, receiptErr, handleReceipt,
+  // lista
+  grouped, collapsed, setCollapsed, cardRefs,
+  dragCat, onDragStart, onDragMove, onDragEnd,
+  // modifica
+  editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
+  startEdit, saveEdit, setEditId, removeItem,
+  // svuota
+  setConfirmClear,
+  // aggiunta manuale
+  newName, setNewName, newQty, setNewQty, grams, setGrams, adding, addManual,
+}) {
+  return (
+    <>
+      <div className="mb-5 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+        <label className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-800 ${processing ? "opacity-60" : ""}`}>
+          {processing ? (<><Loader2 className="h-4 w-4 animate-spin" /> Analisi in corso…</>)
+            : (<><Camera className="h-4 w-4" /> Carica foto scontrino</>)}
+          <input type="file" accept="image/*" className="hidden" onChange={handleReceipt} disabled={processing} />
+        </label>
+        {receiptMsg && <p className="mt-2 text-center text-xs font-medium text-emerald-700">{receiptMsg}</p>}
+        {receiptErr && <p className="mt-2 text-center text-xs font-medium text-red-600">{receiptErr}</p>}
+      </div>
+
+      {grouped.length === 0 && (
+        <p className="py-10 text-center text-sm text-stone-400">Dispensa vuota. Aggiungi un prodotto qui sotto.</p>
+      )}
+
+      <div className="space-y-4">
+        {grouped.map(({ cat, list }) => (
+          <div
+            key={cat}
+            ref={(el) => { cardRefs.current[cat] = el; }}
+            className={`rounded-2xl border bg-white shadow-sm transition ${dragCat === cat ? "border-emerald-400 opacity-90 shadow-lg ring-2 ring-emerald-200" : "border-stone-200"}`}
+          >
+            <div className={`flex w-full items-center gap-1 px-3 py-3 ${!collapsed[cat] ? "border-b border-stone-100" : ""}`}>
+              <button
+                onClick={() => setCollapsed((c) => ({ ...c, [cat]: !c[cat] }))}
+                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+              >
+                <span className="text-lg">{CAT_ICON[cat]}</span>
+                <h2 className="truncate text-sm font-semibold text-stone-700">{cat}</h2>
+                <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{list.length}</span>
+                {collapsed[cat]
+                  ? <ChevronRight className="h-4 w-4 shrink-0 text-stone-400" />
+                  : <ChevronDown className="h-4 w-4 shrink-0 text-stone-400" />}
+              </button>
+              <button
+                onPointerDown={(e) => onDragStart(e, cat)}
+                onPointerMove={onDragMove}
+                onPointerUp={onDragEnd}
+                onPointerCancel={onDragEnd}
+                style={{ touchAction: "none" }}
+                className="shrink-0 cursor-grab rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 active:cursor-grabbing"
+                aria-label="Trascina per riordinare"
+              >
+                <GripVertical className="h-5 w-5" />
+              </button>
+            </div>
+            {!collapsed[cat] && (
+              <ul className="divide-y divide-stone-100">
+                {list.map((it) =>
+                  editId === it.id ? (
+                    <li key={it.id} className="space-y-2 px-4 py-3">
+                      <input className={inputCls} value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nome" />
+                      <div className="flex gap-2">
+                        <input className={inputCls} value={editQty} onChange={(e) => setEditQty(e.target.value)} placeholder="Quantità" />
+                        <select className={inputCls} value={editCat} onChange={(e) => setEditCat(e.target.value)}>
+                          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={saveEdit} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-stone-800 px-3 py-2 text-sm font-medium text-white hover:bg-stone-900">
+                          <Check className="h-4 w-4" /> Salva
+                        </button>
+                        <button onClick={() => setEditId(null)} className="flex items-center justify-center rounded-lg border border-stone-300 px-3 py-2 text-stone-500 hover:bg-stone-50">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </li>
+                  ) : (
+                    <li key={it.id} className="flex items-center justify-between gap-2 px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-stone-800">{it.name}</p>
+                        <p className="text-xs text-stone-500">{it.qty}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button onClick={() => startEdit(it)} className="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-700" aria-label="Modifica">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => removeItem(it.id)} className="rounded-lg p-2 text-stone-400 hover:bg-red-50 hover:text-red-600" aria-label="Elimina">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </li>
+                  )
+                )}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {grouped.length > 0 && (
+        <button
+          onClick={() => setConfirmClear(true)}
+          className="mx-auto mt-6 block text-xs text-stone-300 transition hover:text-stone-500"
+        >
+          Svuota dispensa
+        </button>
+      )}
+
+      {/* Form aggiunta (sticky in fondo) */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
+        <input
+          className={inputCls}
+          placeholder="Nome alimento"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addManual()}
+        />
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex items-center rounded-lg border border-stone-300 bg-white">
+            <button
+              onClick={() => setNewQty((q) => String(Math.max(1, (parseFloat(String(q).replace(",", ".")) || 1) - 1)))}
+              className="flex h-11 w-11 items-center justify-center rounded-l-lg text-stone-600 transition hover:bg-stone-100"
+              aria-label="Meno"
+            >
+              <Minus className="h-5 w-5" />
+            </button>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={newQty}
+              onChange={(e) => setNewQty(e.target.value.replace(/[^0-9.,]/g, ""))}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => e.key === "Enter" && addManual()}
+              className="w-16 border-0 bg-transparent text-center text-lg font-semibold text-stone-800 outline-none"
+            />
+            <button
+              onClick={() => setNewQty((q) => String((parseFloat(String(q).replace(",", ".")) || 0) + 1))}
+              className="flex h-11 w-11 items-center justify-center rounded-r-lg text-stone-600 transition hover:bg-stone-100"
+              aria-label="Più"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
+          <button
+            onClick={() => setGrams((g) => !g)}
+            aria-pressed={grams}
+            className={`h-11 rounded-lg border px-4 text-sm font-semibold transition ${grams ? "border-emerald-600 bg-emerald-600 text-white" : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"}`}
+          >
+            gr
+          </button>
+          <button
+            onClick={addManual}
+            disabled={adding}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-stone-800 px-4 py-3 text-sm font-medium text-white hover:bg-stone-900 disabled:opacity-60"
+          >
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Aggiungi</>}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
