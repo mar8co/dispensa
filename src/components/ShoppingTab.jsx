@@ -64,25 +64,34 @@ export default function ShoppingTab({
                     {it.name}
                   </p>
                   <div className="mt-1 flex items-center">
-                    {/\d/.test(it.qty) ? (
-                      <div className="flex items-center rounded-md border border-stone-200">
-                        <button
-                          onClick={() => onAdjustQty(it, -1)}
-                          className="flex h-6 w-7 items-center justify-center rounded-l-md text-stone-500 transition hover:bg-stone-100"
-                          aria-label="Diminuisci"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </button>
-                        <span className="min-w-[3rem] px-1 text-center text-xs text-stone-600">{it.qty}</span>
-                        <button
-                          onClick={() => onAdjustQty(it, 1)}
-                          className="flex h-6 w-7 items-center justify-center rounded-r-md text-stone-500 transition hover:bg-stone-100"
-                          aria-label="Aumenta"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ) : (
+                    {/\d/.test(it.qty) ? (() => {
+                      const n = parseFloat(String(it.qty).replace(",", "."));
+                      const atMin = !isNaN(n) && n <= 1;
+                      return (
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            onClick={() => onAdjustQty(it, -1)}
+                            disabled={atMin}
+                            className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                              atMin
+                                ? "border-stone-200 text-stone-300"
+                                : "border-stone-300 text-stone-600 hover:border-stone-400 hover:bg-stone-100 active:scale-95"
+                            }`}
+                            aria-label="Diminuisci"
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="min-w-[2rem] px-1 text-center text-sm font-semibold tabular-nums text-stone-800">{it.qty}</span>
+                          <button
+                            onClick={() => onAdjustQty(it, 1)}
+                            className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
+                            aria-label="Aumenta"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })() : (
                       it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{it.qty}</span>
                     )}
                   </div>

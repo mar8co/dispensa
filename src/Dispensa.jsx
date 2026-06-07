@@ -415,6 +415,8 @@ export default function Dispensa({ session }) {
     } catch (e) { console.error("Errore selezione totale spesa:", e); }
   }
   async function adjustShoppingQty(it, delta) {
+    const cur = parseFloat(String(it.qty).replace(",", ".")) || 1;
+    if (delta < 0 && cur <= 1) return; // minimo 1 nella lista spesa
     const next = adjustQty(it.qty, delta);
     if (next === it.qty) return;
     setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: next } : x)));
