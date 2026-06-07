@@ -276,7 +276,7 @@ export default function Dispensa({ session }) {
     try {
       await deleteItem(it.id);
       setItems((prev) => prev.filter((x) => x.id !== it.id));
-      showToast(`"${it.name}" eliminato`, async () => {
+      showToast(<><strong>{it.name}</strong> eliminato</>, async () => {
         try {
           const row = await insertItem({
             name: it.name, qty: it.qty, category: it.category, expiry: it.expiry,
@@ -395,7 +395,7 @@ export default function Dispensa({ session }) {
       await deleteShopping(id);
       setShopping((prev) => prev.filter((x) => x.id !== id));
       if (it) {
-        showToast(`"${it.name}" rimosso dalla lista`, async () => {
+        showToast(<><strong>{it.name}</strong> rimosso dalla lista</>, async () => {
           try {
             const row = await insertShopping({ name: it.name, qty: it.qty });
             setShopping((prev) => [...prev, row]);

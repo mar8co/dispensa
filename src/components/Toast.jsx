@@ -3,7 +3,7 @@ import { Undo2 } from "lucide-react";
 
 export default function Toast({ message, onUndo }) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-24 z-[60] flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-28 z-[60] flex justify-center px-4">
       <div className="pointer-events-auto flex items-center gap-3 rounded-xl border border-stone-300 bg-stone-200 px-4 py-2.5 text-sm text-stone-900 shadow-lg">
         <span>{message}</span>
         {onUndo && (

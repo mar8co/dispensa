@@ -91,7 +91,7 @@ export default function ShoppingTab({
       <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
         <input
           className={inputCls}
-          placeholder="Cosa serve comprare?"
+          placeholder="Cosa ti manca?"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
