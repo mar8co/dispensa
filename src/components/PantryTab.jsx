@@ -1,9 +1,10 @@
 // Scheda Dispensa: scansione, ricerca, ordinamento, lista prodotti raggruppati
 // per categoria (collassabili e riordinabili via drag), +/- rapido sulla
 // quantità, badge scadenza, modifica/eliminazione in-line, aggiunta manuale.
+import { useState } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
-  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, Search,
+  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, Search, CalendarPlus,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry } from "../lib/pantry.js";
@@ -45,8 +46,10 @@ export default function PantryTab({
   setConfirmClear,
   // aggiunta manuale
   newName, setNewName, newQty, setNewQty, grams, setGrams, adding, addManual,
+  newExpiry, setNewExpiry,
 }) {
   const searchActive = search.trim() !== "";
+  const [showDate, setShowDate] = useState(false);
 
   return (
     <>
@@ -280,6 +283,15 @@ export default function PantryTab({
             gr
           </button>
           <button
+            onClick={() => setShowDate((s) => !s)}
+            aria-pressed={!!newExpiry}
+            aria-label="Aggiungi scadenza"
+            title="Scadenza"
+            className={`flex h-11 w-11 items-center justify-center rounded-lg border transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"}`}
+          >
+            <CalendarPlus className="h-5 w-5" />
+          </button>
+          <button
             onClick={addManual}
             disabled={adding}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-stone-800 px-4 py-3 text-sm font-medium text-white hover:bg-stone-900 disabled:opacity-60"
@@ -287,6 +299,27 @@ export default function PantryTab({
             {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Aggiungi</>}
           </button>
         </div>
+
+        {(showDate || newExpiry) && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="shrink-0 text-xs text-stone-500">Scade il</span>
+            <input
+              type="date"
+              className={inputCls}
+              value={newExpiry || ""}
+              onChange={(e) => setNewExpiry(e.target.value)}
+            />
+            {newExpiry && (
+              <button
+                onClick={() => setNewExpiry("")}
+                className="shrink-0 rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+                aria-label="Rimuovi scadenza"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

@@ -52,6 +52,7 @@ export default function Dispensa({ session }) {
   const [newName, setNewName] = useState("");
   const [newQty, setNewQty] = useState("1");
   const [grams, setGrams] = useState(false);
+  const [newExpiry, setNewExpiry] = useState("");
   const [adding, setAdding] = useState(false);
 
   // ricerca / ordinamento
@@ -251,20 +252,23 @@ export default function Dispensa({ session }) {
     } catch (e) {
       console.error(e);
     }
+    const expiry = newExpiry || null;
     try {
       const existing = items.find((x) => x.name.trim().toLowerCase() === name.toLowerCase());
       if (existing) {
         const merged = normalizeWeight(mergeQty(existing.qty, qty));
-        await updateItem(existing.id, { qty: merged });
-        setItems((prev) => prev.map((x) => (x.id === existing.id ? { ...x, qty: merged } : x)));
+        const fields = { qty: merged };
+        if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
+        await updateItem(existing.id, fields);
+        setItems((prev) => prev.map((x) => (x.id === existing.id ? { ...x, ...fields } : x)));
       } else {
-        const row = await insertItem({ name, qty, category });
+        const row = await insertItem({ name, qty, category, expiry });
         setItems((prev) => [...prev, row]);
       }
     } catch (e) {
       console.error("Errore aggiunta prodotto:", e);
     }
-    setNewName(""); setNewQty("1"); setAdding(false);
+    setNewName(""); setNewQty("1"); setNewExpiry(""); setAdding(false);
   }
 
   // Elimina con possibilità di Annulla (re-inserisce il prodotto).
@@ -780,6 +784,7 @@ export default function Dispensa({ session }) {
             setConfirmClear={setConfirmClear}
             newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
             grams={grams} setGrams={setGrams} adding={adding} addManual={addManual}
+            newExpiry={newExpiry} setNewExpiry={setNewExpiry}
           />
         )}
 
