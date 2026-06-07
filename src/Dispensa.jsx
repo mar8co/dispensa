@@ -99,12 +99,11 @@ export default function Dispensa({ session }) {
   const [cookDone, setCookDone] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
 
-  // Applica le impostazioni (da cache o da DB) a collapsed/catOrder/modeOrder.
+  // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
+  // NB: lo stato "collassato" NON viene ripristinato: le categorie partono
+  // sempre chiuse a ogni apertura/ricarica dell'app (default voluto).
   function applySettings(s) {
     if (!s || typeof s !== "object") return;
-    if (s.collapsed && typeof s.collapsed === "object") {
-      setCollapsed((prev) => ({ ...prev, ...s.collapsed }));
-    }
     if (Array.isArray(s.catOrder)) {
       setCatOrder([
         ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
