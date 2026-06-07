@@ -1,8 +1,10 @@
 // Scheda Ricette: griglia di occasioni (riordinabili via drag) -> 4 proposte
 // generate dall'AI -> ricetta completa con grammature metriche, selettore
 // porzioni, timer per passaggio e pulsante "Ho cucinato questo".
+import { useState, useEffect } from "react";
 import {
   Plus, Minus, Loader2, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
+  CheckCircle2, Circle, ShoppingCart,
 } from "lucide-react";
 import { scaleQty } from "../lib/pantry.js";
 import StepTimer from "./StepTimer.jsx";
@@ -17,7 +19,21 @@ export default function RecipesTab({
   recipe, loadingRecipe, recipeErr,
   servings, setServings, factor, backToIdeas,
   openCookModal, cookDone,
+  // "cosa mi manca" + lista spesa
+  hasIngredient, onAddMissing,
 }) {
+  const [addedMissing, setAddedMissing] = useState(false);
+  // Resetta il feedback "aggiunti" quando cambia ricetta.
+  useEffect(() => { setAddedMissing(false); }, [recipe?.title]);
+
+  const ingredients = recipe?.ingredients || [];
+  const missing = ingredients.filter((ing) => !hasIngredient(ing.name));
+
+  async function addMissing() {
+    await onAddMissing(missing.map((ing) => ing.name));
+    setAddedMissing(true);
+  }
+
   return (
     <>
       {!mode && (
@@ -145,15 +161,42 @@ export default function RecipesTab({
               </div>
             </div>
 
-            <h3 className="mb-2 mt-5 text-sm font-semibold uppercase tracking-wide text-stone-400">Ingredienti</h3>
+            <div className="mb-2 mt-5 flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-400">Ingredienti</h3>
+              <span className="text-xs text-stone-400">🟢 in dispensa</span>
+            </div>
             <ul className="divide-y divide-stone-100 rounded-xl bg-stone-50">
-              {(recipe.ingredients || []).map((ing, i) => (
-                <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                  <span className="text-stone-700">{ing.name}</span>
-                  <span className="shrink-0 font-medium text-stone-900">{scaleQty(ing.qty, factor)}</span>
-                </li>
-              ))}
+              {ingredients.map((ing, i) => {
+                const have = hasIngredient(ing.name);
+                return (
+                  <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <span className="flex min-w-0 items-center gap-2">
+                      {have
+                        ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                        : <Circle className="h-4 w-4 shrink-0 text-stone-300" />}
+                      <span className={`truncate ${have ? "text-stone-700" : "text-stone-500"}`}>{ing.name}</span>
+                    </span>
+                    <span className="shrink-0 font-medium text-stone-900">{scaleQty(ing.qty, factor)}</span>
+                  </li>
+                );
+              })}
             </ul>
+
+            {missing.length > 0 && (
+              addedMissing ? (
+                <p className="mt-2 text-center text-xs font-medium text-emerald-700">
+                  {missing.length} {missing.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista della spesa.
+                </p>
+              ) : (
+                <button
+                  onClick={addMissing}
+                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs font-medium text-stone-600 transition hover:bg-stone-50"
+                >
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  Aggiungi {missing.length} {missing.length === 1 ? "mancante" : "mancanti"} alla spesa
+                </button>
+              )
+            )}
 
             <h3 className="mb-3 mt-5 text-sm font-semibold uppercase tracking-wide text-stone-400">Procedimento</h3>
             <ol className="space-y-4">

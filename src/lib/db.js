@@ -9,20 +9,22 @@ import { supabase } from "./supabase.js";
 
 // ---------- Prodotti dispensa ----------
 
+const PANTRY_COLS = "id, name, qty, category, expiry, created_at";
+
 export async function fetchPantry() {
   const { data, error } = await supabase
     .from("pantry_items")
-    .select("id, name, qty, category")
+    .select(PANTRY_COLS)
     .order("created_at", { ascending: true });
   if (error) throw error;
   return data || [];
 }
 
-export async function insertItem({ name, qty, category }) {
+export async function insertItem({ name, qty, category, expiry = null }) {
   const { data, error } = await supabase
     .from("pantry_items")
-    .insert({ name, qty, category })
-    .select("id, name, qty, category")
+    .insert({ name, qty, category, expiry: expiry || null })
+    .select(PANTRY_COLS)
     .single();
   if (error) throw error;
   return data;
@@ -33,8 +35,8 @@ export async function insertMany(rows) {
   if (!rows.length) return [];
   const { data, error } = await supabase
     .from("pantry_items")
-    .insert(rows.map(({ name, qty, category }) => ({ name, qty, category })))
-    .select("id, name, qty, category");
+    .insert(rows.map(({ name, qty, category, expiry = null }) => ({ name, qty, category, expiry: expiry || null })))
+    .select(PANTRY_COLS);
   if (error) throw error;
   return data || [];
 }
@@ -88,5 +90,54 @@ export async function saveSettings(settings) {
       { user_id: userId, settings, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
+  if (error) throw error;
+}
+
+// ---------- Lista della spesa ----------
+
+const SHOPPING_COLS = "id, name, qty, checked, created_at";
+
+export async function fetchShopping() {
+  const { data, error } = await supabase
+    .from("shopping_items")
+    .select(SHOPPING_COLS)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function insertShopping({ name, qty = "1" }) {
+  const { data, error } = await supabase
+    .from("shopping_items")
+    .insert({ name, qty })
+    .select(SHOPPING_COLS)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function insertManyShopping(rows) {
+  if (!rows.length) return [];
+  const { data, error } = await supabase
+    .from("shopping_items")
+    .insert(rows.map(({ name, qty = "1" }) => ({ name, qty })))
+    .select(SHOPPING_COLS);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateShopping(id, fields) {
+  const { error } = await supabase.from("shopping_items").update(fields).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteShopping(id) {
+  const { error } = await supabase.from("shopping_items").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteShoppingItems(ids) {
+  if (!ids.length) return;
+  const { error } = await supabase.from("shopping_items").delete().in("id", ids);
   if (error) throw error;
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Package, ChefHat, LogOut } from "lucide-react";
+import { Loader2, Package, ChefHat, ShoppingCart, LogOut } from "lucide-react";
 
 import {
   CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA,
@@ -7,6 +7,7 @@ import {
 import {
   guessCategory, correctName,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
+  adjustQty, norm, daysUntilExpiry,
 } from "./lib/pantry.js";
 import { callClaude, fileToBase64 } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
@@ -14,13 +15,17 @@ import {
   fetchPantry, insertItem, insertMany, updateItem,
   deleteItem, deleteItems, deleteAllPantry,
   fetchSettings, saveSettings,
+  fetchShopping, insertShopping, insertManyShopping,
+  updateShopping, deleteShopping, deleteShoppingItems,
 } from "./lib/db.js";
 
 import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
+import ShoppingTab from "./components/ShoppingTab.jsx";
 import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
+import Toast from "./components/Toast.jsx";
 
 export default function Dispensa({ session }) {
   const [items, setItems] = useState([]);
@@ -47,11 +52,24 @@ export default function Dispensa({ session }) {
   const [grams, setGrams] = useState(false);
   const [adding, setAdding] = useState(false);
 
+  // ricerca / ordinamento
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("recenti");
+
   // modifica
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editQty, setEditQty] = useState("");
   const [editCat, setEditCat] = useState(CATEGORIES[0]);
+  const [editExpiry, setEditExpiry] = useState("");
+
+  // lista della spesa
+  const [shopping, setShopping] = useState([]);
+  const [movingChecked, setMovingChecked] = useState(false);
+
+  // toast / undo
+  const [toast, setToast] = useState(null); // { message, onUndo? }
+  const toastTimer = useRef(null);
 
   // scontrino
   const [processing, setProcessing] = useState(false);
@@ -114,9 +132,28 @@ export default function Dispensa({ session }) {
       } catch (e) {
         console.error("Errore caricamento impostazioni:", e);
       }
+      try {
+        setShopping(await fetchShopping());
+      } catch (e) {
+        console.error("Errore caricamento lista spesa:", e);
+      }
       setLoaded(true);
     })();
   }, []);
+
+  // Pulisce il timer del toast allo smontaggio.
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  // Mostra un toast (con eventuale azione "Annulla") per ~6 secondi.
+  function showToast(message, onUndo) {
+    clearTimeout(toastTimer.current);
+    setToast({ message, onUndo });
+    toastTimer.current = setTimeout(() => setToast(null), 6000);
+  }
+  function dismissToast() {
+    clearTimeout(toastTimer.current);
+    setToast(null);
+  }
 
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
@@ -170,33 +207,68 @@ export default function Dispensa({ session }) {
     setNewName(""); setNewQty("1"); setAdding(false);
   }
 
-  async function removeItem(id) {
+  // Elimina con possibilità di Annulla (re-inserisce il prodotto).
+  async function removeItem(it) {
     try {
-      await deleteItem(id);
-      setItems((prev) => prev.filter((x) => x.id !== id));
+      await deleteItem(it.id);
+      setItems((prev) => prev.filter((x) => x.id !== it.id));
+      showToast(`"${it.name}" eliminato`, async () => {
+        try {
+          const row = await insertItem({
+            name: it.name, qty: it.qty, category: it.category, expiry: it.expiry,
+          });
+          setItems((prev) => [...prev, row]);
+          dismissToast();
+        } catch (e) { console.error("Errore ripristino:", e); }
+      });
     } catch (e) {
       console.error("Errore eliminazione:", e);
     }
   }
 
+  // Svuota tutto con possibilità di Annulla (re-inserisce l'intera dispensa).
   async function clearPantry() {
+    setConfirmClear(false);
+    const backup = items;
+    if (!backup.length) return;
     try {
       await deleteAllPantry();
       setItems([]);
+      showToast(`Dispensa svuotata (${backup.length} prodotti)`, async () => {
+        try {
+          await insertMany(
+            backup.map(({ name, qty, category, expiry }) => ({ name, qty, category, expiry }))
+          );
+          setItems(await fetchPantry());
+          dismissToast();
+        } catch (e) { console.error("Errore ripristino dispensa:", e); }
+      });
     } catch (e) {
       console.error("Errore svuotamento dispensa:", e);
     }
-    setConfirmClear(false);
+  }
+
+  // +/- rapido sulla quantità (senza entrare in modifica).
+  async function adjustItemQty(it, delta) {
+    const next = adjustQty(it.qty, delta);
+    if (next === it.qty) return;
+    setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: next } : x)));
+    try {
+      await updateItem(it.id, { qty: next });
+    } catch (e) {
+      console.error("Errore aggiornamento quantità:", e);
+    }
   }
 
   function startEdit(it) {
-    setEditId(it.id); setEditName(it.name); setEditQty(it.qty); setEditCat(it.category);
+    setEditId(it.id); setEditName(it.name); setEditQty(it.qty);
+    setEditCat(it.category); setEditExpiry(it.expiry || "");
   }
 
   async function saveEdit() {
     const orig = items.find((x) => x.id === editId);
     const name = editName.trim() || (orig ? orig.name : "");
-    const fields = { name, qty: editQty.trim(), category: editCat };
+    const fields = { name, qty: editQty.trim(), category: editCat, expiry: editExpiry || null };
     try {
       await updateItem(editId, fields);
       setItems((prev) => prev.map((x) => (x.id === editId ? { ...x, ...fields } : x)));
@@ -239,6 +311,72 @@ export default function Dispensa({ session }) {
 
   async function logout() {
     await supabase.auth.signOut();
+  }
+
+  // --- Lista della spesa ---
+  async function addShoppingItem(name, qty) {
+    try {
+      const row = await insertShopping({ name, qty });
+      setShopping((prev) => [...prev, row]);
+    } catch (e) { console.error("Errore aggiunta spesa:", e); }
+  }
+  async function toggleShoppingItem(id, checked) {
+    setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
+    try { await updateShopping(id, { checked }); }
+    catch (e) { console.error("Errore aggiornamento spesa:", e); }
+  }
+  async function removeShoppingItem(id) {
+    const it = shopping.find((x) => x.id === id);
+    try {
+      await deleteShopping(id);
+      setShopping((prev) => prev.filter((x) => x.id !== id));
+      if (it) {
+        showToast(`"${it.name}" rimosso dalla lista`, async () => {
+          try {
+            const row = await insertShopping({ name: it.name, qty: it.qty });
+            setShopping((prev) => [...prev, row]);
+            dismissToast();
+          } catch (e) { console.error("Errore ripristino spesa:", e); }
+        });
+      }
+    } catch (e) { console.error("Errore rimozione spesa:", e); }
+  }
+  async function clearCheckedShopping() {
+    const ids = shopping.filter((x) => x.checked).map((x) => x.id);
+    if (!ids.length) return;
+    try {
+      await deleteShoppingItems(ids);
+      setShopping((prev) => prev.filter((x) => !x.checked));
+    } catch (e) { console.error("Errore rimozione barrati:", e); }
+  }
+  async function moveCheckedToPantry() {
+    const checked = shopping.filter((x) => x.checked);
+    if (!checked.length) return;
+    setMovingChecked(true);
+    try {
+      await mergeItems(checked.map((x) => ({ name: x.name, qty: x.qty })));
+      await deleteShoppingItems(checked.map((x) => x.id));
+      setShopping((prev) => prev.filter((x) => !x.checked));
+      showToast(`${checked.length} ${checked.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`);
+    } catch (e) { console.error("Errore spostamento in dispensa:", e); }
+    setMovingChecked(false);
+  }
+  // Aggiunge alla lista spesa gli ingredienti mancanti (no duplicati per nome).
+  async function addMissingToShopping(names) {
+    const existing = new Set(shopping.map((s) => s.name.trim().toLowerCase()));
+    const toAdd = (names || [])
+      .filter(Boolean)
+      .filter((n) => !existing.has(n.trim().toLowerCase()));
+    if (!toAdd.length) return;
+    try {
+      const rows = await insertManyShopping(toAdd.map((name) => ({ name, qty: "1" })));
+      setShopping((prev) => [...prev, ...rows]);
+    } catch (e) { console.error("Errore aggiunta mancanti:", e); }
+  }
+
+  // "Cosa mi manca": true se l'ingrediente trova corrispondenza in dispensa.
+  function hasIngredient(name) {
+    return !!findMatch(name, items);
   }
 
   // --- Riordino generico (categorie e occasioni) ---
@@ -393,8 +531,29 @@ export default function Dispensa({ session }) {
   function backToIdeas() { setRecipe(null); setRecipeErr(""); setCookDone(""); }
 
   // --- Derivati ---
+  const q = norm(search);
+  function sortList(list) {
+    const arr = [...list];
+    if (sort === "nome") {
+      arr.sort((a, b) => a.name.localeCompare(b.name, "it", { sensitivity: "base" }));
+    } else if (sort === "scadenza") {
+      arr.sort((a, b) => {
+        const da = a.expiry ? daysUntilExpiry(a.expiry) : Infinity;
+        const db = b.expiry ? daysUntilExpiry(b.expiry) : Infinity;
+        return da - db;
+      });
+    } else {
+      // "recenti": più recenti in cima (created_at desc)
+      arr.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+    }
+    return arr;
+  }
   const grouped = catOrder
-    .map((c) => ({ cat: c, list: items.filter((x) => x.category === c) }))
+    .map((c) => {
+      let list = items.filter((x) => x.category === c);
+      if (q) list = list.filter((x) => norm(x.name).includes(q));
+      return { cat: c, list: sortList(list) };
+    })
     .filter((g) => g.list.length > 0);
   const total = items.length;
   const allCollapsed = grouped.length > 0 && grouped.every((g) => collapsed[g.cat]);
@@ -524,17 +683,32 @@ export default function Dispensa({ session }) {
           >
             <ChefHat className="h-4 w-4" /> Ricette
           </button>
+          <button
+            onClick={() => setView("spesa")}
+            className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
+              view === "spesa" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
+            }`}
+          >
+            <ShoppingCart className="h-4 w-4" /> Spesa
+            {shopping.length > 0 && (
+              <span className="ml-0.5 rounded-full bg-emerald-600 px-1.5 text-[10px] font-semibold text-white">
+                {shopping.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {view === "dispensa" && (
           <PantryTab
             inputCls={inputCls}
             processing={processing} receiptMsg={receiptMsg} receiptErr={receiptErr} handleReceipt={handleReceipt}
+            search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
             allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
             dragCat={dragCat} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd}
+            onAdjustQty={adjustItemQty}
             editId={editId} editName={editName} setEditName={setEditName} editQty={editQty} setEditQty={setEditQty}
-            editCat={editCat} setEditCat={setEditCat}
+            editCat={editCat} setEditCat={setEditCat} editExpiry={editExpiry} setEditExpiry={setEditExpiry}
             startEdit={startEdit} saveEdit={saveEdit} setEditId={setEditId} removeItem={removeItem}
             setConfirmClear={setConfirmClear}
             newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
@@ -551,6 +725,20 @@ export default function Dispensa({ session }) {
             recipe={recipe} loadingRecipe={loadingRecipe} recipeErr={recipeErr}
             servings={servings} setServings={setServings} factor={factor} backToIdeas={backToIdeas}
             openCookModal={openCookModal} cookDone={cookDone}
+            hasIngredient={hasIngredient} onAddMissing={addMissingToShopping}
+          />
+        )}
+
+        {view === "spesa" && (
+          <ShoppingTab
+            inputCls={inputCls}
+            shopping={shopping}
+            onAdd={addShoppingItem}
+            onToggle={toggleShoppingItem}
+            onDelete={removeShoppingItem}
+            onMoveChecked={moveCheckedToPantry}
+            onClearChecked={clearCheckedShopping}
+            movingChecked={movingChecked}
           />
         )}
       </div>
@@ -576,6 +764,8 @@ export default function Dispensa({ session }) {
           onConfirm={confirmScan}
         />
       )}
+
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} />}
     </div>
   );
 }

@@ -123,13 +123,63 @@ export function subtractQty(stock, used) {
   return { ok: false, value: stock };
 }
 
-function norm(s) {
+export function norm(s) {
   return String(s)
     .toLowerCase()
     .replace(/\([^)]*\)/g, " ")
     .replace(/[^a-zàèéìòù0-9 ]/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// Incrementa/decrementa il primo numero in una quantità mantenendo l'unità
+// (es. adjustQty("2 barattoli", -1) -> "1 barattoli"). Se non c'è un numero
+// (es. "poca quantità") restituisce la stringa invariata.
+export function adjustQty(qty, delta) {
+  const s = String(qty);
+  const m = s.match(/-?\d+(?:[.,]\d+)?/);
+  if (!m) return qty;
+  let next = parseFloat(m[0].replace(",", ".")) + delta;
+  if (next < 0) next = 0;
+  const nextStr = Number.isInteger(next)
+    ? String(next)
+    : String(Math.round(next * 10) / 10).replace(".", ",");
+  return s.replace(m[0], nextStr);
+}
+
+// --- Scadenze (date in formato "YYYY-MM-DD") ---
+
+export function daysUntilExpiry(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(`${dateStr}T00:00:00`);
+  if (isNaN(d.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((d.getTime() - today.getTime()) / 86400000);
+}
+
+// Stato: null (nessuna data) | "scaduto" | "oggi" | "presto" (<=3gg) |
+// "settimana" (<=7gg) | "ok".
+export function expiryStatus(dateStr) {
+  const days = daysUntilExpiry(dateStr);
+  if (days === null) return null;
+  if (days < 0) return "scaduto";
+  if (days === 0) return "oggi";
+  if (days <= 3) return "presto";
+  if (days <= 7) return "settimana";
+  return "ok";
+}
+
+// Etichetta breve per il badge (es. "Scaduto", "Scade oggi", "Tra 2 gg", "12/06").
+export function formatExpiry(dateStr) {
+  const days = daysUntilExpiry(dateStr);
+  if (days === null) return "";
+  if (days < 0) return `Scaduto`;
+  if (days === 0) return "Scade oggi";
+  if (days === 1) return "Scade domani";
+  if (days <= 7) return `Tra ${days} gg`;
+  const d = new Date(`${dateStr}T00:00:00`);
+  return d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" });
 }
 
 export function findMatch(ingName, items) {
