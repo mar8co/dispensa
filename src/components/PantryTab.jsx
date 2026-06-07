@@ -1,7 +1,6 @@
 // Scheda Dispensa: scansione, ricerca, ordinamento, lista prodotti raggruppati
 // per categoria (collassabili e riordinabili via drag), +/- rapido sulla
 // quantità, badge scadenza, modifica/eliminazione in-line, aggiunta manuale.
-import { useState, useRef } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
   ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, Search, CalendarPlus,
@@ -49,18 +48,6 @@ export default function PantryTab({
   newExpiry, setNewExpiry,
 }) {
   const searchActive = search.trim() !== "";
-  const dateRef = useRef(null);
-
-  // Apre direttamente il selettore data nativo (con fallback).
-  function openDatePicker() {
-    const el = dateRef.current;
-    if (!el) return;
-    if (typeof el.showPicker === "function") {
-      try { el.showPicker(); return; } catch { /* fallback sotto */ }
-    }
-    el.focus();
-    el.click();
-  }
 
   function formatDateIt(d) {
     if (!d) return "";
@@ -299,25 +286,21 @@ export default function PantryTab({
           >
             gr
           </button>
-          <button
-            onClick={openDatePicker}
-            aria-pressed={!!newExpiry}
-            aria-label="Aggiungi scadenza"
+          {/* Pulsante calendario: l'input data trasparente è sovrapposto, così
+              il tocco apre direttamente il selettore nativo (anche su mobile). */}
+          <label
             title="Scadenza"
-            className={`flex h-11 shrink-0 items-center justify-center rounded-lg border px-3 transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-amber-400 bg-amber-50 text-amber-500 hover:bg-amber-100"}`}
+            className={`relative flex h-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border px-3 transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-amber-400 bg-amber-50 text-amber-500 hover:bg-amber-100"}`}
           >
             <CalendarPlus className="h-6 w-6" />
-          </button>
-          {/* Input data nascosto: aperto direttamente dal pulsante calendario. */}
-          <input
-            type="date"
-            ref={dateRef}
-            value={newExpiry || ""}
-            onChange={(e) => setNewExpiry(e.target.value)}
-            className="sr-only"
-            tabIndex={-1}
-            aria-hidden="true"
-          />
+            <input
+              type="date"
+              value={newExpiry || ""}
+              onChange={(e) => setNewExpiry(e.target.value)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              aria-label="Scadenza"
+            />
+          </label>
           <button
             onClick={addManual}
             disabled={adding}
