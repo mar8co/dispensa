@@ -4,7 +4,7 @@
 import { useState } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
-  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, Search, CalendarPlus, ScanBarcode,
+  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, CalendarPlus, ScanBarcode,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry } from "../lib/pantry.js";
@@ -65,26 +65,6 @@ export default function PantryTab({
 
   return (
     <>
-      {/* Ricerca */}
-      <div className="relative mb-3">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-        <input
-          className="w-full rounded-xl border border-stone-300 bg-white py-2.5 pl-9 pr-9 text-sm text-stone-800 outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
-          placeholder="Cerca un prodotto…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        {searchActive && (
-          <button
-            onClick={() => setSearch("")}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
-            aria-label="Cancella ricerca"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
       {/* Barra ordinamento + apri/chiudi */}
       {grouped.length > 0 && (
         <div className="mb-2 flex items-center justify-between gap-2">
