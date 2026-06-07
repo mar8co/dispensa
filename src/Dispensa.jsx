@@ -405,6 +405,13 @@ export default function Dispensa({ session }) {
       }
     } catch (e) { console.error("Errore rimozione spesa:", e); }
   }
+  async function adjustShoppingQty(it, delta) {
+    const next = adjustQty(it.qty, delta);
+    if (next === it.qty) return;
+    setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: next } : x)));
+    try { await updateShopping(it.id, { qty: next }); }
+    catch (e) { console.error("Errore aggiornamento quantità spesa:", e); }
+  }
   async function clearCheckedShopping() {
     const ids = shopping.filter((x) => x.checked).map((x) => x.id);
     if (!ids.length) return;
@@ -808,6 +815,7 @@ export default function Dispensa({ session }) {
             onAdd={addShoppingItem}
             onToggle={toggleShoppingItem}
             onDelete={removeShoppingItem}
+            onAdjustQty={adjustShoppingQty}
             onMoveChecked={moveCheckedToPantry}
             onClearChecked={clearCheckedShopping}
             movingChecked={movingChecked}
