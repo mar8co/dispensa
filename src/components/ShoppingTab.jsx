@@ -51,9 +51,9 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
 
   return (
     <li className="relative overflow-hidden">
-      {/* Sfondo rosso rivelato durante lo swipe (cestino su entrambi i lati) */}
-      <div className="absolute inset-0 flex items-center justify-between bg-red-500 px-5 text-white">
-        <Trash2 className="h-5 w-5" />
+      {/* Sfondo rosso: il cestino appare solo sul lato che si scopre scorrendo
+          (a destra se scorri verso sinistra, a sinistra se scorri verso destra). */}
+      <div className={`absolute inset-0 flex items-center bg-red-500 px-5 text-white ${dx > 0 ? "justify-start" : "justify-end"}`}>
         <Trash2 className="h-5 w-5" />
       </div>
       {/* Contenuto scorrevole */}
