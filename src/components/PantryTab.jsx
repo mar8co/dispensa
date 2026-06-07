@@ -1,7 +1,7 @@
 // Scheda Dispensa: scansione, ricerca, ordinamento, lista prodotti raggruppati
 // per categoria (collassabili e riordinabili via drag), +/- rapido sulla
 // quantità, badge scadenza, modifica/eliminazione in-line, aggiunta manuale.
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
   ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, Search, CalendarPlus,
@@ -49,7 +49,24 @@ export default function PantryTab({
   newExpiry, setNewExpiry,
 }) {
   const searchActive = search.trim() !== "";
-  const [showDate, setShowDate] = useState(false);
+  const dateRef = useRef(null);
+
+  // Apre direttamente il selettore data nativo (con fallback).
+  function openDatePicker() {
+    const el = dateRef.current;
+    if (!el) return;
+    if (typeof el.showPicker === "function") {
+      try { el.showPicker(); return; } catch { /* fallback sotto */ }
+    }
+    el.focus();
+    el.click();
+  }
+
+  function formatDateIt(d) {
+    if (!d) return "";
+    const dt = new Date(`${d}T00:00:00`);
+    return isNaN(dt.getTime()) ? d : dt.toLocaleDateString("it-IT");
+  }
 
   return (
     <>
@@ -283,7 +300,7 @@ export default function PantryTab({
             gr
           </button>
           <button
-            onClick={() => setShowDate((s) => !s)}
+            onClick={openDatePicker}
             aria-pressed={!!newExpiry}
             aria-label="Aggiungi scadenza"
             title="Scadenza"
@@ -291,6 +308,16 @@ export default function PantryTab({
           >
             <CalendarPlus className="h-6 w-6" />
           </button>
+          {/* Input data nascosto: aperto direttamente dal pulsante calendario. */}
+          <input
+            type="date"
+            ref={dateRef}
+            value={newExpiry || ""}
+            onChange={(e) => setNewExpiry(e.target.value)}
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
           <button
             onClick={addManual}
             disabled={adding}
@@ -300,24 +327,19 @@ export default function PantryTab({
           </button>
         </div>
 
-        {(showDate || newExpiry) && (
-          <div className="mt-2 flex items-center gap-2">
-            <span className="shrink-0 text-xs text-stone-500">Scade il</span>
-            <input
-              type="date"
-              className={inputCls}
-              value={newExpiry || ""}
-              onChange={(e) => setNewExpiry(e.target.value)}
-            />
-            {newExpiry && (
-              <button
-                onClick={() => setNewExpiry("")}
-                className="shrink-0 rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
-                aria-label="Rimuovi scadenza"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+        {newExpiry && (
+          <div className="mt-2 flex items-center gap-2 text-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
+              <CalendarPlus className="h-3.5 w-3.5" />
+              Scade il {formatDateIt(newExpiry)}
+            </span>
+            <button
+              onClick={() => setNewExpiry("")}
+              className="shrink-0 rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+              aria-label="Rimuovi scadenza"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         )}
       </div>
