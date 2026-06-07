@@ -1,7 +1,120 @@
-// Scheda "Da comprare": lista della spesa con spunta, aggiunta manuale,
-// e azioni per spostare i prodotti barrati nella dispensa o rimuoverli.
-import { useState } from "react";
+// Scheda "Da comprare": lista della spesa con spunta, contatore quantità,
+// swipe-to-delete (scorri la riga a destra/sinistra per eliminare), aggiunta
+// manuale e azioni per spostare i barrati in dispensa o rimuoverli.
+import { useState, useRef } from "react";
 import { Plus, Minus, Trash2, Check, PackagePlus, Loader2, ListChecks } from "lucide-react";
+
+// Riga con gesto di scorrimento orizzontale per eliminare.
+function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
+  const [dx, setDx] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const start = useRef(null);
+  const axis = useRef(null); // 'h' | 'v' | null
+
+  const THRESHOLD = 90;
+
+  function onPointerDown(e) {
+    start.current = { x: e.clientX, y: e.clientY };
+    axis.current = null;
+    setDragging(true);
+  }
+  function onPointerMove(e) {
+    if (!start.current) return;
+    const ddx = e.clientX - start.current.x;
+    const ddy = e.clientY - start.current.y;
+    if (axis.current == null) {
+      if (Math.abs(ddx) < 8 && Math.abs(ddy) < 8) return;
+      axis.current = Math.abs(ddx) > Math.abs(ddy) ? "h" : "v";
+      // Da qui in poi gestiamo noi lo swipe orizzontale.
+      if (axis.current === "h") {
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
+      }
+    }
+    if (axis.current === "h") setDx(ddx);
+  }
+  function onPointerEnd(e) {
+    if (!start.current) return;
+    const ddx = e.clientX - start.current.x;
+    start.current = null;
+    setDragging(false);
+    if (axis.current === "h" && Math.abs(ddx) > THRESHOLD) {
+      setDx(ddx > 0 ? 600 : -600); // esce di scena
+      setTimeout(() => onDelete(it.id), 160);
+    } else {
+      setDx(0);
+    }
+    axis.current = null;
+  }
+
+  const n = parseFloat(String(it.qty).replace(",", "."));
+  const atMin = !isNaN(n) && n <= 1;
+
+  return (
+    <li className="relative overflow-hidden">
+      {/* Sfondo rosso rivelato durante lo swipe (cestino su entrambi i lati) */}
+      <div className="absolute inset-0 flex items-center justify-between bg-red-500 px-5 text-white">
+        <Trash2 className="h-5 w-5" />
+        <Trash2 className="h-5 w-5" />
+      </div>
+      {/* Contenuto scorrevole */}
+      <div
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
+        style={{
+          transform: `translateX(${dx}px)`,
+          touchAction: "pan-y",
+          transition: dragging ? "none" : "transform 0.2s ease",
+        }}
+        className="relative flex items-center gap-2 bg-white px-4 py-3"
+      >
+        <button
+          onClick={() => onToggle(it.id, !it.checked)}
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
+            it.checked
+              ? "border-emerald-600 bg-emerald-600 text-white"
+              : "border-stone-300 bg-white text-transparent hover:border-stone-400"
+          }`}
+          aria-label={it.checked ? "Segna da comprare" : "Segna come preso"}
+        >
+          <Check className="h-4 w-4" />
+        </button>
+        <p className={`min-w-0 flex-1 truncate text-sm font-medium ${it.checked ? "text-stone-400 line-through" : "text-stone-800"}`}>
+          {it.name}
+        </p>
+        <div className="shrink-0">
+          {/\d/.test(it.qty) ? (
+            <div className="inline-flex items-center gap-1.5">
+              <button
+                onClick={() => onAdjustQty(it, -1)}
+                disabled={atMin}
+                className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                  atMin
+                    ? "border-stone-200 text-stone-300"
+                    : "border-stone-300 text-stone-600 hover:border-stone-400 hover:bg-stone-100 active:scale-95"
+                }`}
+                aria-label="Diminuisci"
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <span className="min-w-[1.75rem] px-0.5 text-center text-sm font-semibold tabular-nums text-stone-800">{it.qty}</span>
+              <button
+                onClick={() => onAdjustQty(it, 1)}
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
+                aria-label="Aumenta"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{it.qty}</span>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+}
 
 export default function ShoppingTab({
   inputCls,
@@ -44,67 +157,25 @@ export default function ShoppingTab({
       )}
 
       {shopping.length > 0 && (
-        <div className="rounded-2xl border border-stone-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
           <ul className="divide-y divide-stone-100">
             {shopping.map((it) => (
-              <li key={it.id} className="flex items-center gap-3 px-4 py-3">
-                <button
-                  onClick={() => onToggle(it.id, !it.checked)}
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
-                    it.checked
-                      ? "border-emerald-600 bg-emerald-600 text-white"
-                      : "border-stone-300 bg-white text-transparent hover:border-stone-400"
-                  }`}
-                  aria-label={it.checked ? "Segna da comprare" : "Segna come preso"}
-                >
-                  <Check className="h-4 w-4" />
-                </button>
-                <p className={`min-w-0 flex-1 truncate text-sm font-medium ${it.checked ? "text-stone-400 line-through" : "text-stone-800"}`}>
-                  {it.name}
-                </p>
-                <div className="shrink-0">
-                  {/\d/.test(it.qty) ? (() => {
-                    const n = parseFloat(String(it.qty).replace(",", "."));
-                    const atMin = !isNaN(n) && n <= 1;
-                    return (
-                      <div className="inline-flex items-center gap-1.5">
-                        <button
-                          onClick={() => onAdjustQty(it, -1)}
-                          disabled={atMin}
-                          className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
-                            atMin
-                              ? "border-stone-200 text-stone-300"
-                              : "border-stone-300 text-stone-600 hover:border-stone-400 hover:bg-stone-100 active:scale-95"
-                          }`}
-                          aria-label="Diminuisci"
-                        >
-                          <Minus className="h-3.5 w-3.5" />
-                        </button>
-                        <span className="min-w-[1.75rem] px-0.5 text-center text-sm font-semibold tabular-nums text-stone-800">{it.qty}</span>
-                        <button
-                          onClick={() => onAdjustQty(it, 1)}
-                          className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
-                          aria-label="Aumenta"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    );
-                  })() : (
-                    it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{it.qty}</span>
-                  )}
-                </div>
-                <button
-                  onClick={() => onDelete(it.id)}
-                  className="shrink-0 rounded-lg p-2 text-stone-400 hover:bg-red-50 hover:text-red-600"
-                  aria-label="Elimina"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </li>
+              <SwipeItem
+                key={it.id}
+                it={it}
+                onToggle={onToggle}
+                onAdjustQty={onAdjustQty}
+                onDelete={onDelete}
+              />
             ))}
           </ul>
         </div>
+      )}
+
+      {shopping.length > 0 && (
+        <p className="mt-2 text-center text-[11px] text-stone-400">
+          Scorri un prodotto a destra o sinistra per eliminarlo
+        </p>
       )}
 
       {checkedCount > 0 && (
