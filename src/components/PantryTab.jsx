@@ -249,14 +249,14 @@ export default function PantryTab({
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addManual()}
         />
-        <div className="mt-2 flex items-center gap-2">
-          <div className="flex items-center rounded-lg border border-stone-300 bg-white">
+        <div className="mt-2 flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center rounded-lg border border-stone-300 bg-white">
             <button
               onClick={() => setNewQty((q) => String(Math.max(1, (parseFloat(String(q).replace(",", ".")) || 1) - 1)))}
-              className="flex h-11 w-11 items-center justify-center rounded-l-lg text-stone-600 transition hover:bg-stone-100"
+              className="flex h-11 w-8 items-center justify-center rounded-l-lg text-stone-600 transition hover:bg-stone-100"
               aria-label="Meno"
             >
-              <Minus className="h-5 w-5" />
+              <Minus className="h-4 w-4" />
             </button>
             <input
               type="text"
@@ -265,20 +265,20 @@ export default function PantryTab({
               onChange={(e) => setNewQty(e.target.value.replace(/[^0-9.,]/g, ""))}
               onFocus={(e) => e.target.select()}
               onKeyDown={(e) => e.key === "Enter" && addManual()}
-              className="w-16 border-0 bg-transparent text-center text-lg font-semibold text-stone-800 outline-none"
+              className="w-9 border-0 bg-transparent text-center text-base font-semibold text-stone-800 outline-none"
             />
             <button
               onClick={() => setNewQty((q) => String((parseFloat(String(q).replace(",", ".")) || 0) + 1))}
-              className="flex h-11 w-11 items-center justify-center rounded-r-lg text-stone-600 transition hover:bg-stone-100"
+              className="flex h-11 w-8 items-center justify-center rounded-r-lg text-stone-600 transition hover:bg-stone-100"
               aria-label="Più"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4" />
             </button>
           </div>
           <button
             onClick={() => setGrams((g) => !g)}
             aria-pressed={grams}
-            className={`h-11 rounded-lg border px-4 text-sm font-semibold transition ${grams ? "border-emerald-600 bg-emerald-600 text-white" : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"}`}
+            className={`h-11 shrink-0 rounded-lg border px-3 text-sm font-semibold transition ${grams ? "border-emerald-600 bg-emerald-600 text-white" : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"}`}
           >
             gr
           </button>
@@ -287,16 +287,16 @@ export default function PantryTab({
             aria-pressed={!!newExpiry}
             aria-label="Aggiungi scadenza"
             title="Scadenza"
-            className={`flex h-11 items-center justify-center rounded-lg border px-5 transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-amber-400 bg-amber-50 text-amber-500 hover:bg-amber-100"}`}
+            className={`flex h-11 shrink-0 items-center justify-center rounded-lg border px-3 transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-amber-400 bg-amber-50 text-amber-500 hover:bg-amber-100"}`}
           >
             <CalendarPlus className="h-6 w-6" />
           </button>
           <button
             onClick={addManual}
             disabled={adding}
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-stone-800 px-3 py-3 text-sm font-medium text-white hover:bg-stone-900 disabled:opacity-60"
+            className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-800 px-2 py-3 text-sm font-medium text-white hover:bg-stone-900 disabled:opacity-60"
           >
-            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Aggiungi</>}
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
           </button>
         </div>
 
