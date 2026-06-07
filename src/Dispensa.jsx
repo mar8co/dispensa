@@ -19,6 +19,8 @@ import {
   updateShopping, deleteShopping, deleteShoppingItems,
 } from "./lib/db.js";
 
+import { loadCache, saveCache } from "./lib/cache.js";
+
 import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
 import ShoppingTab from "./components/ShoppingTab.jsx";
@@ -71,6 +73,9 @@ export default function Dispensa({ session }) {
   const [toast, setToast] = useState(null); // { message, onUndo? }
   const toastTimer = useRef(null);
 
+  // stato connessione (per indicatore offline)
+  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+
   // scontrino
   const [processing, setProcessing] = useState(false);
   const [receiptMsg, setReceiptMsg] = useState("");
@@ -93,52 +98,107 @@ export default function Dispensa({ session }) {
   const [cookDone, setCookDone] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
 
-  // --- Caricamento iniziale da Supabase ---
+  // Applica le impostazioni (da cache o da DB) a collapsed/catOrder/modeOrder.
+  function applySettings(s) {
+    if (!s || typeof s !== "object") return;
+    if (s.collapsed && typeof s.collapsed === "object") {
+      setCollapsed((prev) => ({ ...prev, ...s.collapsed }));
+    }
+    if (Array.isArray(s.catOrder)) {
+      setCatOrder([
+        ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
+        ...CATEGORIES.filter((c) => !s.catOrder.includes(c)),
+      ]);
+    }
+    if (Array.isArray(s.modeOrder)) {
+      const ids = MODES.map((m) => m.id);
+      setModeOrder([
+        ...s.modeOrder.filter((id) => ids.includes(id)),
+        ...ids.filter((id) => !s.modeOrder.includes(id)),
+      ]);
+    }
+  }
+
+  // --- Caricamento iniziale: prima la cache (istantaneo, anche offline),
+  //     poi aggiorna dalla rete; se la rete manca si tiene la cache. ---
   useEffect(() => {
+    const uid = session.user.id;
+    const cached = loadCache(uid);
+    if (cached) {
+      if (Array.isArray(cached.items)) setItems(cached.items);
+      if (Array.isArray(cached.shopping)) setShopping(cached.shopping);
+      applySettings(cached.settings);
+      setLoaded(true); // mostra subito i dati in cache
+    }
     (async () => {
       try {
         let rows = await fetchPantry();
-        if (rows.length === 0) {
-          // Primo accesso con dispensa vuota: carica i dati iniziali (SEED_DATA).
+        // Seed iniziale solo al primissimo accesso (nessuna cache + DB vuoto).
+        if (rows.length === 0 && !cached) {
           rows = await insertMany(
             SEED_DATA.map(([name, qty, category]) => ({ name, qty, category }))
           );
         }
         setItems(rows);
+        try { applySettings(await fetchSettings()); } catch (e) { console.error(e); }
+        try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
       } catch (e) {
-        console.error("Errore caricamento dispensa:", e);
-        setItems([]);
+        console.warn("Rete non disponibile: uso i dati in cache.", e);
+        if (!cached) setItems([]);
+      } finally {
+        setLoaded(true);
       }
-      try {
-        const s = await fetchSettings();
-        if (s && typeof s === "object") {
-          if (s.collapsed && typeof s.collapsed === "object") {
-            setCollapsed((prev) => ({ ...prev, ...s.collapsed }));
-          }
-          if (Array.isArray(s.catOrder)) {
-            setCatOrder([
-              ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
-              ...CATEGORIES.filter((c) => !s.catOrder.includes(c)),
-            ]);
-          }
-          if (Array.isArray(s.modeOrder)) {
-            const ids = MODES.map((m) => m.id);
-            setModeOrder([
-              ...s.modeOrder.filter((id) => ids.includes(id)),
-              ...ids.filter((id) => !s.modeOrder.includes(id)),
-            ]);
-          }
-        }
-      } catch (e) {
-        console.error("Errore caricamento impostazioni:", e);
-      }
-      try {
-        setShopping(await fetchShopping());
-      } catch (e) {
-        console.error("Errore caricamento lista spesa:", e);
-      }
-      setLoaded(true);
     })();
+  }, []);
+
+  // --- Specchio dei dati in cache locale (per consultazione offline) ---
+  useEffect(() => {
+    if (!loaded) return;
+    saveCache(session.user.id, {
+      items,
+      shopping,
+      settings: { collapsed, catOrder, modeOrder },
+    });
+  }, [items, shopping, collapsed, catOrder, modeOrder, loaded]);
+
+  // --- Indicatore stato connessione ---
+  useEffect(() => {
+    const goOnline = () => setOnline(true);
+    const goOffline = () => setOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  // --- Realtime: sincronizza dispensa e lista spesa tra dispositivi ---
+  useEffect(() => {
+    const uid = session.user.id;
+    const upsert = (setFn) => (payload) => {
+      const row = payload.new;
+      if (!row?.id) return;
+      setFn((prev) =>
+        prev.some((x) => x.id === row.id)
+          ? prev.map((x) => (x.id === row.id ? { ...x, ...row } : x))
+          : [...prev, row]
+      );
+    };
+    const remove = (setFn) => (payload) => {
+      const id = payload.old?.id;
+      if (id) setFn((prev) => prev.filter((x) => x.id !== id));
+    };
+    const channel = supabase
+      .channel("realtime-dispensa")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "pantry_items", filter: `user_id=eq.${uid}` }, upsert(setItems))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "pantry_items", filter: `user_id=eq.${uid}` }, upsert(setItems))
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "pantry_items", filter: `user_id=eq.${uid}` }, remove(setItems))
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "shopping_items", filter: `user_id=eq.${uid}` }, upsert(setShopping))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "shopping_items", filter: `user_id=eq.${uid}` }, upsert(setShopping))
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "shopping_items", filter: `user_id=eq.${uid}` }, remove(setShopping))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   // Pulisce il timer del toast allo smontaggio.
@@ -653,7 +713,14 @@ export default function Dispensa({ session }) {
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-semibold leading-tight">Ciao! Hai fame?</h1>
-            <p className="text-xs text-stone-500">{total} prodotti · {grouped.length} categorie</p>
+            <p className="flex items-center gap-2 text-xs text-stone-500">
+              <span>{total} prodotti · {grouped.length} categorie</span>
+              {!online && (
+                <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                  offline
+                </span>
+              )}
+            </p>
           </div>
           <button
             onClick={logout}
