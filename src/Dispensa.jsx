@@ -769,37 +769,39 @@ export default function Dispensa({ session }) {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-5 flex gap-1 rounded-xl bg-stone-200/70 p-1">
-          <button
-            onClick={() => setView("dispensa")}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
-              view === "dispensa" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
-            }`}
-          >
-            <Package className="h-4 w-4" /> Dispensa
-          </button>
-          <button
-            onClick={() => setView("ricette")}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
-              view === "ricette" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
-            }`}
-          >
-            <ChefHat className="h-4 w-4" /> Ricette
-          </button>
-          <button
-            onClick={() => setView("spesa")}
-            className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
-              view === "spesa" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
-            }`}
-          >
-            <ShoppingCart className="h-4 w-4" /> Spesa
-            {shopping.length > 0 && (
-              <span className="ml-0.5 rounded-full bg-emerald-600 px-1.5 text-[10px] font-semibold text-white">
-                {shopping.length}
-              </span>
-            )}
-          </button>
+        {/* Tabs (sticky in alto: restano visibili durante lo scroll) */}
+        <div className="sticky top-0 z-20 -mx-4 mb-5 bg-stone-50/95 px-4 pb-2 pt-2 backdrop-blur">
+          <div className="flex gap-1 rounded-xl bg-stone-200/70 p-1">
+            <button
+              onClick={() => setView("dispensa")}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
+                view === "dispensa" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
+              }`}
+            >
+              <Package className="h-4 w-4" /> Dispensa
+            </button>
+            <button
+              onClick={() => setView("ricette")}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
+                view === "ricette" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
+              }`}
+            >
+              <ChefHat className="h-4 w-4" /> Ricette
+            </button>
+            <button
+              onClick={() => setView("spesa")}
+              className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
+                view === "spesa" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
+              }`}
+            >
+              <ShoppingCart className="h-4 w-4" /> Spesa
+              {shopping.length > 0 && (
+                <span className="ml-0.5 rounded-full bg-emerald-600 px-1.5 text-[10px] font-semibold text-white">
+                  {shopping.length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {view === "dispensa" && (
