@@ -3,7 +3,7 @@
 // in-line, form di aggiunta manuale con contatore + toggle "gr".
 import {
   Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
-  ChevronDown, ChevronRight, GripVertical,
+  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 
@@ -13,6 +13,7 @@ export default function PantryTab({
   processing, receiptMsg, receiptErr, handleReceipt,
   // lista
   grouped, collapsed, setCollapsed, cardRefs,
+  allCollapsed, onToggleAll,
   dragCat, onDragStart, onDragMove, onDragEnd,
   // modifica
   editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
@@ -27,7 +28,7 @@ export default function PantryTab({
       <div className="mb-5 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
         <label className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-800 ${processing ? "opacity-60" : ""}`}>
           {processing ? (<><Loader2 className="h-4 w-4 animate-spin" /> Analisi in corso…</>)
-            : (<><Camera className="h-4 w-4" /> Scansiona scontrino o spesa</>)}
+            : (<><Camera className="h-4 w-4" /> Carica foto dello scontrino o della spesa</>)}
           <input type="file" accept="image/*" className="hidden" onChange={handleReceipt} disabled={processing} />
         </label>
         {receiptMsg && <p className="mt-2 text-center text-xs font-medium text-emerald-700">{receiptMsg}</p>}
@@ -36,6 +37,19 @@ export default function PantryTab({
 
       {grouped.length === 0 && (
         <p className="py-10 text-center text-sm text-stone-400">Dispensa vuota. Aggiungi un prodotto qui sotto.</p>
+      )}
+
+      {grouped.length > 0 && (
+        <div className="mb-2 flex justify-end">
+          <button
+            onClick={onToggleAll}
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
+          >
+            {allCollapsed
+              ? (<><ChevronsUpDown className="h-3.5 w-3.5" /> Apri tutto</>)
+              : (<><ChevronsDownUp className="h-3.5 w-3.5" /> Chiudi tutto</>)}
+          </button>
+        </div>
       )}
 
       <div className="space-y-4">

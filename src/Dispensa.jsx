@@ -20,12 +20,17 @@ import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
 import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
+import ReviewScanModal from "./components/ReviewScanModal.jsx";
 
 export default function Dispensa({ session }) {
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState("dispensa");
-  const [collapsed, setCollapsed] = useState({});
+  // Categorie CHIUSE di default: ogni categoria parte con collapsed=true.
+  // Le scelte salvate dall'utente (aperto/chiuso) vengono fuse sopra al load.
+  const [collapsed, setCollapsed] = useState(() =>
+    Object.fromEntries(CATEGORIES.map((c) => [c, true]))
+  );
   const [catOrder, setCatOrder] = useState(CATEGORIES);
   const [dragCat, setDragCat] = useState(null);
   const dragCatRef = useRef(null);
@@ -52,6 +57,8 @@ export default function Dispensa({ session }) {
   const [processing, setProcessing] = useState(false);
   const [receiptMsg, setReceiptMsg] = useState("");
   const [receiptErr, setReceiptErr] = useState("");
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanItems, setScanItems] = useState([]);
 
   // ricette
   const [mode, setMode] = useState(null);
@@ -87,7 +94,9 @@ export default function Dispensa({ session }) {
       try {
         const s = await fetchSettings();
         if (s && typeof s === "object") {
-          if (s.collapsed && typeof s.collapsed === "object") setCollapsed(s.collapsed);
+          if (s.collapsed && typeof s.collapsed === "object") {
+            setCollapsed((prev) => ({ ...prev, ...s.collapsed }));
+          }
           if (Array.isArray(s.catOrder)) {
             setCatOrder([
               ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
@@ -312,7 +321,11 @@ export default function Dispensa({ session }) {
       ], 1000);
       const list = Array.isArray(parsed.items) ? parsed.items : [];
       if (!list.length) setReceiptErr("Nessun alimento riconosciuto nell'immagine.");
-      else { await mergeItems(list); setReceiptMsg(`${list.length} prodotti aggiunti.`); }
+      else {
+        // Non aggiunge subito: apre la modale di revisione per nome/categoria.
+        setScanItems(list);
+        setScanOpen(true);
+      }
     } catch (err) {
       console.error(err);
       setReceiptErr("Impossibile leggere l'immagine. Riprova con una foto più nitida.");
@@ -320,6 +333,17 @@ export default function Dispensa({ session }) {
       setProcessing(false);
       input.value = "";
     }
+  }
+
+  // Conferma dei prodotti rivisti nella modale: vengono aggiunti alla dispensa.
+  async function confirmScan(reviewed) {
+    setScanOpen(false);
+    const valid = (reviewed || []).filter((x) => String(x.name || "").trim());
+    if (valid.length) {
+      await mergeItems(valid);
+      setReceiptMsg(`${valid.length} prodotti aggiunti.`);
+    }
+    setScanItems([]);
   }
 
   // --- Ricette ---
@@ -373,6 +397,18 @@ export default function Dispensa({ session }) {
     .map((c) => ({ cat: c, list: items.filter((x) => x.category === c) }))
     .filter((g) => g.list.length > 0);
   const total = items.length;
+  const allCollapsed = grouped.length > 0 && grouped.every((g) => collapsed[g.cat]);
+
+  // Apri/chiudi tutte le categorie visibili: se almeno una è aperta le chiude
+  // tutte, altrimenti le apre tutte.
+  function toggleAllCategories() {
+    const anyOpen = grouped.some((g) => !collapsed[g.cat]);
+    setCollapsed((prev) => {
+      const next = { ...prev };
+      for (const g of grouped) next[g.cat] = anyOpen;
+      return next;
+    });
+  }
   const orderedModes = modeOrder.map((id) => MODES.find((m) => m.id === id)).filter(Boolean);
 
   const baseServings = recipe ? (Number(recipe.servings) || 2) : 1;
@@ -457,7 +493,7 @@ export default function Dispensa({ session }) {
             </svg>
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-semibold leading-tight">La Mia Dispensa</h1>
+            <h1 className="text-xl font-semibold leading-tight">Ciao! Hai fame?</h1>
             <p className="text-xs text-stone-500">{total} prodotti · {grouped.length} categorie</p>
           </div>
           <button
@@ -495,6 +531,7 @@ export default function Dispensa({ session }) {
             inputCls={inputCls}
             processing={processing} receiptMsg={receiptMsg} receiptErr={receiptErr} handleReceipt={handleReceipt}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
+            allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
             dragCat={dragCat} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd}
             editId={editId} editName={editName} setEditName={setEditName} editQty={editQty} setEditQty={setEditQty}
             editCat={editCat} setEditCat={setEditCat}
@@ -529,6 +566,14 @@ export default function Dispensa({ session }) {
           onSetAfter={setRowAfter}
           onRemoveRow={removeRow}
           onApply={applyCooked}
+        />
+      )}
+
+      {scanOpen && (
+        <ReviewScanModal
+          initialItems={scanItems}
+          onCancel={() => { setScanOpen(false); setScanItems([]); }}
+          onConfirm={confirmScan}
         />
       )}
     </div>
