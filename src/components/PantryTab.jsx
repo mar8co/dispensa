@@ -287,14 +287,14 @@ export default function PantryTab({
             aria-pressed={!!newExpiry}
             aria-label="Aggiungi scadenza"
             title="Scadenza"
-            className={`flex h-11 w-11 items-center justify-center rounded-lg border transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"}`}
+            className={`flex h-11 items-center justify-center rounded-lg border px-5 transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-amber-400 bg-amber-50 text-amber-500 hover:bg-amber-100"}`}
           >
-            <CalendarPlus className="h-5 w-5" />
+            <CalendarPlus className="h-6 w-6" />
           </button>
           <button
             onClick={addManual}
             disabled={adding}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-stone-800 px-4 py-3 text-sm font-medium text-white hover:bg-stone-900 disabled:opacity-60"
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-stone-800 px-3 py-3 text-sm font-medium text-white hover:bg-stone-900 disabled:opacity-60"
           >
             {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Aggiungi</>}
           </button>
