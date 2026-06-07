@@ -1,7 +1,7 @@
 // Scheda "Da comprare": lista della spesa con spunta, aggiunta manuale,
 // e azioni per spostare i prodotti barrati nella dispensa o rimuoverli.
 import { useState } from "react";
-import { Plus, Trash2, Check, ShoppingCart, PackagePlus, Loader2 } from "lucide-react";
+import { Plus, Minus, Trash2, Check, PackagePlus, Loader2 } from "lucide-react";
 
 export default function ShoppingTab({
   inputCls,
@@ -10,15 +10,15 @@ export default function ShoppingTab({
   movingChecked,
 }) {
   const [name, setName] = useState("");
-  const [qty, setQty] = useState("");
+  const [qty, setQty] = useState("1");
 
   const checkedCount = shopping.filter((s) => s.checked).length;
 
   function add() {
     const n = name.trim();
     if (!n) return;
-    onAdd(n, qty.trim() || "1");
-    setName(""); setQty("");
+    onAdd(n, String(qty).trim() || "1");
+    setName(""); setQty("1");
   }
 
   return (
@@ -87,30 +87,46 @@ export default function ShoppingTab({
         </div>
       )}
 
-      {/* Form aggiunta (sticky in fondo) */}
+      {/* Form aggiunta (sticky in fondo): nome in alto, contatore quantità sotto */}
       <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="h-5 w-5 shrink-0 text-stone-400" />
-          <input
-            className={`${inputCls} flex-1`}
-            placeholder="Cosa serve comprare?"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-          />
-          <input
-            className={`${inputCls} w-20 text-center`}
-            placeholder="Qtà"
-            value={qty}
-            onChange={(e) => setQty(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-          />
+        <input
+          className={inputCls}
+          placeholder="Cosa serve comprare?"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && add()}
+        />
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex items-center rounded-lg border border-stone-300 bg-white">
+            <button
+              onClick={() => setQty((q) => String(Math.max(1, (parseFloat(String(q).replace(",", ".")) || 1) - 1)))}
+              className="flex h-11 w-11 items-center justify-center rounded-l-lg text-stone-600 transition hover:bg-stone-100"
+              aria-label="Meno"
+            >
+              <Minus className="h-5 w-5" />
+            </button>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={qty}
+              onChange={(e) => setQty(e.target.value.replace(/[^0-9.,]/g, ""))}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => e.key === "Enter" && add()}
+              className="w-16 border-0 bg-transparent text-center text-lg font-semibold text-stone-800 outline-none"
+            />
+            <button
+              onClick={() => setQty((q) => String((parseFloat(String(q).replace(",", ".")) || 0) + 1))}
+              className="flex h-11 w-11 items-center justify-center rounded-r-lg text-stone-600 transition hover:bg-stone-100"
+              aria-label="Più"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
           <button
             onClick={add}
-            className="flex shrink-0 items-center justify-center rounded-lg bg-stone-800 px-4 py-3 text-sm font-medium text-white hover:bg-stone-900"
-            aria-label="Aggiungi"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-stone-800 px-4 py-3 text-sm font-medium text-white hover:bg-stone-900"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" /> Aggiungi
           </button>
         </div>
       </div>
