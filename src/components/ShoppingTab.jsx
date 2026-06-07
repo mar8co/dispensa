@@ -59,42 +59,40 @@ export default function ShoppingTab({
                 >
                   <Check className="h-4 w-4" />
                 </button>
-                <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-medium ${it.checked ? "text-stone-400 line-through" : "text-stone-800"}`}>
-                    {it.name}
-                  </p>
-                  <div className="mt-1 flex items-center">
-                    {/\d/.test(it.qty) ? (() => {
-                      const n = parseFloat(String(it.qty).replace(",", "."));
-                      const atMin = !isNaN(n) && n <= 1;
-                      return (
-                        <div className="inline-flex items-center gap-1.5">
-                          <button
-                            onClick={() => onAdjustQty(it, -1)}
-                            disabled={atMin}
-                            className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
-                              atMin
-                                ? "border-stone-200 text-stone-300"
-                                : "border-stone-300 text-stone-600 hover:border-stone-400 hover:bg-stone-100 active:scale-95"
-                            }`}
-                            aria-label="Diminuisci"
-                          >
-                            <Minus className="h-3.5 w-3.5" />
-                          </button>
-                          <span className="min-w-[2rem] px-1 text-center text-sm font-semibold tabular-nums text-stone-800">{it.qty}</span>
-                          <button
-                            onClick={() => onAdjustQty(it, 1)}
-                            className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
-                            aria-label="Aumenta"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      );
-                    })() : (
-                      it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{it.qty}</span>
-                    )}
-                  </div>
+                <p className={`min-w-0 flex-1 truncate text-sm font-medium ${it.checked ? "text-stone-400 line-through" : "text-stone-800"}`}>
+                  {it.name}
+                </p>
+                <div className="shrink-0">
+                  {/\d/.test(it.qty) ? (() => {
+                    const n = parseFloat(String(it.qty).replace(",", "."));
+                    const atMin = !isNaN(n) && n <= 1;
+                    return (
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => onAdjustQty(it, -1)}
+                          disabled={atMin}
+                          className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                            atMin
+                              ? "border-stone-200 text-stone-300"
+                              : "border-stone-300 text-stone-600 hover:border-stone-400 hover:bg-stone-100 active:scale-95"
+                          }`}
+                          aria-label="Diminuisci"
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="min-w-[1.75rem] px-0.5 text-center text-sm font-semibold tabular-nums text-stone-800">{it.qty}</span>
+                        <button
+                          onClick={() => onAdjustQty(it, 1)}
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
+                          aria-label="Aumenta"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })() : (
+                    it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{it.qty}</span>
+                  )}
                 </div>
                 <button
                   onClick={() => onDelete(it.id)}
