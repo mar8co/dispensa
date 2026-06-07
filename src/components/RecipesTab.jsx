@@ -51,6 +51,7 @@ export default function RecipesTab({
                 <div className="pr-5 text-sm font-semibold text-stone-800">{m.id}</div>
                 <div className="mt-0.5 text-xs text-stone-500">{m.desc}</div>
                 <button
+                  data-noswipe
                   onPointerDown={(e) => { e.stopPropagation(); onModeDragStart(e, m.id); }}
                   onPointerMove={onModeDragMove}
                   onPointerUp={onModeDragEnd}

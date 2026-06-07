@@ -116,6 +116,7 @@ export default function PantryTab({
                     : <ChevronRight className="h-4 w-4 shrink-0 text-stone-400" />}
                 </button>
                 <button
+                  data-noswipe
                   onPointerDown={(e) => onDragStart(e, cat)}
                   onPointerMove={onDragMove}
                   onPointerUp={onDragEnd}

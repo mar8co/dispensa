@@ -52,7 +52,7 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
   const atMin = !isNaN(n) && n <= 1;
 
   return (
-    <li className="relative overflow-hidden">
+    <li data-noswipe className="relative overflow-hidden">
       {/* Sfondo rosso: il cestino appare solo sul lato che si scopre scorrendo
           (a destra se scorri verso sinistra, a sinistra se scorri verso destra). */}
       <div className={`absolute inset-0 flex items-center bg-red-500 px-5 text-white ${dx > 0 ? "justify-start" : "justify-end"}`}>

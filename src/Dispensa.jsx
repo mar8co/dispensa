@@ -464,6 +464,28 @@ export default function Dispensa({ session }) {
     return !!findMatch(name, items);
   }
 
+  // --- Cambio scheda con swipe orizzontale ---
+  const VIEWS = ["dispensa", "ricette", "spesa"];
+  const swipeRef = useRef(null);
+
+  function onSwipeStart(e) {
+    if (e.pointerType !== "touch") return;
+    if (e.target.closest("[data-noswipe]")) { swipeRef.current = null; return; }
+    swipeRef.current = { x: e.clientX, y: e.clientY };
+  }
+  function onSwipeEnd(e) {
+    const s = swipeRef.current;
+    swipeRef.current = null;
+    if (!s || e.pointerType !== "touch") return;
+    const dx = e.clientX - s.x;
+    const dy = e.clientY - s.y;
+    // deve essere chiaramente orizzontale e abbastanza ampio
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const idx = VIEWS.indexOf(view);
+    if (dx < 0 && idx < VIEWS.length - 1) setView(VIEWS[idx + 1]); // swipe verso sinistra → prossima
+    else if (dx > 0 && idx > 0) setView(VIEWS[idx - 1]); // swipe verso destra → precedente
+  }
+
   // --- Riordino generico (categorie e occasioni) ---
   function moveInOrder(setOrder, dragged, target) {
     setOrder((order) => {
@@ -826,6 +848,8 @@ export default function Dispensa({ session }) {
           )}
         </div>
 
+        {/* Area contenuti: swipe orizzontale per cambiare scheda */}
+        <div onPointerDown={onSwipeStart} onPointerUp={onSwipeEnd} onPointerCancel={() => { swipeRef.current = null; }}>
         {view === "dispensa" && (
           <PantryTab
             inputCls={inputCls}
@@ -873,6 +897,7 @@ export default function Dispensa({ session }) {
             movingChecked={movingChecked}
           />
         )}
+        </div>
       </div>
 
       {confirmClear && (
