@@ -227,8 +227,12 @@ export default function ShoppingTab({
         </div>
       )}
 
-      {/* Form aggiunta (sticky in fondo): nome in alto, contatore quantità sotto */}
-      <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
+      {/* Spazio per non coprire gli ultimi elementi con la barra fissa */}
+      <div className="h-32" />
+
+      {/* Form aggiunta: SEMPRE fisso in basso, a portata di pollice */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto max-w-md px-4 py-3">
         <input
           className={inputCls}
           placeholder="Cosa ti manca?"
@@ -268,6 +272,7 @@ export default function ShoppingTab({
           >
             <Plus className="h-4 w-4" /> Aggiungi
           </button>
+        </div>
         </div>
       </div>
     </>
