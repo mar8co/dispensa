@@ -1,6 +1,7 @@
 // Scheda Dispensa: scansione, ricerca, ordinamento, lista prodotti raggruppati
 // per categoria (collassabili e riordinabili via drag), +/- rapido sulla
 // quantità, badge scadenza, modifica/eliminazione in-line, aggiunta manuale.
+import { useState } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
   ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, Search, CalendarPlus, ScanBarcode,
@@ -29,7 +30,7 @@ function ExpiryBadge({ date }) {
 export default function PantryTab({
   inputCls,
   // scontrino
-  processing, receiptMsg, receiptErr, handleReceipt, onScanBarcode,
+  processing, handleReceipt, onScanBarcode,
   // ricerca / ordinamento
   search, setSearch, sort, setSort,
   // lista
@@ -48,6 +49,7 @@ export default function PantryTab({
   newExpiry, setNewExpiry,
 }) {
   const searchActive = search.trim() !== "";
+  const [addOpen, setAddOpen] = useState(false);
 
   function formatDateIt(d) {
     if (!d) return "";
@@ -55,25 +57,14 @@ export default function PantryTab({
     return isNaN(dt.getTime()) ? d : dt.toLocaleDateString("it-IT");
   }
 
+  async function submitAdd() {
+    if (!newName.trim()) return;
+    await addManual();
+    setAddOpen(false);
+  }
+
   return (
     <>
-      <div className="mb-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-        <label className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-800 ${processing ? "opacity-60" : ""}`}>
-          {processing ? (<><Loader2 className="h-4 w-4 animate-spin" /> Analisi in corso…</>)
-            : (<><Camera className="h-4 w-4" /> Carica foto dello scontrino o della spesa</>)}
-          <input type="file" accept="image/*" className="hidden" onChange={handleReceipt} disabled={processing} />
-        </label>
-        <button
-          onClick={onScanBarcode}
-          disabled={processing}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-60"
-        >
-          <ScanBarcode className="h-4 w-4" /> Scansiona codice a barre
-        </button>
-        {receiptMsg && <p className="mt-2 text-center text-xs font-medium text-emerald-700">{receiptMsg}</p>}
-        {receiptErr && <p className="mt-2 text-center text-xs font-medium text-red-600">{receiptErr}</p>}
-      </div>
-
       {/* Ricerca */}
       <div className="relative mb-3">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
@@ -251,88 +242,130 @@ export default function PantryTab({
         </button>
       )}
 
-      {/* Form aggiunta (sticky in fondo) */}
-      <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
-        <input
-          className={inputCls}
-          placeholder="Cosa hai in dispensa?"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addManual()}
-        />
-        <div className="mt-2 flex items-center gap-1.5">
-          <div className="flex shrink-0 items-center rounded-lg border border-stone-300 bg-white">
-            <button
-              onClick={() => setNewQty((q) => String(Math.max(1, (parseFloat(String(q).replace(",", ".")) || 1) - 1)))}
-              className="flex h-11 w-8 items-center justify-center rounded-l-lg text-stone-600 transition hover:bg-stone-100"
-              aria-label="Meno"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={newQty}
-              onChange={(e) => setNewQty(e.target.value.replace(/[^0-9.,]/g, ""))}
-              onFocus={(e) => e.target.select()}
-              onKeyDown={(e) => e.key === "Enter" && addManual()}
-              className="w-9 border-0 bg-transparent text-center text-base font-semibold text-stone-800 outline-none"
-            />
-            <button
-              onClick={() => setNewQty((q) => String((parseFloat(String(q).replace(",", ".")) || 0) + 1))}
-              className="flex h-11 w-8 items-center justify-center rounded-r-lg text-stone-600 transition hover:bg-stone-100"
-              aria-label="Più"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-          <button
-            onClick={() => setGrams((g) => !g)}
-            aria-pressed={grams}
-            className={`h-11 shrink-0 rounded-lg border px-3 text-sm font-semibold transition ${grams ? "border-emerald-600 bg-emerald-600 text-white" : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"}`}
-          >
-            gr
-          </button>
-          {/* Pulsante calendario: l'input data trasparente è sovrapposto, così
-              il tocco apre direttamente il selettore nativo (anche su mobile). */}
-          <label
-            title="Scadenza"
-            className={`relative flex h-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border px-3 transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-amber-400 bg-amber-50 text-amber-500 hover:bg-amber-100"}`}
-          >
-            <CalendarPlus className="h-6 w-6" />
-            <input
-              type="date"
-              value={newExpiry || ""}
-              onChange={(e) => setNewExpiry(e.target.value)}
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              aria-label="Scadenza"
-            />
-          </label>
-          <button
-            onClick={addManual}
-            disabled={adding}
-            className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-800 px-2 py-3 text-sm font-medium text-white hover:bg-stone-900 disabled:opacity-60"
-          >
-            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
-          </button>
-        </div>
+      {/* Spazio per non far coprire l'ultimo elemento dalla barra in basso */}
+      <div className="h-24" />
 
-        {newExpiry && (
-          <div className="mt-2 flex items-center gap-2 text-xs">
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
-              <CalendarPlus className="h-3.5 w-3.5" />
-              Scade il {formatDateIt(newExpiry)}
-            </span>
-            <button
-              onClick={() => setNewExpiry("")}
-              className="shrink-0 rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
-              aria-label="Rimuovi scadenza"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+      {/* Barra azioni in basso: barcode · + (aggiunta manuale) · foto */}
+      <div className="fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
+        <div className="flex items-center gap-7 rounded-full bg-stone-900 px-6 py-2.5 shadow-xl">
+          <button
+            onClick={onScanBarcode}
+            className="p-1.5 text-white/90 transition hover:text-white active:scale-95"
+            aria-label="Scansiona codice a barre"
+          >
+            <ScanBarcode className="h-6 w-6" />
+          </button>
+
+          <button
+            onClick={() => setAddOpen(true)}
+            className="-my-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition active:scale-95"
+            aria-label="Aggiungi un prodotto"
+          >
+            <Plus className="h-7 w-7" />
+          </button>
+
+          <label
+            className="cursor-pointer p-1.5 text-white/90 transition hover:text-white active:scale-95"
+            aria-label="Carica foto scontrino o spesa"
+          >
+            {processing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+            <input type="file" accept="image/*" className="hidden" onChange={handleReceipt} disabled={processing} />
+          </label>
+        </div>
       </div>
+
+      {/* Scheda di aggiunta manuale (si apre dal +) */}
+      {addOpen && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={() => setAddOpen(false)}>
+          <div className="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-base font-semibold">Aggiungi un prodotto</h3>
+              <button onClick={() => setAddOpen(false)} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <input
+              autoFocus
+              className={inputCls}
+              placeholder="Cosa hai in dispensa?"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitAdd()}
+            />
+            <div className="mt-2 flex items-center gap-1.5">
+              <div className="flex shrink-0 items-center rounded-lg border border-stone-300 bg-white">
+                <button
+                  onClick={() => setNewQty((q) => String(Math.max(1, (parseFloat(String(q).replace(",", ".")) || 1) - 1)))}
+                  className="flex h-11 w-8 items-center justify-center rounded-l-lg text-stone-600 transition hover:bg-stone-100"
+                  aria-label="Meno"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={newQty}
+                  onChange={(e) => setNewQty(e.target.value.replace(/[^0-9.,]/g, ""))}
+                  onFocus={(e) => e.target.select()}
+                  onKeyDown={(e) => e.key === "Enter" && submitAdd()}
+                  className="w-9 border-0 bg-transparent text-center text-base font-semibold text-stone-800 outline-none"
+                />
+                <button
+                  onClick={() => setNewQty((q) => String((parseFloat(String(q).replace(",", ".")) || 0) + 1))}
+                  className="flex h-11 w-8 items-center justify-center rounded-r-lg text-stone-600 transition hover:bg-stone-100"
+                  aria-label="Più"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <button
+                onClick={() => setGrams((g) => !g)}
+                aria-pressed={grams}
+                className={`h-11 shrink-0 rounded-lg border px-3 text-sm font-semibold transition ${grams ? "border-emerald-600 bg-emerald-600 text-white" : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"}`}
+              >
+                gr
+              </button>
+              <label
+                title="Scadenza"
+                className={`relative flex h-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border px-3 transition ${newExpiry ? "border-emerald-600 bg-emerald-600 text-white" : "border-amber-400 bg-amber-50 text-amber-500 hover:bg-amber-100"}`}
+              >
+                <CalendarPlus className="h-6 w-6" />
+                <input
+                  type="date"
+                  value={newExpiry || ""}
+                  onChange={(e) => setNewExpiry(e.target.value)}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  aria-label="Scadenza"
+                />
+              </label>
+              <button
+                onClick={submitAdd}
+                disabled={adding}
+                className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-800 px-2 py-3 text-sm font-medium text-white hover:bg-stone-900 disabled:opacity-60"
+              >
+                {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
+              </button>
+            </div>
+
+            {newExpiry && (
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
+                  <CalendarPlus className="h-3.5 w-3.5" />
+                  Scade il {formatDateIt(newExpiry)}
+                </span>
+                <button
+                  onClick={() => setNewExpiry("")}
+                  className="shrink-0 rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+                  aria-label="Rimuovi scadenza"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

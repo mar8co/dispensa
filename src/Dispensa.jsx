@@ -83,8 +83,6 @@ export default function Dispensa({ session }) {
 
   // scontrino
   const [processing, setProcessing] = useState(false);
-  const [receiptMsg, setReceiptMsg] = useState("");
-  const [receiptErr, setReceiptErr] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
   const [scanItems, setScanItems] = useState([]);
   const [barcodeOpen, setBarcodeOpen] = useState(false);
@@ -536,7 +534,7 @@ export default function Dispensa({ session }) {
     const input = e.target;
     const file = input.files?.[0];
     if (!file) return;
-    setReceiptErr(""); setReceiptMsg(""); setProcessing(true);
+    setProcessing(true);
     try {
       const data64 = await fileToBase64(file);
       const media_type = file.type || "image/jpeg";
@@ -545,7 +543,7 @@ export default function Dispensa({ session }) {
         { type: "text", text: RECEIPT_PROMPT },
       ], 1000);
       const list = Array.isArray(parsed.items) ? parsed.items : [];
-      if (!list.length) setReceiptErr("Nessun alimento riconosciuto nell'immagine.");
+      if (!list.length) showToast("Nessun alimento riconosciuto nell'immagine.");
       else {
         // Non aggiunge subito: apre la modale di revisione per nome/categoria.
         setScanItems(list);
@@ -553,7 +551,7 @@ export default function Dispensa({ session }) {
       }
     } catch (err) {
       console.error(err);
-      setReceiptErr("Impossibile leggere l'immagine. Riprova con una foto più nitida.");
+      showToast("Impossibile leggere l'immagine. Riprova con una foto più nitida.");
     } finally {
       setProcessing(false);
       input.value = "";
@@ -578,7 +576,7 @@ export default function Dispensa({ session }) {
     const valid = (reviewed || []).filter((x) => String(x.name || "").trim());
     if (valid.length) {
       await mergeItems(valid);
-      setReceiptMsg(`${valid.length} prodotti aggiunti.`);
+      showToast(`${valid.length} prodotti aggiunti.`);
     }
     setScanItems([]);
   }
@@ -807,7 +805,7 @@ export default function Dispensa({ session }) {
         {view === "dispensa" && (
           <PantryTab
             inputCls={inputCls}
-            processing={processing} receiptMsg={receiptMsg} receiptErr={receiptErr} handleReceipt={handleReceipt}
+            processing={processing} handleReceipt={handleReceipt}
             onScanBarcode={() => setBarcodeOpen(true)}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
