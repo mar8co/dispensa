@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Loader2, Package, ChefHat, ShoppingCart, LogOut } from "lucide-react";
 
 import {
@@ -28,6 +28,10 @@ import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import Toast from "./components/Toast.jsx";
+
+// Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
+// solo quando si apre la scansione del codice a barre.
+const BarcodeScanModal = lazy(() => import("./components/BarcodeScanModal.jsx"));
 
 export default function Dispensa({ session }) {
   const [items, setItems] = useState([]);
@@ -83,6 +87,7 @@ export default function Dispensa({ session }) {
   const [receiptErr, setReceiptErr] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
   const [scanItems, setScanItems] = useState([]);
+  const [barcodeOpen, setBarcodeOpen] = useState(false);
 
   // ricette
   const [mode, setMode] = useState(null);
@@ -555,6 +560,18 @@ export default function Dispensa({ session }) {
     }
   }
 
+  // Risultato della scansione barcode: apre la revisione con il prodotto trovato.
+  function handleBarcodeResult(item) {
+    setBarcodeOpen(false);
+    const raw = String(item?.name || "").trim();
+    const name = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "";
+    const qty = normalizeWeight(String(item?.qty || "1"));
+    const category = guessCategory(name) || "Altro";
+    setScanItems([{ name, qty, category }]);
+    setScanOpen(true);
+    if (!item?.found) showToast("Codice non trovato: inserisci il nome del prodotto.");
+  }
+
   // Conferma dei prodotti rivisti nella modale: vengono aggiunti alla dispensa.
   async function confirmScan(reviewed) {
     setScanOpen(false);
@@ -791,6 +808,7 @@ export default function Dispensa({ session }) {
           <PantryTab
             inputCls={inputCls}
             processing={processing} receiptMsg={receiptMsg} receiptErr={receiptErr} handleReceipt={handleReceipt}
+            onScanBarcode={() => setBarcodeOpen(true)}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
             allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
@@ -855,6 +873,15 @@ export default function Dispensa({ session }) {
           onCancel={() => { setScanOpen(false); setScanItems([]); }}
           onConfirm={confirmScan}
         />
+      )}
+
+      {barcodeOpen && (
+        <Suspense fallback={null}>
+          <BarcodeScanModal
+            onClose={() => setBarcodeOpen(false)}
+            onResult={handleBarcodeResult}
+          />
+        </Suspense>
       )}
 
       {toast && <Toast message={toast.message} onUndo={toast.onUndo} />}

@@ -2,7 +2,9 @@
 // swipe-to-delete (scorri la riga a destra/sinistra per eliminare), aggiunta
 // manuale e azioni per spostare i barrati in dispensa o rimuoverli.
 import { useState, useRef } from "react";
-import { Plus, Minus, Trash2, Check, PackagePlus, Loader2, ListChecks } from "lucide-react";
+import { Plus, Minus, Trash2, Check, PackagePlus, Loader2, ListChecks, Store } from "lucide-react";
+import { CATEGORIES, CAT_ICON } from "../constants.js";
+import { guessCategory } from "../lib/pantry.js";
 
 // Riga con gesto di scorrimento orizzontale per eliminare.
 function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
@@ -124,9 +126,20 @@ export default function ShoppingTab({
 }) {
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
+  const [byAisle, setByAisle] = useState(true);
 
   const checkedCount = shopping.filter((s) => s.checked).length;
   const allChecked = shopping.length > 0 && checkedCount === shopping.length;
+
+  // Raggruppa per reparto (categoria indovinata dal nome), nell'ordine di CATEGORIES.
+  const groups = CATEGORIES
+    .map((c) => ({ cat: c, list: shopping.filter((s) => (guessCategory(s.name) || "Altro") === c) }))
+    .filter((g) => g.list.length > 0);
+
+  const renderItems = (list) =>
+    list.map((it) => (
+      <SwipeItem key={it.id} it={it} onToggle={onToggle} onAdjustQty={onAdjustQty} onDelete={onDelete} />
+    ));
 
   function add() {
     const n = name.trim();
@@ -145,7 +158,18 @@ export default function ShoppingTab({
       )}
 
       {shopping.length > 0 && (
-        <div className="mb-2 flex justify-end">
+        <div className="mb-2 flex items-center justify-between">
+          <button
+            onClick={() => setByAisle((v) => !v)}
+            aria-pressed={byAisle}
+            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
+              byAisle
+                ? "border-emerald-600 bg-emerald-600 text-white"
+                : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"
+            }`}
+          >
+            <Store className="h-3.5 w-3.5" /> Per reparto
+          </button>
           <button
             onClick={onToggleAll}
             className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
@@ -157,19 +181,24 @@ export default function ShoppingTab({
       )}
 
       {shopping.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
-          <ul className="divide-y divide-stone-100">
-            {shopping.map((it) => (
-              <SwipeItem
-                key={it.id}
-                it={it}
-                onToggle={onToggle}
-                onAdjustQty={onAdjustQty}
-                onDelete={onDelete}
-              />
+        byAisle ? (
+          <div className="space-y-3">
+            {groups.map(({ cat, list }) => (
+              <div key={cat} className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+                <div className="flex items-center gap-2 border-b border-stone-100 px-4 py-2">
+                  <span className="text-base">{CAT_ICON[cat]}</span>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-stone-500">{cat}</h4>
+                  <span className="rounded-full bg-stone-100 px-1.5 text-xs text-stone-500">{list.length}</span>
+                </div>
+                <ul className="divide-y divide-stone-100">{renderItems(list)}</ul>
+              </div>
             ))}
-          </ul>
-        </div>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+            <ul className="divide-y divide-stone-100">{renderItems(shopping)}</ul>
+          </div>
+        )
       )}
 
       {shopping.length > 0 && (

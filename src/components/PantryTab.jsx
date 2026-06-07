@@ -3,7 +3,7 @@
 // quantità, badge scadenza, modifica/eliminazione in-line, aggiunta manuale.
 import {
   Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
-  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, Search, CalendarPlus,
+  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, Search, CalendarPlus, ScanBarcode,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry } from "../lib/pantry.js";
@@ -29,7 +29,7 @@ function ExpiryBadge({ date }) {
 export default function PantryTab({
   inputCls,
   // scontrino
-  processing, receiptMsg, receiptErr, handleReceipt,
+  processing, receiptMsg, receiptErr, handleReceipt, onScanBarcode,
   // ricerca / ordinamento
   search, setSearch, sort, setSort,
   // lista
@@ -63,6 +63,13 @@ export default function PantryTab({
             : (<><Camera className="h-4 w-4" /> Carica foto dello scontrino o della spesa</>)}
           <input type="file" accept="image/*" className="hidden" onChange={handleReceipt} disabled={processing} />
         </label>
+        <button
+          onClick={onScanBarcode}
+          disabled={processing}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-60"
+        >
+          <ScanBarcode className="h-4 w-4" /> Scansiona codice a barre
+        </button>
         {receiptMsg && <p className="mt-2 text-center text-xs font-medium text-emerald-700">{receiptMsg}</p>}
         {receiptErr && <p className="mt-2 text-center text-xs font-medium text-red-600">{receiptErr}</p>}
       </div>
