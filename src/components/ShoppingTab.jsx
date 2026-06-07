@@ -1,18 +1,19 @@
 // Scheda "Da comprare": lista della spesa con spunta, aggiunta manuale,
 // e azioni per spostare i prodotti barrati nella dispensa o rimuoverli.
 import { useState } from "react";
-import { Plus, Minus, Trash2, Check, PackagePlus, Loader2 } from "lucide-react";
+import { Plus, Minus, Trash2, Check, PackagePlus, Loader2, ListChecks } from "lucide-react";
 
 export default function ShoppingTab({
   inputCls,
   shopping,
-  onAdd, onToggle, onDelete, onAdjustQty, onMoveChecked, onClearChecked,
+  onAdd, onToggle, onDelete, onAdjustQty, onToggleAll, onMoveChecked, onClearChecked,
   movingChecked,
 }) {
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
 
   const checkedCount = shopping.filter((s) => s.checked).length;
+  const allChecked = shopping.length > 0 && checkedCount === shopping.length;
 
   function add() {
     const n = name.trim();
@@ -28,6 +29,18 @@ export default function ShoppingTab({
           La lista della spesa è vuota. Aggiungi qualcosa qui sotto, o aggiungi gli
           ingredienti mancanti da una ricetta.
         </p>
+      )}
+
+      {shopping.length > 0 && (
+        <div className="mb-2 flex justify-end">
+          <button
+            onClick={onToggleAll}
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
+          >
+            <ListChecks className="h-3.5 w-3.5" />
+            {allChecked ? "Deseleziona tutto" : "Seleziona tutto"}
+          </button>
+        </div>
       )}
 
       {shopping.length > 0 && (
