@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Loader2, Package, ChefHat, ShoppingCart, LogOut, Search, X } from "lucide-react";
 
 import {
-  CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA,
+  CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, NAME_RULES,
 } from "./constants.js";
 import {
   guessCategory, correctName,
@@ -228,6 +228,16 @@ export default function Dispensa({ session }) {
 
   const pantryStr = items.map((i) => `${i.name} (${i.qty})`).join(", ");
 
+  // Pulisce/genericizza un nome alimento via AI -> { name, category }.
+  async function aiCleanName(raw) {
+    const prompt =
+      `Sei un assistente per una dispensa italiana. Dall'input dell'utente ricava il nome dell'alimento. ` +
+      `${NAME_RULES} ` +
+      `Assegna anche una categoria tra: ${CATEGORIES.join(", ")}. Input: "${raw}". ` +
+      `Rispondi SOLO con JSON valido senza markdown: {"name":"...","category":"..."}`;
+    return callClaude([{ type: "text", text: prompt }], 200);
+  }
+
   // --- Operazioni dispensa (scrivono su Supabase + aggiornano lo stato) ---
   async function addManual() {
     const raw = newName.trim();
@@ -238,14 +248,7 @@ export default function Dispensa({ session }) {
     let name = correctName(raw);
     let category = guessCategory(name) || "Altro";
     try {
-      const prompt =
-        `Sei un assistente per una dispensa italiana. Dall'input dell'utente estrai SOLO il nome dell'alimento, ` +
-        `togliendo marca, grammature, formati e parole promozionali, ma mantenendo le qualità rilevanti ` +
-        `(es. "greco", "integrale", "fresco", "in scatola"). ` +
-        `Esempi: "Meteora yogurt greco 500g" -> "Yogurt greco"; "ceci la fiammante 400g" -> "Ceci". ` +
-        `Assegna una categoria tra: ${CATEGORIES.join(", ")}. Input: "${raw}". ` +
-        `Rispondi SOLO con JSON valido senza markdown: {"name":"...","category":"..."}`;
-      const parsed = await callClaude([{ type: "text", text: prompt }], 200);
+      const parsed = await aiCleanName(raw);
       if (parsed && parsed.name) {
         const s = String(parsed.name).trim();
         name = s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
@@ -464,28 +467,6 @@ export default function Dispensa({ session }) {
     return !!findMatch(name, items);
   }
 
-  // --- Cambio scheda con swipe orizzontale ---
-  const VIEWS = ["dispensa", "ricette", "spesa"];
-  const swipeRef = useRef(null);
-
-  function onSwipeStart(e) {
-    if (e.pointerType !== "touch") return;
-    if (e.target.closest("[data-noswipe]")) { swipeRef.current = null; return; }
-    swipeRef.current = { x: e.clientX, y: e.clientY };
-  }
-  function onSwipeEnd(e) {
-    const s = swipeRef.current;
-    swipeRef.current = null;
-    if (!s || e.pointerType !== "touch") return;
-    const dx = e.clientX - s.x;
-    const dy = e.clientY - s.y;
-    // deve essere chiaramente orizzontale e abbastanza ampio
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    const idx = VIEWS.indexOf(view);
-    if (dx < 0 && idx < VIEWS.length - 1) setView(VIEWS[idx + 1]); // swipe verso sinistra → prossima
-    else if (dx > 0 && idx > 0) setView(VIEWS[idx - 1]); // swipe verso destra → precedente
-  }
-
   // --- Riordino generico (categorie e occasioni) ---
   function moveInOrder(setOrder, dragged, target) {
     setOrder((order) => {
@@ -580,13 +561,23 @@ export default function Dispensa({ session }) {
     }
   }
 
-  // Risultato della scansione barcode: apre la revisione con il prodotto trovato.
-  function handleBarcodeResult(item) {
+  // Risultato della scansione barcode: genericizza il nome trovato e apre la revisione.
+  async function handleBarcodeResult(item) {
     setBarcodeOpen(false);
     const raw = String(item?.name || "").trim();
-    const name = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "";
+    let name = raw;
+    let category = guessCategory(raw) || "Altro";
+    if (raw) {
+      try {
+        const parsed = await aiCleanName(raw);
+        if (parsed && parsed.name) {
+          name = String(parsed.name).trim();
+          category = CATEGORIES.includes(parsed.category) ? parsed.category : (guessCategory(name) || "Altro");
+        }
+      } catch (e) { console.error(e); }
+    }
+    name = name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
     const qty = normalizeWeight(String(item?.qty || "1"));
-    const category = guessCategory(name) || "Altro";
     setScanItems([{ name, qty, category }]);
     setScanOpen(true);
     if (!item?.found) showToast("Codice non trovato: inserisci il nome del prodotto.");
@@ -803,14 +794,6 @@ export default function Dispensa({ session }) {
               <Package className="h-4 w-4" /> Dispensa
             </button>
             <button
-              onClick={() => setView("ricette")}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
-                view === "ricette" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
-              }`}
-            >
-              <ChefHat className="h-4 w-4" /> Ricette
-            </button>
-            <button
               onClick={() => setView("spesa")}
               className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
                 view === "spesa" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
@@ -822,6 +805,14 @@ export default function Dispensa({ session }) {
                   {shopping.length}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => setView("ricette")}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
+                view === "ricette" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
+              }`}
+            >
+              <ChefHat className="h-4 w-4" /> Ricette
             </button>
           </div>
 
@@ -848,8 +839,6 @@ export default function Dispensa({ session }) {
           )}
         </div>
 
-        {/* Area contenuti: swipe orizzontale per cambiare scheda */}
-        <div onPointerDown={onSwipeStart} onPointerUp={onSwipeEnd} onPointerCancel={() => { swipeRef.current = null; }}>
         {view === "dispensa" && (
           <PantryTab
             inputCls={inputCls}
@@ -897,7 +886,6 @@ export default function Dispensa({ session }) {
             movingChecked={movingChecked}
           />
         )}
-        </div>
       </div>
 
       {confirmClear && (

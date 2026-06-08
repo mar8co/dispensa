@@ -29,14 +29,21 @@ export const MODES = [
   { id: "Dolci & dessert", icon: "🍰", desc: "Per concludere in dolcezza" },
 ];
 
+// Regole condivise per ottenere il NOME GENERICO dell'alimento (usate da
+// scontrino/foto, scansione barcode e aggiunta manuale).
+export const NAME_RULES = `Restituisci solo il NOME GENERICO dell'alimento, il più semplice possibile.
+TOGLI SEMPRE: la marca e il nome commerciale, il peso/grammatura/volume e la quantità, il formato e la confezione (PET, lattina, bottiglia, busta, vaschetta, conf., multipack), le parole promozionali, e le descrizioni di preparazione o taglio (grattugiato, a fette, affettato, a cubetti, frullato, in tranci).
+MANTIENI SOLO le qualità che identificano un alimento davvero diverso (es. greco, integrale, fresco, senza lattosio, senza glutine, piccante, decaffeinato, basmati, oppure la parte come petto/coscia).
+Il nome deve avere la prima lettera maiuscola e il resto minuscolo.
+Esempi: "Rosa Blu acqua naturale 1,5L" -> "Acqua"; "Parmigiano Reggiano grattugiato 100g" -> "Parmigiano"; "Yoga Succo di Pera PET" -> "Succo di pera"; "Meteora yogurt greco 0% 500g" -> "Yogurt greco"; "Barilla spaghetti n.5 500g" -> "Spaghetti"; "Petto di pollo a fette 400g" -> "Petto di pollo".`;
+
 export const RECEIPT_PROMPT = `Sei un assistente per la gestione della dispensa italiana.
 L'immagine può essere di tre tipi: (a) uno scontrino della spesa, (b) uno screenshot con una lista di prodotti (es. riepilogo ordine di un'app), oppure (c) una foto di alimenti reali (sul tavolo, nel frigo, nella busta della spesa). Identifica TUTTI gli alimenti presenti.
 - Se è uno scontrino o un testo: leggi i nomi dei prodotti dal testo.
 - Se è una foto di prodotti reali: riconosci visivamente ogni alimento che vedi.
-Per ogni alimento estrai SOLO il nome del prodotto, rimuovendo la marca, il tipo di confezione (PET, lattina, bottiglia, busta, conf.) e le parole promozionali, ma mantenendo le qualità rilevanti (es. "greco", "integrale", "fresco", "di pera", "in scatola").
-Metti l'eventuale peso o formato nel campo "qty" (es. "500 g"). Se non è indicato ma riesci a contare gli oggetti nella foto, usa quel numero (es. "3" per tre mele); altrimenti "1". Usa SOLO unità metriche (g, kg, ml, l) — mai cups/oz.
-Il nome deve avere la prima lettera maiuscola e il resto minuscolo.
-Esempi: "Yoga Succo di Pera PET" -> name "Succo di pera"; "PAST.BARILL.500G" -> name "Pasta", qty "500 g"; "Meteora yogurt greco 500g" -> name "Yogurt greco", qty "500 g"; foto con tre banane -> name "Banane", qty "3".
+Per ogni alimento applica queste regole sul nome:
+${NAME_RULES}
+Metti l'eventuale peso o formato nel campo "qty" (es. "500 g") — MAI nel nome. Se non è indicato ma riesci a contare gli oggetti nella foto, usa quel numero (es. "3" per tre mele); altrimenti "1". Usa SOLO unità metriche (g, kg, ml, l) — mai cups/oz.
 Ignora prodotti non alimentari. Se non riconosci alcun alimento, restituisci una lista vuota.
 Rispondi SOLO con JSON valido senza markdown:
 {"items":[{"name":"...","qty":"...","category":"..."}]}
