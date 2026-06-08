@@ -1,8 +1,12 @@
 // Aggiunta prodotti a voce: usa il riconoscimento vocale del browser
 // (Web Speech API) per trascrivere ciò che dici, poi passa il testo al
 // chiamante (che lo manda all'AI per estrarre e categorizzare gli alimenti).
+//
+// Ascolto "continuo": su iOS il riconoscimento si ferma dopo una pausa, quindi
+// lo riavviamo automaticamente (accumulando il testo) finché non tocchi
+// "Aggiungi" o "Stop".
 import { useEffect, useRef, useState } from "react";
-import { Mic, X, Loader2, Check, RotateCcw } from "lucide-react";
+import { Mic, X, Loader2, Check, RotateCcw, Square } from "lucide-react";
 
 export default function VoiceAddModal({ processing, onCancel, onResult }) {
   const [transcript, setTranscript] = useState("");
@@ -10,20 +14,19 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
   const [error, setError] = useState("");
   const recRef = useRef(null);
   const finalRef = useRef("");
+  const keepRef = useRef(false);
 
-  function start() {
+  function begin() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       setError("Il riconoscimento vocale non è supportato su questo browser.");
+      keepRef.current = false;
       return;
     }
     const rec = new SR();
     rec.lang = "it-IT";
     rec.interimResults = true;
-    rec.continuous = false;
-    finalRef.current = "";
-    setTranscript("");
-    setError("");
+    rec.continuous = true;
     rec.onresult = (e) => {
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -34,24 +37,52 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
       setTranscript((finalRef.current + interim).trim());
     };
     rec.onerror = (e) => {
-      if (e.error !== "no-speech" && e.error !== "aborted") {
-        setError("Microfono non disponibile o permesso negato.");
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        keepRef.current = false;
+        setError("Permesso microfono negato.");
+        setListening(false);
+      }
+      // no-speech / aborted: lasciamo che onend gestisca il riavvio
+    };
+    rec.onend = () => {
+      // Riavvia per continuare l'ascolto oltre le pause (finché keepRef è true).
+      if (keepRef.current) {
+        setTimeout(() => { if (keepRef.current) begin(); }, 250);
+      } else {
+        setListening(false);
       }
     };
-    rec.onend = () => setListening(false);
     recRef.current = rec;
     try { rec.start(); setListening(true); } catch { /* già avviato */ }
   }
 
+  function start() {
+    finalRef.current = "";
+    setTranscript("");
+    setError("");
+    keepRef.current = true;
+    begin();
+  }
+
+  function stop() {
+    keepRef.current = false;
+    try { recRef.current?.stop(); } catch { /* ignora */ }
+    setListening(false);
+  }
+
   useEffect(() => {
     start();
-    return () => { try { recRef.current?.abort(); } catch { /* ignora */ } };
+    return () => {
+      keepRef.current = false;
+      try { recRef.current?.abort(); } catch { /* ignora */ }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function confirm() {
-    const t = transcript.trim();
+    keepRef.current = false;
     try { recRef.current?.stop(); } catch { /* ignora */ }
+    const t = transcript.trim();
     if (t) onResult(t);
   }
 
@@ -70,12 +101,10 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
         {/* Indicatore microfono */}
         <div className="flex flex-col items-center py-3">
           <div className={`flex h-16 w-16 items-center justify-center rounded-full transition ${listening ? "bg-red-100 text-red-600" : "bg-stone-100 text-stone-400"}`}>
-            {listening
-              ? <Mic className="h-8 w-8 animate-pulse" />
-              : <Mic className="h-8 w-8" />}
+            <Mic className={`h-8 w-8 ${listening ? "animate-pulse" : ""}`} />
           </div>
           <p className="mt-2 text-xs text-stone-500">
-            {error ? "" : listening ? "Sto ascoltando…" : "Tocca per riascoltare"}
+            {error ? "" : listening ? "Sto ascoltando… parla pure, tocca Aggiungi quando hai finito" : "In pausa"}
           </p>
         </div>
 
@@ -89,13 +118,23 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
 
         {/* Azioni */}
         <div className="mt-4 flex gap-2">
-          <button
-            onClick={start}
-            disabled={processing || listening}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-50"
-          >
-            <RotateCcw className="h-4 w-4" /> Riascolta
-          </button>
+          {listening ? (
+            <button
+              onClick={stop}
+              disabled={processing}
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-50"
+            >
+              <Square className="h-4 w-4" /> Stop
+            </button>
+          ) : (
+            <button
+              onClick={start}
+              disabled={processing}
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-50"
+            >
+              <RotateCcw className="h-4 w-4" /> Riascolta
+            </button>
+          )}
           <button
             onClick={confirm}
             disabled={processing || !transcript.trim()}
