@@ -642,7 +642,9 @@ export default function Dispensa({ session }) {
       setIdeas(Array.isArray(parsed.recipes) ? parsed.recipes : []);
     } catch (err) {
       console.error(err);
-      setRecipeErr("Errore nel generare le proposte. Riprova.");
+      setRecipeErr(err?.status === 429
+        ? "Limite di richieste AI raggiunto. Attendi qualche secondo e riprova."
+        : "Errore nel generare le proposte. Riprova.");
     } finally {
       setLoadingIdeas(false);
     }
@@ -664,7 +666,9 @@ export default function Dispensa({ session }) {
       setServings(1);
     } catch (err) {
       console.error(err);
-      setRecipeErr("Errore nel generare la ricetta. Riprova.");
+      setRecipeErr(err?.status === 429
+        ? "Limite di richieste AI raggiunto. Attendi qualche secondo e riprova."
+        : "Errore nel generare la ricetta. Riprova.");
     } finally {
       setLoadingRecipe(false);
     }

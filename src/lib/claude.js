@@ -12,29 +12,53 @@ export function fileToBase64(file) {
   });
 }
 
-export async function callClaude(content, maxTokens = 1000) {
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token;
+export async function callClaude(content, maxTokens = 1000, retries = 1) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
 
-  const res = await fetch("/api/claude", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ content, max_tokens: maxTokens }),
-  });
-  if (!res.ok) {
-    const info = await res.json().catch(() => null);
-    const msg = info?.error || `API ${res.status}`;
-    throw new Error(msg + (info?.detail?.error?.message ? `: ${info.detail.error.message}` : ""));
+    const res = await fetch("/api/claude", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ content, max_tokens: maxTokens }),
+    });
+
+    if (!res.ok) {
+      const info = await res.json().catch(() => null);
+      const detail = info?.detail?.error?.message;
+      const err = new Error((info?.error || `API ${res.status}`) + (detail ? `: ${detail}` : ""));
+      err.status = res.status;
+      throw err;
+    }
+
+    const payload = await res.json();
+    const text = (payload.content || [])
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("\n");
+    const clean = text.replace(/```json|```/g, "").trim();
+
+    try {
+      return JSON.parse(clean);
+    } catch {
+      // Fallback: estrae il primo blocco JSON se la risposta è un po' sporca.
+      const m = clean.match(/[\{\[][\s\S]*[\}\]]/);
+      if (m) {
+        try { return JSON.parse(m[0]); } catch { /* niente */ }
+      }
+      const err = new Error("Risposta AI non valida");
+      err.status = 502;
+      throw err;
+    }
+  } catch (err) {
+    // Un riprova automatico su limite di richieste (429) o risposta vuota/non valida (502).
+    if (retries > 0 && (err.status === 429 || err.status === 502)) {
+      await new Promise((r) => setTimeout(r, 1500));
+      return callClaude(content, maxTokens, retries - 1);
+    }
+    throw err;
   }
-
-  const payload = await res.json();
-  const text = (payload.content || [])
-    .filter((b) => b.type === "text")
-    .map((b) => b.text)
-    .join("\n");
-  const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
 }
