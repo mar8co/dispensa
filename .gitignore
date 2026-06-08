@@ -7,6 +7,9 @@ node_modules
 dist
 dist-ssr
 
+# Mockup di esplorazione stile (solo locali)
+public/mockups
+
 # Local env files — la API key vive SOLO qui, mai nel codice
 .env
 .env.local

@@ -8,4 +8,13 @@ html {
 
 body {
   margin: 0;
+  background: #faf7f2;
+  font-family: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+  color: #1a1a1a;
+}
+
+/* Titoli editoriali */
+.font-display {
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: -0.01em;
 }

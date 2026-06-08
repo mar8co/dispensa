@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { Loader2, Package, ChefHat, ShoppingCart, LogOut, Search, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import {
   CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, NAME_RULES,
@@ -24,6 +24,10 @@ import { loadCache, saveCache } from "./lib/cache.js";
 import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
 import ShoppingTab from "./components/ShoppingTab.jsx";
+import ProfileTab from "./components/ProfileTab.jsx";
+import BottomNav from "./components/BottomNav.jsx";
+import AddMenu from "./components/AddMenu.jsx";
+import ManualAddModal from "./components/ManualAddModal.jsx";
 import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
@@ -89,6 +93,9 @@ export default function Dispensa({ session }) {
   const [barcodeOpen, setBarcodeOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const fileInputRef = useRef(null);
 
   // ricette
   const [mode, setMode] = useState(null);
@@ -277,6 +284,13 @@ export default function Dispensa({ session }) {
       console.error("Errore aggiunta prodotto:", e);
     }
     setNewName(""); setNewQty("1"); setNewExpiry(""); setAdding(false);
+  }
+
+  // Invio dal foglio di aggiunta manuale: aggiunge e chiude il foglio.
+  async function submitManual() {
+    if (!newName.trim()) return;
+    await addManual();
+    setManualOpen(false);
   }
 
   // Elimina con possibilità di Annulla (re-inserisce il prodotto).
@@ -776,112 +790,23 @@ export default function Dispensa({ session }) {
 
   if (!loaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50">
+      <div className="flex min-h-screen items-center justify-center bg-cream">
         <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-800">
-      <div className="mx-auto max-w-md px-4 pt-6 pb-8">
-        {/* Header */}
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-sm">
-            <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="4.5" y="3.5" width="15" height="15" rx="1.6" fill="white" fillOpacity="0.18" />
-              <line x1="4.5" y1="6.8" x2="19.5" y2="6.8" />
-              <line x1="12" y1="6.8" x2="12" y2="18.5" />
-              <circle cx="10.6" cy="12.5" r="0.75" fill="white" stroke="none" />
-              <circle cx="13.4" cy="12.5" r="0.75" fill="white" stroke="none" />
-              <line x1="6.8" y1="18.5" x2="6.8" y2="20.3" />
-              <line x1="17.2" y1="18.5" x2="17.2" y2="20.3" />
-            </svg>
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-semibold leading-tight">Ciao! Hai fame?</h1>
-            <p className="flex items-center gap-2 text-xs text-stone-500">
-              <span>{total} prodotti · {grouped.length} categorie</span>
-              {!online && (
-                <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                  offline
-                </span>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={logout}
-            className="shrink-0 rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
-            aria-label="Esci"
-            title="Esci"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
+    <div className="min-h-screen bg-cream text-ink">
+      {!online && (
+        <div className="fixed left-1/2 top-2 z-40 -translate-x-1/2 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-700 shadow">
+          offline
         </div>
-
-        {/* Tabs (sticky in alto: restano visibili durante lo scroll) */}
-        <div className="sticky top-0 z-20 -mx-4 mb-5 bg-stone-50/95 px-4 pb-2 pt-2 backdrop-blur">
-          <div className="flex gap-1 rounded-xl bg-stone-200/70 p-1">
-            <button
-              onClick={() => setView("dispensa")}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
-                view === "dispensa" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
-              }`}
-            >
-              <Package className="h-4 w-4" /> Dispensa
-            </button>
-            <button
-              onClick={() => setView("spesa")}
-              className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
-                view === "spesa" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
-              }`}
-            >
-              <ShoppingCart className="h-4 w-4" /> Spesa
-              {shopping.length > 0 && (
-                <span className="ml-0.5 rounded-full bg-emerald-600 px-1.5 text-[10px] font-semibold text-white">
-                  {shopping.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setView("ricette")}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
-                view === "ricette" ? "bg-white text-stone-800 shadow-sm" : "text-stone-500"
-              }`}
-            >
-              <ChefHat className="h-4 w-4" /> Ricette
-            </button>
-          </div>
-
-          {/* Ricerca: attaccata ai tab e sticky, solo nella scheda Dispensa */}
-          {view === "dispensa" && (
-            <div className="relative mt-2">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-              <input
-                className="w-full rounded-xl border border-stone-300 bg-white py-2.5 pl-9 pr-9 text-sm text-stone-800 outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
-                placeholder="Cerca un prodotto…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search.trim() !== "" && (
-                <button
-                  onClick={() => setSearch("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
-                  aria-label="Cancella ricerca"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
+      )}
+      <div className="mx-auto max-w-md px-5 pt-7 pb-28">
         {view === "dispensa" && (
           <PantryTab
-            inputCls={inputCls}
-            processing={processing} handleReceipt={handleReceipt}
-            onScanBarcode={() => setBarcodeOpen(true)}
-            onVoiceAdd={() => setVoiceOpen(true)}
+            total={total}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
             allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
@@ -891,9 +816,6 @@ export default function Dispensa({ session }) {
             editCat={editCat} setEditCat={setEditCat} editExpiry={editExpiry} setEditExpiry={setEditExpiry}
             startEdit={startEdit} saveEdit={saveEdit} setEditId={setEditId} removeItem={removeItem}
             setConfirmClear={setConfirmClear}
-            newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
-            grams={grams} setGrams={setGrams} adding={adding} addManual={addManual}
-            newExpiry={newExpiry} setNewExpiry={setNewExpiry}
           />
         )}
 
@@ -924,7 +846,39 @@ export default function Dispensa({ session }) {
             movingChecked={movingChecked}
           />
         )}
+
+        {view === "profilo" && (
+          <ProfileTab email={session?.user?.email} onLogout={logout} />
+        )}
       </div>
+
+      <BottomNav
+        view={view}
+        setView={setView}
+        onAdd={() => setAddMenuOpen(true)}
+        shoppingCount={shopping.length}
+      />
+
+      {/* Input nascosto per la foto (azionato dal menù +) */}
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleReceipt} />
+
+      {addMenuOpen && (
+        <AddMenu
+          onClose={() => setAddMenuOpen(false)}
+          onManual={() => { setAddMenuOpen(false); setManualOpen(true); }}
+          onPhoto={() => { setAddMenuOpen(false); fileInputRef.current?.click(); }}
+          onBarcode={() => { setAddMenuOpen(false); setBarcodeOpen(true); }}
+          onVoice={() => { setAddMenuOpen(false); setVoiceOpen(true); }}
+        />
+      )}
+
+      {manualOpen && (
+        <ManualAddModal
+          newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
+          grams={grams} setGrams={setGrams} newExpiry={newExpiry} setNewExpiry={setNewExpiry}
+          adding={adding} onSubmit={submitManual} onClose={() => setManualOpen(false)}
+        />
+      )}
 
       {confirmClear && (
         <ConfirmClearModal onCancel={() => setConfirmClear(false)} onConfirm={clearPantry} />
