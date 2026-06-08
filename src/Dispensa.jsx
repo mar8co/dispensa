@@ -27,6 +27,7 @@ import ShoppingTab from "./components/ShoppingTab.jsx";
 import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
+import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import Toast from "./components/Toast.jsx";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
@@ -86,6 +87,8 @@ export default function Dispensa({ session }) {
   const [scanOpen, setScanOpen] = useState(false);
   const [scanItems, setScanItems] = useState([]);
   const [barcodeOpen, setBarcodeOpen] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
 
   // ricette
   const [mode, setMode] = useState(null);
@@ -583,6 +586,36 @@ export default function Dispensa({ session }) {
     if (!item?.found) showToast("Codice non trovato: inserisci il nome del prodotto.");
   }
 
+  // Aggiunta a voce: la frase trascritta viene passata all'AI che estrae e
+  // categorizza gli alimenti, poi si apre la revisione (come per le foto).
+  async function handleVoiceResult(transcript) {
+    if (!transcript) { setVoiceOpen(false); return; }
+    setVoiceProcessing(true);
+    try {
+      const prompt =
+        `Sei un assistente per la dispensa italiana. Questa è una frase detta a voce ` +
+        `che elenca alimenti da aggiungere: "${transcript}". Estrai TUTTI gli alimenti citati. ` +
+        `${NAME_RULES} ` +
+        `Per la quantità: se l'utente indica un numero o una confezione ("6 uova", "un pacco di pasta", ` +
+        `"due litri di latte"), mettila nel campo "qty" (numero oppure unità metriche come "500 g"/"1 l"), ` +
+        `MAI nel nome; altrimenti "1". ` +
+        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"...","category":"..."}]} ` +
+        `Categorie possibili: ${CATEGORIES.join(", ")}.`;
+      const parsed = await callClaude([{ type: "text", text: prompt }], 800);
+      const list = Array.isArray(parsed?.items) ? parsed.items : [];
+      setVoiceProcessing(false);
+      setVoiceOpen(false);
+      if (!list.length) { showToast("Non ho riconosciuto alimenti. Riprova."); return; }
+      setScanItems(list);
+      setScanOpen(true);
+    } catch (e) {
+      console.error(e);
+      setVoiceProcessing(false);
+      setVoiceOpen(false);
+      showToast("Errore nell'elaborare la voce. Riprova.");
+    }
+  }
+
   // Conferma dei prodotti rivisti nella modale: vengono aggiunti alla dispensa.
   async function confirmScan(reviewed) {
     setScanOpen(false);
@@ -844,6 +877,7 @@ export default function Dispensa({ session }) {
             inputCls={inputCls}
             processing={processing} handleReceipt={handleReceipt}
             onScanBarcode={() => setBarcodeOpen(true)}
+            onVoiceAdd={() => setVoiceOpen(true)}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
             allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
@@ -917,6 +951,14 @@ export default function Dispensa({ session }) {
             onResult={handleBarcodeResult}
           />
         </Suspense>
+      )}
+
+      {voiceOpen && (
+        <VoiceAddModal
+          processing={voiceProcessing}
+          onCancel={() => { if (!voiceProcessing) setVoiceOpen(false); }}
+          onResult={handleVoiceResult}
+        />
       )}
 
       {toast && <Toast message={toast.message} onUndo={toast.onUndo} />}

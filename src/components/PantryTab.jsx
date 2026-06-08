@@ -4,7 +4,7 @@
 import { useState } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Camera, Check, X, Loader2,
-  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, CalendarPlus, ScanBarcode,
+  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown, CalendarPlus, ScanBarcode, Mic,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry } from "../lib/pantry.js";
@@ -30,7 +30,7 @@ function ExpiryBadge({ date }) {
 export default function PantryTab({
   inputCls,
   // scontrino
-  processing, handleReceipt, onScanBarcode,
+  processing, handleReceipt, onScanBarcode, onVoiceAdd,
   // ricerca / ordinamento
   search, setSearch, sort, setSort,
   // lista
@@ -226,9 +226,9 @@ export default function PantryTab({
       {/* Spazio per non far coprire l'ultimo elemento dalla barra in basso */}
       <div className="h-24" />
 
-      {/* Barra azioni in basso: barcode · + (aggiunta manuale) · foto */}
+      {/* Barra azioni in basso: barcode · + (manuale) · voce · foto */}
       <div className="fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
-        <div className="flex items-center gap-7 rounded-full bg-stone-900 px-6 py-2.5 shadow-xl">
+        <div className="flex items-center gap-5 rounded-full bg-stone-900 px-5 py-2.5 shadow-xl">
           <button
             onClick={onScanBarcode}
             className="p-1.5 text-white/90 transition hover:text-white active:scale-95"
@@ -243,6 +243,14 @@ export default function PantryTab({
             aria-label="Aggiungi un prodotto"
           >
             <Plus className="h-7 w-7" />
+          </button>
+
+          <button
+            onClick={onVoiceAdd}
+            className="p-1.5 text-white/90 transition hover:text-white active:scale-95"
+            aria-label="Aggiungi a voce"
+          >
+            <Mic className="h-6 w-6" />
           </button>
 
           <label
