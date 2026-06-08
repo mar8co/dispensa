@@ -1,8 +1,9 @@
 // Scheda Dispensa — stile editoriale: titolo serif, ricerca, sezioni separate
 // da righe sottili (niente scatole), accento pomodoro, +/- rapido, scadenze,
 // modifica/eliminazione in-line. L'aggiunta è gestita dalla barra in basso.
+import { useRef, useEffect } from "react";
 import {
-  Plus, Minus, Trash2, Pencil, Check, X, Search,
+  Plus, Minus, Trash2, Pencil, Check, X, Search, LogOut,
   ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
@@ -30,8 +31,7 @@ const editCls =
   "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
 export default function PantryTab({
-  total,
-  search, setSearch, sort, setSort,
+  search, setSearch, sort, setSort, focusSignal, onLogout,
   grouped, collapsed, setCollapsed, cardRefs, allCollapsed, onToggleAll,
   dragCat, onDragStart, onDragMove, onDragEnd, onAdjustQty,
   editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
@@ -39,18 +39,30 @@ export default function PantryTab({
   setConfirmClear,
 }) {
   const searchActive = search.trim() !== "";
+  const searchRef = useRef(null);
+  useEffect(() => {
+    if (focusSignal) {
+      searchRef.current?.focus();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [focusSignal]);
 
   return (
     <div className="pt-2">
       {/* Header editoriale */}
-      <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua dispensa</div>
-      <h1 className="mt-1.5 font-display text-[40px] font-semibold leading-[0.98] text-ink">Ciao!<br />Hai fame?</h1>
-      <p className="mt-2.5 text-sm text-stone-500">{total} prodotti · {grouped.length} categorie</p>
+      <div className="flex items-start justify-between">
+        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua dispensa</div>
+        <button onClick={onLogout} className="-mr-1 -mt-1 rounded-lg p-1.5 text-stone-300 transition hover:bg-stone-100 hover:text-stone-600" aria-label="Esci" title="Esci">
+          <LogOut className="h-5 w-5" />
+        </button>
+      </div>
+      <h1 className="mt-1 font-display text-[40px] font-semibold leading-[0.98] text-ink">Ciao!<br />Hai fame?</h1>
 
       {/* Ricerca */}
       <div className="relative mt-4">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
         <input
+          ref={searchRef}
           className="w-full rounded-xl border border-hair bg-paper py-2.5 pl-9 pr-9 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
           placeholder="Cerca un prodotto"
           value={search}

@@ -1,14 +1,12 @@
 // Navigazione principale in basso (stile editoriale): Dispensa · Spesa · (+) ·
-// Ricette · Profilo. Il "+" centrale apre il menù di aggiunta.
-import { Package, ShoppingCart, ChefHat, User, Plus } from "lucide-react";
+// Ricette · Cerca. Il "+" centrale apre il menù di aggiunta; "Cerca" porta
+// alla Dispensa mettendo a fuoco la ricerca.
+import { Package, ShoppingCart, ChefHat, Search, Plus } from "lucide-react";
 
 function Tab({ id, view, setView, icon: Icon, label, badge }) {
   const active = view === id;
   return (
-    <button
-      onClick={() => setView(id)}
-      className="relative flex flex-1 flex-col items-center gap-1 py-2.5"
-    >
+    <button onClick={() => setView(id)} className="relative flex flex-1 flex-col items-center gap-1 py-2.5">
       <Icon className={active ? "h-[22px] w-[22px] text-ink" : "h-[22px] w-[22px] text-stone-400"} strokeWidth={active ? 2.3 : 1.9} />
       <span className={`text-[10px] font-semibold tracking-wide ${active ? "text-ink" : "text-stone-400"}`}>{label}</span>
       {badge > 0 && (
@@ -20,7 +18,7 @@ function Tab({ id, view, setView, icon: Icon, label, badge }) {
   );
 }
 
-export default function BottomNav({ view, setView, onAdd, shoppingCount }) {
+export default function BottomNav({ view, setView, onAdd, onSearch, shoppingCount }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-30">
       <div className="mx-auto flex max-w-md items-center border-t border-hair bg-cream/95 px-2 backdrop-blur"
@@ -39,7 +37,11 @@ export default function BottomNav({ view, setView, onAdd, shoppingCount }) {
         </div>
 
         <Tab id="ricette" view={view} setView={setView} icon={ChefHat} label="Ricette" />
-        <Tab id="profilo" view={view} setView={setView} icon={User} label="Profilo" />
+
+        <button onClick={onSearch} className="flex flex-1 flex-col items-center gap-1 py-2.5">
+          <Search className="h-[22px] w-[22px] text-stone-400" strokeWidth={1.9} />
+          <span className="text-[10px] font-semibold tracking-wide text-stone-400">Cerca</span>
+        </button>
       </div>
     </div>
   );
