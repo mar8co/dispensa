@@ -218,7 +218,7 @@ export default function RecipesTab({
               onClick={openCookModal}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-800"
             >
-              <Utensils className="h-4 w-4" /> Ho cucinato questo
+              <Utensils className="h-4 w-4" /> Ho cucinato questa ricetta
             </button>
             {cookDone && <p className="mt-2 text-center text-xs font-medium text-emerald-700">{cookDone}</p>}
           </div>
