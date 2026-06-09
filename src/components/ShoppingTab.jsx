@@ -228,10 +228,13 @@ export default function ShoppingTab({
       )}
 
       {/* Spazio per non coprire gli ultimi elementi con la barra fissa */}
-      <div className="h-32" />
+      <div className="h-44" />
 
-      {/* Form aggiunta: SEMPRE fisso in basso, a portata di pollice */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 backdrop-blur">
+      {/* Form aggiunta: fisso, ma SOPRA la barra di navigazione in basso */}
+      <div
+        className="fixed inset-x-0 z-20 border-t border-hair bg-cream/95 backdrop-blur"
+        style={{ bottom: "calc(86px + env(safe-area-inset-bottom))" }}
+      >
         <div className="mx-auto max-w-md px-4 py-3">
         <input
           className={inputCls}

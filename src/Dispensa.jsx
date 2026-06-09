@@ -25,7 +25,6 @@ import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
 import ShoppingTab from "./components/ShoppingTab.jsx";
 import BottomNav from "./components/BottomNav.jsx";
-import AddMenu from "./components/AddMenu.jsx";
 import ManualAddModal from "./components/ManualAddModal.jsx";
 import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
@@ -852,23 +851,18 @@ export default function Dispensa({ session }) {
       <BottomNav
         view={view}
         setView={setView}
-        onAdd={() => setAddMenuOpen(true)}
         onSearch={() => { setView("dispensa"); setSearchSignal((n) => n + 1); }}
         shoppingCount={shopping.length}
+        menuOpen={addMenuOpen}
+        setMenuOpen={setAddMenuOpen}
+        onManual={() => setManualOpen(true)}
+        onPhoto={() => fileInputRef.current?.click()}
+        onBarcode={() => setBarcodeOpen(true)}
+        onVoice={() => setVoiceOpen(true)}
       />
 
       {/* Input nascosto per la foto (azionato dal menù +) */}
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleReceipt} />
-
-      {addMenuOpen && (
-        <AddMenu
-          onClose={() => setAddMenuOpen(false)}
-          onManual={() => { setAddMenuOpen(false); setManualOpen(true); }}
-          onPhoto={() => { setAddMenuOpen(false); fileInputRef.current?.click(); }}
-          onBarcode={() => { setAddMenuOpen(false); setBarcodeOpen(true); }}
-          onVoice={() => { setAddMenuOpen(false); setVoiceOpen(true); }}
-        />
-      )}
 
       {manualOpen && (
         <ManualAddModal

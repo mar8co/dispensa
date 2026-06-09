@@ -1,7 +1,7 @@
 // Scheda Dispensa — stile editoriale: titolo serif, ricerca, sezioni separate
 // da righe sottili (niente scatole), accento pomodoro, +/- rapido, scadenze,
 // modifica/eliminazione in-line. L'aggiunta è gestita dalla barra in basso.
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Check, X, Search, LogOut,
   ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown,
@@ -40,10 +40,12 @@ export default function PantryTab({
 }) {
   const searchActive = search.trim() !== "";
   const searchRef = useRef(null);
+  const [showSearch, setShowSearch] = useState(false);
   useEffect(() => {
     if (focusSignal) {
-      searchRef.current?.focus();
+      setShowSearch(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => searchRef.current?.focus(), 60);
     }
   }, [focusSignal]);
 
@@ -58,22 +60,26 @@ export default function PantryTab({
       </div>
       <h1 className="mt-1 font-display text-[40px] font-semibold leading-[0.98] text-ink">Ciao!<br />Hai fame?</h1>
 
-      {/* Ricerca */}
-      <div className="relative mt-4">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-        <input
-          ref={searchRef}
-          className="w-full rounded-xl border border-hair bg-paper py-2.5 pl-9 pr-9 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-          placeholder="Cerca un prodotto"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        {searchActive && (
-          <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100" aria-label="Cancella ricerca">
+      {/* Ricerca (compare dalla lente in basso) */}
+      {(showSearch || searchActive) && (
+        <div className="relative mt-4">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+          <input
+            ref={searchRef}
+            className="w-full rounded-xl border border-hair bg-paper py-2.5 pl-9 pr-9 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+            placeholder="Cerca un prodotto"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            onClick={() => { setSearch(""); setShowSearch(false); }}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100"
+            aria-label="Chiudi ricerca"
+          >
             <X className="h-4 w-4" />
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Ordinamento + apri/chiudi */}
       {grouped.length > 0 && (
