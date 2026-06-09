@@ -38,32 +38,32 @@ export default function StepTimer({ minutes }) {
 
   return (
     <div
-      className={`mt-2 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 ${
-        done ? "border-tomato/30 bg-tomato/5" : "border-hair bg-stone-50"
+      className={`mt-2.5 inline-flex items-center gap-2 rounded-full border py-1 pl-3 pr-1 ${
+        done ? "border-tomato/40 bg-tomato/5" : "border-hair bg-stone-50"
       }`}
     >
-      <Timer className={`h-4 w-4 ${done ? "text-tomato" : "text-stone-500"}`} />
-      <span className={`font-mono text-sm tabular-nums ${done ? "text-tomato" : "text-stone-700"}`}>
+      <Timer className={`h-4 w-4 ${done ? "text-tomato" : "text-stone-400"}`} />
+      <span className={`font-mono text-sm font-bold tabular-nums ${done ? "text-tomato" : "text-ink"}`}>
         {fmt(left)}
       </span>
-      <div className="ml-auto flex items-center gap-1">
-        {!done && (
-          <button
-            onClick={() => setRunning((r) => !r)}
-            className="rounded-md p-1.5 text-stone-500 hover:bg-stone-200"
-            aria-label={running ? "Pausa" : "Avvia"}
-          >
-            {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </button>
-        )}
+      {!done ? (
         <button
-          onClick={() => { setRunning(false); setLeft(total); }}
-          className="rounded-md p-1.5 text-stone-500 hover:bg-stone-200"
-          aria-label="Reimposta"
+          onClick={() => setRunning((r) => !r)}
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-white transition hover:bg-black active:scale-95"
+          aria-label={running ? "Pausa" : "Avvia"}
         >
-          <RotateCcw className="h-4 w-4" />
+          {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </button>
-      </div>
+      ) : (
+        <span className="px-1 text-xs font-bold text-tomato">fatto!</span>
+      )}
+      <button
+        onClick={() => { setRunning(false); setLeft(total); }}
+        className="flex h-7 w-7 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-200 hover:text-stone-600"
+        aria-label="Reimposta"
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }

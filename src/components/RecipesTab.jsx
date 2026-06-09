@@ -89,26 +89,31 @@ export default function RecipesTab({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2.5">
             {ideas.map((r, i) => (
               <button
                 key={i}
                 onClick={() => openRecipe(r.title)}
-                className="flex min-h-[12.5rem] flex-col rounded-2xl border border-hair bg-paper p-4 text-left transition hover:border-ink"
+                className="flex w-full items-center gap-3 rounded-2xl border border-hair bg-paper p-3 text-left transition hover:border-ink"
               >
-                <h3 className="text-base font-bold leading-snug text-ink line-clamp-3">{r.title}</h3>
-                <p className="mt-2 text-[13px] leading-snug text-stone-500 line-clamp-4">{r.description}</p>
-                <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
-                  {r.time && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-1 text-[11px] text-stone-600">
-                      <Clock className="h-3 w-3" /> {r.time}
-                    </span>
-                  )}
-                  {r.difficulty && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-1 text-[11px] text-stone-600">
-                      <Gauge className="h-3 w-3" /> {r.difficulty}
-                    </span>
-                  )}
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 text-2xl">
+                  {mode?.icon || "🍽️"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-[15px] font-bold leading-tight text-ink">{r.title}</h3>
+                  <p className="mt-0.5 line-clamp-1 text-xs leading-snug text-stone-500">{r.description}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {r.time && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600">
+                        <Clock className="h-3 w-3" /> {r.time}
+                      </span>
+                    )}
+                    {r.difficulty && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600">
+                        <Gauge className="h-3 w-3" /> {r.difficulty}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </button>
             ))}
@@ -129,7 +134,12 @@ export default function RecipesTab({
             <ArrowLeft className="h-4 w-4" /> Altre proposte
           </button>
 
-          <h1 className="font-display text-[28px] font-extrabold leading-tight tracking-tight text-ink">{recipe.title}</h1>
+          {/* Cover */}
+          <div className="flex h-36 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200 text-6xl">
+            {mode?.icon || "🍽️"}
+          </div>
+
+          <h1 className="mt-4 font-display text-[26px] font-extrabold leading-tight tracking-tight text-ink">{recipe.title}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {recipe.time && (
               <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs text-stone-600">
@@ -158,26 +168,29 @@ export default function RecipesTab({
             </div>
           </div>
 
-          <div className="mb-2 mt-6 flex items-baseline justify-between border-b border-ink/15 pb-2">
+          {/* Ingredienti: raccolti in un "foglio" */}
+          <div className="mb-2 mt-6 flex items-baseline justify-between">
             <h3 className="font-display text-base font-bold uppercase tracking-wide text-ink">Ingredienti</h3>
             <span className="flex items-center gap-1 text-[11px] text-stone-400"><CheckCircle2 className="h-3.5 w-3.5 text-ink" /> ce l'hai · <Circle className="h-3.5 w-3.5 text-tomato" /> manca</span>
           </div>
-          <ul className="divide-y divide-hair">
-            {ingredients.map((ing, i) => {
-              const have = hasIngredient(ing.name);
-              return (
-                <li key={i} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                  <span className="flex min-w-0 items-center gap-2">
-                    {have
-                      ? <CheckCircle2 className="h-4 w-4 shrink-0 text-ink" />
-                      : <Circle className="h-4 w-4 shrink-0 text-tomato" />}
-                    <span className={`truncate ${have ? "text-ink" : "text-tomato"}`}>{ing.name}</span>
-                  </span>
-                  <span className="shrink-0 font-semibold text-ink">{scaleQty(ing.qty, factor)}</span>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="rounded-2xl border border-hair bg-stone-50/70 px-4 py-1.5">
+            <ul className="divide-y divide-hair">
+              {ingredients.map((ing, i) => {
+                const have = hasIngredient(ing.name);
+                return (
+                  <li key={i} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <span className="flex min-w-0 items-center gap-2">
+                      {have
+                        ? <CheckCircle2 className="h-4 w-4 shrink-0 text-ink" />
+                        : <Circle className="h-4 w-4 shrink-0 text-tomato" />}
+                      <span className={`truncate ${have ? "text-ink" : "text-tomato"}`}>{ing.name}</span>
+                    </span>
+                    <span className="shrink-0 font-semibold text-ink">{scaleQty(ing.qty, factor)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
           {missing.length > 0 && (
             addedMissing ? (
@@ -195,15 +208,15 @@ export default function RecipesTab({
             )
           )}
 
-          <h3 className="mb-3 mt-6 border-b border-ink/15 pb-2 font-display text-base font-bold uppercase tracking-wide text-ink">Procedimento</h3>
-          <ol className="space-y-4">
+          <h3 className="mb-4 mt-7 font-display text-base font-bold uppercase tracking-wide text-ink">Procedimento</h3>
+          <ol className="space-y-5">
             {(recipe.steps || []).map((s, i) => (
-              <li key={i} className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">
+              <li key={i} className="flex gap-3.5">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">
                   {i + 1}
                 </span>
-                <div className="flex-1">
-                  <p className="text-sm leading-relaxed text-stone-700">{s.text}</p>
+                <div className="flex-1 pt-0.5">
+                  <p className="text-[15px] leading-relaxed text-stone-800">{s.text}</p>
                   {s.timer ? <StepTimer minutes={Number(s.timer)} /> : null}
                 </div>
               </li>
