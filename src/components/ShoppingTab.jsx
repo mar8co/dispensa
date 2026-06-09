@@ -158,29 +158,6 @@ export default function ShoppingTab({
       )}
 
       {shopping.length > 0 && (
-        <div className="mb-2 flex items-center justify-between">
-          <button
-            onClick={() => setByAisle((v) => !v)}
-            aria-pressed={byAisle}
-            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
-              byAisle
-                ? "border-emerald-600 bg-emerald-600 text-white"
-                : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"
-            }`}
-          >
-            <Store className="h-3.5 w-3.5" /> Per reparto
-          </button>
-          <button
-            onClick={onToggleAll}
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
-          >
-            <ListChecks className="h-3.5 w-3.5" />
-            {allChecked ? "Deseleziona tutto" : "Seleziona tutto"}
-          </button>
-        </div>
-      )}
-
-      {shopping.length > 0 && (
         byAisle ? (
           <div className="space-y-3">
             {groups.map(({ cat, list }) => (
@@ -228,7 +205,7 @@ export default function ShoppingTab({
       )}
 
       {/* Spazio per non coprire gli ultimi elementi con la barra fissa */}
-      <div className="h-44" />
+      <div className="h-60" />
 
       {/* Form aggiunta: fisso, ma SOPRA la barra di navigazione in basso */}
       <div
@@ -276,6 +253,29 @@ export default function ShoppingTab({
             <Plus className="h-4 w-4" /> Aggiungi
           </button>
         </div>
+
+        {shopping.length > 0 && (
+          <div className="mt-2 flex items-center justify-between">
+            <button
+              onClick={() => setByAisle((v) => !v)}
+              aria-pressed={byAisle}
+              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
+                byAisle
+                  ? "border-emerald-600 bg-emerald-600 text-white"
+                  : "border-stone-300 bg-white text-stone-500 hover:bg-stone-50"
+              }`}
+            >
+              <Store className="h-3.5 w-3.5" /> Per reparto
+            </button>
+            <button
+              onClick={onToggleAll}
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
+            >
+              <ListChecks className="h-3.5 w-3.5" />
+              {allChecked ? "Deseleziona tutto" : "Seleziona tutto"}
+            </button>
+          </div>
+        )}
         </div>
       </div>
     </>
