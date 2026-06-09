@@ -71,9 +71,9 @@ export default function RecipesTab({
           <button onClick={backToModes} className="mb-4 flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-ink">
             <ArrowLeft className="h-4 w-4" /> Occasioni
           </button>
-          <div className="mb-5 flex items-center gap-2">
-            <span className="text-2xl">{mode.icon}</span>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">{mode.id}</h1>
+          <div className="mb-4 flex items-center gap-2">
+            <span className="text-xl">{mode.icon}</span>
+            <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">{mode.id}</h1>
           </div>
 
           {loadingIdeas && (
@@ -89,23 +89,23 @@ export default function RecipesTab({
             </div>
           )}
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
             {ideas.map((r, i) => (
               <button
                 key={i}
                 onClick={() => openRecipe(r.title)}
-                className="w-full rounded-2xl border border-hair bg-paper p-4 text-left transition hover:border-ink"
+                className="flex min-h-[9rem] flex-col rounded-2xl border border-hair bg-paper p-3.5 text-left transition hover:border-ink"
               >
-                <h3 className="text-base font-bold text-ink">{r.title}</h3>
-                <p className="mt-1 text-sm text-stone-500">{r.description}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <h3 className="text-sm font-bold leading-tight text-ink line-clamp-2">{r.title}</h3>
+                <p className="mt-1 text-xs leading-snug text-stone-500 line-clamp-3">{r.description}</p>
+                <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
                   {r.time && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] text-stone-600">
                       <Clock className="h-3 w-3" /> {r.time}
                     </span>
                   )}
                   {r.difficulty && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] text-stone-600">
                       <Gauge className="h-3 w-3" /> {r.difficulty}
                     </span>
                   )}

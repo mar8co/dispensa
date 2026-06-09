@@ -120,11 +120,10 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
 export default function ShoppingTab({
   shopping,
   onAdd, onToggle, onDelete, onAdjustQty, onToggleAll, onMoveChecked, onClearChecked,
-  movingChecked, onHideNav,
+  movingChecked, onHideNav, byAisle, setByAisle,
 }) {
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
-  const [byAisle, setByAisle] = useState(true);
   const [focused, setFocused] = useState(false);
 
   const checkedCount = shopping.filter((s) => s.checked).length;

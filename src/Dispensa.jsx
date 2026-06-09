@@ -77,6 +77,7 @@ export default function Dispensa({ session }) {
   // lista della spesa
   const [shopping, setShopping] = useState([]);
   const [movingChecked, setMovingChecked] = useState(false);
+  const [byAisle, setByAisle] = useState(true); // vista "per reparto" (persistita)
 
   // toast / undo
   const [toast, setToast] = useState(null); // { message, onUndo? }
@@ -117,6 +118,7 @@ export default function Dispensa({ session }) {
   // sempre chiuse a ogni apertura/ricarica dell'app (default voluto).
   function applySettings(s) {
     if (!s || typeof s !== "object") return;
+    if (typeof s.byAisle === "boolean") setByAisle(s.byAisle);
     if (Array.isArray(s.catOrder)) {
       setCatOrder([
         ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
@@ -170,9 +172,9 @@ export default function Dispensa({ session }) {
     saveCache(session.user.id, {
       items,
       shopping,
-      settings: { collapsed, catOrder, modeOrder },
+      settings: { collapsed, catOrder, modeOrder, byAisle },
     });
-  }, [items, shopping, collapsed, catOrder, modeOrder, loaded]);
+  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, loaded]);
 
   // --- Indicatore stato connessione ---
   useEffect(() => {
@@ -231,10 +233,10 @@ export default function Dispensa({ session }) {
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
     if (!loaded) return;
-    saveSettings({ collapsed, catOrder, modeOrder }).catch((e) =>
+    saveSettings({ collapsed, catOrder, modeOrder, byAisle }).catch((e) =>
       console.error("Errore salvataggio impostazioni:", e)
     );
-  }, [collapsed, catOrder, modeOrder, loaded]);
+  }, [collapsed, catOrder, modeOrder, byAisle, loaded]);
 
   const pantryStr = items.map((i) => `${i.name} (${i.qty})`).join(", ");
 
@@ -845,6 +847,7 @@ export default function Dispensa({ session }) {
             onClearChecked={clearCheckedShopping}
             movingChecked={movingChecked}
             onHideNav={setHideNav}
+            byAisle={byAisle} setByAisle={setByAisle}
           />
         )}
 
