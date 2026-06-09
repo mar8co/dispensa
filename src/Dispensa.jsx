@@ -857,7 +857,7 @@ export default function Dispensa({ session }) {
         <BottomNav view={view} setView={setView} shoppingCount={shopping.length} />
       )}
 
-      {view !== "spesa" && (
+      {view === "dispensa" && (
         <AddFab
           menuOpen={addMenuOpen}
           setMenuOpen={setAddMenuOpen}
