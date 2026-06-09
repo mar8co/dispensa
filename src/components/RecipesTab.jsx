@@ -89,24 +89,24 @@ export default function RecipesTab({
             </div>
           )}
 
-          <div className="space-y-2.5">
+          <div className="flex flex-col gap-3" style={{ minHeight: "calc(100dvh - 13rem)" }}>
             {ideas.map((r, i) => (
               <button
                 key={i}
                 onClick={() => openRecipe(r.title)}
-                className="flex w-full items-center gap-3 rounded-2xl border border-hair bg-paper p-3 text-left transition hover:border-ink"
+                className="flex min-h-0 flex-1 items-center gap-4 rounded-2xl border border-hair bg-paper p-4 text-left transition hover:border-ink"
               >
                 {r.image ? (
-                  <img src={r.image} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                  <img src={r.image} alt="" loading="lazy" className="h-20 w-20 shrink-0 rounded-xl object-cover" />
                 ) : (
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 text-2xl">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 text-3xl">
                     {mode?.icon || "🍽️"}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-[15px] font-bold leading-tight text-ink">{r.title}</h3>
-                  <p className="mt-0.5 line-clamp-1 text-xs leading-snug text-stone-500">{r.description}</p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  <h3 className="text-base font-bold leading-tight text-ink line-clamp-2">{r.title}</h3>
+                  <p className="mt-1 text-[13px] leading-snug text-stone-500 line-clamp-2">{r.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
                     {r.time && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600">
                         <Clock className="h-3 w-3" /> {r.time}
@@ -225,7 +225,7 @@ export default function RecipesTab({
                 </span>
                 <div className="flex-1 pt-0.5">
                   <p className="text-[15px] leading-relaxed text-stone-800">{s.text}</p>
-                  {s.timer ? <StepTimer minutes={Number(s.timer)} /> : null}
+                  {s.timer ? <StepTimer minutes={Number(s.timer)} id={`${recipe.title}-${i}`} /> : null}
                 </div>
               </li>
             ))}
