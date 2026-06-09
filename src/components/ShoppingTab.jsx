@@ -120,11 +120,12 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
 export default function ShoppingTab({
   shopping,
   onAdd, onToggle, onDelete, onAdjustQty, onToggleAll, onMoveChecked, onClearChecked,
-  movingChecked,
+  movingChecked, onHideNav,
 }) {
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
   const [byAisle, setByAisle] = useState(true);
+  const [focused, setFocused] = useState(false);
 
   const checkedCount = shopping.filter((s) => s.checked).length;
   const allChecked = shopping.length > 0 && checkedCount === shopping.length;
@@ -208,12 +209,17 @@ export default function ShoppingTab({
 
       <div className="h-60" />
 
-      {/* Form aggiunta: fisso, appena sopra la barra di navigazione in basso */}
+      {/* Form aggiunta: fisso in basso. Mentre scrivi, scende a ridosso del bordo
+          (la barra di navigazione viene nascosta) per stare sopra la tastiera. */}
       <div
-        className="fixed inset-x-0 z-20 border-t border-hair bg-white/95 backdrop-blur"
-        style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
+        className="fixed inset-x-0 z-20 border-t border-hair bg-white/95 backdrop-blur transition-[bottom] duration-150"
+        style={{ bottom: focused ? "env(safe-area-inset-bottom)" : "calc(60px + env(safe-area-inset-bottom))" }}
       >
-        <div className="mx-auto max-w-md px-5 py-3">
+        <div
+          className="mx-auto max-w-md px-5 py-3"
+          onFocus={() => { setFocused(true); onHideNav?.(true); }}
+          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { setFocused(false); onHideNav?.(false); } }}
+        >
           <input
             className={inputBase}
             placeholder="Cosa ti manca?"

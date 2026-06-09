@@ -33,15 +33,16 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
                 key={o.id}
                 onClick={() => { setMenuOpen(false); o.action(); }}
                 aria-label={o.label}
-                className="absolute bottom-1 right-1 flex h-12 w-12 items-center justify-center rounded-full bg-paper text-tomato shadow-lg transition-all duration-200 ease-out"
+                className="absolute bottom-1 right-1 flex h-12 w-12 items-center justify-center rounded-full bg-paper text-tomato shadow-lg"
                 style={{
                   transform: menuOpen
                     ? `translate(${o.x}px, ${o.y}px) scale(1)`
-                    : "translate(0,0) scale(0.3)",
+                    : "translate(0,0) scale(0.4)",
                   opacity: menuOpen ? 1 : 0,
                   pointerEvents: menuOpen ? "auto" : "none",
+                  transition: "transform 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease",
                   // stagger in apertura e in chiusura (ordine inverso)
-                  transitionDelay: menuOpen ? `${i * 40}ms` : `${(options.length - 1 - i) * 40}ms`,
+                  transitionDelay: menuOpen ? `${i * 45}ms` : `${(options.length - 1 - i) * 45}ms`,
                 }}
               >
                 <Icon className="h-[22px] w-[22px]" />
@@ -54,7 +55,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
             aria-label="Aggiungi"
             className="relative z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-tomato text-white shadow-xl shadow-tomato/30 transition active:scale-95"
           >
-            <Plus className={`h-7 w-7 transition-transform duration-200 ${menuOpen ? "rotate-45" : ""}`} strokeWidth={2.4} />
+            <Plus className={`h-7 w-7 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} strokeWidth={2.4} />
           </button>
         </div>
       </div>

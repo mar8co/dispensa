@@ -94,6 +94,7 @@ export default function Dispensa({ session }) {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [hideNav, setHideNav] = useState(false);
   const fileInputRef = useRef(null);
 
   // ricette
@@ -843,12 +844,15 @@ export default function Dispensa({ session }) {
             onMoveChecked={moveCheckedToPantry}
             onClearChecked={clearCheckedShopping}
             movingChecked={movingChecked}
+            onHideNav={setHideNav}
           />
         )}
 
       </div>
 
-      <BottomNav view={view} setView={setView} shoppingCount={shopping.length} />
+      {!(view === "spesa" && hideNav) && (
+        <BottomNav view={view} setView={setView} shoppingCount={shopping.length} />
+      )}
 
       {view !== "spesa" && (
         <AddFab
