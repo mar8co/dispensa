@@ -93,8 +93,9 @@ export default function Dispensa({ session }) {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
-  const [searchSignal, setSearchSignal] = useState(0);
+  const [showSearch, setShowSearch] = useState(false);
   const fileInputRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // ricette
   const [mode, setMode] = useState(null);
@@ -805,7 +806,8 @@ export default function Dispensa({ session }) {
       <div className="mx-auto max-w-md px-5 pt-7 pb-28">
         {view === "dispensa" && (
           <PantryTab
-            onLogout={logout} focusSignal={searchSignal}
+            onLogout={logout}
+            showSearch={showSearch} setShowSearch={setShowSearch} searchInputRef={searchInputRef}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
             allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
@@ -851,7 +853,7 @@ export default function Dispensa({ session }) {
       <BottomNav
         view={view}
         setView={setView}
-        onSearch={() => { setView("dispensa"); setSearchSignal((n) => n + 1); }}
+        onSearch={() => { setView("dispensa"); setShowSearch(true); searchInputRef.current?.focus(); }}
         shoppingCount={shopping.length}
         menuOpen={addMenuOpen}
         setMenuOpen={setAddMenuOpen}

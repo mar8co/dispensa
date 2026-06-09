@@ -1,7 +1,7 @@
 // Scheda Dispensa — stile editoriale: titolo serif, ricerca, sezioni separate
 // da righe sottili (niente scatole), accento pomodoro, +/- rapido, scadenze,
 // modifica/eliminazione in-line. L'aggiunta è gestita dalla barra in basso.
-import { useRef, useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Check, X, Search, LogOut,
   ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown,
@@ -31,7 +31,7 @@ const editCls =
   "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
 export default function PantryTab({
-  search, setSearch, sort, setSort, focusSignal, onLogout,
+  search, setSearch, sort, setSort, showSearch, setShowSearch, searchInputRef, onLogout,
   grouped, collapsed, setCollapsed, cardRefs, allCollapsed, onToggleAll,
   dragCat, onDragStart, onDragMove, onDragEnd, onAdjustQty,
   editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
@@ -39,15 +39,10 @@ export default function PantryTab({
   setConfirmClear,
 }) {
   const searchActive = search.trim() !== "";
-  const searchRef = useRef(null);
-  const [showSearch, setShowSearch] = useState(false);
+  // Mette a fuoco quando la ricerca viene aperta (best-effort cross-tab).
   useEffect(() => {
-    if (focusSignal) {
-      setShowSearch(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      setTimeout(() => searchRef.current?.focus(), 60);
-    }
-  }, [focusSignal]);
+    if (showSearch) searchInputRef.current?.focus();
+  }, [showSearch, searchInputRef]);
 
   return (
     <div className="pt-2">
@@ -60,12 +55,12 @@ export default function PantryTab({
       </div>
       <h1 className="mt-1 font-display text-[40px] font-semibold leading-[0.98] text-ink">Ciao!<br />Hai fame?</h1>
 
-      {/* Ricerca (compare dalla lente in basso) */}
-      {(showSearch || searchActive) && (
-        <div className="relative mt-4">
+      {/* Ricerca: sempre montata (per il focus immediato), collassata finché chiusa */}
+      <div className={`overflow-hidden transition-all duration-200 ${(showSearch || searchActive) ? "mt-4 max-h-16 opacity-100" : "max-h-0 opacity-0"}`}>
+        <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
           <input
-            ref={searchRef}
+            ref={searchInputRef}
             className="w-full rounded-xl border border-hair bg-paper py-2.5 pl-9 pr-9 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
             placeholder="Cerca un prodotto"
             value={search}
@@ -79,7 +74,7 @@ export default function PantryTab({
             <X className="h-4 w-4" />
           </button>
         </div>
-      )}
+      </div>
 
       {/* Ordinamento + apri/chiudi */}
       {grouped.length > 0 && (
