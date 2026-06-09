@@ -143,7 +143,7 @@ export default function ShoppingTab({
 
       {shopping.length === 0 && (
         <p className="py-12 text-center text-sm text-stone-400">
-          La lista è vuota. Tocca «Aggiungi alla spesa», oppure aggiungi i mancanti da una ricetta.
+          La lista è vuota. Tocca «Aggiungi alla lista», oppure aggiungi i mancanti da una ricetta.
         </p>
       )}
 
@@ -206,7 +206,7 @@ export default function ShoppingTab({
             onClick={() => setAddOpen(true)}
             className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-black"
           >
-            <Plus className="h-4 w-4" /> Aggiungi alla spesa
+            <Plus className="h-4 w-4" /> Aggiungi alla lista
           </button>
 
           {shopping.length > 0 && (

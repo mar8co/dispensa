@@ -7,7 +7,6 @@ import { Plus, Minus, X } from "lucide-react";
 export default function ShoppingAddModal({ onAdd, onClose }) {
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
-  const [count, setCount] = useState(0);
   const inputRef = useRef(null);
 
   const inputBase = "w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -17,15 +16,15 @@ export default function ShoppingAddModal({ onAdd, onClose }) {
     if (!n) return;
     onAdd(n, String(qty).trim() || "1");
     setName(""); setQty("1");
-    setCount((c) => c + 1);
     inputRef.current?.focus();
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-16" onClick={onClose}>
-      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    // Niente oscuramento: la lista resta visibile mentre aggiungi.
+    <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-16" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl border border-hair bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Aggiungi alla spesa</h3>
+          <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Aggiungi alla lista</h3>
           <button onClick={onClose} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
             <X className="h-5 w-5" />
           </button>
@@ -69,10 +68,6 @@ export default function ShoppingAddModal({ onAdd, onClose }) {
             <Plus className="h-4 w-4" /> Aggiungi
           </button>
         </div>
-
-        <p className="mt-3 text-center text-xs text-stone-400">
-          {count > 0 ? `${count} aggiunti · continua o chiudi` : "Aggiungine quanti vuoi, poi chiudi"}
-        </p>
       </div>
     </div>
   );
