@@ -89,31 +89,31 @@ export default function RecipesTab({
             </div>
           )}
 
-          <div className="flex flex-col gap-3" style={{ minHeight: "calc(100dvh - 13rem)" }}>
+          <div className="space-y-3">
             {ideas.map((r, i) => (
               <button
                 key={i}
                 onClick={() => openRecipe(r.title)}
-                className="flex min-h-0 flex-1 items-center gap-4 rounded-2xl border border-hair bg-paper p-4 text-left transition hover:border-ink"
+                className="block w-full overflow-hidden rounded-2xl border border-hair bg-paper text-left transition hover:border-ink"
               >
                 {r.image ? (
-                  <img src={r.image} alt="" loading="lazy" className="h-20 w-20 shrink-0 rounded-xl object-cover" />
+                  <img src={r.image} alt="" loading="lazy" className="h-32 w-full object-cover" />
                 ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 text-3xl">
+                  <div className="flex h-32 w-full items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200 text-4xl">
                     {mode?.icon || "🍽️"}
                   </div>
                 )}
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-base font-bold leading-tight text-ink line-clamp-2">{r.title}</h3>
-                  <p className="mt-1 text-[13px] leading-snug text-stone-500 line-clamp-2">{r.description}</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="p-4">
+                  <h3 className="text-base font-bold leading-snug text-ink">{r.title}</h3>
+                  <p className="mt-1 text-sm leading-snug text-stone-500">{r.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {r.time && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
                         <Clock className="h-3 w-3" /> {r.time}
                       </span>
                     )}
                     {r.difficulty && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
                         <Gauge className="h-3 w-3" /> {r.difficulty}
                       </span>
                     )}
