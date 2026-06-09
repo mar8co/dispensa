@@ -1,9 +1,11 @@
 // Scheda "Spesa" (stile editoriale): lista con spunta, contatore, swipe-to-delete,
-// raggruppamento per reparto, aggiunta in basso. Bianco / nero / rosso.
-import { useState, useRef, useEffect } from "react";
-import { Plus, Minus, Trash2, Check, PackagePlus, Loader2, ListChecks, Store } from "lucide-react";
+// raggruppamento per reparto. L'aggiunta avviene da una finestra dedicata
+// (tasto "+ Aggiungi") per non avere problemi con la tastiera su iOS.
+import { useState, useRef } from "react";
+import { Plus, Trash2, Check, Minus, PackagePlus, Loader2, ListChecks, Store } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { guessCategory } from "../lib/pantry.js";
+import ShoppingAddModal from "./ShoppingAddModal.jsx";
 
 // Riga con gesto di scorrimento orizzontale per eliminare.
 function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
@@ -75,9 +77,7 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
         <button
           onClick={() => onToggle(it.id, !it.checked)}
           className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
-            it.checked
-              ? "border-ink bg-ink text-white"
-              : "border-stone-300 bg-white text-transparent hover:border-stone-500"
+            it.checked ? "border-ink bg-ink text-white" : "border-stone-300 bg-white text-transparent hover:border-stone-500"
           }`}
           aria-label={it.checked ? "Segna da comprare" : "Segna come preso"}
         >
@@ -120,26 +120,9 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
 export default function ShoppingTab({
   shopping,
   onAdd, onToggle, onDelete, onAdjustQty, onToggleAll, onMoveChecked, onClearChecked,
-  movingChecked, onHideNav, byAisle, setByAisle,
+  movingChecked, byAisle, setByAisle,
 }) {
-  const [name, setName] = useState("");
-  const [qty, setQty] = useState("1");
-  const [focused, setFocused] = useState(false);
-  const [kbInset, setKbInset] = useState(0); // altezza tastiera (per ancorare il form sopra)
-
-  // Tiene il form aggiunta sopra la tastiera su iOS (dove "fixed" non basta).
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => setKbInset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    update();
-    return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
-    };
-  }, []);
+  const [addOpen, setAddOpen] = useState(false);
 
   const checkedCount = shopping.filter((s) => s.checked).length;
   const allChecked = shopping.length > 0 && checkedCount === shopping.length;
@@ -153,24 +136,14 @@ export default function ShoppingTab({
       <SwipeItem key={it.id} it={it} onToggle={onToggle} onAdjustQty={onAdjustQty} onDelete={onDelete} />
     ));
 
-  function add() {
-    const n = name.trim();
-    if (!n) return;
-    onAdd(n, String(qty).trim() || "1");
-    setName(""); setQty("1");
-  }
-
-  const inputBase = "w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
-
   return (
     <div className="pt-2">
-      {/* Header editoriale */}
       <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua lista</div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">La spesa</h1>
 
       {shopping.length === 0 && (
         <p className="py-12 text-center text-sm text-stone-400">
-          La lista è vuota. Aggiungi qualcosa qui sotto, o aggiungi i mancanti da una ricetta.
+          La lista è vuota. Tocca «Aggiungi alla spesa», oppure aggiungi i mancanti da una ricetta.
         </p>
       )}
 
@@ -221,59 +194,20 @@ export default function ShoppingTab({
         </div>
       )}
 
-      <div className="h-60" />
+      <div className="h-44" />
 
-      {/* Form aggiunta: fisso in basso. Mentre scrivi, scende a ridosso del bordo
-          (la barra di navigazione viene nascosta) per stare sopra la tastiera. */}
+      {/* Barra azioni in basso (sopra la navigazione): + Aggiungi e toggle */}
       <div
         className="fixed inset-x-0 z-20 border-t border-hair bg-white/95 backdrop-blur"
-        style={{ bottom: focused ? `${kbInset}px` : "calc(60px + env(safe-area-inset-bottom))" }}
+        style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
       >
-        <div
-          className="mx-auto max-w-md px-5 py-3"
-          onFocus={() => { setFocused(true); onHideNav?.(true); }}
-          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { setFocused(false); onHideNav?.(false); } }}
-        >
-          <input
-            className={inputBase}
-            placeholder="Cosa ti manca?"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-          />
-          <div className="mt-2 flex items-center gap-2">
-            <div className="flex items-center rounded-xl border border-hair bg-paper">
-              <button
-                onClick={() => setQty((q) => String(Math.max(1, (parseFloat(String(q).replace(",", ".")) || 1) - 1)))}
-                className="flex h-11 w-10 items-center justify-center rounded-l-xl text-stone-600 transition hover:bg-stone-100"
-                aria-label="Meno"
-              >
-                <Minus className="h-5 w-5" />
-              </button>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={qty}
-                onChange={(e) => setQty(e.target.value.replace(/[^0-9.,]/g, ""))}
-                onFocus={(e) => e.target.select()}
-                onKeyDown={(e) => e.key === "Enter" && add()}
-                className="w-12 border-0 bg-transparent text-center text-lg font-bold text-ink outline-none"
-              />
-              <button
-                onClick={() => setQty((q) => String((parseFloat(String(q).replace(",", ".")) || 0) + 1))}
-                className="flex h-11 w-10 items-center justify-center rounded-r-xl text-stone-600 transition hover:bg-stone-100"
-                aria-label="Più"
-              >
-                <Plus className="h-5 w-5" />
-              </button>
-            </div>
-            <button
-              onClick={add}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white hover:bg-black"
-            >
-              <Plus className="h-4 w-4" /> Aggiungi
-            </button>
-          </div>
+        <div className="mx-auto max-w-md px-5 py-3">
+          <button
+            onClick={() => setAddOpen(true)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-black"
+          >
+            <Plus className="h-4 w-4" /> Aggiungi alla spesa
+          </button>
 
           {shopping.length > 0 && (
             <div className="mt-2 flex items-center justify-between">
@@ -297,6 +231,10 @@ export default function ShoppingTab({
           )}
         </div>
       </div>
+
+      {addOpen && (
+        <ShoppingAddModal onAdd={onAdd} onClose={() => setAddOpen(false)} />
+      )}
     </div>
   );
 }
