@@ -1,7 +1,6 @@
 // Scheda Dispensa — stile editoriale: titolo serif, ricerca, sezioni separate
 // da righe sottili (niente scatole), accento pomodoro, +/- rapido, scadenze,
 // modifica/eliminazione in-line. L'aggiunta è gestita dalla barra in basso.
-import { useEffect } from "react";
 import {
   Plus, Minus, Trash2, Pencil, Check, X, Search, LogOut,
   ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown,
@@ -31,7 +30,7 @@ const editCls =
   "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
 export default function PantryTab({
-  search, setSearch, sort, setSort, showSearch, setShowSearch, searchInputRef, onLogout,
+  search, setSearch, sort, setSort, onLogout,
   grouped, collapsed, setCollapsed, cardRefs, allCollapsed, onToggleAll,
   dragCat, onDragStart, onDragMove, onDragEnd, onAdjustQty,
   editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
@@ -39,10 +38,6 @@ export default function PantryTab({
   setConfirmClear,
 }) {
   const searchActive = search.trim() !== "";
-  // Mette a fuoco quando la ricerca viene aperta (best-effort cross-tab).
-  useEffect(() => {
-    if (showSearch) searchInputRef.current?.focus();
-  }, [showSearch, searchInputRef]);
 
   return (
     <div className="pt-2">
@@ -55,25 +50,24 @@ export default function PantryTab({
       </div>
       <h1 className="mt-1 font-display text-[40px] font-semibold leading-[0.98] text-ink">Ciao!<br />Hai fame?</h1>
 
-      {/* Ricerca: sempre montata (per il focus immediato), collassata finché chiusa */}
-      <div className={`overflow-hidden transition-all duration-200 ${(showSearch || searchActive) ? "mt-4 max-h-16 opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-          <input
-            ref={searchInputRef}
-            className="w-full rounded-xl border border-hair bg-paper py-2.5 pl-9 pr-9 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-            placeholder="Cerca un prodotto"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* Ricerca minimale: solo riga sotto, nessun bordo/box */}
+      <div className="relative mt-4">
+        <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+        <input
+          className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-7 text-sm text-ink outline-none focus:border-ink"
+          placeholder="Cerca un prodotto"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {searchActive && (
           <button
-            onClick={() => { setSearch(""); setShowSearch(false); }}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100"
-            aria-label="Chiudi ricerca"
+            onClick={() => setSearch("")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100"
+            aria-label="Cancella ricerca"
           >
             <X className="h-4 w-4" />
           </button>
-        </div>
+        )}
       </div>
 
       {/* Ordinamento + apri/chiudi */}

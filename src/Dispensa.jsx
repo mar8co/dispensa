@@ -25,6 +25,7 @@ import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
 import ShoppingTab from "./components/ShoppingTab.jsx";
 import BottomNav from "./components/BottomNav.jsx";
+import AddFab from "./components/AddFab.jsx";
 import ManualAddModal from "./components/ManualAddModal.jsx";
 import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
@@ -93,9 +94,7 @@ export default function Dispensa({ session }) {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const fileInputRef = useRef(null);
-  const searchInputRef = useRef(null);
 
   // ricette
   const [mode, setMode] = useState(null);
@@ -807,7 +806,6 @@ export default function Dispensa({ session }) {
         {view === "dispensa" && (
           <PantryTab
             onLogout={logout}
-            showSearch={showSearch} setShowSearch={setShowSearch} searchInputRef={searchInputRef}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
             allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
@@ -850,18 +848,18 @@ export default function Dispensa({ session }) {
 
       </div>
 
-      <BottomNav
-        view={view}
-        setView={setView}
-        onSearch={() => { setView("dispensa"); setShowSearch(true); searchInputRef.current?.focus(); }}
-        shoppingCount={shopping.length}
-        menuOpen={addMenuOpen}
-        setMenuOpen={setAddMenuOpen}
-        onManual={() => setManualOpen(true)}
-        onPhoto={() => fileInputRef.current?.click()}
-        onBarcode={() => setBarcodeOpen(true)}
-        onVoice={() => setVoiceOpen(true)}
-      />
+      <BottomNav view={view} setView={setView} shoppingCount={shopping.length} />
+
+      {view !== "spesa" && (
+        <AddFab
+          menuOpen={addMenuOpen}
+          setMenuOpen={setAddMenuOpen}
+          onManual={() => setManualOpen(true)}
+          onPhoto={() => fileInputRef.current?.click()}
+          onBarcode={() => setBarcodeOpen(true)}
+          onVoice={() => setVoiceOpen(true)}
+        />
+      )}
 
       {/* Input nascosto per la foto (azionato dal menù +) */}
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleReceipt} />
