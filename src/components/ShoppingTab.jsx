@@ -1,6 +1,6 @@
 // Scheda "Spesa" (stile editoriale): lista con spunta, contatore, swipe-to-delete,
 // raggruppamento per reparto, aggiunta in basso. Bianco / nero / rosso.
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Plus, Minus, Trash2, Check, PackagePlus, Loader2, ListChecks, Store } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { guessCategory } from "../lib/pantry.js";
@@ -125,6 +125,21 @@ export default function ShoppingTab({
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
   const [focused, setFocused] = useState(false);
+  const [kbInset, setKbInset] = useState(0); // altezza tastiera (per ancorare il form sopra)
+
+  // Tiene il form aggiunta sopra la tastiera su iOS (dove "fixed" non basta).
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setKbInset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    update();
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
 
   const checkedCount = shopping.filter((s) => s.checked).length;
   const allChecked = shopping.length > 0 && checkedCount === shopping.length;
@@ -211,8 +226,8 @@ export default function ShoppingTab({
       {/* Form aggiunta: fisso in basso. Mentre scrivi, scende a ridosso del bordo
           (la barra di navigazione viene nascosta) per stare sopra la tastiera. */}
       <div
-        className="fixed inset-x-0 z-20 border-t border-hair bg-white/95 backdrop-blur transition-[bottom] duration-150"
-        style={{ bottom: focused ? "env(safe-area-inset-bottom)" : "calc(60px + env(safe-area-inset-bottom))" }}
+        className="fixed inset-x-0 z-20 border-t border-hair bg-white/95 backdrop-blur"
+        style={{ bottom: focused ? `${kbInset}px` : "calc(60px + env(safe-area-inset-bottom))" }}
       >
         <div
           className="mx-auto max-w-md px-5 py-3"
