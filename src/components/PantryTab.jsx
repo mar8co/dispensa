@@ -48,7 +48,7 @@ export default function PantryTab({
           <LogOut className="h-5 w-5" />
         </button>
       </div>
-      <h1 className="mt-1 font-display text-[40px] font-semibold leading-[0.98] text-ink">Ciao!<br />Hai fame?</h1>
+      <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Ciao!<br />Hai fame?</h1>
 
       {/* Ricerca minimale: solo riga sotto, nessun bordo/box */}
       <div className="relative mt-4">

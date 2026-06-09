@@ -4,11 +4,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Stile X · Editoriale
-        cream: "#faf7f2",      // tela di fondo
+        // Stile X · Editoriale (fondo bianco)
+        cream: "#ffffff",      // tela di fondo (bianco)
         paper: "#ffffff",
         ink: "#1a1a1a",        // testo principale
-        hair: "#ece8e1",       // righe sottili / bordi
+        hair: "#ececec",       // righe sottili / bordi
         tomato: {
           DEFAULT: "#d6442f",  // accento
           50: "#fdf3f1",
@@ -19,7 +19,7 @@ export default {
       },
       fontFamily: {
         sans: ['"Hanken Grotesk"', "system-ui", "-apple-system", "sans-serif"],
-        display: ["Fraunces", "Georgia", "serif"],
+        display: ['"Hanken Grotesk"', "system-ui", "-apple-system", "sans-serif"],
       },
     },
   },
