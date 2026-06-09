@@ -10,7 +10,7 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50">
+      <div className="flex min-h-screen items-center justify-center bg-cream">
         <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
       </div>
     );

@@ -39,11 +39,11 @@ export default function StepTimer({ minutes }) {
   return (
     <div
       className={`mt-2 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 ${
-        done ? "border-emerald-300 bg-emerald-50" : "border-stone-200 bg-stone-50"
+        done ? "border-tomato/30 bg-tomato/5" : "border-hair bg-stone-50"
       }`}
     >
-      <Timer className={`h-4 w-4 ${done ? "text-emerald-600" : "text-stone-500"}`} />
-      <span className={`font-mono text-sm tabular-nums ${done ? "text-emerald-700" : "text-stone-700"}`}>
+      <Timer className={`h-4 w-4 ${done ? "text-tomato" : "text-stone-500"}`} />
+      <span className={`font-mono text-sm tabular-nums ${done ? "text-tomato" : "text-stone-700"}`}>
         {fmt(left)}
       </span>
       <div className="ml-auto flex items-center gap-1">

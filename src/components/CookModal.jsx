@@ -76,7 +76,7 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
           <button
             onClick={onApply}
             disabled={rows.length === 0}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-700 py-2.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
           >
             <Check className="h-4 w-4" /> Conferma
           </button>

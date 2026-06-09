@@ -45,11 +45,11 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-cream px-5">
       <div className="w-full max-w-sm">
         {/* Logo + titolo */}
-        <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-sm">
+        <div className="mb-7 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-tomato shadow-lg shadow-tomato/30">
             <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="4.5" y="3.5" width="15" height="15" rx="1.6" fill="white" fillOpacity="0.18" />
               <line x1="4.5" y1="6.8" x2="19.5" y2="6.8" />
@@ -60,24 +60,25 @@ export default function Auth() {
               <line x1="17.2" y1="18.5" x2="17.2" y2="20.3" />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-stone-800">La Mia Dispensa</h1>
-          <p className="mt-1 text-sm text-stone-500">Accedi per ritrovare la tua dispensa ovunque.</p>
+          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La mia dispensa</div>
+          <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Bentornato 👋</h1>
+          <p className="mt-2 text-sm text-stone-500">Accedi per ritrovare la tua dispensa ovunque.</p>
         </div>
 
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-hair bg-paper p-5">
           {sent ? (
             <div className="flex flex-col items-center gap-2 py-4 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                <Check className="h-6 w-6 text-emerald-700" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tomato/10">
+                <Check className="h-6 w-6 text-tomato" />
               </div>
-              <p className="text-sm font-medium text-stone-800">Controlla la tua email</p>
+              <p className="text-sm font-semibold text-ink">Controlla la tua email</p>
               <p className="text-sm text-stone-500">
-                Ti ho inviato un link di accesso a <span className="font-medium">{email}</span>.
+                Ti ho inviato un link di accesso a <span className="font-semibold text-ink">{email}</span>.
                 Aprilo da questo dispositivo per entrare.
               </p>
               <button
                 onClick={() => { setSent(false); setEmail(""); }}
-                className="mt-2 text-xs text-stone-400 hover:text-stone-600"
+                className="mt-2 text-xs text-stone-400 hover:text-ink"
               >
                 Usa un'altra email
               </button>
@@ -85,19 +86,19 @@ export default function Auth() {
           ) : (
             <>
               <form onSubmit={sendMagicLink}>
-                <label className="mb-1 block text-sm font-medium text-stone-700">Email</label>
+                <label className="mb-1.5 block text-sm font-semibold text-ink">Email</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nome@email.it"
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
+                  className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
                 />
                 <button
                   type="submit"
                   disabled={sending}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-stone-800 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-stone-900 disabled:opacity-60"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-60"
                 >
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                   Invia link di accesso
@@ -105,17 +106,17 @@ export default function Auth() {
               </form>
 
               <div className="my-4 flex items-center gap-3 text-xs text-stone-400">
-                <div className="h-px flex-1 bg-stone-200" /> oppure <div className="h-px flex-1 bg-stone-200" />
+                <div className="h-px flex-1 bg-hair" /> oppure <div className="h-px flex-1 bg-hair" />
               </div>
 
               <button
                 onClick={signInGoogle}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-hair bg-paper px-4 py-3 text-sm font-semibold text-ink transition hover:bg-stone-50"
               >
                 <GoogleIcon /> Continua con Google
               </button>
 
-              {err && <p className="mt-3 text-center text-xs font-medium text-red-600">{err}</p>}
+              {err && <p className="mt-3 text-center text-xs font-semibold text-tomato">{err}</p>}
             </>
           )}
         </div>

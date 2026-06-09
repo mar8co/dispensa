@@ -138,7 +138,7 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
           <button
             onClick={confirm}
             disabled={processing || !transcript.trim()}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-800 disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50"
           >
             {processing ? <><Loader2 className="h-4 w-4 animate-spin" /> Elaboro…</> : <><Check className="h-4 w-4" /> Aggiungi</>}
           </button>
