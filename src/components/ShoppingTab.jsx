@@ -10,10 +10,11 @@ import { guessCategory } from "../lib/pantry.js";
 function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const start = useRef(null);
   const axis = useRef(null); // 'h' | 'v' | null
 
-  const THRESHOLD = 90;
+  const THRESHOLD = 80;
 
   function onPointerDown(e) {
     start.current = { x: e.clientX, y: e.clientY };
@@ -40,8 +41,10 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
     start.current = null;
     setDragging(false);
     if (axis.current === "h" && Math.abs(ddx) > THRESHOLD) {
-      setDx(ddx > 0 ? 600 : -600); // esce di scena
-      setTimeout(() => onDelete(it.id), 160);
+      const w = typeof window !== "undefined" ? window.innerWidth : 400;
+      setRemoving(true);
+      setDx(ddx > 0 ? w : -w); // scivola fuori schermo
+      setTimeout(() => onDelete(it.id), 300);
     } else {
       setDx(0);
     }
@@ -52,10 +55,14 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
   const atMin = !isNaN(n) && n <= 1;
 
   return (
-    <li data-noswipe className="relative overflow-hidden">
+    <li
+      data-noswipe
+      className="relative overflow-hidden transition-all duration-300 ease-out"
+      style={{ maxHeight: removing ? 0 : "6rem", opacity: removing ? 0 : 1 }}
+    >
       {/* Sfondo rosso: il cestino appare solo sul lato che si scopre scorrendo
           (a destra se scorri verso sinistra, a sinistra se scorri verso destra). */}
-      <div className={`absolute inset-0 flex items-center bg-red-500 px-5 text-white ${dx > 0 ? "justify-start" : "justify-end"}`}>
+      <div className={`absolute inset-0 flex items-center bg-tomato px-5 text-white ${dx > 0 ? "justify-start" : "justify-end"}`}>
         <Trash2 className="h-5 w-5" />
       </div>
       {/* Contenuto scorrevole */}
@@ -67,7 +74,7 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
         style={{
           transform: `translateX(${dx}px)`,
           touchAction: "pan-y",
-          transition: dragging ? "none" : "transform 0.2s ease",
+          transition: dragging ? "none" : removing ? "transform 0.3s cubic-bezier(.4,0,.2,1)" : "transform 0.2s ease",
         }}
         className="relative flex items-center gap-2 bg-white px-4 py-3"
       >

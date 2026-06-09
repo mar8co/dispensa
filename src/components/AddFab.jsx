@@ -40,7 +40,8 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
                     : "translate(0,0) scale(0.3)",
                   opacity: menuOpen ? 1 : 0,
                   pointerEvents: menuOpen ? "auto" : "none",
-                  transitionDelay: menuOpen ? `${i * 35}ms` : "0ms",
+                  // stagger in apertura e in chiusura (ordine inverso)
+                  transitionDelay: menuOpen ? `${i * 40}ms` : `${(options.length - 1 - i) * 40}ms`,
                 }}
               >
                 <Icon className="h-[22px] w-[22px]" />
