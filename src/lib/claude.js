@@ -12,6 +12,28 @@ export function fileToBase64(file) {
   });
 }
 
+// Recupera URL di foto (Pexels) per una lista di query. Mai bloccante:
+// in caso di errore restituisce un array vuoto.
+export async function fetchPhotos(queries) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
+    const res = await fetch("/api/photo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ queries }),
+    });
+    if (!res.ok) return [];
+    const j = await res.json();
+    return Array.isArray(j.urls) ? j.urls : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function callClaude(content, maxTokens = 1000, retries = 1) {
   try {
     const { data } = await supabase.auth.getSession();

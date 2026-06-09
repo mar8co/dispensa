@@ -96,9 +96,13 @@ export default function RecipesTab({
                 onClick={() => openRecipe(r.title)}
                 className="flex w-full items-center gap-3 rounded-2xl border border-hair bg-paper p-3 text-left transition hover:border-ink"
               >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 text-2xl">
-                  {mode?.icon || "🍽️"}
-                </div>
+                {r.image ? (
+                  <img src={r.image} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 text-2xl">
+                    {mode?.icon || "🍽️"}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-[15px] font-bold leading-tight text-ink">{r.title}</h3>
                   <p className="mt-0.5 line-clamp-1 text-xs leading-snug text-stone-500">{r.description}</p>
@@ -135,9 +139,13 @@ export default function RecipesTab({
           </button>
 
           {/* Cover */}
-          <div className="flex h-36 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200 text-6xl">
-            {mode?.icon || "🍽️"}
-          </div>
+          {recipe.image ? (
+            <img src={recipe.image} alt="" className="h-44 w-full rounded-2xl object-cover" />
+          ) : (
+            <div className="flex h-36 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200 text-6xl">
+              {mode?.icon || "🍽️"}
+            </div>
+          )}
 
           <h1 className="mt-4 font-display text-[26px] font-extrabold leading-tight tracking-tight text-ink">{recipe.title}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2">

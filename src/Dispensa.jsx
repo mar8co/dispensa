@@ -9,7 +9,7 @@ import {
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
   adjustQty, norm, daysUntilExpiry,
 } from "./lib/pantry.js";
-import { callClaude, fileToBase64 } from "./lib/claude.js";
+import { callClaude, fileToBase64, fetchPhotos } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
 import {
   fetchPantry, insertItem, insertMany, updateItem,
@@ -651,10 +651,16 @@ export default function Dispensa({ session }) {
       `Voglio idee per la categoria "${m.id}". Proponi esattamente 4 ricette diverse che usino principalmente ` +
       `ingredienti della mia dispensa (puoi assumere disponibili sale, acqua e olio). ${fast}` +
       `Rispondi SOLO con JSON valido senza markdown: ` +
-      `{"recipes":[{"title":"...","description":"breve, max 14 parole","time":"es. 15 min","difficulty":"Facile|Media|Elaborata"}]}`;
+      `{"recipes":[{"title":"...","description":"breve, max 14 parole","time":"es. 15 min","difficulty":"Facile|Media|Elaborata","imageQuery":"2-4 parole IN INGLESE per cercare una foto del piatto, es. spaghetti tomato"}]}`;
     try {
       const parsed = await callClaude([{ type: "text", text: prompt }], 1000);
-      setIdeas(Array.isArray(parsed.recipes) ? parsed.recipes : []);
+      const list = Array.isArray(parsed.recipes) ? parsed.recipes : [];
+      setIdeas(list);
+      if (list.length) {
+        fetchPhotos(list.map((r) => r.imageQuery || r.title)).then((urls) => {
+          setIdeas((prev) => prev.map((r, i) => (urls[i] ? { ...r, image: urls[i] } : r)));
+        });
+      }
     } catch (err) {
       console.error(err);
       setRecipeErr(err?.status === 429
@@ -674,11 +680,14 @@ export default function Dispensa({ session }) {
       `IMPORTANTISSIMO: usa SOLO unità di misura metriche (g, kg, ml, l) — mai cups, oz, tbsp, tsp. ` +
       `Per ogni passaggio che richiede attesa o cottura indica i minuti nel campo "timer" (numero), altrimenti null. ` +
       `Rispondi SOLO con JSON valido senza markdown: ` +
-      `{"title":"...","servings":2,"time":"...","ingredients":[{"name":"...","qty":"120 g"}],"steps":[{"text":"...","timer":10}]}`;
+      `{"title":"...","servings":2,"time":"...","imageQuery":"2-4 parole IN INGLESE per la foto del piatto","ingredients":[{"name":"...","qty":"120 g"}],"steps":[{"text":"...","timer":10}]}`;
     try {
       const parsed = await callClaude([{ type: "text", text: prompt }], 1500);
       setRecipe(parsed);
       setServings(1);
+      fetchPhotos([parsed.imageQuery || parsed.title]).then((urls) => {
+        if (urls[0]) setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
+      });
     } catch (err) {
       console.error(err);
       setRecipeErr(err?.status === 429
