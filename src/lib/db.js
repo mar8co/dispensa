@@ -69,6 +69,40 @@ export async function deleteAllPantry() {
   if (error) throw error;
 }
 
+// ---------- Ricettario (salvate + cucinate) ----------
+
+const RECIPE_COLS = "id, title, data, image, saved, cooked_count, last_cooked_at, created_at";
+
+export async function fetchSavedRecipes() {
+  const { data, error } = await supabase
+    .from("saved_recipes")
+    .select(RECIPE_COLS)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+// Upsert per (utente, titolo): aggiorna solo i campi passati.
+export async function upsertSavedRecipe(fields) {
+  const { data, error } = await supabase
+    .from("saved_recipes")
+    .upsert(fields, { onConflict: "user_id,title" })
+    .select(RECIPE_COLS)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateSavedRecipe(id, fields) {
+  const { error } = await supabase.from("saved_recipes").update(fields).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteSavedRecipe(id) {
+  const { error } = await supabase.from("saved_recipes").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ---------- Impostazioni utente ----------
 
 // Restituisce { settings, updatedAt }: il timestamp serve al chiamante per

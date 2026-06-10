@@ -18,7 +18,9 @@ import {
   fetchSettings, saveSettings,
   fetchShopping, insertShopping, insertManyShopping,
   updateShopping, deleteShopping, deleteShoppingItems,
+  fetchSavedRecipes, upsertSavedRecipe, updateSavedRecipe, deleteSavedRecipe,
 } from "./lib/db.js";
+import { checkTimers } from "./lib/timers.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
 import { loadHistory, saveHistory, bumpedHistory, sortedNames } from "./lib/history.js";
@@ -34,6 +36,7 @@ import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
+import TimerBar from "./components/TimerBar.jsx";
 import Toast from "./components/Toast.jsx";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
@@ -119,6 +122,9 @@ export default function Dispensa({ session }) {
   const [loadingIdeas, setLoadingIdeas] = useState(false);
   const [loadingRecipe, setLoadingRecipe] = useState(false);
   const [recipeErr, setRecipeErr] = useState("");
+  const [savedRecipes, setSavedRecipes] = useState([]); // ricettario (salvate + cucinate)
+  const [prefServings, setPrefServings] = useState(null); // "a casa siamo in X" (persistito)
+  const [foodPrefs, setFoodPrefs] = useState("");          // preferenze alimentari (persistite)
 
   // "Ho cucinato questo"
   const [cookOpen, setCookOpen] = useState(false);
@@ -136,6 +142,8 @@ export default function Dispensa({ session }) {
     if (!s || typeof s !== "object") return;
     if (typeof s.byAisle === "boolean") setByAisle(s.byAisle);
     if (s.shopCats && typeof s.shopCats === "object") setShopCats(s.shopCats);
+    if (Number(s.prefServings) >= 1) setPrefServings(Number(s.prefServings));
+    if (typeof s.foodPrefs === "string") setFoodPrefs(s.foodPrefs);
     if (Array.isArray(s.catOrder)) {
       setCatOrder([
         ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
@@ -185,6 +193,9 @@ export default function Dispensa({ session }) {
           }
         } catch (e) { console.error(e); }
         try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
+        // Ricettario: se la tabella non esiste ancora (migration-4.sql non
+        // eseguita) la funzione fallisce e la sezione resta semplicemente vuota.
+        try { setSavedRecipes(await fetchSavedRecipes()); } catch (e) { console.warn("Ricettario non disponibile:", e?.message || e); }
       } catch (e) {
         console.warn("Rete non disponibile: uso i dati in cache.", e);
         if (!cached) setItems([]);
@@ -200,9 +211,9 @@ export default function Dispensa({ session }) {
     saveCache(session.user.id, {
       items,
       shopping,
-      settings: { collapsed, catOrder, modeOrder, byAisle, shopCats },
+      settings: { collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs },
     });
-  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, loaded]);
+  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
 
   // --- Indicatore stato connessione ---
   useEffect(() => {
@@ -262,10 +273,29 @@ export default function Dispensa({ session }) {
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
     if (!loaded) return;
-    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats }).catch((e) =>
+    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs }).catch((e) =>
       console.error("Errore salvataggio impostazioni:", e)
     );
-  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, loaded]);
+  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
+
+  // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
+  useEffect(() => {
+    const tick = () => {
+      for (const t of checkTimers()) {
+        showToast(<>⏱️ Timer finito{t.label ? <>: <strong>{t.label}</strong></> : null}</>);
+      }
+    };
+    const int = setInterval(tick, 500);
+    const onVis = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onVis);
+    return () => {
+      clearInterval(int);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onVis);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pantryStr = items.map((i) => `${i.name} (${i.qty})`).join(", ");
 
@@ -777,24 +807,60 @@ export default function Dispensa({ session }) {
   }
 
   // --- Ricette ---
-  async function chooseMode(m) {
+
+  // Riga di preferenze alimentari iniettata in tutti i prompt di cucina.
+  const prefLine = foodPrefs.trim()
+    ? `Preferenze alimentari dell'utente, da rispettare SEMPRE: ${foodPrefs.trim()}. `
+    : "";
+
+  // Cache delle proposte per occasione (per utente, 24h): riaprire
+  // un'occasione non consuma chiamate AI; "Altre idee" forza la rigenerazione.
+  const IDEAS_TTL = 24 * 60 * 60 * 1000;
+  const ideasKey = () => `dispensa-ideas-${session.user.id}`;
+  function loadIdeasCache() {
+    try { return JSON.parse(localStorage.getItem(ideasKey())) || {}; } catch { return {}; }
+  }
+  function saveIdeasCache(modeId, list) {
+    try {
+      const all = loadIdeasCache();
+      all[modeId] = { ideas: list, ts: Date.now() };
+      localStorage.setItem(ideasKey(), JSON.stringify(all));
+    } catch { /* niente cache */ }
+  }
+
+  async function chooseMode(m, force = false) {
+    // Richiesta libera ("Cosa ti va?"): niente cache, sempre fresca.
+    if (!force && !m.custom) {
+      const hit = loadIdeasCache()[m.id];
+      if (hit && Array.isArray(hit.ideas) && hit.ideas.length && Date.now() - hit.ts < IDEAS_TTL) {
+        animateUI(() => {
+          setMode(m); setRecipe(null); setIdeas(hit.ideas); setRecipeErr(""); setLoadingIdeas(false);
+        });
+        return;
+      }
+    }
     animateUI(() => {
       setMode(m); setRecipe(null); setIdeas([]); setRecipeErr(""); setLoadingIdeas(true);
     });
     const fast = m.id === "Pranzo veloce" ? "Ogni ricetta deve essere pronta entro 20 minuti. " : "";
+    const ask = m.custom
+      ? `L'utente chiede: "${m.id}". Proponi esattamente 4 ricette diverse che soddisfino questa richiesta usando principalmente `
+      : `Voglio idee per la categoria "${m.id}". Proponi esattamente 4 ricette diverse che usino principalmente `;
     const prompt =
       `Sei uno chef esperto di cucina casalinga. Questi sono gli alimenti nella mia dispensa: ${pantryStr}. ` +
-      `Voglio idee per la categoria "${m.id}". Proponi esattamente 4 ricette diverse che usino principalmente ` +
-      `ingredienti della mia dispensa (puoi assumere disponibili sale, acqua e olio). ${fast}` +
+      `${prefLine}${ask}ingredienti della mia dispensa (puoi assumere disponibili sale, acqua e olio). ${fast}` +
       `Rispondi SOLO con JSON valido senza markdown: ` +
       `{"recipes":[{"title":"...","description":"breve, max 14 parole","time":"es. 15 min","difficulty":"Facile|Media|Elaborata","imageQuery":"2-4 parole IN INGLESE per cercare una foto del piatto, es. spaghetti tomato"}]}`;
     try {
       const parsed = await callClaude([{ type: "text", text: prompt }], 1000);
       const list = Array.isArray(parsed.recipes) ? parsed.recipes : [];
       animateUI(() => { setIdeas(list); setLoadingIdeas(false); });
+      if (!m.custom && list.length) saveIdeasCache(m.id, list);
       if (list.length) {
         fetchPhotos(list.map((r) => r.imageQuery || r.title)).then((urls) => {
-          setIdeas((prev) => prev.map((r, i) => (urls[i] ? { ...r, image: urls[i] } : r)));
+          const withPhotos = list.map((r, i) => (urls[i] ? { ...r, image: urls[i] } : r));
+          setIdeas(withPhotos);
+          if (!m.custom) saveIdeasCache(m.id, withPhotos);
         });
       }
     } catch (err) {
@@ -806,13 +872,44 @@ export default function Dispensa({ session }) {
     }
   }
 
+  // "Cosa ti va?": proposte su una richiesta libera dell'utente.
+  function askCustom(text) {
+    const t = String(text || "").trim();
+    if (!t) return;
+    chooseMode({ id: t, icon: "✨", custom: true });
+  }
+
+  // Porzioni di partenza: la preferenza dell'utente, altrimenti quelle
+  // della ricetta. Ogni cambio manuale viene ricordato ("a casa siamo in X").
+  function initialServings(r) {
+    return prefServings || Number(r?.servings) || 2;
+  }
+  function changeServings(n) {
+    const v = Math.max(1, n);
+    setServings(v);
+    setPrefServings(v);
+  }
+
+  const savedByTitle = (title) =>
+    savedRecipes.find((r) => norm(r.title) === norm(String(title || "")));
+
   async function openRecipe(title) {
+    // Se è già nel ricettario, si apre da lì: istantanea e senza quota AI.
+    const saved = savedByTitle(title);
+    if (saved?.data?.steps?.length) {
+      animateUI(() => {
+        setRecipe({ ...saved.data, image: saved.data.image || saved.image || undefined });
+        setServings(initialServings(saved.data));
+        setRecipeErr(""); setLoadingRecipe(false); setCookDone("");
+      });
+      return;
+    }
     animateUI(() => {
       setRecipe(null); setRecipeErr(""); setLoadingRecipe(true); setCookDone("");
     });
     const prompt =
       `Sei uno chef esperto. Dammi la ricetta completa e dettagliata per "${title}". ` +
-      `Usa principalmente gli ingredienti della mia dispensa: ${pantryStr}. ` +
+      `Usa principalmente gli ingredienti della mia dispensa: ${pantryStr}. ${prefLine}` +
       `Indica le grammature per il numero di porzioni nel campo "servings". ` +
       `IMPORTANTISSIMO: usa SOLO unità di misura metriche (g, kg, ml, l) — mai cups, oz, tbsp, tsp. ` +
       `Per ogni passaggio che richiede attesa o cottura indica i minuti nel campo "timer" (numero), altrimenti null. ` +
@@ -820,7 +917,7 @@ export default function Dispensa({ session }) {
       `{"title":"...","servings":2,"time":"...","imageQuery":"2-4 parole IN INGLESE per la foto del piatto","ingredients":[{"name":"...","qty":"120 g"}],"steps":[{"text":"...","timer":10}]}`;
     try {
       const parsed = await callClaude([{ type: "text", text: prompt }], 1500);
-      animateUI(() => { setRecipe(parsed); setServings(1); setLoadingRecipe(false); });
+      animateUI(() => { setRecipe(parsed); setServings(initialServings(parsed)); setLoadingRecipe(false); });
       fetchPhotos([parsed.imageQuery || parsed.title]).then((urls) => {
         if (urls[0]) setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
       });
@@ -831,6 +928,85 @@ export default function Dispensa({ session }) {
         : "Errore nel generare la ricetta. Riprova.");
       setLoadingRecipe(false);
     }
+  }
+
+  // --- Ricettario (salvate + cucinate) ---
+
+  // Apre una ricetta del ricettario (nessuna chiamata AI).
+  function openSavedRecipe(row) {
+    if (!row?.data) return;
+    animateUI(() => {
+      setMode(null); setIdeas([]); setRecipeErr(""); setCookDone(""); setLoadingRecipe(false);
+      setRecipe({ ...row.data, image: row.data.image || row.image || undefined });
+      setServings(initialServings(row.data));
+    });
+  }
+
+  // Cuore sulla ricetta aperta: salva/rimuove dal ricettario.
+  async function toggleSaveRecipe() {
+    if (!recipe) return;
+    const ex = savedByTitle(recipe.title);
+    try {
+      if (ex && ex.saved) {
+        // Tolto il cuore: se mai cucinata si elimina, altrimenti resta nello storico.
+        if (ex.cooked_count > 0) {
+          await updateSavedRecipe(ex.id, { saved: false });
+          setSavedRecipes((prev) => prev.map((r) => (r.id === ex.id ? { ...r, saved: false } : r)));
+        } else {
+          await deleteSavedRecipe(ex.id);
+          setSavedRecipes((prev) => prev.filter((r) => r.id !== ex.id));
+        }
+      } else if (ex) {
+        await updateSavedRecipe(ex.id, { saved: true });
+        setSavedRecipes((prev) => prev.map((r) => (r.id === ex.id ? { ...r, saved: true } : r)));
+      } else {
+        const row = await upsertSavedRecipe({
+          title: recipe.title, data: recipe, image: recipe.image || null, saved: true,
+        });
+        setSavedRecipes((prev) => [row, ...prev]);
+      }
+    } catch (e) {
+      console.error("Errore salvataggio ricetta:", e);
+      showToast("Non riesco a salvare: hai eseguito migration-4.sql su Supabase?");
+    }
+  }
+
+  // Registra una cottura nello storico (chiamata da "Ho cucinato questo").
+  async function recordCookedRecipe() {
+    if (!recipe) return;
+    const ex = savedByTitle(recipe.title);
+    const now = new Date().toISOString();
+    try {
+      if (ex) {
+        const fields = { cooked_count: (ex.cooked_count || 0) + 1, last_cooked_at: now };
+        await updateSavedRecipe(ex.id, fields);
+        setSavedRecipes((prev) => prev.map((r) => (r.id === ex.id ? { ...r, ...fields } : r)));
+      } else {
+        const row = await upsertSavedRecipe({
+          title: recipe.title, data: recipe, image: recipe.image || null,
+          saved: false, cooked_count: 1, last_cooked_at: now,
+        });
+        setSavedRecipes((prev) => [row, ...prev]);
+      }
+    } catch (e) { console.warn("Storico cucinate non disponibile:", e?.message || e); }
+  }
+
+  // Elimina una riga del ricettario (con Annulla).
+  async function removeSavedRecipe(row) {
+    try {
+      await deleteSavedRecipe(row.id);
+      setSavedRecipes((prev) => prev.filter((r) => r.id !== row.id));
+      showToast(<><strong>{row.title}</strong> rimossa dal ricettario</>, async () => {
+        try {
+          const back = await upsertSavedRecipe({
+            title: row.title, data: row.data, image: row.image, saved: row.saved,
+            cooked_count: row.cooked_count, last_cooked_at: row.last_cooked_at,
+          });
+          setSavedRecipes((prev) => [back, ...prev]);
+          dismissToast();
+        } catch (e) { console.error("Errore ripristino ricetta:", e); }
+      });
+    } catch (e) { console.error("Errore eliminazione ricetta:", e); }
   }
 
   function backToModes() {
@@ -932,6 +1108,7 @@ export default function Dispensa({ session }) {
     setCookOpen(false);
     const n = Object.keys(updates).length + removals.size;
     setCookDone(n ? `Dispensa aggiornata: ${n} prodotti.` : "");
+    recordCookedRecipe(); // storico "cucinate di recente"
     // I prodotti finiti cucinando si possono rimettere in lista con un tap.
     const finished = cookRows.filter((r) => removals.has(r.itemId)).map((r) => r.name);
     if (finished.length) {
@@ -989,9 +1166,16 @@ export default function Dispensa({ session }) {
             onModeDragEnd={onModeDragEnd} chooseMode={chooseMode}
             ideas={ideas} loadingIdeas={loadingIdeas} openRecipe={openRecipe} backToModes={backToModes}
             recipe={recipe} loadingRecipe={loadingRecipe} recipeErr={recipeErr}
-            servings={servings} setServings={setServings} factor={factor} backToIdeas={backToIdeas}
+            servings={servings} setServings={changeServings} factor={factor} backToIdeas={backToIdeas}
             openCookModal={openCookModal} cookDone={cookDone}
             hasIngredient={hasIngredient} onAddMissing={addMissingToShopping}
+            onRegenerate={() => mode && chooseMode(mode, true)}
+            onCustomAsk={askCustom}
+            savedRecipes={savedRecipes}
+            onOpenSaved={openSavedRecipe}
+            onDeleteSaved={removeSavedRecipe}
+            isSaved={!!(recipe && savedByTitle(recipe.title)?.saved)}
+            onToggleSave={toggleSaveRecipe}
           />
         )}
 
@@ -1018,6 +1202,14 @@ export default function Dispensa({ session }) {
         )}
 
       </div>
+
+      {/* Timer attivi visibili da ogni scheda */}
+      <TimerBar
+        onTap={() => changeView("ricette")}
+        bottom={view === "spesa"
+          ? "calc(180px + env(safe-area-inset-bottom))"
+          : "calc(72px + env(safe-area-inset-bottom))"}
+      />
 
       {/* Il badge conta solo ciò che resta da comprare */}
       <BottomNav view={view} setView={changeView} shoppingCount={shopping.filter((s) => !s.checked).length} />
@@ -1048,6 +1240,8 @@ export default function Dispensa({ session }) {
         <ProfileSheet
           email={session.user.email}
           itemCount={items.length}
+          foodPrefs={foodPrefs}
+          onSaveFoodPrefs={setFoodPrefs}
           onClose={() => setProfileOpen(false)}
           onClearPantry={() => setConfirmClear(true)}
           onLogout={logout}

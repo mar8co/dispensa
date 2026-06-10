@@ -1,128 +1,42 @@
-import { useState, useEffect, useRef } from "react";
+// Timer di un passaggio di ricetta: vista sullo store globale (lib/timers.js),
+// così il conteggio continua e suona anche navigando nelle altre schede.
+import { useState, useEffect } from "react";
 import { Timer, Play, Pause, RotateCcw } from "lucide-react";
+import {
+  subscribeTimers, getTimer, isFinished, startTimer, pauseTimer, resetTimer,
+} from "../lib/timers.js";
 
-// AudioContext condiviso, sbloccato al primo "Avvia" (gesto utente) così il
-// suono può partire anche più tardi quando il timer finisce.
-let sharedCtx = null;
-function unlockAudio() {
-  try {
-    if (!sharedCtx) sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (sharedCtx.state === "suspended") sharedCtx.resume();
-  } catch { /* niente audio */ }
-}
-function beep() {
-  try {
-    if (!sharedCtx) sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (sharedCtx.state === "suspended") sharedCtx.resume();
-    const ctx = sharedCtx;
-    // tre brevi bip
-    [0, 0.6, 1.2].forEach((t) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = "sine"; o.frequency.value = 880;
-      g.gain.setValueAtTime(0.001, ctx.currentTime + t);
-      g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + t + 0.05);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.45);
-      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.5);
-    });
-  } catch { /* niente audio */ }
-}
-function notify() {
-  try {
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification("⏱️ Timer finito", {
-        body: "Il tempo di cottura è terminato!",
-        icon: "/pwa-192x192.png",
-        tag: "dispensa-timer",
-      });
-    }
-  } catch { /* niente notifica */ }
-}
-
-export default function StepTimer({ minutes, id }) {
+export default function StepTimer({ minutes, id, label }) {
   const total = Math.max(1, Math.round(minutes * 60));
-  const storeKey = id ? `dispensa-timer-${id}` : null;
+  const [, force] = useState(0);
+  const [pausedLeft, setPausedLeft] = useState(null); // rimanenza quando in pausa
 
-  const [endTime, setEndTime] = useState(null); // ms di fine quando in corso
-  const [left, setLeft] = useState(total);       // secondi mostrati
-  const [done, setDone] = useState(false);
-  const tickRef = useRef(null);
-  const firedRef = useRef(false);
+  // Ridisegna sugli eventi dello store (start/pausa/scadenza da ovunque).
+  useEffect(() => subscribeTimers(() => force((x) => x + 1)), []);
 
-  function finish() {
-    setLeft(0); setEndTime(null); setDone(true);
-    if (storeKey) { try { localStorage.removeItem(storeKey); } catch { /* */ } }
-    if (!firedRef.current) { firedRef.current = true; beep(); notify(); }
-  }
+  const t = getTimer(id);
+  const running = !!t;
+  const done = isFinished(id);
 
-  // Ripristino da localStorage (sopravvive al cambio scheda dentro l'app).
+  // Tick locale solo per aggiornare il display mentre corre.
   useEffect(() => {
-    if (!storeKey) return;
-    try {
-      const raw = localStorage.getItem(storeKey);
-      if (raw) {
-        const end = parseInt(raw, 10);
-        if (!isNaN(end)) {
-          if (end - Date.now() > 0) setEndTime(end);
-          else { setLeft(0); setDone(true); }
-        }
-      }
-    } catch { /* */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!running) return;
+    const int = setInterval(() => force((x) => x + 1), 500);
+    return () => clearInterval(int);
+  }, [running]);
 
-  // Tick basato sull'orario reale (preciso anche se il browser rallenta).
-  useEffect(() => {
-    if (endTime == null) return;
-    const tick = () => {
-      const rem = Math.round((endTime - Date.now()) / 1000);
-      if (rem <= 0) finish();
-      else setLeft(rem);
-    };
-    tick();
-    tickRef.current = setInterval(tick, 250);
-    return () => clearInterval(tickRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [endTime]);
-
-  // Al ritorno in primo piano: se è scaduto mentre eri via, suona subito.
-  useEffect(() => {
-    const onVis = () => {
-      if (document.visibilityState === "visible" && endTime != null) {
-        if (endTime - Date.now() <= 0) finish();
-        else setLeft(Math.round((endTime - Date.now()) / 1000));
-      }
-    };
-    document.addEventListener("visibilitychange", onVis);
-    window.addEventListener("focus", onVis);
-    return () => {
-      document.removeEventListener("visibilitychange", onVis);
-      window.removeEventListener("focus", onVis);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [endTime]);
-
-  const running = endTime != null;
+  const left = done
+    ? 0
+    : running
+      ? Math.max(0, Math.round((t.endTime - Date.now()) / 1000))
+      : (pausedLeft ?? total);
 
   function start() {
-    unlockAudio();
-    try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch { /* */ }
-    firedRef.current = false;
-    setDone(false);
-    const base = left > 0 ? left : total;
-    const end = Date.now() + base * 1000;
-    setEndTime(end);
-    if (storeKey) { try { localStorage.setItem(storeKey, String(end)); } catch { /* */ } }
+    startTimer(id, label, pausedLeft ?? total);
+    setPausedLeft(null);
   }
-  function pause() {
-    setEndTime(null);
-    if (storeKey) { try { localStorage.removeItem(storeKey); } catch { /* */ } }
-  }
-  function reset() {
-    setEndTime(null); setDone(false); firedRef.current = false; setLeft(total);
-    if (storeKey) { try { localStorage.removeItem(storeKey); } catch { /* */ } }
-  }
+  function pause() { setPausedLeft(pauseTimer(id)); }
+  function reset() { resetTimer(id); setPausedLeft(null); }
 
   const fmt = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;

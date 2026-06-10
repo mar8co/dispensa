@@ -12,7 +12,9 @@ const THEMES = [
   { id: "dark", label: "Scuro", icon: Moon },
 ];
 
-export default function ProfileSheet({ email, itemCount, onClose, onClearPantry, onLogout }) {
+export default function ProfileSheet({
+  email, itemCount, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout,
+}) {
   const [theme, setThemeState] = useState(getTheme());
   const [confirmLogout, setConfirmLogout] = useState(false);
 
@@ -72,6 +74,17 @@ export default function ProfileSheet({ email, itemCount, onClose, onClearPantry,
           {theme === "auto" && (
             <p className="mt-2 text-xs text-stone-400">Segue le impostazioni del telefono.</p>
           )}
+
+          {/* Preferenze alimentari: iniettate in tutte le richieste di ricette */}
+          <p className="mb-2 mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Preferenze alimentari</p>
+          <textarea
+            defaultValue={foodPrefs}
+            onBlur={(e) => onSaveFoodPrefs(e.target.value.trim())}
+            rows={2}
+            placeholder="Es. vegetariano · niente fritti · pochi latticini"
+            className="w-full resize-none rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+          />
+          <p className="mt-1.5 text-xs text-stone-400">Le ricette proposte ne terranno sempre conto.</p>
 
           {/* Azioni */}
           <div className="mt-6 space-y-2">
