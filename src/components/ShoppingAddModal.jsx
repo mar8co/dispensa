@@ -20,8 +20,12 @@ export default function ShoppingAddModal({ onAdd, onClose }) {
   }
 
   return (
-    // Niente oscuramento: la lista resta visibile mentre aggiungi.
-    <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-16" onClick={onClose}>
+    // Sfondo leggermente scurito e sfocato (come il menù "+" della dispensa):
+    // la lista sotto resta intuibile mentre aggiungi.
+    <div
+      className="animate-fade-in fixed inset-0 z-50 flex items-start justify-center bg-black/25 px-4 pt-16 backdrop-blur-[2px]"
+      onClick={onClose}
+    >
       <div className="animate-drop-in w-full max-w-md rounded-2xl border border-hair bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Aggiungi alla lista</h3>

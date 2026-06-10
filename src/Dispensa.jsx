@@ -32,6 +32,7 @@ import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
+import ProfileSheet from "./components/ProfileSheet.jsx";
 import Toast from "./components/Toast.jsx";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
@@ -119,6 +120,9 @@ export default function Dispensa({ session }) {
   const [cookRows, setCookRows] = useState([]);
   const [cookDone, setCookDone] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
+
+  // foglio profilo (tema, svuota dispensa, logout)
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
   // NB: lo stato "collassato" NON viene ripristinato: le categorie partono
@@ -845,7 +849,8 @@ export default function Dispensa({ session }) {
       <div className="mx-auto max-w-md px-5 pt-7 pb-28">
         {view === "dispensa" && (
           <PantryTab
-            onLogout={logout}
+            onOpenProfile={() => setProfileOpen(true)}
+            userInitial={(session.user.email || "?").trim().charAt(0).toUpperCase()}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
             allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
@@ -854,7 +859,6 @@ export default function Dispensa({ session }) {
             editId={editId} editName={editName} setEditName={setEditName} editQty={editQty} setEditQty={setEditQty}
             editCat={editCat} setEditCat={setEditCat} editExpiry={editExpiry} setEditExpiry={setEditExpiry}
             startEdit={startEdit} saveEdit={saveEdit} setEditId={setEditId} removeItem={removeItem}
-            setConfirmClear={setConfirmClear}
           />
         )}
 
@@ -909,6 +913,16 @@ export default function Dispensa({ session }) {
           newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
           grams={grams} setGrams={setGrams} newExpiry={newExpiry} setNewExpiry={setNewExpiry}
           adding={adding} onSubmit={submitManual} onClose={() => setManualOpen(false)}
+        />
+      )}
+
+      {profileOpen && (
+        <ProfileSheet
+          email={session.user.email}
+          itemCount={items.length}
+          onClose={() => setProfileOpen(false)}
+          onClearPantry={() => setConfirmClear(true)}
+          onLogout={logout}
         />
       )}
 

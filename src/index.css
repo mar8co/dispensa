@@ -29,8 +29,11 @@
   --amber-700: 180 83 9;
 }
 
+/* Toni scuri: valgono in automatico (sistema scuro, salvo forzatura "chiaro")
+   e quando l'utente forza "scuro" dal profilo. NB: i due blocchi devono
+   restare identici. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --cream: 18 18 17;
     --paper: 30 30 29;
     --ink: 242 240 236;
@@ -54,6 +57,31 @@
     --amber-700: 224 179 79;
   }
 }
+:root[data-theme="dark"] {
+  --cream: 18 18 17;
+  --paper: 30 30 29;
+  --ink: 242 240 236;
+  --hair: 44 44 42;
+  --white: 24 24 23;
+  --tomato: 232 91 68;
+  --tomato-700: 240 122 102;
+  --tomato-50: 45 26 22;
+  --tomato-100: 58 30 25;
+  --stone-50: 36 36 34;
+  --stone-100: 44 44 42;
+  --stone-200: 58 58 55;
+  --stone-300: 76 76 72;
+  --stone-400: 136 136 130;
+  --stone-500: 162 162 156;
+  --stone-600: 194 194 188;
+  --stone-700: 212 212 206;
+  --stone-800: 226 226 220;
+  --stone-900: 240 240 234;
+  --amber-100: 58 47 18;
+  --amber-700: 224 179 79;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 html {
   -webkit-tap-highlight-color: transparent;
@@ -81,6 +109,15 @@ body {
   ::view-transition-new(root) {
     animation: none;
   }
+}
+
+/* Dissolvenza generica (es. sfondo blurrato delle finestre). */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.25s ease;
 }
 
 /* Entrata morbida della finestra "Aggiungi alla lista" (ancorata in alto). */

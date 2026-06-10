@@ -2,7 +2,7 @@
 // da righe sottili (niente scatole), accento pomodoro, +/- rapido, scadenze,
 // modifica/eliminazione in-line. L'aggiunta è gestita dalla barra in basso.
 import {
-  Plus, Minus, Trash2, Pencil, Check, X, Search, LogOut,
+  Trash2, Pencil, Check, X, Search,
   ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
@@ -30,12 +30,11 @@ const editCls =
   "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
 export default function PantryTab({
-  search, setSearch, sort, setSort, onLogout,
+  search, setSearch, sort, setSort, onOpenProfile, userInitial,
   grouped, collapsed, setCollapsed, cardRefs, allCollapsed, onToggleAll,
   dragCat, onDragStart, onDragMove, onDragEnd, onAdjustQty,
   editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
   editExpiry, setEditExpiry, startEdit, saveEdit, setEditId, removeItem,
-  setConfirmClear,
 }) {
   const searchActive = search.trim() !== "";
 
@@ -44,8 +43,13 @@ export default function PantryTab({
       {/* Header editoriale */}
       <div className="flex items-start justify-between">
         <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua dispensa</div>
-        <button onClick={onLogout} className="-mr-1 -mt-1 rounded-lg p-1.5 text-stone-300 transition hover:bg-stone-100 hover:text-stone-600" aria-label="Esci" title="Esci">
-          <LogOut className="h-5 w-5" />
+        <button
+          onClick={onOpenProfile}
+          className="-mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-sm font-extrabold text-white shadow-sm transition hover:opacity-90 active:scale-95"
+          aria-label="Profilo"
+          title="Profilo"
+        >
+          {userInitial}
         </button>
       </div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Ciao 👋<br />Hai fame?</h1>
@@ -173,11 +177,6 @@ export default function PantryTab({
         })}
       </div>
 
-      {grouped.length > 0 && !searchActive && (
-        <button onClick={() => setConfirmClear(true)} className="mx-auto mt-8 block text-xs text-stone-300 hover:text-stone-500">
-          Svuota dispensa
-        </button>
-      )}
     </div>
   );
 }
