@@ -31,11 +31,9 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
           {options.map((o, i) => {
             const Icon = o.icon;
             return (
-              <button
+              <div
                 key={o.id}
-                onClick={() => { setMenuOpen(false); o.action(); }}
-                aria-label={o.label}
-                className="absolute bottom-1 right-1 flex h-12 w-12 items-center justify-center rounded-full bg-paper text-tomato shadow-lg"
+                className="absolute bottom-1 right-1 flex w-12 flex-col items-center"
                 style={{
                   transform: menuOpen
                     ? `translate(${o.x}px, ${o.y}px) scale(1)`
@@ -49,8 +47,18 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
                   transitionDelay: menuOpen ? `${i * 45}ms` : `${(options.length - 1 - i) * 25}ms`,
                 }}
               >
-                <Icon className="h-[22px] w-[22px]" />
-              </button>
+                <button
+                  onClick={() => { setMenuOpen(false); o.action(); }}
+                  aria-label={o.label}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-paper text-tomato shadow-lg"
+                >
+                  <Icon className="h-[22px] w-[22px]" />
+                </button>
+                {/* Etichetta sotto il bollino: leggibile sullo sfondo scurito */}
+                <span className="pointer-events-none mt-1 whitespace-nowrap rounded-full bg-black/60 px-1.5 py-px text-[9px] font-bold text-white">
+                  {o.label}
+                </span>
+              </div>
             );
           })}
 

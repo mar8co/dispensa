@@ -131,7 +131,7 @@ function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
               ? "transform 0.22s cubic-bezier(0.55, 0, 1, 0.45)"   // esce accelerando
               : "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)",  // rientro morbido
         }}
-        className="relative flex items-center gap-3 bg-white py-3"
+        className="relative flex items-center gap-3 bg-cream py-3"
       >
         <button
           onClick={() => onToggle(it.id, !it.checked)}
@@ -360,7 +360,7 @@ export default function ShoppingTab({
 
       {/* Barra azioni in basso (sopra la navigazione): + Aggiungi, voce e toggle */}
       <div
-        className="fixed inset-x-0 z-20 border-t border-hair bg-white/95 backdrop-blur"
+        className="fixed inset-x-0 z-20 border-t border-hair bg-cream/95 backdrop-blur"
         style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
       >
         <div className="mx-auto max-w-md px-5 py-3">

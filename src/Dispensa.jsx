@@ -76,9 +76,10 @@ export default function Dispensa({ session }) {
   const [newExpiry, setNewExpiry] = useState("");
   const [adding, setAdding] = useState(false);
 
-  // ricerca / ordinamento
+  // ricerca / ordinamento / filtro scadenze
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("recenti");
+  const [expFilter, setExpFilter] = useState(false); // mostra solo in scadenza
 
   // modifica
   const [editId, setEditId] = useState(null);
@@ -310,25 +311,19 @@ export default function Dispensa({ session }) {
   }
 
   // --- Operazioni dispensa (scrivono su Supabase + aggiornano lo stato) ---
-  async function addManual() {
-    const raw = newName.trim();
-    if (!raw || adding) return;
+  // Aggiunta a mano: pulizia SOLO locale (correzione ortografica + categoria
+  // automatica) — istantanea e senza consumare quota AI. L'AI resta solo per
+  // il barcode, dove i nomi arrivano davvero sporchi.
+  async function addManual(rawName) {
+    const raw = String(rawName ?? newName).trim();
+    if (!raw || adding) return null;
     const n = String(newQty).trim() || "1";
     const qty = normalizeWeight(grams ? `${n} gr` : n);
     setAdding(true);
-    let name = correctName(raw);
-    let category = guessCategory(name) || "Altro";
-    try {
-      const parsed = await aiCleanName(raw);
-      if (parsed && parsed.name) {
-        const s = String(parsed.name).trim();
-        name = s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-        category = CATEGORIES.includes(parsed.category) ? parsed.category : (guessCategory(name) || "Altro");
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    const name = correctName(raw);
+    const category = guessCategory(name) || "Altro";
     const expiry = newExpiry || null;
+    let result = null;
     try {
       const existing = items.find((x) => x.name.trim().toLowerCase() === name.toLowerCase());
       if (existing) {
@@ -337,21 +332,27 @@ export default function Dispensa({ session }) {
         if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
         await updateItem(existing.id, fields);
         setItems((prev) => prev.map((x) => (x.id === existing.id ? { ...x, ...fields } : x)));
+        result = { name: existing.name, merged: true };
       } else {
         const row = await insertItem({ name, qty, category, expiry });
         setItems((prev) => [...prev, row]);
+        result = { name, merged: false };
       }
+      bumpShopHistory([name]);
+      // Apri la categoria interessata, così vedi subito dov'è finito.
+      setCollapsed((prev) => ({ ...prev, [category]: false }));
     } catch (e) {
       console.error("Errore aggiunta prodotto:", e);
     }
     setNewName(""); setNewQty("1"); setNewExpiry(""); setAdding(false);
+    return result;
   }
 
-  // Invio dal foglio di aggiunta manuale: aggiunge e chiude il foglio.
+  // Invio dal foglio di aggiunta manuale: il foglio resta aperto per
+  // inserire più prodotti di fila (si chiude con la X o lo sfondo).
   async function submitManual() {
-    if (!newName.trim()) return;
-    await addManual();
-    setManualOpen(false);
+    if (!newName.trim()) return null;
+    return addManual();
   }
 
   // Elimina con possibilità di Annulla (re-inserisce il prodotto).
@@ -790,12 +791,19 @@ export default function Dispensa({ session }) {
     }
   }
 
-  // Conferma dei prodotti rivisti nella modale: vengono aggiunti alla dispensa.
+  // Conferma dei prodotti rivisti nella modale: vengono aggiunti alla
+  // dispensa e le categorie coinvolte si aprono, così vedi dove sono finiti.
   async function confirmScan(reviewed) {
     setScanOpen(false);
     const valid = (reviewed || []).filter((x) => String(x.name || "").trim());
     if (valid.length) {
       await mergeItems(valid);
+      const cats = new Set(valid.map((x) => (CATEGORIES.includes(x.category) ? x.category : "Altro")));
+      setCollapsed((prev) => {
+        const next = { ...prev };
+        for (const c of cats) next[c] = false;
+        return next;
+      });
       showToast(`${valid.length} prodotti aggiunti.`);
     }
     setScanItems([]);
@@ -1016,6 +1024,39 @@ export default function Dispensa({ session }) {
     animateUI(() => { setRecipe(null); setRecipeErr(""); setCookDone(""); });
   }
 
+  // --- Scadenze: prodotti che scadono entro 7 giorni (o già scaduti) ---
+  const isExpiring = (x) => {
+    const d = daysUntilExpiry(x.expiry);
+    return d !== null && d <= 7;
+  };
+  const expiringItems = items.filter(isExpiring);
+
+  // Se il filtro scadenze resta attivo ma non c'è più nulla, si spegne da solo.
+  useEffect(() => {
+    if (expFilter && expiringItems.length === 0) setExpFilter(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expiringItems.length]);
+
+  // Un prodotto è "finito" se la sua quantità numerica è 0.
+  const isOut = (x) => {
+    const m = String(x.qty).replace(",", ".").match(/-?\d+(\.\d+)?/);
+    return !!m && parseFloat(m[0]) === 0;
+  };
+
+  // "Finito → in lista": dalla riga del prodotto esaurito.
+  async function finishedToShopping(it) {
+    await addToShoppingMerged([{ name: it.name, qty: "1" }]);
+    showToast(<><strong>{it.name}</strong> aggiunto alla lista della spesa</>);
+  }
+
+  // "Cucina con questi": manda i prodotti in scadenza alle Ricette.
+  function cookWithExpiring() {
+    const names = expiringItems.filter((x) => !isOut(x)).map((x) => x.name).slice(0, 8);
+    if (!names.length) return;
+    changeView("ricette");
+    askCustom(`qualcosa per usare subito: ${names.join(", ")}`);
+  }
+
   // --- Derivati ---
   const q = norm(search);
   function sortList(list) {
@@ -1038,6 +1079,7 @@ export default function Dispensa({ session }) {
     .map((c) => {
       let list = items.filter((x) => x.category === c);
       if (q) list = list.filter((x) => norm(x.name).includes(q));
+      if (expFilter) list = list.filter(isExpiring);
       return { cat: c, list: sortList(list) };
     })
     .filter((g) => g.list.length > 0);
@@ -1143,7 +1185,8 @@ export default function Dispensa({ session }) {
           offline
         </div>
       )}
-      <div className="mx-auto max-w-md px-5 pt-7 pb-28">
+      {/* Sulla dispensa più spazio in fondo, così il "+" non copre l'ultima categoria */}
+      <div className={`mx-auto max-w-md px-5 pt-7 ${view === "dispensa" ? "pb-52" : "pb-28"}`}>
         {view === "dispensa" && (
           <PantryTab
             onOpenProfile={() => setProfileOpen(true)}
@@ -1156,6 +1199,8 @@ export default function Dispensa({ session }) {
             editId={editId} editName={editName} setEditName={setEditName} editQty={editQty} setEditQty={setEditQty}
             editCat={editCat} setEditCat={setEditCat} editExpiry={editExpiry} setEditExpiry={setEditExpiry}
             startEdit={startEdit} saveEdit={saveEdit} setEditId={setEditId} removeItem={removeItem}
+            expiringCount={expiringItems.length} expFilter={expFilter} setExpFilter={setExpFilter}
+            onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
           />
         )}
 
@@ -1232,7 +1277,9 @@ export default function Dispensa({ session }) {
         <ManualAddModal
           newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
           grams={grams} setGrams={setGrams} newExpiry={newExpiry} setNewExpiry={setNewExpiry}
-          adding={adding} onSubmit={submitManual} onClose={() => setManualOpen(false)}
+          adding={adding} onSubmit={submitManual} onQuickAdd={addManual}
+          onClose={() => setManualOpen(false)}
+          historyNames={sortedNames(shopHist)} pantryNames={items.map((i) => i.name)}
         />
       )}
 

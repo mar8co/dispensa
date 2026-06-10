@@ -1,7 +1,11 @@
-// Scheda di aggiunta manuale (aperta dal menù "+"): nome, quantità con
-// contatore, toggle grammi, scadenza opzionale (calendario nativo).
-import { Plus, Minus, Loader2, CalendarPlus, X } from "lucide-react";
+// Foglio di aggiunta manuale (dal menù "+"): nome con suggerimenti, quantità
+// con contatore, toggle grammi, scadenza opzionale. Resta aperto dopo ogni
+// aggiunta (con conferma), così si inseriscono più prodotti di fila.
+// La pulizia del nome è locale: istantanea e senza consumare quota AI.
+import { useMemo, useState } from "react";
+import { Plus, Minus, Loader2, CalendarPlus, X, Check } from "lucide-react";
 import Sheet from "./Sheet.jsx";
+import { norm } from "../lib/pantry.js";
 
 function formatDateIt(d) {
   if (!d) return "";
@@ -11,10 +15,40 @@ function formatDateIt(d) {
 
 export default function ManualAddModal({
   newName, setNewName, newQty, setNewQty, grams, setGrams,
-  newExpiry, setNewExpiry, adding, onSubmit, onClose,
+  newExpiry, setNewExpiry, adding, onSubmit, onQuickAdd, onClose,
+  historyNames = [], pantryNames = [],
 }) {
+  const [lastAdded, setLastAdded] = useState(null); // { name, merged }
+
   const inputCls =
     "w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
+
+  // Candidati per i suggerimenti: storico acquisti + nomi già in dispensa.
+  const pool = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const n of [...historyNames, ...pantryNames]) {
+      const k = norm(n);
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      out.push(n);
+    }
+    return out;
+  }, [historyNames, pantryNames]);
+
+  const q = norm(newName);
+  const suggestions = q
+    ? pool.filter((n) => norm(n).includes(q) && norm(n) !== q).slice(0, 5)
+    : [];
+
+  async function submit() {
+    const res = await onSubmit();
+    if (res) setLastAdded(res);
+  }
+  async function quickAdd(n) {
+    const res = await onQuickAdd(n);
+    if (res) setLastAdded(res);
+  }
 
   return (
     <Sheet onClose={onClose}>
@@ -33,13 +67,28 @@ export default function ManualAddModal({
           placeholder="Cosa hai in dispensa?"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
         />
+
+        {/* Completamenti: un tap e il prodotto è dentro */}
+        {suggestions.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {suggestions.map((n) => (
+              <button
+                key={n}
+                onClick={() => quickAdd(n)}
+                className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="mt-2.5 flex items-center gap-1.5">
           <div className="flex shrink-0 items-center rounded-xl border border-hair bg-paper">
             <button
-              onClick={() => setNewQty((q) => String(Math.max(1, (parseFloat(String(q).replace(",", ".")) || 1) - 1)))}
+              onClick={() => setNewQty((v) => String(Math.max(1, (parseFloat(String(v).replace(",", ".")) || 1) - 1)))}
               className="flex h-11 w-9 items-center justify-center rounded-l-xl text-stone-500 hover:bg-stone-100"
               aria-label="Meno"
             ><Minus className="h-4 w-4" /></button>
@@ -47,11 +96,11 @@ export default function ManualAddModal({
               type="text" inputMode="numeric" value={newQty}
               onChange={(e) => setNewQty(e.target.value.replace(/[^0-9.,]/g, ""))}
               onFocus={(e) => e.target.select()}
-              onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+              onKeyDown={(e) => e.key === "Enter" && submit()}
               className="w-9 border-0 bg-transparent text-center text-base font-bold text-ink outline-none"
             />
             <button
-              onClick={() => setNewQty((q) => String((parseFloat(String(q).replace(",", ".")) || 0) + 1))}
+              onClick={() => setNewQty((v) => String((parseFloat(String(v).replace(",", ".")) || 0) + 1))}
               className="flex h-11 w-9 items-center justify-center rounded-r-xl text-stone-500 hover:bg-stone-100"
               aria-label="Più"
             ><Plus className="h-4 w-4" /></button>
@@ -77,8 +126,8 @@ export default function ManualAddModal({
           </label>
 
           <button
-            onClick={onSubmit}
-            disabled={adding}
+            onClick={submit}
+            disabled={adding || !newName.trim()}
             className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-3 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
           >
             {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
@@ -94,6 +143,17 @@ export default function ManualAddModal({
               <X className="h-4 w-4" />
             </button>
           </div>
+        )}
+
+        {/* Conferma dell'ultimo inserimento: il foglio resta aperto */}
+        {lastAdded && (
+          <p className="mt-2.5 flex items-center gap-1.5 text-xs font-semibold text-stone-500">
+            <Check className="h-3.5 w-3.5 shrink-0 text-tomato" />
+            <span className="min-w-0 truncate">
+              <strong className="text-ink">{lastAdded.name}</strong>{" "}
+              {lastAdded.merged ? "era già in dispensa: quantità aumentata" : "aggiunto in dispensa"}
+            </span>
+          </p>
         )}
       </div>
       )}

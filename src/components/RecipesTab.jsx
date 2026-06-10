@@ -94,7 +94,7 @@ export default function RecipesTab({
             <input
               value={ask}
               onChange={(e) => setAsk(e.target.value)}
-              placeholder="Cosa ti va? es. qualcosa con le zucchine"
+              placeholder="Cosa ti va? Scrivilo qui…"
               className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-14 text-sm text-ink outline-none focus:border-ink"
             />
             {ask.trim() && (
