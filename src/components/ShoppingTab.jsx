@@ -2,13 +2,13 @@
 // raggruppamento per reparto (nell'ordine personalizzato della dispensa),
 // sezione "Nel carrello" per gli articoli presi, modifica nome/reparto con un
 // tap, condivisione della lista e blocco dello spegnimento schermo.
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Plus, Trash2, Check, Minus, PackagePlus, Loader2, ListChecks, Store,
   Share2, Lightbulb, Mic, X, Pencil,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON, AISLE_ORDER } from "../constants.js";
-import ShoppingAddModal from "./ShoppingAddModal.jsx";
+import { norm } from "../lib/pantry.js";
 
 const editCls =
   "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -194,7 +194,8 @@ export default function ShoppingTab({
   movingChecked, byAisle, setByAisle,
   catFor, onEdit, onOpenVoice, onNotify, historyNames, pantryNames,
 }) {
-  const [addOpen, setAddOpen] = useState(false);
+  const [name, setName] = useState(""); // campo di inserimento in linea
+  const inputRef = useRef(null);
   const [awake, setAwake] = useState(false);
   const wakeRef = useRef(null);
   // L'hint sullo swipe sparisce dopo la prima eliminazione col gesto.
@@ -236,6 +237,35 @@ export default function ShoppingTab({
       setShowHint(false);
     }
     onDelete(id);
+  }
+
+  // --- Inserimento in linea: i nuovi prodotti appaiono subito qui sotto ---
+  const pool = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const n of [...(historyNames || []), ...(pantryNames || [])]) {
+      const k = norm(n);
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      out.push(n);
+    }
+    return out;
+  }, [historyNames, pantryNames]);
+
+  const q = norm(name);
+  const listSet = useMemo(() => new Set(shopping.map((x) => norm(x.name))), [shopping]);
+  // Scrivendo: completamenti; campo vuoto (ma attivo): i frequenti non in lista.
+  const suggestions = q
+    ? pool.filter((n) => norm(n).includes(q) && norm(n) !== q).slice(0, 5)
+    : (historyNames || []).filter((n) => !listSet.has(norm(n))).slice(0, 4);
+
+  async function add(n) {
+    const clean = String(n ?? name).trim();
+    if (!clean) return;
+    const res = await onAdd(clean, "1");
+    if (res?.merged) onNotify(<><strong>{clean}</strong> era già in lista: quantità aumentata</>);
+    setName("");
+    inputRef.current?.focus(); // resta pronto per il prossimo
   }
 
   // Condivide la lista (o la copia negli appunti se share non c'è).
@@ -296,9 +326,58 @@ export default function ShoppingTab({
       </div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">La spesa</h1>
 
+      {/* Inserimento in linea: scrivi e il prodotto appare qui sotto.
+          È nel flusso della pagina, quindi la tastiera iOS non lo copre. */}
+      <div className="mt-4 flex items-center gap-2">
+        <div className="relative flex-1">
+          <Plus className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
+          <input
+            ref={inputRef}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && add()}
+            placeholder="Scrivi cosa ti manca…"
+            className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-2 text-sm text-ink outline-none focus:border-ink"
+          />
+        </div>
+        {name.trim() ? (
+          <button
+            onClick={() => add()}
+            className="flex h-9 shrink-0 items-center justify-center rounded-full bg-tomato px-3.5 text-xs font-bold text-white transition hover:bg-tomato-700 active:scale-95"
+          >
+            Aggiungi
+          </button>
+        ) : (
+          <button
+            onClick={onOpenVoice}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-hair text-tomato transition hover:bg-tomato/5 active:scale-95"
+            aria-label="Aggiungi a voce"
+            title="Aggiungi a voce"
+          >
+            <Mic className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Completamenti / acquisti frequenti: un tap e sono in lista */}
+      {suggestions.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {suggestions.map((n) => (
+            <button
+              key={n}
+              onClick={() => add(n)}
+              className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+            >
+              {q ? n : `+ ${n}`}
+            </button>
+          ))}
+        </div>
+      )}
+
       {shopping.length === 0 && (
         <p className="py-12 text-center text-sm text-stone-400">
-          La lista è vuota. Tocca «Aggiungi alla lista», oppure aggiungi i mancanti da una ricetta.
+          La lista è vuota. Scrivi qui sopra cosa ti manca, dettalo col microfono
+          o aggiungi i mancanti da una ricetta.
         </p>
       )}
 
@@ -365,66 +444,33 @@ export default function ShoppingTab({
         </div>
       )}
 
-      <div className="h-44" />
+      <div className="h-28" />
 
-      {/* Barra azioni in basso (sopra la navigazione): + Aggiungi, voce e toggle */}
-      <div
-        className="fixed inset-x-0 z-20 border-t border-hair bg-cream/95 backdrop-blur"
-        style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
-      >
-        <div className="mx-auto max-w-md px-5 py-3">
-          <div className="flex gap-2">
-            {/* Sembra un campo di testo, apre la finestra di inserimento:
-                su iOS un vero input fisso in basso finirebbe sotto la tastiera. */}
+      {/* Barra in basso (sopra la navigazione): solo i toggle di vista */}
+      {shopping.length > 0 && (
+        <div
+          className="fixed inset-x-0 z-20 border-t border-hair bg-cream/95 backdrop-blur"
+          style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
+        >
+          <div className="mx-auto flex max-w-md items-center justify-between px-5 py-2.5">
             <button
-              onClick={() => setAddOpen(true)}
-              className="flex flex-1 items-center gap-2 rounded-xl border border-stone-300 bg-paper px-3.5 py-3 text-left text-sm text-stone-400 transition hover:border-stone-400"
+              onClick={() => setByAisle((v) => !v)}
+              aria-pressed={byAisle}
+              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+                byAisle ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+              }`}
             >
-              <Plus className="h-4 w-4 shrink-0 text-tomato" />
-              Scrivi cosa ti manca…
+              <Store className="h-3.5 w-3.5" /> Per reparto
             </button>
             <button
-              onClick={onOpenVoice}
-              className="flex w-12 items-center justify-center rounded-xl border border-hair bg-paper text-tomato transition hover:bg-tomato/5"
-              aria-label="Aggiungi a voce"
-              title="Aggiungi a voce"
+              onClick={onToggleAll}
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-stone-500 transition hover:bg-stone-100 hover:text-ink"
             >
-              <Mic className="h-5 w-5" />
+              <ListChecks className="h-3.5 w-3.5" />
+              {allChecked ? "Deseleziona tutto" : "Seleziona tutto"}
             </button>
           </div>
-
-          {shopping.length > 0 && (
-            <div className="mt-2 flex items-center justify-between">
-              <button
-                onClick={() => setByAisle((v) => !v)}
-                aria-pressed={byAisle}
-                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
-                  byAisle ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-                }`}
-              >
-                <Store className="h-3.5 w-3.5" /> Per reparto
-              </button>
-              <button
-                onClick={onToggleAll}
-                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-stone-500 transition hover:bg-stone-100 hover:text-ink"
-              >
-                <ListChecks className="h-3.5 w-3.5" />
-                {allChecked ? "Deseleziona tutto" : "Seleziona tutto"}
-              </button>
-            </div>
-          )}
         </div>
-      </div>
-
-      {addOpen && (
-        <ShoppingAddModal
-          onAdd={onAdd}
-          onClose={() => setAddOpen(false)}
-          historyNames={historyNames}
-          pantryNames={pantryNames}
-          listNames={shopping.map((x) => x.name)}
-          uncheckedCount={toBuy.length}
-        />
       )}
     </div>
   );
