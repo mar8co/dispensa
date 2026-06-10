@@ -142,7 +142,7 @@ export default function StepTimer({ minutes, id }) {
       ) : (
         <button
           onClick={() => (running ? pause() : start())}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-white transition hover:bg-black active:scale-95"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-tomato text-white transition hover:bg-tomato-700 active:scale-95"
           aria-label={running ? "Pausa" : "Avvia"}
         >
           {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
