@@ -5,9 +5,9 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Plus, Trash2, Check, Minus, PackagePlus, Loader2, ListChecks, Store,
-  Share2, Lightbulb, Mic, X,
+  Share2, Lightbulb, Mic, X, Pencil,
 } from "lucide-react";
-import { CATEGORIES, CAT_ICON } from "../constants.js";
+import { CATEGORIES, CAT_ICON, AISLE_ORDER } from "../constants.js";
 import ShoppingAddModal from "./ShoppingAddModal.jsx";
 
 const editCls =
@@ -142,9 +142,10 @@ function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
         >
           <Check className="h-4 w-4" />
         </button>
+        {/* Tap sul nome = spunta "comprato"; per modificare c'è la matita */}
         <p
-          onClick={startEdit}
-          title="Tocca per modificare"
+          onClick={() => onToggle(it.id, !it.checked)}
+          title={it.checked ? "Tocca per segnare da comprare" : "Tocca per segnare come preso"}
           className={`min-w-0 flex-1 cursor-pointer truncate text-[15px] font-semibold ${it.checked ? "text-stone-400 line-through" : "text-ink"}`}
         >
           {it.name}
@@ -175,6 +176,13 @@ function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
             it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{it.qty}</span>
           )}
         </div>
+        <button
+          onClick={startEdit}
+          className="shrink-0 rounded-lg p-1.5 text-stone-300 transition hover:bg-stone-100 hover:text-stone-700"
+          aria-label="Modifica"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
       </div>
     </li>
   );
@@ -184,7 +192,7 @@ export default function ShoppingTab({
   shopping,
   onAdd, onToggle, onDelete, onAdjustQty, onToggleAll, onMoveChecked, onClearChecked,
   movingChecked, byAisle, setByAisle,
-  catOrder, catFor, onEdit, onOpenVoice, onNotify, historyNames, pantryNames,
+  catFor, onEdit, onOpenVoice, onNotify, historyNames, pantryNames,
 }) {
   const [addOpen, setAddOpen] = useState(false);
   const [awake, setAwake] = useState(false);
@@ -244,8 +252,9 @@ export default function ShoppingTab({
     }
   }
 
-  // Reparti nell'ordine personalizzato della dispensa (solo da comprare).
-  const groups = catOrder
+  // Reparti nell'ordine del giro classico del supermercato (frutta e
+  // verdura all'ingresso, freschi, scaffali, surgelati e bevande in fondo).
+  const groups = AISLE_ORDER
     .map((c) => ({ cat: c, list: toBuy.filter((s) => catFor(s.name) === c) }))
     .filter((g) => g.list.length > 0);
 
@@ -332,7 +341,7 @@ export default function ShoppingTab({
 
       {shopping.length > 0 && showHint && (
         <p className="mt-3 text-center text-[11px] text-stone-400">
-          Scorri un prodotto a destra o sinistra per eliminarlo · tocca il nome per modificarlo
+          Tocca il nome per spuntarlo · scorri di lato per eliminarlo · matita per modificarlo
         </p>
       )}
 
@@ -365,11 +374,14 @@ export default function ShoppingTab({
       >
         <div className="mx-auto max-w-md px-5 py-3">
           <div className="flex gap-2">
+            {/* Sembra un campo di testo, apre la finestra di inserimento:
+                su iOS un vero input fisso in basso finirebbe sotto la tastiera. */}
             <button
               onClick={() => setAddOpen(true)}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+              className="flex flex-1 items-center gap-2 rounded-xl border border-stone-300 bg-paper px-3.5 py-3 text-left text-sm text-stone-400 transition hover:border-stone-400"
             >
-              <Plus className="h-4 w-4" /> Aggiungi alla lista
+              <Plus className="h-4 w-4 shrink-0 text-tomato" />
+              Scrivi cosa ti manca…
             </button>
             <button
               onClick={onOpenVoice}

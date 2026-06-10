@@ -136,10 +136,11 @@ export async function saveSettings(settings) {
 const SHOPPING_COLS = "id, name, qty, checked, created_at";
 
 export async function fetchShopping() {
+  // Più recenti in cima: i nuovi inserimenti appaiono in alto nella lista.
   const { data, error } = await supabase
     .from("shopping_items")
     .select(SHOPPING_COLS)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return data || [];
 }

@@ -504,9 +504,11 @@ export default function Dispensa({ session }) {
       for (const [id, qty] of updates) await updateShopping(id, { qty });
       if (inserts.size) newRows = await insertManyShopping([...inserts.values()]);
     } catch (e) { console.error("Errore aggiunta spesa:", e); }
+    // I nuovi inserimenti vanno in cima; i duplicati restano dove sono
+    // (si aggiorna solo la quantità).
     setShopping((prev) => [
-      ...prev.map((x) => (updates.has(x.id) ? { ...x, qty: updates.get(x.id) } : x)),
       ...newRows,
+      ...prev.map((x) => (updates.has(x.id) ? { ...x, qty: updates.get(x.id) } : x)),
     ]);
     bumpShopHistory((entries || []).map((e) => e.name));
     return { added: newRows.length, merged: updates.size };
@@ -571,7 +573,7 @@ export default function Dispensa({ session }) {
         showToast(<><strong>{it.name}</strong> rimosso dalla lista</>, async () => {
           try {
             const row = await insertShopping({ name: it.name, qty: it.qty });
-            setShopping((prev) => [...prev, row]);
+            setShopping((prev) => [row, ...prev]);
             dismissToast();
           } catch (e) { console.error("Errore ripristino spesa:", e); }
         });
@@ -611,7 +613,7 @@ export default function Dispensa({ session }) {
             const rows = await insertManyShopping(
               checked.map(({ name, qty }) => ({ name, qty, checked: true }))
             );
-            setShopping((prev) => [...prev, ...rows]);
+            setShopping((prev) => [...rows, ...prev]);
             dismissToast();
           } catch (e) { console.error("Errore ripristino lista:", e); }
         }
@@ -1236,7 +1238,6 @@ export default function Dispensa({ session }) {
             onClearChecked={clearCheckedShopping}
             movingChecked={movingChecked}
             byAisle={byAisle} setByAisle={setByAisle}
-            catOrder={catOrder}
             catFor={catForShopping}
             onEdit={editShoppingItem}
             onOpenVoice={() => setShopVoiceOpen(true)}

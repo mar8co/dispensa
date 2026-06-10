@@ -7,6 +7,15 @@ export const CATEGORIES = [
   "Spezie ed Erbe", "Bevande", "Altro",
 ];
 
+// Ordine dei reparti come si incontrano in un supermercato tipico:
+// frutta/verdura all'ingresso, banchi freschi, scaffali, surgelati e
+// bevande verso le casse. Usato dalla lista della spesa "Per reparto".
+export const AISLE_ORDER = [
+  "Fresco e Verdure", "Carne", "Pesce", "Latticini e Formaggi",
+  "Pasta e Cereali", "Legumi e Conserve", "Condimenti e Oli",
+  "Spezie ed Erbe", "Frutta Secca", "Congelato", "Bevande", "Altro",
+];
+
 export const CAT_ICON = {
   "Pasta e Cereali": "🌾", "Legumi e Conserve": "🥫", "Frutta Secca": "🥜",
   "Condimenti e Oli": "🫙", "Latticini e Formaggi": "🧀", "Fresco e Verdure": "🥬",
