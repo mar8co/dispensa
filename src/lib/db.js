@@ -124,7 +124,7 @@ export async function insertManyShopping(rows) {
   if (!rows.length) return [];
   const { data, error } = await supabase
     .from("shopping_items")
-    .insert(rows.map(({ name, qty = "1" }) => ({ name, qty })))
+    .insert(rows.map(({ name, qty = "1", checked = false }) => ({ name, qty, checked })))
     .select(SHOPPING_COLS);
   if (error) throw error;
   return data || [];

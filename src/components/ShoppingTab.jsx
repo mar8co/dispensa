@@ -1,18 +1,28 @@
 // Scheda "Spesa" (stile editoriale): lista con spunta, contatore, swipe-to-delete,
-// raggruppamento per reparto. L'aggiunta avviene da una finestra dedicata
-// (tasto "+ Aggiungi") per non avere problemi con la tastiera su iOS.
-import { useState, useRef } from "react";
-import { Plus, Trash2, Check, Minus, PackagePlus, Loader2, ListChecks, Store } from "lucide-react";
+// raggruppamento per reparto (nell'ordine personalizzato della dispensa),
+// sezione "Nel carrello" per gli articoli presi, modifica nome/reparto con un
+// tap, condivisione della lista e blocco dello spegnimento schermo.
+import { useState, useRef, useEffect } from "react";
+import {
+  Plus, Trash2, Check, Minus, PackagePlus, Loader2, ListChecks, Store,
+  Share2, Lightbulb, Mic, X,
+} from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
-import { guessCategory } from "../lib/pantry.js";
 import ShoppingAddModal from "./ShoppingAddModal.jsx";
 
-// Riga con gesto di scorrimento orizzontale per eliminare.
-function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
+const editCls =
+  "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
+
+// Riga con gesto di scorrimento orizzontale per eliminare; toccando il nome
+// si modificano nome e reparto.
+function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [out, setOut] = useState(false);       // fase 1: scivola fuori dallo schermo
   const [removing, setRemoving] = useState(false); // fase 2: la riga si richiude
+  const [editing, setEditing] = useState(false);
+  const [eName, setEName] = useState("");
+  const [eCat, setECat] = useState(category);
   const start = useRef(null);
   const axis = useRef(null);
   const THRESHOLD = 80;
@@ -53,8 +63,44 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
     axis.current = null;
   }
 
+  function startEdit() {
+    setEName(it.name);
+    setECat(category);
+    setEditing(true);
+  }
+  function saveEdit() {
+    onEdit(it, eName, eCat);
+    setEditing(false);
+  }
+
   const n = parseFloat(String(it.qty).replace(",", "."));
   const atMin = !isNaN(n) && n <= 1;
+
+  if (editing) {
+    return (
+      <li data-noswipe className="space-y-2 py-3">
+        <input
+          autoFocus
+          className={editCls}
+          value={eName}
+          onChange={(e) => setEName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+          placeholder="Nome"
+        />
+        <div className="flex gap-2">
+          <select className={`${editCls} flex-1`} value={eCat} onChange={(e) => setECat(e.target.value)}>
+            {CATEGORIES.map((c) => <option key={c} value={c}>{CAT_ICON[c]} {c}</option>)}
+          </select>
+          <button onClick={saveEdit} className="flex items-center justify-center rounded-xl bg-ink px-3.5 text-white hover:opacity-90" aria-label="Salva">
+            <Check className="h-4 w-4" />
+          </button>
+          <button onClick={() => setEditing(false)} className="flex items-center justify-center rounded-xl border border-hair px-3.5 text-stone-500 hover:bg-stone-50" aria-label="Annulla">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </li>
+    );
+  }
 
   return (
     <li
@@ -96,7 +142,11 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
         >
           <Check className="h-4 w-4" />
         </button>
-        <p className={`min-w-0 flex-1 truncate text-[15px] font-semibold ${it.checked ? "text-stone-400 line-through" : "text-ink"}`}>
+        <p
+          onClick={startEdit}
+          title="Tocca per modificare"
+          className={`min-w-0 flex-1 cursor-pointer truncate text-[15px] font-semibold ${it.checked ? "text-stone-400 line-through" : "text-ink"}`}
+        >
           {it.name}
         </p>
         <div className="shrink-0">
@@ -134,24 +184,107 @@ export default function ShoppingTab({
   shopping,
   onAdd, onToggle, onDelete, onAdjustQty, onToggleAll, onMoveChecked, onClearChecked,
   movingChecked, byAisle, setByAisle,
+  catOrder, catFor, onEdit, onOpenVoice, onNotify, historyNames, pantryNames,
 }) {
   const [addOpen, setAddOpen] = useState(false);
+  const [awake, setAwake] = useState(false);
+  const wakeRef = useRef(null);
+  // L'hint sullo swipe sparisce dopo la prima eliminazione col gesto.
+  const [showHint, setShowHint] = useState(() => {
+    try { return localStorage.getItem("dispensa-swipe-hint") !== "1"; } catch { return true; }
+  });
 
-  const checkedCount = shopping.filter((s) => s.checked).length;
+  const toBuy = shopping.filter((s) => !s.checked);
+  const inCart = shopping.filter((s) => s.checked);
+  const checkedCount = inCart.length;
   const allChecked = shopping.length > 0 && checkedCount === shopping.length;
 
-  const groups = CATEGORIES
-    .map((c) => ({ cat: c, list: shopping.filter((s) => (guessCategory(s.name) || "Altro") === c) }))
+  // Wake Lock: tiene lo schermo acceso mentre fai la spesa (se supportato).
+  const wakeSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
+  useEffect(() => {
+    if (!awake) {
+      wakeRef.current?.release?.().catch(() => {});
+      wakeRef.current = null;
+      return;
+    }
+    const acquire = async () => {
+      try { wakeRef.current = await navigator.wakeLock.request("screen"); }
+      catch { setAwake(false); }
+    };
+    acquire();
+    // iOS rilascia il lock quando l'app va in background: lo riprendiamo.
+    const onVis = () => { if (document.visibilityState === "visible") acquire(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      wakeRef.current?.release?.().catch(() => {});
+      wakeRef.current = null;
+    };
+  }, [awake]);
+
+  function handleDelete(id) {
+    if (showHint) {
+      try { localStorage.setItem("dispensa-swipe-hint", "1"); } catch { /* */ }
+      setShowHint(false);
+    }
+    onDelete(id);
+  }
+
+  // Condivide la lista (o la copia negli appunti se share non c'è).
+  function shareList() {
+    const lines = toBuy.map((x) => `• ${x.name}${x.qty && x.qty !== "1" ? ` — ${x.qty}` : ""}`);
+    const text = `🛒 Lista della spesa:\n${lines.join("\n")}`;
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => { /* condivisione annullata */ });
+    } else if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => onNotify("Lista copiata negli appunti."),
+        () => {}
+      );
+    }
+  }
+
+  // Reparti nell'ordine personalizzato della dispensa (solo da comprare).
+  const groups = catOrder
+    .map((c) => ({ cat: c, list: toBuy.filter((s) => catFor(s.name) === c) }))
     .filter((g) => g.list.length > 0);
 
   const renderItems = (list) =>
     list.map((it) => (
-      <SwipeItem key={it.id} it={it} onToggle={onToggle} onAdjustQty={onAdjustQty} onDelete={onDelete} />
+      <SwipeItem
+        key={it.id} it={it} category={catFor(it.name)}
+        onToggle={onToggle} onAdjustQty={onAdjustQty} onDelete={handleDelete} onEdit={onEdit}
+      />
     ));
 
   return (
     <div className="pt-2">
-      <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua lista</div>
+      <div className="flex items-start justify-between">
+        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua lista</div>
+        <div className="-mr-1 -mt-1 flex gap-0.5">
+          {wakeSupported && shopping.length > 0 && (
+            <button
+              onClick={() => setAwake((v) => !v)}
+              aria-pressed={awake}
+              className={`rounded-lg p-1.5 transition ${awake ? "bg-tomato/10 text-tomato" : "text-stone-300 hover:bg-stone-100 hover:text-stone-600"}`}
+              title="Tieni lo schermo acceso"
+              aria-label="Tieni lo schermo acceso"
+            >
+              <Lightbulb className="h-5 w-5" />
+            </button>
+          )}
+          {toBuy.length > 0 && (
+            <button
+              onClick={shareList}
+              className="rounded-lg p-1.5 text-stone-300 transition hover:bg-stone-100 hover:text-stone-600"
+              title="Condividi la lista"
+              aria-label="Condividi la lista"
+            >
+              <Share2 className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      </div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">La spesa</h1>
 
       {shopping.length === 0 && (
@@ -161,7 +294,7 @@ export default function ShoppingTab({
       )}
 
       <div className="mt-5">
-        {shopping.length > 0 && (
+        {toBuy.length > 0 && (
           byAisle ? (
             <div className="space-y-6">
               {groups.map(({ cat, list }) => (
@@ -176,14 +309,30 @@ export default function ShoppingTab({
               ))}
             </div>
           ) : (
-            <ul className="divide-y divide-hair border-t border-ink/15">{renderItems(shopping)}</ul>
+            <ul className="divide-y divide-hair border-t border-ink/15">{renderItems(toBuy)}</ul>
           )
+        )}
+
+        {toBuy.length === 0 && inCart.length > 0 && (
+          <p className="py-6 text-center text-sm text-stone-400">Hai preso tutto! 🎉</p>
+        )}
+
+        {/* Gli articoli presi scivolano qui in fondo */}
+        {inCart.length > 0 && (
+          <section className="mt-7">
+            <div className="flex items-center gap-2 border-b border-ink/15 pb-2">
+              <Check className="h-4 w-4 text-stone-400" />
+              <h4 className="font-display text-base font-bold uppercase tracking-wide text-stone-400">Nel carrello</h4>
+              <span className="font-display text-sm font-bold text-tomato">{String(inCart.length).padStart(2, "0")}</span>
+            </div>
+            <ul className="divide-y divide-hair">{renderItems(inCart)}</ul>
+          </section>
         )}
       </div>
 
-      {shopping.length > 0 && (
+      {shopping.length > 0 && showHint && (
         <p className="mt-3 text-center text-[11px] text-stone-400">
-          Scorri un prodotto a destra o sinistra per eliminarlo
+          Scorri un prodotto a destra o sinistra per eliminarlo · tocca il nome per modificarlo
         </p>
       )}
 
@@ -209,18 +358,28 @@ export default function ShoppingTab({
 
       <div className="h-44" />
 
-      {/* Barra azioni in basso (sopra la navigazione): + Aggiungi e toggle */}
+      {/* Barra azioni in basso (sopra la navigazione): + Aggiungi, voce e toggle */}
       <div
         className="fixed inset-x-0 z-20 border-t border-hair bg-white/95 backdrop-blur"
         style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
       >
         <div className="mx-auto max-w-md px-5 py-3">
-          <button
-            onClick={() => setAddOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" /> Aggiungi alla lista
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setAddOpen(true)}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" /> Aggiungi alla lista
+            </button>
+            <button
+              onClick={onOpenVoice}
+              className="flex w-12 items-center justify-center rounded-xl border border-hair bg-paper text-tomato transition hover:bg-tomato/5"
+              aria-label="Aggiungi a voce"
+              title="Aggiungi a voce"
+            >
+              <Mic className="h-5 w-5" />
+            </button>
+          </div>
 
           {shopping.length > 0 && (
             <div className="mt-2 flex items-center justify-between">
@@ -246,7 +405,14 @@ export default function ShoppingTab({
       </div>
 
       {addOpen && (
-        <ShoppingAddModal onAdd={onAdd} onClose={() => setAddOpen(false)} />
+        <ShoppingAddModal
+          onAdd={onAdd}
+          onClose={() => setAddOpen(false)}
+          historyNames={historyNames}
+          pantryNames={pantryNames}
+          listNames={shopping.map((x) => x.name)}
+          uncheckedCount={toBuy.length}
+        />
       )}
     </div>
   );

@@ -21,6 +21,7 @@ import {
 } from "./lib/db.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
+import { loadHistory, saveHistory, bumpedHistory, sortedNames } from "./lib/history.js";
 
 import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
@@ -87,6 +88,10 @@ export default function Dispensa({ session }) {
   const [shopping, setShopping] = useState([]);
   const [movingChecked, setMovingChecked] = useState(false);
   const [byAisle, setByAisle] = useState(true); // vista "per reparto" (persistita)
+  const [shopCats, setShopCats] = useState({}); // reparti corretti a mano (per nome, persistiti)
+  const [shopHist, setShopHist] = useState(() => loadHistory(session.user.id)); // storico per suggerimenti
+  const [shopVoiceOpen, setShopVoiceOpen] = useState(false);
+  const [shopVoiceProcessing, setShopVoiceProcessing] = useState(false);
 
   // toast / undo
   const [toast, setToast] = useState(null); // { message, onUndo? }
@@ -130,6 +135,7 @@ export default function Dispensa({ session }) {
   function applySettings(s) {
     if (!s || typeof s !== "object") return;
     if (typeof s.byAisle === "boolean") setByAisle(s.byAisle);
+    if (s.shopCats && typeof s.shopCats === "object") setShopCats(s.shopCats);
     if (Array.isArray(s.catOrder)) {
       setCatOrder([
         ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
@@ -194,9 +200,9 @@ export default function Dispensa({ session }) {
     saveCache(session.user.id, {
       items,
       shopping,
-      settings: { collapsed, catOrder, modeOrder, byAisle },
+      settings: { collapsed, catOrder, modeOrder, byAisle, shopCats },
     });
-  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, loaded]);
+  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, loaded]);
 
   // --- Indicatore stato connessione ---
   useEffect(() => {
@@ -241,10 +247,11 @@ export default function Dispensa({ session }) {
   // Pulisce il timer del toast allo smontaggio.
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
-  // Mostra un toast (con eventuale azione "Annulla") per ~6 secondi.
-  function showToast(message, onUndo) {
+  // Mostra un toast per ~6 secondi, con eventuale azione ("Annulla" di
+  // default, oppure un'etichetta personalizzata es. "In lista spesa").
+  function showToast(message, onUndo, actionLabel) {
     clearTimeout(toastTimer.current);
-    setToast({ message, onUndo });
+    setToast({ message, onUndo, actionLabel });
     toastTimer.current = setTimeout(() => setToast(null), 6000);
   }
   function dismissToast() {
@@ -255,10 +262,10 @@ export default function Dispensa({ session }) {
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
     if (!loaded) return;
-    saveSettings({ collapsed, catOrder, modeOrder, byAisle }).catch((e) =>
+    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats }).catch((e) =>
       console.error("Errore salvataggio impostazioni:", e)
     );
-  }, [collapsed, catOrder, modeOrder, byAisle, loaded]);
+  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, loaded]);
 
   const pantryStr = items.map((i) => `${i.name} (${i.qty})`).join(", ");
 
@@ -358,7 +365,8 @@ export default function Dispensa({ session }) {
     }
   }
 
-  // +/- rapido sulla quantità (senza entrare in modifica).
+  // +/- rapido sulla quantità (senza entrare in modifica). Se si arriva a
+  // zero, propone di mettere il prodotto in lista della spesa.
   async function adjustItemQty(it, delta) {
     const next = adjustQty(it.qty, delta);
     if (next === it.qty) return;
@@ -367,6 +375,13 @@ export default function Dispensa({ session }) {
       await updateItem(it.id, { qty: next });
     } catch (e) {
       console.error("Errore aggiornamento quantità:", e);
+    }
+    const m = String(next).replace(",", ".").match(/-?\d+(\.\d+)?/);
+    if (delta < 0 && m && parseFloat(m[0]) === 0) {
+      showToast(<>Hai finito <strong>{it.name}</strong></>, async () => {
+        await addToShoppingMerged([{ name: it.name, qty: "1" }]);
+        dismissToast();
+      }, "In lista spesa");
     }
   }
 
@@ -424,11 +439,92 @@ export default function Dispensa({ session }) {
   }
 
   // --- Lista della spesa ---
-  async function addShoppingItem(name, qty) {
+
+  // Aggiorna lo storico acquisti (per i suggerimenti e i "frequenti").
+  function bumpShopHistory(names) {
+    setShopHist((prev) => {
+      const next = bumpedHistory(prev, names);
+      saveHistory(session.user.id, next);
+      return next;
+    });
+  }
+
+  // Reparto di un articolo: correzione manuale (per nome) o stima automatica.
+  const catForShopping = (name) => shopCats[norm(name)] || guessCategory(name) || "Altro";
+
+  // Aggiunge alla lista fondendo i duplicati per nome (le quantità si
+  // sommano) e registrando lo storico. entries: [{ name, qty }]
+  async function addToShoppingMerged(entries) {
+    const byNorm = new Map(shopping.map((x) => [norm(x.name), x]));
+    const updates = new Map(); // id esistente -> nuova qty
+    const inserts = new Map(); // nome normalizzato -> { name, qty }
+    for (const e of entries || []) {
+      const name = String(e.name || "").trim();
+      if (!name) continue;
+      const qty = normalizeWeight(String(e.qty || "1").trim() || "1");
+      const k = norm(name);
+      const ex = byNorm.get(k);
+      if (ex) updates.set(ex.id, normalizeWeight(mergeQty(updates.get(ex.id) ?? ex.qty, qty)));
+      else if (inserts.has(k)) inserts.get(k).qty = normalizeWeight(mergeQty(inserts.get(k).qty, qty));
+      else inserts.set(k, { name, qty });
+    }
+    let newRows = [];
     try {
-      const row = await insertShopping({ name, qty });
-      setShopping((prev) => [...prev, row]);
+      for (const [id, qty] of updates) await updateShopping(id, { qty });
+      if (inserts.size) newRows = await insertManyShopping([...inserts.values()]);
     } catch (e) { console.error("Errore aggiunta spesa:", e); }
+    setShopping((prev) => [
+      ...prev.map((x) => (updates.has(x.id) ? { ...x, qty: updates.get(x.id) } : x)),
+      ...newRows,
+    ]);
+    bumpShopHistory((entries || []).map((e) => e.name));
+    return { added: newRows.length, merged: updates.size };
+  }
+
+  async function addShoppingItem(name, qty) {
+    const res = await addToShoppingMerged([{ name, qty }]);
+    return { merged: res.merged > 0 };
+  }
+
+  // Modifica nome e reparto di un articolo: il reparto scelto a mano viene
+  // ricordato nelle impostazioni (per nome) e sincronizzato tra dispositivi.
+  async function editShoppingItem(it, name, category) {
+    const newName = String(name || "").trim() || it.name;
+    try {
+      if (newName !== it.name) await updateShopping(it.id, { name: newName });
+      setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, name: newName } : x)));
+      if (CATEGORIES.includes(category)) {
+        setShopCats((prev) => ({ ...prev, [norm(newName)]: category }));
+      }
+    } catch (e) { console.error("Errore modifica spesa:", e); }
+  }
+
+  // Aggiunta a voce per la spesa: estrae i prodotti dalla frase e li
+  // aggiunge alla lista (con merge dei duplicati).
+  async function handleShoppingVoice(transcript) {
+    if (!transcript) { setShopVoiceOpen(false); return; }
+    setShopVoiceProcessing(true);
+    try {
+      const prompt =
+        `Questa è una frase detta a voce che elenca cose da comprare: "${transcript}". ` +
+        `Estrai TUTTI i prodotti citati. ${NAME_RULES} ` +
+        `Per la quantità: se indicata ("6 uova", "due litri di latte") mettila nel campo "qty" ` +
+        `(numero oppure unità metriche come "500 g"/"1 l"), MAI nel nome; altrimenti "1". ` +
+        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"..."}]}`;
+      const parsed = await callClaude([{ type: "text", text: prompt }], 600);
+      const list = Array.isArray(parsed?.items) ? parsed.items : [];
+      setShopVoiceProcessing(false);
+      setShopVoiceOpen(false);
+      if (!list.length) { showToast("Non ho riconosciuto prodotti. Riprova."); return; }
+      const res = await addToShoppingMerged(list);
+      const tot = res.added + res.merged;
+      showToast(`${tot} ${tot === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista`);
+    } catch (e) {
+      console.error(e);
+      setShopVoiceProcessing(false);
+      setShopVoiceOpen(false);
+      showToast("Errore nell'elaborare la voce. Riprova.");
+    }
   }
   async function toggleShoppingItem(id, checked) {
     setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
@@ -470,12 +566,25 @@ export default function Dispensa({ session }) {
     try { await updateShopping(it.id, { qty: next }); }
     catch (e) { console.error("Errore aggiornamento quantità spesa:", e); }
   }
+  // Rimuove i barrati, con possibilità di Annulla (li re-inserisce barrati).
   async function clearCheckedShopping() {
-    const ids = shopping.filter((x) => x.checked).map((x) => x.id);
-    if (!ids.length) return;
+    const checked = shopping.filter((x) => x.checked);
+    if (!checked.length) return;
     try {
-      await deleteShoppingItems(ids);
+      await deleteShoppingItems(checked.map((x) => x.id));
       setShopping((prev) => prev.filter((x) => !x.checked));
+      showToast(
+        `${checked.length} ${checked.length === 1 ? "articolo rimosso" : "articoli rimossi"} dalla lista`,
+        async () => {
+          try {
+            const rows = await insertManyShopping(
+              checked.map(({ name, qty }) => ({ name, qty, checked: true }))
+            );
+            setShopping((prev) => [...prev, ...rows]);
+            dismissToast();
+          } catch (e) { console.error("Errore ripristino lista:", e); }
+        }
+      );
     } catch (e) { console.error("Errore rimozione barrati:", e); }
   }
   async function moveCheckedToPantry() {
@@ -486,21 +595,18 @@ export default function Dispensa({ session }) {
       await mergeItems(checked.map((x) => ({ name: x.name, qty: x.qty })));
       await deleteShoppingItems(checked.map((x) => x.id));
       setShopping((prev) => prev.filter((x) => !x.checked));
+      bumpShopHistory(checked.map((x) => x.name)); // acquisti completati
       showToast(`${checked.length} ${checked.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`);
     } catch (e) { console.error("Errore spostamento in dispensa:", e); }
     setMovingChecked(false);
   }
-  // Aggiunge alla lista spesa gli ingredienti mancanti (no duplicati per nome).
+  // Aggiunge alla lista spesa gli ingredienti mancanti (chi è già in lista
+  // viene saltato, senza toccarne la quantità).
   async function addMissingToShopping(names) {
-    const existing = new Set(shopping.map((s) => s.name.trim().toLowerCase()));
-    const toAdd = (names || [])
-      .filter(Boolean)
-      .filter((n) => !existing.has(n.trim().toLowerCase()));
+    const existing = new Set(shopping.map((s) => norm(s.name)));
+    const toAdd = (names || []).filter(Boolean).filter((n) => !existing.has(norm(n)));
     if (!toAdd.length) return;
-    try {
-      const rows = await insertManyShopping(toAdd.map((name) => ({ name, qty: "1" })));
-      setShopping((prev) => [...prev, ...rows]);
-    } catch (e) { console.error("Errore aggiunta mancanti:", e); }
+    await addToShoppingMerged(toAdd.map((name) => ({ name, qty: "1" })));
   }
 
   // "Cosa mi manca": true se l'ingrediente trova corrispondenza in dispensa.
@@ -826,6 +932,20 @@ export default function Dispensa({ session }) {
     setCookOpen(false);
     const n = Object.keys(updates).length + removals.size;
     setCookDone(n ? `Dispensa aggiornata: ${n} prodotti.` : "");
+    // I prodotti finiti cucinando si possono rimettere in lista con un tap.
+    const finished = cookRows.filter((r) => removals.has(r.itemId)).map((r) => r.name);
+    if (finished.length) {
+      showToast(
+        finished.length === 1
+          ? <>Hai finito <strong>{finished[0]}</strong></>
+          : `Hai finito ${finished.length} prodotti`,
+        async () => {
+          await addToShoppingMerged(finished.map((name) => ({ name, qty: "1" })));
+          dismissToast();
+        },
+        "In lista spesa"
+      );
+    }
   }
 
   const inputCls =
@@ -887,12 +1007,20 @@ export default function Dispensa({ session }) {
             onClearChecked={clearCheckedShopping}
             movingChecked={movingChecked}
             byAisle={byAisle} setByAisle={setByAisle}
+            catOrder={catOrder}
+            catFor={catForShopping}
+            onEdit={editShoppingItem}
+            onOpenVoice={() => setShopVoiceOpen(true)}
+            onNotify={showToast}
+            historyNames={sortedNames(shopHist)}
+            pantryNames={items.map((i) => i.name)}
           />
         )}
 
       </div>
 
-      <BottomNav view={view} setView={changeView} shoppingCount={shopping.length} />
+      {/* Il badge conta solo ciò che resta da comprare */}
+      <BottomNav view={view} setView={changeView} shoppingCount={shopping.filter((s) => !s.checked).length} />
 
       {view === "dispensa" && (
         <AddFab
@@ -965,7 +1093,16 @@ export default function Dispensa({ session }) {
         />
       )}
 
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} />}
+      {/* Aggiunta a voce per la lista della spesa */}
+      {shopVoiceOpen && (
+        <VoiceAddModal
+          processing={shopVoiceProcessing}
+          onCancel={() => { if (!shopVoiceProcessing) setShopVoiceOpen(false); }}
+          onResult={handleShoppingVoice}
+        />
+      )}
+
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} />}
     </div>
   );
 }
