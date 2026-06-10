@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { flushSync } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 import {
@@ -36,6 +37,13 @@ import Toast from "./components/Toast.jsx";
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
 // solo quando si apre la scansione del codice a barre.
 const BarcodeScanModal = lazy(() => import("./components/BarcodeScanModal.jsx"));
+
+// Applica un cambio di vista dentro una View Transition del browser
+// (dissolvenza nativa tra schermate); dove l'API manca, applica e basta.
+function animateUI(fn) {
+  if (document.startViewTransition) document.startViewTransition(() => flushSync(fn));
+  else fn();
+}
 
 export default function Dispensa({ session }) {
   const [items, setItems] = useState([]);
@@ -138,6 +146,7 @@ export default function Dispensa({ session }) {
   useEffect(() => {
     const uid = session.user.id;
     const cached = loadCache(uid);
+    const cachedTs = cached?.ts || 0;
     if (cached) {
       if (Array.isArray(cached.items)) setItems(cached.items);
       if (Array.isArray(cached.shopping)) setShopping(cached.shopping);
@@ -154,7 +163,17 @@ export default function Dispensa({ session }) {
           );
         }
         setItems(rows);
-        try { applySettings(await fetchSettings()); } catch (e) { console.error(e); }
+        try {
+          // Applica le impostazioni dal DB solo se più recenti della cache
+          // locale: se l'app è stata chiusa prima che un salvataggio
+          // arrivasse al DB (es. toggle "Per reparto" e via), la scelta
+          // locale non viene sovrascritta da quella vecchia.
+          const remote = await fetchSettings();
+          if (remote) {
+            const remoteTs = Date.parse(remote.updatedAt || "") || 0;
+            if (!cachedTs || remoteTs >= cachedTs) applySettings(remote.settings);
+          }
+        } catch (e) { console.error(e); }
         try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
       } catch (e) {
         console.warn("Rete non disponibile: uso i dati in cache.", e);
@@ -642,9 +661,16 @@ export default function Dispensa({ session }) {
     setScanItems([]);
   }
 
+  // Cambio scheda con dissolvenza (View Transition).
+  function changeView(v) {
+    if (v !== view) animateUI(() => setView(v));
+  }
+
   // --- Ricette ---
   async function chooseMode(m) {
-    setMode(m); setRecipe(null); setIdeas([]); setRecipeErr(""); setLoadingIdeas(true);
+    animateUI(() => {
+      setMode(m); setRecipe(null); setIdeas([]); setRecipeErr(""); setLoadingIdeas(true);
+    });
     const fast = m.id === "Pranzo veloce" ? "Ogni ricetta deve essere pronta entro 20 minuti. " : "";
     const prompt =
       `Sei uno chef esperto di cucina casalinga. Questi sono gli alimenti nella mia dispensa: ${pantryStr}. ` +
@@ -655,7 +681,7 @@ export default function Dispensa({ session }) {
     try {
       const parsed = await callClaude([{ type: "text", text: prompt }], 1000);
       const list = Array.isArray(parsed.recipes) ? parsed.recipes : [];
-      setIdeas(list);
+      animateUI(() => { setIdeas(list); setLoadingIdeas(false); });
       if (list.length) {
         fetchPhotos(list.map((r) => r.imageQuery || r.title)).then((urls) => {
           setIdeas((prev) => prev.map((r, i) => (urls[i] ? { ...r, image: urls[i] } : r)));
@@ -666,13 +692,14 @@ export default function Dispensa({ session }) {
       setRecipeErr(err?.status === 429
         ? "Limite di richieste AI raggiunto. Attendi qualche secondo e riprova."
         : "Errore nel generare le proposte. Riprova.");
-    } finally {
       setLoadingIdeas(false);
     }
   }
 
   async function openRecipe(title) {
-    setRecipe(null); setRecipeErr(""); setLoadingRecipe(true); setCookDone("");
+    animateUI(() => {
+      setRecipe(null); setRecipeErr(""); setLoadingRecipe(true); setCookDone("");
+    });
     const prompt =
       `Sei uno chef esperto. Dammi la ricetta completa e dettagliata per "${title}". ` +
       `Usa principalmente gli ingredienti della mia dispensa: ${pantryStr}. ` +
@@ -683,8 +710,7 @@ export default function Dispensa({ session }) {
       `{"title":"...","servings":2,"time":"...","imageQuery":"2-4 parole IN INGLESE per la foto del piatto","ingredients":[{"name":"...","qty":"120 g"}],"steps":[{"text":"...","timer":10}]}`;
     try {
       const parsed = await callClaude([{ type: "text", text: prompt }], 1500);
-      setRecipe(parsed);
-      setServings(1);
+      animateUI(() => { setRecipe(parsed); setServings(1); setLoadingRecipe(false); });
       fetchPhotos([parsed.imageQuery || parsed.title]).then((urls) => {
         if (urls[0]) setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
       });
@@ -693,13 +719,16 @@ export default function Dispensa({ session }) {
       setRecipeErr(err?.status === 429
         ? "Limite di richieste AI raggiunto. Attendi qualche secondo e riprova."
         : "Errore nel generare la ricetta. Riprova.");
-    } finally {
       setLoadingRecipe(false);
     }
   }
 
-  function backToModes() { setMode(null); setIdeas([]); setRecipe(null); setRecipeErr(""); setCookDone(""); }
-  function backToIdeas() { setRecipe(null); setRecipeErr(""); setCookDone(""); }
+  function backToModes() {
+    animateUI(() => { setMode(null); setIdeas([]); setRecipe(null); setRecipeErr(""); setCookDone(""); });
+  }
+  function backToIdeas() {
+    animateUI(() => { setRecipe(null); setRecipeErr(""); setCookDone(""); });
+  }
 
   // --- Derivati ---
   const q = norm(search);
@@ -859,7 +888,7 @@ export default function Dispensa({ session }) {
 
       </div>
 
-      <BottomNav view={view} setView={setView} shoppingCount={shopping.length} />
+      <BottomNav view={view} setView={changeView} shoppingCount={shopping.length} />
 
       {view === "dispensa" && (
         <AddFab

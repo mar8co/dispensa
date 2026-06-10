@@ -118,7 +118,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
 
         <div className="px-4 py-3 text-center">
           {error ? (
-            <p className="text-sm font-medium text-red-600">{error}</p>
+            <p className="text-sm font-medium text-tomato">{error}</p>
           ) : (
             <p className="flex items-center justify-center gap-2 text-sm text-stone-600">
               {status === "Cerco il prodotto…" && <Loader2 className="h-4 w-4 animate-spin" />}

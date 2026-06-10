@@ -11,7 +11,8 @@ import ShoppingAddModal from "./ShoppingAddModal.jsx";
 function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
-  const [removing, setRemoving] = useState(false);
+  const [out, setOut] = useState(false);       // fase 1: scivola fuori dallo schermo
+  const [removing, setRemoving] = useState(false); // fase 2: la riga si richiude
   const start = useRef(null);
   const axis = useRef(null);
   const THRESHOLD = 80;
@@ -41,9 +42,11 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
     setDragging(false);
     if (axis.current === "h" && Math.abs(ddx) > THRESHOLD) {
       const w = typeof window !== "undefined" ? window.innerWidth : 400;
-      setRemoving(true);
+      // Due tempi, come iOS: la riga esce di lato, poi lo spazio si richiude.
+      setOut(true);
       setDx(ddx > 0 ? w : -w);
-      setTimeout(() => onDelete(it.id), 300);
+      setTimeout(() => setRemoving(true), 200);
+      setTimeout(() => onDelete(it.id), 500);
     } else {
       setDx(0);
     }
@@ -56,10 +59,16 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
   return (
     <li
       data-noswipe
-      className="relative overflow-hidden transition-all duration-300 ease-out"
-      style={{ maxHeight: removing ? 0 : "6rem", opacity: removing ? 0 : 1 }}
+      className="relative overflow-hidden"
+      style={{
+        maxHeight: removing ? 0 : "6rem",
+        opacity: removing ? 0 : 1,
+        transition: "max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease",
+      }}
     >
-      <div className={`absolute inset-0 flex items-center bg-tomato px-5 text-white ${dx > 0 ? "justify-start" : "justify-end"}`}>
+      <div
+        className={`absolute inset-0 flex items-center bg-tomato px-5 text-white transition-opacity duration-200 ${dx > 0 ? "justify-start" : "justify-end"} ${out ? "opacity-0" : "opacity-100"}`}
+      >
         <Trash2 className="h-5 w-5" />
       </div>
       <div
@@ -70,7 +79,11 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete }) {
         style={{
           transform: `translateX(${dx}px)`,
           touchAction: "pan-y",
-          transition: dragging ? "none" : removing ? "transform 0.3s cubic-bezier(.4,0,.2,1)" : "transform 0.2s ease",
+          transition: dragging
+            ? "none"
+            : out
+              ? "transform 0.22s cubic-bezier(0.55, 0, 1, 0.45)"   // esce accelerando
+              : "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)",  // rientro morbido
         }}
         className="relative flex items-center gap-3 bg-white py-3"
       >
@@ -179,7 +192,7 @@ export default function ShoppingTab({
           <button
             onClick={onMoveChecked}
             disabled={movingChecked}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-60"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-3 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
           >
             {movingChecked
               ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -204,7 +217,7 @@ export default function ShoppingTab({
         <div className="mx-auto max-w-md px-5 py-3">
           <button
             onClick={() => setAddOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-black"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
           >
             <Plus className="h-4 w-4" /> Aggiungi alla lista
           </button>

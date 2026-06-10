@@ -2,11 +2,44 @@
 // completa con grammature, "cosa mi manca", timer e "Ho cucinato questa ricetta".
 import { useState, useEffect } from "react";
 import {
-  Plus, Minus, Loader2, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
+  Plus, Minus, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
   CheckCircle2, Circle, ShoppingCart,
 } from "lucide-react";
 import { scaleQty } from "../lib/pantry.js";
 import StepTimer from "./StepTimer.jsx";
+
+// Foto con caricamento morbido: placeholder neutro sotto, fade-in quando pronta.
+function FadeImg({ src, className = "" }) {
+  const [ready, setReady] = useState(false);
+  return (
+    <div className={`overflow-hidden bg-stone-100 ${className}`}>
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        onLoad={() => setReady(true)}
+        className={`h-full w-full object-cover transition-opacity duration-500 ${ready ? "opacity-100" : "opacity-0"}`}
+      />
+    </div>
+  );
+}
+
+// Scheletro di una card proposta (mentre l'AI prepara le 4 idee).
+function IdeaSkeleton() {
+  return (
+    <div className="animate-pulse overflow-hidden rounded-2xl border border-hair bg-paper">
+      <div className="h-32 w-full bg-stone-100" />
+      <div className="space-y-2.5 p-4">
+        <div className="h-4 w-2/3 rounded bg-stone-100" />
+        <div className="h-3 w-11/12 rounded bg-stone-100" />
+        <div className="flex gap-2 pt-1">
+          <div className="h-5 w-16 rounded-full bg-stone-100" />
+          <div className="h-5 w-14 rounded-full bg-stone-100" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function RecipesTab({
   orderedModes, mode, modeCardRefs,
@@ -77,9 +110,8 @@ export default function RecipesTab({
           </div>
 
           {loadingIdeas && (
-            <div className="flex flex-col items-center gap-2 py-12 text-stone-400">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <p className="text-sm">Preparo le proposte…</p>
+            <div className="space-y-3">
+              {[0, 1, 2, 3].map((i) => <IdeaSkeleton key={i} />)}
             </div>
           )}
           {recipeErr && !loadingIdeas && (
@@ -97,7 +129,7 @@ export default function RecipesTab({
                 className="block w-full overflow-hidden rounded-2xl border border-hair bg-paper text-left transition hover:border-ink"
               >
                 {r.image ? (
-                  <img src={r.image} alt="" loading="lazy" className="h-32 w-full object-cover" />
+                  <FadeImg src={r.image} className="h-32 w-full" />
                 ) : (
                   <div className="flex h-32 w-full items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200 text-4xl">
                     {mode?.icon || "🍽️"}
@@ -126,9 +158,31 @@ export default function RecipesTab({
       )}
 
       {mode && loadingRecipe && (
-        <div className="flex flex-col items-center gap-2 py-16 text-stone-400">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <p className="text-sm">Scrivo la ricetta completa…</p>
+        <div className="animate-pulse pt-1">
+          <div className="h-44 w-full rounded-2xl bg-stone-100" />
+          <div className="mt-5 h-7 w-3/4 rounded bg-stone-100" />
+          <div className="mt-3 flex gap-2">
+            <div className="h-6 w-20 rounded-full bg-stone-100" />
+            <div className="h-6 w-36 rounded-full bg-stone-100" />
+          </div>
+          <div className="mt-7 h-4 w-32 rounded bg-stone-100" />
+          <div className="mt-3 space-y-3 rounded-2xl border border-hair p-4">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-4 w-full rounded bg-stone-100" />
+            ))}
+          </div>
+          <div className="mt-7 h-4 w-40 rounded bg-stone-100" />
+          <div className="mt-4 space-y-5">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex gap-3.5">
+                <div className="h-7 w-7 shrink-0 rounded-full bg-stone-100" />
+                <div className="flex-1 space-y-2 pt-1">
+                  <div className="h-3.5 w-full rounded bg-stone-100" />
+                  <div className="h-3.5 w-2/3 rounded bg-stone-100" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -140,7 +194,7 @@ export default function RecipesTab({
 
           {/* Cover */}
           {recipe.image ? (
-            <img src={recipe.image} alt="" className="h-44 w-full rounded-2xl object-cover" />
+            <FadeImg src={recipe.image} className="h-44 w-full rounded-2xl" />
           ) : (
             <div className="flex h-36 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200 text-6xl">
               {mode?.icon || "🍽️"}

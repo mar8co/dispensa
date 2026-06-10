@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { X, Check } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
+import Sheet from "./Sheet.jsx";
 
 function tmpId() {
   return Math.random().toString(36).slice(2, 10);
@@ -34,25 +35,20 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
     .filter((g) => g.list.length > 0);
 
   const fieldCls =
-    "rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-800 outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200";
+    "rounded-lg border border-stone-300 bg-paper px-2 py-1.5 text-sm text-stone-800 outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
-      onClick={onCancel}
-    >
-      <div
-        className="flex max-h-screen w-full max-w-md flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-stone-100 px-4 py-3">
+    <Sheet onClose={onCancel}>
+      {(close) => (
+      <>
+        <div className="flex items-center justify-between border-b border-hair px-4 pb-3 pt-1">
           <div>
-            <h3 className="text-base font-semibold">Prodotti riconosciuti</h3>
+            <h3 className="text-base font-semibold text-ink">Prodotti riconosciuti</h3>
             <p className="text-xs text-stone-500">
               Controlla nome e categoria, poi conferma.
             </p>
           </div>
-          <button onClick={onCancel} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
+          <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -89,7 +85,7 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
                           />
                           <button
                             onClick={() => remove(it.id)}
-                            className="shrink-0 rounded-lg p-1.5 text-stone-300 hover:bg-red-50 hover:text-red-600"
+                            className="shrink-0 rounded-lg p-1.5 text-stone-300 hover:bg-tomato/10 hover:text-tomato"
                             aria-label="Rimuovi"
                           >
                             <X className="h-4 w-4" />
@@ -113,9 +109,9 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
           )}
         </div>
 
-        <div className="flex gap-2 border-t border-stone-100 px-4 py-3">
+        <div className="flex gap-2 border-t border-hair px-4 py-3">
           <button
-            onClick={onCancel}
+            onClick={close}
             className="flex-1 rounded-xl border border-stone-300 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
           >
             Annulla
@@ -123,13 +119,14 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
           <button
             onClick={() => onConfirm(items)}
             disabled={items.length === 0}
-            className="flex flex-[2] items-center justify-center gap-1.5 rounded-xl bg-ink py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+            className="flex flex-[2] items-center justify-center gap-1.5 rounded-xl bg-ink py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
             <Check className="h-4 w-4" />
             {items.length > 0 ? `Aggiungi ${items.length} prodotti` : "Aggiungi"}
           </button>
         </div>
-      </div>
-    </div>
+      </>
+      )}
+    </Sheet>
   );
 }

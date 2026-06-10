@@ -7,6 +7,7 @@
 // "Aggiungi" o "Stop".
 import { useEffect, useRef, useState } from "react";
 import { Mic, X, Loader2, Check, RotateCcw, Square } from "lucide-react";
+import Sheet from "./Sheet.jsx";
 
 export default function VoiceAddModal({ processing, onCancel, onResult }) {
   const [transcript, setTranscript] = useState("");
@@ -87,20 +88,21 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+    <Sheet onClose={onCancel} locked={processing}>
+      {(close) => (
+      <div className="px-5 pb-7 pt-1">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-base font-semibold">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-ink">
             <Mic className="h-5 w-5" /> Aggiungi a voce
           </h3>
-          <button onClick={onCancel} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
+          <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Indicatore microfono */}
         <div className="flex flex-col items-center py-3">
-          <div className={`flex h-16 w-16 items-center justify-center rounded-full transition ${listening ? "bg-red-100 text-red-600" : "bg-stone-100 text-stone-400"}`}>
+          <div className={`flex h-16 w-16 items-center justify-center rounded-full transition ${listening ? "bg-tomato/15 text-tomato" : "bg-stone-100 text-stone-400"}`}>
             <Mic className={`h-8 w-8 ${listening ? "animate-pulse" : ""}`} />
           </div>
           <p className="mt-2 text-xs text-stone-500">
@@ -114,7 +116,7 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
             {transcript || <span className="text-stone-400">Es: "ho comprato un pane, un pacco di pasta, il latte e 6 uova"</span>}
           </div>
         )}
-        {error && <p className="text-center text-sm font-medium text-red-600">{error}</p>}
+        {error && <p className="text-center text-sm font-medium text-tomato">{error}</p>}
 
         {/* Azioni */}
         <div className="mt-4 flex gap-2">
@@ -138,12 +140,13 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
           <button
             onClick={confirm}
             disabled={processing || !transcript.trim()}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
           >
             {processing ? <><Loader2 className="h-4 w-4 animate-spin" /> Elaboro…</> : <><Check className="h-4 w-4" /> Aggiungi</>}
           </button>
         </div>
       </div>
-    </div>
+      )}
+    </Sheet>
   );
 }

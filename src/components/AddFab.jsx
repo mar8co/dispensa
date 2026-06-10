@@ -13,13 +13,15 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
 
   return (
     <>
-      {menuOpen && (
-        <button
-          onClick={() => setMenuOpen(false)}
-          aria-label="Chiudi"
-          className="fixed inset-0 z-30 bg-black/20"
-        />
-      )}
+      {/* Sfondo sempre montato: sfuma in entrata e in uscita (niente scatto). */}
+      <button
+        onClick={() => setMenuOpen(false)}
+        aria-label="Chiudi"
+        tabIndex={menuOpen ? 0 : -1}
+        className={`fixed inset-0 z-30 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${
+          menuOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
 
       <div
         className="fixed z-40"
@@ -40,9 +42,11 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
                     : "translate(0,0) scale(0.4)",
                   opacity: menuOpen ? 1 : 0,
                   pointerEvents: menuOpen ? "auto" : "none",
-                  transition: "transform 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease",
-                  // stagger in apertura e in chiusura (ordine inverso)
-                  transitionDelay: menuOpen ? `${i * 45}ms` : `${(options.length - 1 - i) * 45}ms`,
+                  transition: menuOpen
+                    ? "transform 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease"
+                    : "transform 0.24s cubic-bezier(0.4,0,0.6,1), opacity 0.2s ease",
+                  // stagger in apertura e in chiusura (ordine inverso, più rapido)
+                  transitionDelay: menuOpen ? `${i * 45}ms` : `${(options.length - 1 - i) * 25}ms`,
                 }}
               >
                 <Icon className="h-[22px] w-[22px]" />

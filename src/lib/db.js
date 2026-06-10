@@ -71,18 +71,22 @@ export async function deleteAllPantry() {
 
 // ---------- Impostazioni utente ----------
 
+// Restituisce { settings, updatedAt }: il timestamp serve al chiamante per
+// capire se le impostazioni del DB sono più fresche di quelle in cache locale.
 export async function fetchSettings() {
   const { data, error } = await supabase
     .from("user_settings")
-    .select("settings")
+    .select("settings, updated_at")
     .maybeSingle();
   if (error) throw error;
-  return data?.settings || null;
+  return data ? { settings: data.settings, updatedAt: data.updated_at } : null;
 }
 
 export async function saveSettings(settings) {
-  const { data: userData } = await supabase.auth.getUser();
-  const userId = userData?.user?.id;
+  // getSession legge la sessione locale (niente rete): il salvataggio parte
+  // subito e ha più probabilità di completarsi se l'app viene chiusa al volo.
+  const { data } = await supabase.auth.getSession();
+  const userId = data?.session?.user?.id;
   if (!userId) return;
   const { error } = await supabase
     .from("user_settings")

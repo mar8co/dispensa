@@ -143,7 +143,7 @@ export default function PantryTab({
                           )}
                         </label>
                         <div className="flex gap-2">
-                          <button onClick={saveEdit} className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-ink px-3 py-2 text-sm font-semibold text-white hover:bg-black"><Check className="h-4 w-4" /> Salva</button>
+                          <button onClick={saveEdit} className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90"><Check className="h-4 w-4" /> Salva</button>
                           <button onClick={() => setEditId(null)} className="flex items-center justify-center rounded-xl border border-hair px-3 py-2 text-stone-500 hover:bg-stone-50"><X className="h-4 w-4" /></button>
                         </div>
                       </li>

@@ -22,7 +22,7 @@ export default function ShoppingAddModal({ onAdd, onClose }) {
   return (
     // Niente oscuramento: la lista resta visibile mentre aggiungi.
     <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-16" onClick={onClose}>
-      <div className="w-full max-w-md rounded-2xl border border-hair bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="animate-drop-in w-full max-w-md rounded-2xl border border-hair bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Aggiungi alla lista</h3>
           <button onClick={onClose} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
@@ -63,7 +63,7 @@ export default function ShoppingAddModal({ onAdd, onClose }) {
           <button
             onClick={submit}
             disabled={!name.trim()}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-40"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
           >
             <Plus className="h-4 w-4" /> Aggiungi
           </button>

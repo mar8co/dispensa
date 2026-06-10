@@ -1,6 +1,7 @@
 // Scheda di aggiunta manuale (aperta dal menù "+"): nome, quantità con
 // contatore, toggle grammi, scadenza opzionale (calendario nativo).
 import { Plus, Minus, Loader2, CalendarPlus, X } from "lucide-react";
+import Sheet from "./Sheet.jsx";
 
 function formatDateIt(d) {
   if (!d) return "";
@@ -16,11 +17,12 @@ export default function ManualAddModal({
     "w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-t-3xl bg-cream p-5 pb-7 shadow-xl sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+    <Sheet onClose={onClose}>
+      {(close) => (
+      <div className="px-5 pb-7 pt-1">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-display text-xl font-semibold text-ink">Aggiungi a mano</h3>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
+          <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -77,7 +79,7 @@ export default function ManualAddModal({
           <button
             onClick={onSubmit}
             disabled={adding}
-            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-3 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-60"
+            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-3 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
           >
             {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
           </button>
@@ -94,6 +96,7 @@ export default function ManualAddModal({
           </div>
         )}
       </div>
-    </div>
+      )}
+    </Sheet>
   );
 }

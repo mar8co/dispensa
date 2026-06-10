@@ -9,7 +9,7 @@ export default function Toast({ message, onUndo }) {
         {onUndo && (
           <button
             onClick={onUndo}
-            className="flex items-center gap-1 rounded-lg bg-red-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-red-700"
+            className="flex items-center gap-1 rounded-lg bg-tomato px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-tomato-700"
           >
             <Undo2 className="h-3.5 w-3.5" /> Annulla
           </button>
