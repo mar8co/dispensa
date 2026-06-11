@@ -1253,7 +1253,9 @@ export default function Dispensa({ session }) {
       <TimerBar
         onTap={() => changeView("ricette")}
         bottom={view === "spesa"
-          ? "calc(122px + env(safe-area-inset-bottom))"
+          ? (shopping.some((s) => s.checked)
+              ? "calc(176px + env(safe-area-inset-bottom))"
+              : "calc(122px + env(safe-area-inset-bottom))")
           : "calc(72px + env(safe-area-inset-bottom))"}
       />
 

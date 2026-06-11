@@ -303,7 +303,13 @@ export default function ShoppingTab({
         <div className="-mr-1 -mt-1 flex gap-0.5">
           {wakeSupported && shopping.length > 0 && (
             <button
-              onClick={() => setAwake((v) => !v)}
+              onClick={() => {
+                const next = !awake;
+                setAwake(next);
+                onNotify(next
+                  ? "💡 Schermo sempre acceso mentre fai la spesa"
+                  : "Lo schermo può spegnersi di nuovo");
+              }}
               aria-pressed={awake}
               className={`rounded-lg p-1.5 transition ${awake ? "bg-tomato/10 text-tomato" : "text-stone-300 hover:bg-stone-100 hover:text-stone-600"}`}
               title="Tieni lo schermo acceso"
@@ -424,51 +430,56 @@ export default function ShoppingTab({
         </p>
       )}
 
-      {checkedCount > 0 && (
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={onMoveChecked}
-            disabled={movingChecked}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-3 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-          >
-            {movingChecked
-              ? <Loader2 className="h-4 w-4 animate-spin" />
-              : <><PackagePlus className="h-4 w-4" /> Sposta {checkedCount} in dispensa</>}
-          </button>
-          <button
-            onClick={onClearChecked}
-            className="rounded-xl border border-hair px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-stone-50"
-          >
-            Rimuovi
-          </button>
-        </div>
-      )}
+      <div className={checkedCount > 0 ? "h-44" : "h-28"} />
 
-      <div className="h-28" />
-
-      {/* Barra in basso (sopra la navigazione): solo i toggle di vista */}
+      {/* Barra in basso (sopra la navigazione): l'azione di chiusura della
+          spesa appare qui, grande e sempre visibile, appena spunti qualcosa. */}
       {shopping.length > 0 && (
         <div
           className="fixed inset-x-0 z-20 border-t border-hair bg-cream/95 backdrop-blur"
           style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
         >
-          <div className="mx-auto flex max-w-md items-center justify-between px-5 py-2.5">
-            <button
-              onClick={() => setByAisle((v) => !v)}
-              aria-pressed={byAisle}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
-                byAisle ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-              }`}
-            >
-              <Store className="h-3.5 w-3.5" /> Per reparto
-            </button>
-            <button
-              onClick={onToggleAll}
-              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-stone-500 transition hover:bg-stone-100 hover:text-ink"
-            >
-              <ListChecks className="h-3.5 w-3.5" />
-              {allChecked ? "Deseleziona tutto" : "Seleziona tutto"}
-            </button>
+          <div className="mx-auto max-w-md px-5 py-2.5">
+            {checkedCount > 0 && (
+              <div className="animate-fade-in mb-2 flex gap-2">
+                <button
+                  onClick={onMoveChecked}
+                  disabled={movingChecked}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-tomato px-3 py-3 text-sm font-bold text-white transition hover:bg-tomato-700 active:scale-[0.99] disabled:opacity-60"
+                >
+                  {movingChecked
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <>
+                        <PackagePlus className="h-4 w-4" />
+                        {allChecked ? "Sposta tutto in dispensa" : `Sposta ${checkedCount} in dispensa`}
+                      </>}
+                </button>
+                <button
+                  onClick={onClearChecked}
+                  className="rounded-xl border border-hair px-3 py-3 text-sm font-semibold text-stone-500 transition hover:bg-stone-50"
+                >
+                  Rimuovi
+                </button>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setByAisle((v) => !v)}
+                aria-pressed={byAisle}
+                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+                  byAisle ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+                }`}
+              >
+                <Store className="h-3.5 w-3.5" /> Per reparto
+              </button>
+              <button
+                onClick={onToggleAll}
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-stone-500 transition hover:bg-stone-100 hover:text-ink"
+              >
+                <ListChecks className="h-3.5 w-3.5" />
+                {allChecked ? "Deseleziona tutto" : "Seleziona tutto"}
+              </button>
+            </div>
           </div>
         </div>
       )}
