@@ -278,7 +278,7 @@ export default function PantryTab({
                         <div className="flex gap-1.5">
                           <label
                             title="Scadenza"
-                            className={`relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border transition ${
+                            className={`relative flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded-lg border transition ${
                               it.expiry ? "border-tomato/40 bg-tomato/5 text-tomato" : "border-hair text-stone-500 hover:text-tomato"
                             }`}
                           >

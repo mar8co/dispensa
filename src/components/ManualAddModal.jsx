@@ -112,7 +112,7 @@ export default function ManualAddModal({
 
           <label
             title="Scadenza"
-            className={`relative flex h-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border px-3.5 transition ${newExpiry ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-tomato hover:bg-tomato/5"}`}
+            className={`relative flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-3.5 transition ${newExpiry ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-tomato hover:bg-tomato/5"}`}
           >
             <CalendarPlus className="h-5 w-5" />
             <input
