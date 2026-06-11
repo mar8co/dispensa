@@ -540,15 +540,18 @@ export default function Dispensa({ session }) {
     return { added: newRows.length, merged: updates.size };
   }
 
+  // Aggiunta manuale alla spesa: correzione ortografica locale (stesso
+  // dizionario della dispensa, zero AI) + prima lettera maiuscola.
   async function addShoppingItem(name, qty) {
-    const res = await addToShoppingMerged([{ name, qty }]);
+    const res = await addToShoppingMerged([{ name: correctName(String(name)), qty }]);
     return { merged: res.merged > 0 };
   }
 
   // Modifica nome e reparto di un articolo: il reparto scelto a mano viene
   // ricordato nelle impostazioni (per nome) e sincronizzato tra dispositivi.
   async function editShoppingItem(it, name, category) {
-    const newName = String(name || "").trim() || it.name;
+    let newName = String(name || "").trim() || it.name;
+    newName = newName.charAt(0).toUpperCase() + newName.slice(1); // maiuscola
     try {
       if (newName !== it.name) await updateShopping(it.id, { name: newName });
       setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, name: newName } : x)));
