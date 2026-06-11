@@ -1271,7 +1271,6 @@ export default function Dispensa({ session }) {
             userInitial={(session.user.email || "?").trim().charAt(0).toUpperCase()}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} cardRefs={cardRefs}
-            dragCat={dragCat} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd}
             onMoveCat={moveCategory}
             onAdjustQty={adjustItemQty} onSetExpiry={setItemExpiry}
             editId={editId} editName={editName} setEditName={setEditName}

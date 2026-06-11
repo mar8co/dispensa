@@ -48,7 +48,9 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
                   transitionDelay: menuOpen ? `${i * 40}ms` : `${(options.length - 1 - i) * 25}ms`,
                 }}
               >
-                <span className="pointer-events-none whitespace-nowrap rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white">
+                {/* Bianco letterale: il token "white" del tema si scurisce in
+                    dark mode e sparirebbe sulla chip nera. */}
+                <span className="pointer-events-none whitespace-nowrap rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-[#fff]">
                   {o.label}
                 </span>
                 <button
