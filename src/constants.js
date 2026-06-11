@@ -4,7 +4,7 @@
 // Ordine di default = frequenza d'uso: il fresco che compri spesso in alto,
 // condimenti e spezie (acquisti rari) in fondo. Resta riordinabile a mano.
 export const CATEGORIES = [
-  "Verdura", "Frutta", "Carne", "Salumi", "Pesce", "Latticini e Uova",
+  "Verdura", "Frutta", "Carne", "Salumi", "Pesce", "Latticini",
   "Pane e Forno", "Pasta, Riso e Cereali", "Legumi", "Conserve",
   "Surgelati", "Bevande", "Dolci", "Frutta Secca",
   "Condimenti e Salse", "Spezie ed Erbe", "Altro",
@@ -15,14 +15,14 @@ export const CATEGORIES = [
 // bevande verso le casse. Usato dalla lista della spesa "Per reparto".
 export const AISLE_ORDER = [
   "Verdura", "Frutta", "Pane e Forno", "Carne", "Salumi", "Pesce",
-  "Latticini e Uova", "Pasta, Riso e Cereali", "Legumi", "Conserve",
+  "Latticini", "Pasta, Riso e Cereali", "Legumi", "Conserve",
   "Condimenti e Salse", "Spezie ed Erbe", "Frutta Secca", "Dolci",
   "Surgelati", "Bevande", "Altro",
 ];
 
 export const CAT_ICON = {
   "Verdura": "🥬", "Frutta": "🍎", "Carne": "🥩", "Salumi": "🥓",
-  "Pesce": "🐟", "Latticini e Uova": "🥚", "Pane e Forno": "🍞",
+  "Pesce": "🐟", "Latticini": "🧀", "Pane e Forno": "🍞",
   "Pasta, Riso e Cereali": "🌾", "Legumi": "🫘", "Conserve": "🥫",
   "Surgelati": "🧊", "Bevande": "🥤", "Dolci": "🍪", "Frutta Secca": "🥜",
   "Condimenti e Salse": "🫙", "Spezie ed Erbe": "🌿", "Altro": "📦",
@@ -61,10 +61,10 @@ Metti l'eventuale peso o formato nel campo "qty" (es. "500 g") — MAI nel nome.
 Ignora prodotti non alimentari. Se non riconosci alcun alimento, restituisci una lista vuota.
 Rispondi SOLO con JSON valido senza markdown:
 {"items":[{"name":"...","qty":"...","category":"..."}]}
-Categorie possibili: Verdura, Frutta, Carne, Salumi, Pesce, Latticini e Uova,
+Categorie possibili: Verdura, Frutta, Carne, Salumi, Pesce, Latticini,
 Pane e Forno, Pasta, Riso e Cereali (unica categoria), Legumi, Conserve, Surgelati,
 Bevande, Dolci, Frutta Secca, Condimenti e Salse, Spezie ed Erbe, Altro.
-NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Latticini e Uova".`;
+NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Altro".`;
 
 export const STORAGE_KEY = "dispensa-v1";
 export const COLLAPSE_KEY = "dispensa-collapsed-v1";
@@ -93,8 +93,8 @@ export const SEED_DATA = [
   ["Salsa di soia", "1 bottiglia", "Condimenti e Salse"],
   ["Aceto balsamico", "1 bottiglia", "Condimenti e Salse"],
   ["Aceto di mele", "1 bottiglia", "Condimenti e Salse"],
-  ["Parmigiano grattugiato", "1 conf.", "Latticini e Uova"],
-  ["Pecorino romano", "1 pezzo", "Latticini e Uova"],
+  ["Parmigiano grattugiato", "1 conf.", "Latticini"],
+  ["Pecorino romano", "1 pezzo", "Latticini"],
   ["Pomodorini", "1 vaschetta", "Verdura"],
   ["Limone", "1", "Frutta"],
   ["Fish burger di merluzzo", "2", "Surgelati"],

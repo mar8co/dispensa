@@ -5,7 +5,7 @@
 import { useState } from "react";
 import {
   Trash2, Pencil, Check, X, Search, ShoppingCart, AlertTriangle, ChefHat,
-  CalendarPlus, GripVertical, ArrowUpDown,
+  CalendarPlus, GripVertical, ArrowUpDown, ChevronUp, ChevronDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry } from "../lib/pantry.js";
@@ -54,7 +54,7 @@ const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}
 export default function PantryTab({
   search, setSearch, sort, setSort, onOpenProfile, userInitial,
   grouped, cardRefs,
-  dragCat, onDragStart, onDragMove, onDragEnd, onAdjustQty, onSetExpiry,
+  dragCat, onDragStart, onDragMove, onDragEnd, onMoveCat, onAdjustQty, onSetExpiry,
   editId, editName, setEditName, editCat, setEditCat,
   startEdit, saveEdit, setEditId, removeItem,
   expiringCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping,
@@ -192,7 +192,7 @@ export default function PantryTab({
 
       {/* Sezioni a tutta larghezza, con intestazione fissa */}
       <div className="space-y-5">
-        {grouped.map(({ cat, list }) => (
+        {grouped.map(({ cat, list }, gi) => (
           <section
             key={cat}
             ref={(el) => { cardRefs.current[cat] = el; }}
@@ -203,17 +203,38 @@ export default function PantryTab({
               <span className="text-base">{CAT_ICON[cat]}</span>
               <h2 className="min-w-0 truncate font-display text-lg font-semibold text-ink">{cat}</h2>
               <span className="font-display text-sm font-bold text-tomato">{String(list.length).padStart(2, "0")}</span>
-              <button
-                onPointerDown={(e) => onDragStart(e, cat)}
-                onPointerMove={onDragMove}
-                onPointerUp={onDragEnd}
-                onPointerCancel={onDragEnd}
-                style={{ touchAction: "none" }}
-                className="ml-auto shrink-0 cursor-grab rounded-lg p-1 text-stone-300 hover:text-stone-600 active:cursor-grabbing"
-                aria-label="Trascina per riordinare"
-              >
-                <GripVertical className="h-4 w-4" />
-              </button>
+              {/* Frecce per riordinare: la prima può solo scendere, l'ultima solo salire */}
+              <div className="ml-auto flex shrink-0 items-center gap-0.5">
+                {gi > 0 && (
+                  <button
+                    onClick={() => onMoveCat(cat, -1)}
+                    className="rounded-lg p-1 text-stone-300 transition hover:bg-stone-100 hover:text-ink"
+                    aria-label="Sposta su"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                )}
+                {gi < grouped.length - 1 && (
+                  <button
+                    onClick={() => onMoveCat(cat, 1)}
+                    className="rounded-lg p-1 text-stone-300 transition hover:bg-stone-100 hover:text-ink"
+                    aria-label="Sposta giù"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                )}
+                <button
+                  onPointerDown={(e) => onDragStart(e, cat)}
+                  onPointerMove={onDragMove}
+                  onPointerUp={onDragEnd}
+                  onPointerCancel={onDragEnd}
+                  style={{ touchAction: "none" }}
+                  className="shrink-0 cursor-grab rounded-lg p-1 text-stone-300 hover:text-stone-600 active:cursor-grabbing"
+                  aria-label="Trascina per riordinare"
+                >
+                  <GripVertical className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <ul>

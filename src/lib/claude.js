@@ -34,7 +34,7 @@ export async function fetchPhotos(queries) {
   }
 }
 
-export async function callClaude(content, maxTokens = 1000, retries = 1) {
+export async function callClaude(content, maxTokens = 1000, retries = 2) {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token;
@@ -76,9 +76,12 @@ export async function callClaude(content, maxTokens = 1000, retries = 1) {
       throw err;
     }
   } catch (err) {
-    // Un riprova automatico su limite di richieste (429) o risposta vuota/non valida (502).
-    if (retries > 0 && (err.status === 429 || err.status === 502)) {
-      await new Promise((r) => setTimeout(r, 1500));
+    // Riprova automatico su limite di richieste (429), errori temporanei del
+    // servizio (500/503) o risposta vuota/non valida (502), con attese
+    // crescenti: 2s al primo tentativo, 4s al secondo.
+    const retriable = [429, 500, 502, 503].includes(err.status);
+    if (retries > 0 && retriable) {
+      await new Promise((r) => setTimeout(r, 2000 * (3 - retries)));
       return callClaude(content, maxTokens, retries - 1);
     }
     throw err;

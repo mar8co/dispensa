@@ -676,6 +676,21 @@ export default function Dispensa({ session }) {
     return !!findMatch(name, items);
   }
 
+  // Sposta una categoria su/giù di una posizione rispetto a quelle visibili.
+  function moveCategory(cat, dir) {
+    const visible = grouped.map((g) => g.cat);
+    const i = visible.indexOf(cat);
+    const target = visible[i + dir];
+    if (!target) return;
+    setCatOrder((order) => {
+      const arr = order.filter((c) => c !== cat);
+      const ti = arr.indexOf(target);
+      if (ti < 0) return order;
+      arr.splice(dir > 0 ? ti + 1 : ti, 0, cat);
+      return arr;
+    });
+  }
+
   // --- Riordino generico (categorie e occasioni) ---
   function moveInOrder(setOrder, dragged, target) {
     setOrder((order) => {
@@ -891,7 +906,7 @@ export default function Dispensa({ session }) {
       `Rispondi SOLO con JSON valido senza markdown: ` +
       `{"recipes":[{"title":"...","description":"breve, max 14 parole","time":"es. 15 min","difficulty":"Facile|Media|Elaborata","imageQuery":"2-4 parole IN INGLESE per cercare una foto del piatto, es. spaghetti tomato"}]}`;
     try {
-      const parsed = await callClaude([{ type: "text", text: prompt }], 1000);
+      const parsed = await callClaude([{ type: "text", text: prompt }], 1200);
       const list = Array.isArray(parsed.recipes) ? parsed.recipes : [];
       animateUI(() => { setIdeas(list); setLoadingIdeas(false); });
       if (!m.custom && list.length) saveIdeasCache(m.id, list);
@@ -955,7 +970,8 @@ export default function Dispensa({ session }) {
       `Rispondi SOLO con JSON valido senza markdown: ` +
       `{"title":"...","servings":2,"time":"...","imageQuery":"2-4 parole IN INGLESE per la foto del piatto","ingredients":[{"name":"...","qty":"120 g"}],"steps":[{"text":"...","timer":10}]}`;
     try {
-      const parsed = await callClaude([{ type: "text", text: prompt }], 1500);
+      // Spazio abbondante: le ricette lunghe troncavano il JSON (errore 502).
+      const parsed = await callClaude([{ type: "text", text: prompt }], 2500);
       animateUI(() => { setRecipe(parsed); setServings(initialServings(parsed)); setLoadingRecipe(false); });
       fetchPhotos([parsed.imageQuery || parsed.title]).then((urls) => {
         if (urls[0]) setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
@@ -1256,6 +1272,7 @@ export default function Dispensa({ session }) {
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} cardRefs={cardRefs}
             dragCat={dragCat} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd}
+            onMoveCat={moveCategory}
             onAdjustQty={adjustItemQty} onSetExpiry={setItemExpiry}
             editId={editId} editName={editName} setEditName={setEditName}
             editCat={editCat} setEditCat={setEditCat}

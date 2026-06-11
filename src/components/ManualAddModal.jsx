@@ -80,7 +80,8 @@ export default function ManualAddModal({
             {suggestions.map((n) => (
               <button
                 key={n}
-                onClick={() => quickAdd(n)}
+                // pointerdown: funziona anche con la tastiera iOS aperta
+                onPointerDown={(e) => { e.preventDefault(); quickAdd(n); }}
                 className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
               >
                 {n}

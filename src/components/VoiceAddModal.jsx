@@ -9,16 +9,8 @@
 // UI in stile assistente vocale: microfono grande con anelli che pulsano,
 // equalizer animato e trascrizione in caratteri grandi.
 import { useEffect, useRef, useState } from "react";
-import { Mic, Loader2, Check, RotateCcw } from "lucide-react";
+import { Mic, Loader2, Check } from "lucide-react";
 import Sheet from "./Sheet.jsx";
-
-const EQ_BARS = [
-  { delay: "0s", duration: "0.9s" },
-  { delay: "0.12s", duration: "0.7s" },
-  { delay: "0.2s", duration: "0.8s" },
-  { delay: "0.05s", duration: "0.6s" },
-  { delay: "0.16s", duration: "0.85s" },
-];
 
 export default function VoiceAddModal({ processing, onCancel, onResult, confirmLabel = "Aggiungi" }) {
   const [transcript, setTranscript] = useState("");
@@ -114,42 +106,28 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
           {error ? "Microfono" : listening ? "Ti ascolto" : "In pausa"}
         </p>
 
-        {/* Microfono grande: tap = pausa/riprendi. Anelli mentre ascolta. */}
-        <div className="relative mx-auto my-5 h-28 w-28">
+        {/* Microfono: tap = pausa/riprendi. Un solo anello, discreto. */}
+        <div className="relative mx-auto my-4 h-20 w-20">
           {listening && !processing && (
-            <>
-              <span className="animate-voice-ring absolute inset-0 rounded-full border-2 border-tomato" />
-              <span className="animate-voice-ring absolute inset-0 rounded-full border-2 border-tomato" style={{ animationDelay: "0.6s" }} />
-            </>
+            <span className="animate-voice-ring absolute inset-0 rounded-full border border-tomato/40" style={{ animationDuration: "2.4s" }} />
           )}
           <button
             onClick={() => (listening ? pause() : resume())}
             disabled={processing || !!error}
-            className={`absolute inset-3 flex items-center justify-center rounded-full transition active:scale-95 ${
-              listening ? "bg-tomato text-white shadow-lg shadow-tomato/30" : "bg-stone-200 text-stone-500"
+            className={`absolute inset-2 flex items-center justify-center rounded-full transition active:scale-95 ${
+              listening ? "bg-tomato text-white" : "bg-stone-200 text-stone-500"
             }`}
             aria-label={listening ? "Metti in pausa" : "Riprendi ad ascoltare"}
           >
-            <Mic className="h-9 w-9" />
+            <Mic className="h-7 w-7" />
           </button>
         </div>
 
-        {/* Equalizer: danza solo mentre ascolta */}
-        <div className="flex h-5 items-center justify-center gap-[3px]">
-          {listening && !processing && EQ_BARS.map((b, i) => (
-            <span
-              key={i}
-              className="voice-bar bg-tomato"
-              style={{ animationDelay: b.delay, animationDuration: b.duration }}
-            />
-          ))}
-        </div>
-
-        {/* Trascrizione in grande, da protagonista */}
+        {/* Trascrizione: la vera protagonista */}
         {error ? (
-          <p className="min-h-[3.5rem] py-2 text-sm font-semibold text-tomato">{error}</p>
+          <p className="min-h-[5rem] py-2 text-sm font-semibold text-tomato">{error}</p>
         ) : (
-          <p className="min-h-[3.5rem] py-1 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
+          <p className="min-h-[5rem] px-1 py-1 font-display text-[22px] font-bold leading-snug tracking-tight text-ink">
             {transcript
               ? <>«{transcript}»</>
               : <span className="font-sans text-sm font-normal italic text-stone-400">Es: «un pane, un pacco di pasta, il latte e sei uova»</span>}
@@ -159,25 +137,16 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
           {!error && listening ? `parla pure, poi tocca ${confirmLabel}` : ""}
         </p>
 
-        {/* Azioni */}
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={start}
-            disabled={processing}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-hair py-3 text-sm font-semibold text-stone-500 transition hover:bg-stone-50 disabled:opacity-50"
-          >
-            <RotateCcw className="h-4 w-4" /> Riprova
-          </button>
-          <button
-            onClick={confirm}
-            disabled={processing || !transcript.trim()}
-            className="flex flex-[2] items-center justify-center gap-1.5 rounded-xl bg-tomato py-3 text-sm font-bold text-white transition hover:bg-tomato-700 disabled:opacity-40"
-          >
-            {processing
-              ? <><Loader2 className="h-4 w-4 animate-spin" /> Elaboro…</>
-              : <><Check className="h-4 w-4" /> {confirmLabel}</>}
-          </button>
-        </div>
+        {/* Unica azione: conferma (pausa/riprendi = tap sul microfono) */}
+        <button
+          onClick={confirm}
+          disabled={processing || !transcript.trim()}
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-tomato py-3.5 text-sm font-bold text-white transition hover:bg-tomato-700 disabled:opacity-40"
+        >
+          {processing
+            ? <><Loader2 className="h-4 w-4 animate-spin" /> Elaboro…</>
+            : <><Check className="h-4 w-4" /> {confirmLabel}</>}
+        </button>
       </div>
       )}
     </Sheet>

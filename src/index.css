@@ -92,6 +92,9 @@ body {
   background: rgb(var(--cream));
   font-family: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
   color: rgb(var(--ink));
+  /* Parole molto lunghe (nomi prodotto, richieste libere) vanno a capo
+     invece di sforare dai bordi. */
+  overflow-wrap: break-word;
 }
 
 /* Titoli: grottesco con tracking stretto */

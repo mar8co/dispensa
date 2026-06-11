@@ -373,7 +373,10 @@ export default function ShoppingTab({
             {suggestions.map((n) => (
               <button
                 key={n}
-                onClick={() => add(n)}
+                // pointerdown + preventDefault: scatta subito, senza far
+                // perdere il focus all'input (il click normale veniva
+                // "mangiato" dal reflow quando la tastiera iOS è aperta).
+                onPointerDown={(e) => { e.preventDefault(); add(n); }}
                 className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
               >
                 {q ? n : `+ ${n}`}
