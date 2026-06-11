@@ -449,7 +449,7 @@ export default function Dispensa({ session }) {
   async function saveEdit() {
     const orig = items.find((x) => x.id === editId);
     const name = editName.trim() || (orig ? orig.name : "");
-    const fields = { name, qty: editQty.trim(), category: editCat, expiry: editExpiry || null };
+    const fields = { name, qty: normalizeWeight(editQty.trim()), category: editCat, expiry: editExpiry || null };
     try {
       await updateItem(editId, fields);
       setItems((prev) => prev.map((x) => (x.id === editId ? { ...x, ...fields } : x)));
@@ -1277,6 +1277,7 @@ export default function Dispensa({ session }) {
             onMoveCat={moveCategory}
             onAdjustQty={adjustItemQty} onSetExpiry={setItemExpiry}
             editId={editId} editName={editName} setEditName={setEditName}
+            editQty={editQty} setEditQty={setEditQty}
             editCat={editCat} setEditCat={setEditCat}
             startEdit={startEdit} saveEdit={saveEdit} setEditId={setEditId} removeItem={removeItem}
             expiringCount={expiringItems.length} expFilter={expFilter} setExpFilter={setExpFilter}

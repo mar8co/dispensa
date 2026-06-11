@@ -55,7 +55,7 @@ export default function PantryTab({
   search, setSearch, sort, setSort, onOpenProfile, userInitial,
   grouped, cardRefs,
   onMoveCat, onAdjustQty, onSetExpiry,
-  editId, editName, setEditName, editCat, setEditCat,
+  editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
   startEdit, saveEdit, setEditId, removeItem,
   expiringCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping,
 }) {
@@ -242,6 +242,39 @@ export default function PantryTab({
                         onKeyDown={(e) => e.key === "Enter" && saveEdit()}
                         placeholder="Nome"
                       />
+                      {/* Quantità: campo libero + chips unità rapide */}
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          className={`${editCls} w-24 shrink-0 text-center font-bold`}
+                          value={editQty}
+                          onChange={(e) => setEditQty(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                          placeholder="Qtà"
+                          aria-label="Quantità"
+                        />
+                        {(() => {
+                          const curUnit = String(editQty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
+                          return ["", "g", "kg", "ml", "l"].map((u) => {
+                            const active = u === "" ? curUnit === "" : curUnit === u;
+                            return (
+                              <button
+                                key={u || "pz"}
+                                onClick={() => {
+                                  const m = String(editQty).replace(",", ".").match(/-?\d+(\.\d+)?/);
+                                  const n = m ? m[0].replace(".", ",") : "1";
+                                  setEditQty(u ? `${n} ${u}` : n);
+                                }}
+                                aria-pressed={active}
+                                className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
+                                  active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+                                }`}
+                              >
+                                {u || "pz"}
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
                       <select className={editCls} value={editCat} onChange={(e) => setEditCat(e.target.value)}>
                         {CATEGORIES.map((c) => <option key={c} value={c}>{CAT_ICON[c]} {c}</option>)}
                       </select>
