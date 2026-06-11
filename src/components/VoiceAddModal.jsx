@@ -1,15 +1,26 @@
 // Aggiunta prodotti a voce: usa il riconoscimento vocale del browser
 // (Web Speech API) per trascrivere ciò che dici, poi passa il testo al
-// chiamante (che lo manda all'AI per estrarre e categorizzare gli alimenti).
+// chiamante (che lo manda all'AI per estrarre gli alimenti).
 //
-// Ascolto "continuo": su iOS il riconoscimento si ferma dopo una pausa, quindi
-// lo riavviamo automaticamente (accumulando il testo) finché non tocchi
-// "Aggiungi" o "Stop".
+// Ascolto "continuo": su iOS il riconoscimento si ferma dopo una pausa,
+// quindi lo riavviamo automaticamente (accumulando il testo) finché non
+// tocchi Aggiungi o metti in pausa.
+//
+// UI in stile assistente vocale: microfono grande con anelli che pulsano,
+// equalizer animato e trascrizione in caratteri grandi.
 import { useEffect, useRef, useState } from "react";
-import { Mic, X, Loader2, Check, RotateCcw, Square } from "lucide-react";
+import { Mic, Loader2, Check, RotateCcw } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 
-export default function VoiceAddModal({ processing, onCancel, onResult }) {
+const EQ_BARS = [
+  { delay: "0s", duration: "0.9s" },
+  { delay: "0.12s", duration: "0.7s" },
+  { delay: "0.2s", duration: "0.8s" },
+  { delay: "0.05s", duration: "0.6s" },
+  { delay: "0.16s", duration: "0.85s" },
+];
+
+export default function VoiceAddModal({ processing, onCancel, onResult, confirmLabel = "Aggiungi" }) {
   const [transcript, setTranscript] = useState("");
   const [listening, setListening] = useState(false);
   const [error, setError] = useState("");
@@ -57,6 +68,7 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
     try { rec.start(); setListening(true); } catch { /* già avviato */ }
   }
 
+  // Da capo: azzera la trascrizione e riparte.
   function start() {
     finalRef.current = "";
     setTranscript("");
@@ -65,10 +77,17 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
     begin();
   }
 
-  function stop() {
+  function pause() {
     keepRef.current = false;
     try { recRef.current?.stop(); } catch { /* ignora */ }
     setListening(false);
+  }
+
+  // Riprende l'ascolto SENZA azzerare quanto già detto.
+  function resume() {
+    setError("");
+    keepRef.current = true;
+    begin();
   }
 
   useEffect(() => {
@@ -89,60 +108,74 @@ export default function VoiceAddModal({ processing, onCancel, onResult }) {
 
   return (
     <Sheet onClose={onCancel} locked={processing}>
-      {(close) => (
-      <div className="px-5 pb-7 pt-1">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-base font-semibold text-ink">
-            <Mic className="h-5 w-5" /> Aggiungi a voce
-          </h3>
-          <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
-            <X className="h-5 w-5" />
+      {() => (
+      <div className="px-6 pb-7 pt-1 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">
+          {error ? "Microfono" : listening ? "Ti ascolto" : "In pausa"}
+        </p>
+
+        {/* Microfono grande: tap = pausa/riprendi. Anelli mentre ascolta. */}
+        <div className="relative mx-auto my-5 h-28 w-28">
+          {listening && !processing && (
+            <>
+              <span className="animate-voice-ring absolute inset-0 rounded-full border-2 border-tomato" />
+              <span className="animate-voice-ring absolute inset-0 rounded-full border-2 border-tomato" style={{ animationDelay: "0.6s" }} />
+            </>
+          )}
+          <button
+            onClick={() => (listening ? pause() : resume())}
+            disabled={processing || !!error}
+            className={`absolute inset-3 flex items-center justify-center rounded-full transition active:scale-95 ${
+              listening ? "bg-tomato text-white shadow-lg shadow-tomato/30" : "bg-stone-200 text-stone-500"
+            }`}
+            aria-label={listening ? "Metti in pausa" : "Riprendi ad ascoltare"}
+          >
+            <Mic className="h-9 w-9" />
           </button>
         </div>
 
-        {/* Indicatore microfono */}
-        <div className="flex flex-col items-center py-3">
-          <div className={`flex h-16 w-16 items-center justify-center rounded-full transition ${listening ? "bg-tomato/15 text-tomato" : "bg-stone-100 text-stone-400"}`}>
-            <Mic className={`h-8 w-8 ${listening ? "animate-pulse" : ""}`} />
-          </div>
-          <p className="mt-2 text-xs text-stone-500">
-            {error ? "" : listening ? "Sto ascoltando… parla pure, tocca Aggiungi quando hai finito" : "In pausa"}
-          </p>
+        {/* Equalizer: danza solo mentre ascolta */}
+        <div className="flex h-5 items-center justify-center gap-[3px]">
+          {listening && !processing && EQ_BARS.map((b, i) => (
+            <span
+              key={i}
+              className="voice-bar bg-tomato"
+              style={{ animationDelay: b.delay, animationDuration: b.duration }}
+            />
+          ))}
         </div>
 
-        {/* Trascrizione */}
-        {!error && (
-          <div className="min-h-[3rem] rounded-xl bg-stone-50 px-3 py-2 text-center text-sm text-stone-700">
-            {transcript || <span className="text-stone-400">Es: "ho comprato un pane, un pacco di pasta, il latte e 6 uova"</span>}
-          </div>
+        {/* Trascrizione in grande, da protagonista */}
+        {error ? (
+          <p className="min-h-[3.5rem] py-2 text-sm font-semibold text-tomato">{error}</p>
+        ) : (
+          <p className="min-h-[3.5rem] py-1 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
+            {transcript
+              ? <>«{transcript}»</>
+              : <span className="font-sans text-sm font-normal italic text-stone-400">Es: «un pane, un pacco di pasta, il latte e sei uova»</span>}
+          </p>
         )}
-        {error && <p className="text-center text-sm font-medium text-tomato">{error}</p>}
+        <p className="mt-0.5 h-4 text-xs text-stone-400">
+          {!error && listening ? `parla pure, poi tocca ${confirmLabel}` : ""}
+        </p>
 
         {/* Azioni */}
         <div className="mt-4 flex gap-2">
-          {listening ? (
-            <button
-              onClick={stop}
-              disabled={processing}
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-50"
-            >
-              <Square className="h-4 w-4" /> Stop
-            </button>
-          ) : (
-            <button
-              onClick={start}
-              disabled={processing}
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-50"
-            >
-              <RotateCcw className="h-4 w-4" /> Riascolta
-            </button>
-          )}
+          <button
+            onClick={start}
+            disabled={processing}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-hair py-3 text-sm font-semibold text-stone-500 transition hover:bg-stone-50 disabled:opacity-50"
+          >
+            <RotateCcw className="h-4 w-4" /> Riprova
+          </button>
           <button
             onClick={confirm}
             disabled={processing || !transcript.trim()}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            className="flex flex-[2] items-center justify-center gap-1.5 rounded-xl bg-tomato py-3 text-sm font-bold text-white transition hover:bg-tomato-700 disabled:opacity-40"
           >
-            {processing ? <><Loader2 className="h-4 w-4 animate-spin" /> Elaboro…</> : <><Check className="h-4 w-4" /> Aggiungi</>}
+            {processing
+              ? <><Loader2 className="h-4 w-4 animate-spin" /> Elaboro…</>
+              : <><Check className="h-4 w-4" /> {confirmLabel}</>}
           </button>
         </div>
       </div>

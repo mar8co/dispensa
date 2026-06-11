@@ -1400,6 +1400,7 @@ export default function Dispensa({ session }) {
           processing={shopVoiceProcessing}
           onCancel={() => { if (!shopVoiceProcessing) setShopVoiceOpen(false); }}
           onResult={handleShoppingVoice}
+          confirmLabel="Aggiungi alla lista"
         />
       )}
 

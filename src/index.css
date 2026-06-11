@@ -119,6 +119,26 @@ body {
   display: none;
 }
 
+/* Foglio voce: anelli che pulsano attorno al microfono e barre equalizer. */
+@keyframes voice-ring {
+  from { transform: scale(1); opacity: 0.5; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+.animate-voice-ring {
+  animation: voice-ring 1.8s ease-out infinite;
+}
+@keyframes voice-eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+.voice-bar {
+  width: 3px;
+  height: 18px;
+  border-radius: 99px;
+  transform-origin: center;
+  animation: voice-eq 0.8s ease-in-out infinite;
+}
+
 /* Dissolvenza generica (es. sfondo blurrato delle finestre). */
 @keyframes fade-in {
   from { opacity: 0; }

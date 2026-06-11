@@ -5,7 +5,7 @@
 import { useState } from "react";
 import {
   Trash2, Pencil, Check, X, Search, ShoppingCart, AlertTriangle, ChefHat,
-  CalendarPlus, GripVertical,
+  CalendarPlus, GripVertical, ArrowUpDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry } from "../lib/pantry.js";
@@ -61,6 +61,7 @@ export default function PantryTab({
 }) {
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // prodotto coi comandi aperti
+  const [sortOpen, setSortOpen] = useState(false); // chips ordinamento a comparsa
 
   // Salta alla categoria: l'offset lascia spazio alla barra fissa.
   function jumpTo(cat) {
@@ -83,11 +84,11 @@ export default function PantryTab({
       </div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Ciao 👋<br />Hai fame?</h1>
 
-      {/* Ricerca minimale */}
+      {/* Ricerca minimale, con l'ordinamento dietro l'icona ⇅ a destra */}
       <div className="relative mt-4">
         <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
         <input
-          className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-7 text-sm text-ink outline-none focus:border-ink"
+          className={`w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 text-sm text-ink outline-none focus:border-ink ${searchActive ? "pr-16" : "pr-9"}`}
           placeholder="Cerca un prodotto"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -95,13 +96,43 @@ export default function PantryTab({
         {searchActive && (
           <button
             onClick={() => setSearch("")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100"
+            className="absolute right-8 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100"
             aria-label="Cancella ricerca"
           >
             <X className="h-4 w-4" />
           </button>
         )}
+        {grouped.length > 0 && (
+          <button
+            onClick={() => setSortOpen((v) => !v)}
+            aria-expanded={sortOpen}
+            className={`absolute right-0 top-1/2 -translate-y-1/2 rounded-md p-1 transition hover:bg-stone-100 ${
+              sort !== "recenti" ? "text-tomato" : "text-stone-400"
+            }`}
+            aria-label="Ordinamento"
+            title="Ordinamento"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </button>
+        )}
       </div>
+
+      {/* Chips ordinamento: compaiono solo al tocco dell'icona */}
+      {sortOpen && grouped.length > 0 && (
+        <div className="animate-fade-in mt-3 flex gap-1.5">
+          {SORTS.map(([v, l]) => (
+            <button
+              key={v}
+              onClick={() => { setSort(v); setSortOpen(false); }}
+              className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+                sort === v ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Striscia scadenze */}
       {expiringCount > 0 && (
@@ -126,23 +157,6 @@ export default function PantryTab({
               <ChefHat className="h-4 w-4" /> Cucina con questi
             </button>
           )}
-        </div>
-      )}
-
-      {/* Ordinamento (dentro ogni categoria) */}
-      {grouped.length > 0 && (
-        <div className="mt-3 flex gap-1.5">
-          {SORTS.map(([v, l]) => (
-            <button
-              key={v}
-              onClick={() => setSort(v)}
-              className={`rounded-lg border px-2 py-1.5 text-xs font-semibold transition ${
-                sort === v ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
         </div>
       )}
 
