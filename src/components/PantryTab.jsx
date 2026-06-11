@@ -202,24 +202,25 @@ export default function PantryTab({
               <span className="text-base">{CAT_ICON[cat]}</span>
               <h2 className="min-w-0 truncate font-display text-lg font-semibold text-ink">{cat}</h2>
               <span className="font-display text-sm font-bold text-tomato">{String(list.length).padStart(2, "0")}</span>
-              {/* Frecce per riordinare: la prima può solo scendere, l'ultima solo salire */}
-              <div className="ml-auto flex shrink-0 items-center gap-1">
+              {/* Frecce per riordinare, nude e discrete: la prima categoria
+                  può solo scendere, l'ultima solo salire */}
+              <div className="ml-auto flex shrink-0 items-center">
                 {gi > 0 && (
                   <button
                     onClick={() => onMoveCat(cat, -1)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:border-tomato hover:text-tomato active:scale-95"
+                    className="p-1.5 text-stone-400 transition hover:text-tomato active:scale-90 active:text-tomato"
                     aria-label="Sposta su"
                   >
-                    <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
+                    <ArrowUp className="h-[18px] w-[18px]" strokeWidth={2.2} />
                   </button>
                 )}
                 {gi < grouped.length - 1 && (
                   <button
                     onClick={() => onMoveCat(cat, 1)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:border-tomato hover:text-tomato active:scale-95"
+                    className="p-1.5 text-stone-400 transition hover:text-tomato active:scale-90 active:text-tomato"
                     aria-label="Sposta giù"
                   >
-                    <ArrowDown className="h-4 w-4" strokeWidth={2.4} />
+                    <ArrowDown className="h-[18px] w-[18px]" strokeWidth={2.2} />
                   </button>
                 )}
               </div>
