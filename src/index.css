@@ -111,6 +111,14 @@ body {
   }
 }
 
+/* Barre orizzontali scorrevoli senza scrollbar visibile (salta-reparto). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Dissolvenza generica (es. sfondo blurrato delle finestre). */
 @keyframes fade-in {
   from { opacity: 0; }

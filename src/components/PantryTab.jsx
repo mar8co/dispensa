@@ -1,7 +1,7 @@
-// Scheda Dispensa — vista "scaffali": una card per categoria con righe
-// compatte (nome + quantità), tutta la dispensa a colpo d'occhio. Toccando
-// un prodotto si aprono lì sotto i comandi: quantità, scadenza, modifica,
-// elimina. Un solo prodotto aperto alla volta.
+// Scheda Dispensa — vista "indice": sezioni a tutta larghezza per categoria,
+// righe compatte con puntini di guida (nome ……… quantità), barra
+// salta-reparto e intestazioni fisse durante lo scroll. Toccando un prodotto
+// si aprono lì sotto i comandi: quantità, scadenza, modifica, elimina.
 import { useState } from "react";
 import {
   Trash2, Pencil, Check, X, Search, ShoppingCart, AlertTriangle, ChefHat,
@@ -18,11 +18,12 @@ const EXP_STYLE = {
   ok: "bg-stone-100 text-stone-500",
 };
 
-function ExpiryBadge({ date }) {
+function ExpiryBadge({ date, onlyUrgent = false }) {
   const st = expiryStatus(date);
   if (!st) return null;
+  if (onlyUrgent && st === "ok") return null; // le date lontane non fanno rumore
   return (
-    <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${EXP_STYLE[st]}`}>
+    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${EXP_STYLE[st]}`}>
       {formatExpiry(date)}
     </span>
   );
@@ -60,6 +61,11 @@ export default function PantryTab({
 }) {
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // prodotto coi comandi aperti
+
+  // Salta alla categoria: l'offset lascia spazio alla barra fissa.
+  function jumpTo(cat) {
+    cardRefs.current[cat]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <div className="pt-2">
@@ -123,7 +129,7 @@ export default function PantryTab({
         </div>
       )}
 
-      {/* Ordinamento (dentro ogni scaffale) */}
+      {/* Ordinamento (dentro ogni categoria) */}
       {grouped.length > 0 && (
         <div className="mt-3 flex gap-1.5">
           {SORTS.map(([v, l]) => (
@@ -140,34 +146,50 @@ export default function PantryTab({
         </div>
       )}
 
+      {/* Barra salta-reparto: fissa in alto durante lo scroll */}
+      {grouped.length > 1 && (
+        <div className="no-scrollbar sticky top-0 z-20 -mx-5 mt-3 flex h-12 items-center gap-1.5 overflow-x-auto bg-cream/95 px-5 backdrop-blur">
+          {grouped.map(({ cat }) => (
+            <button
+              key={cat}
+              onClick={() => jumpTo(cat)}
+              className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+            >
+              {CAT_ICON[cat]} {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
       {grouped.length === 0 && (
         <p className="py-12 text-center text-sm text-stone-400">
           {searchActive ? "Nessun prodotto trovato." : expFilter ? "Niente in scadenza. 🎉" : "Dispensa vuota. Tocca + per aggiungere."}
         </p>
       )}
 
-      {/* Scaffali: una card per categoria, in due colonne */}
-      <div className="mt-4 columns-2 gap-3">
+      {/* Sezioni a tutta larghezza, con intestazione fissa */}
+      <div className="space-y-5">
         {grouped.map(({ cat, list }) => (
           <section
             key={cat}
             ref={(el) => { cardRefs.current[cat] = el; }}
-            className={`mb-3 break-inside-avoid rounded-2xl border bg-paper p-3 ${dragCat === cat ? "border-tomato ring-2 ring-tomato/20" : "border-hair"}`}
+            style={{ scrollMarginTop: "48px" }}
+            className={dragCat === cat ? "rounded-xl ring-2 ring-tomato/30" : ""}
           >
-            <div className="mb-1 flex items-center gap-1.5">
-              <span className="text-sm">{CAT_ICON[cat]}</span>
-              <h2 className="min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-[0.08em] text-tomato">{cat}</h2>
-              <span className="text-[11px] font-bold text-stone-400">{list.length}</span>
+            <div className="sticky top-12 z-10 -mx-1 flex items-center gap-2 border-b border-ink/15 bg-cream px-1 pb-2 pt-2">
+              <span className="text-base">{CAT_ICON[cat]}</span>
+              <h2 className="min-w-0 truncate font-display text-lg font-semibold text-ink">{cat}</h2>
+              <span className="font-display text-sm font-bold text-tomato">{String(list.length).padStart(2, "0")}</span>
               <button
                 onPointerDown={(e) => onDragStart(e, cat)}
                 onPointerMove={onDragMove}
                 onPointerUp={onDragEnd}
                 onPointerCancel={onDragEnd}
                 style={{ touchAction: "none" }}
-                className="-mr-1.5 shrink-0 cursor-grab rounded p-1 text-stone-300 hover:text-stone-600 active:cursor-grabbing"
+                className="ml-auto shrink-0 cursor-grab rounded-lg p-1 text-stone-300 hover:text-stone-600 active:cursor-grabbing"
                 aria-label="Trascina per riordinare"
               >
-                <GripVertical className="h-3.5 w-3.5" />
+                <GripVertical className="h-4 w-4" />
               </button>
             </div>
 
@@ -175,10 +197,10 @@ export default function PantryTab({
               {list.map((it) => {
                 const out = isOut(it);
 
-                // Modifica: nome + categoria, in linea nello scaffale
+                // Modifica: nome + categoria, in linea
                 if (editId === it.id) {
                   return (
-                    <li key={it.id} className="-mx-1 my-1 space-y-2 rounded-xl bg-stone-50 p-2.5">
+                    <li key={it.id} className="-mx-2 my-1 space-y-2 rounded-xl bg-stone-50 p-3">
                       <input
                         autoFocus
                         className={editCls}
@@ -205,12 +227,10 @@ export default function PantryTab({
                 // Espanso: comandi sotto il prodotto toccato
                 if (openId === it.id) {
                   return (
-                    <li key={it.id} className="-mx-1 my-1 rounded-xl bg-stone-50 p-2.5">
-                      <button onClick={() => setOpenId(null)} className="flex w-full items-center text-left">
-                        <span className={`min-w-0 truncate text-[13px] font-bold ${nameTone(it, out)}`}>
-                          {it.name}
-                          <ExpiryBadge date={it.expiry} />
-                        </span>
+                    <li key={it.id} className="-mx-2 my-1 rounded-xl bg-stone-50 p-3">
+                      <button onClick={() => setOpenId(null)} className="flex w-full items-center gap-2 text-left">
+                        <span className={`min-w-0 truncate text-[15px] font-bold ${nameTone(it, out)}`}>{it.name}</span>
+                        <ExpiryBadge date={it.expiry} />
                       </button>
                       {out && (
                         <button
@@ -220,7 +240,7 @@ export default function PantryTab({
                           <ShoppingCart className="h-3 w-3" /> finito · metti in lista
                         </button>
                       )}
-                      <div className="mt-2 flex items-center justify-between gap-2">
+                      <div className="mt-2.5 flex items-center justify-between gap-2">
                         {/\d/.test(it.qty) ? (
                           <div className="flex items-center gap-1.5">
                             <button
@@ -231,7 +251,7 @@ export default function PantryTab({
                               }`}
                               aria-label="Diminuisci"
                             >−</button>
-                            <span className="min-w-[2.25rem] text-center text-sm font-bold tabular-nums text-ink">{it.qty}</span>
+                            <span className="min-w-[2.5rem] text-center text-sm font-bold tabular-nums text-ink">{it.qty}</span>
                             <button
                               onClick={() => onAdjustQty(it, 1)}
                               className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 text-base leading-none text-stone-600 transition hover:border-tomato hover:text-tomato active:scale-95"
@@ -277,15 +297,18 @@ export default function PantryTab({
                   );
                 }
 
-                // A riposo: solo nome + quantità
+                // A riposo: nome ……… quantità (puntini di guida)
                 return (
                   <li key={it.id}>
                     <button
                       onClick={() => setOpenId(it.id)}
-                      className="flex w-full items-center justify-between gap-2 py-1 text-left"
+                      className="flex w-full items-baseline gap-2 py-[7px] text-left"
                     >
-                      <span className={`min-w-0 truncate text-[13px] font-semibold ${nameTone(it, out)}`}>{it.name}</span>
-                      <span className="shrink-0 text-xs text-stone-400">{qtyLabel(it.qty)}</span>
+                      <span className={`min-w-0 truncate text-[15px] font-semibold ${nameTone(it, out)}`}>{it.name}</span>
+                      <ExpiryBadge date={it.expiry} onlyUrgent />
+                      {out && <span className="shrink-0 text-[11px] font-bold text-tomato">finito</span>}
+                      <span aria-hidden="true" className="border-b border-dotted border-stone-300" style={{ flex: "1 0 12px" }} />
+                      <span className="shrink-0 text-xs font-medium text-stone-400">{qtyLabel(it.qty)}</span>
                     </button>
                   </li>
                 );
