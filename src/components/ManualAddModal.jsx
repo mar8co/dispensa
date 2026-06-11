@@ -13,8 +13,12 @@ function formatDateIt(d) {
   return isNaN(dt.getTime()) ? d : dt.toLocaleDateString("it-IT");
 }
 
+const UNITS = [
+  ["", "pz"], ["g", "g"], ["kg", "kg"], ["ml", "ml"], ["l", "l"],
+];
+
 export default function ManualAddModal({
-  newName, setNewName, newQty, setNewQty, grams, setGrams,
+  newName, setNewName, newQty, setNewQty, unit, setUnit,
   newExpiry, setNewExpiry, adding, onSubmit, onQuickAdd, onClose,
   historyNames = [], pantryNames = [],
 }) {
@@ -106,12 +110,6 @@ export default function ManualAddModal({
             ><Plus className="h-4 w-4" /></button>
           </div>
 
-          <button
-            onClick={() => setGrams((g) => !g)}
-            aria-pressed={grams}
-            className={`h-11 shrink-0 rounded-xl border px-3.5 text-sm font-bold transition ${grams ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"}`}
-          >gr</button>
-
           <label
             title="Scadenza"
             className={`relative flex h-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border px-3.5 transition ${newExpiry ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-tomato hover:bg-tomato/5"}`}
@@ -132,6 +130,24 @@ export default function ManualAddModal({
           >
             {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
           </button>
+        </div>
+
+        {/* Unità: pezzi di default, oppure peso/volume — aiuta le ricette
+            a scalare le quantità con precisione */}
+        <div className="mt-2.5 flex items-center gap-1.5">
+          <span className="text-xs text-stone-400">Unità:</span>
+          {UNITS.map(([value, label]) => (
+            <button
+              key={label}
+              onClick={() => setUnit(value)}
+              aria-pressed={unit === value}
+              className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition ${
+                unit === value ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {newExpiry && (

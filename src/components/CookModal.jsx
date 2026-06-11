@@ -1,10 +1,10 @@
 // Foglio "Ho cucinato questo": mostra gli ingredienti della ricetta che
 // corrispondono a prodotti in dispensa e permette di aggiornare la quantità
 // rimanente (vuoto o 0 = rimuovi il prodotto).
-import { X, Check } from "lucide-react";
+import { X, Check, Loader2, Sparkles } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 
-export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onApply }) {
+export default function CookModal({ rows, estimating, onClose, onSetAfter, onRemoveRow, onApply }) {
   return (
     <Sheet onClose={onClose}>
       {(close) => (
@@ -50,9 +50,19 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
                           onChange={(e) => onSetAfter(i, e.target.value)}
                         />
                         {!r.auto && (
-                          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                            da verificare
-                          </span>
+                          r.estimated ? (
+                            <span className="flex shrink-0 items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-xs font-medium text-tomato">
+                              <Sparkles className="h-3 w-3" /> stima AI · controlla
+                            </span>
+                          ) : estimating ? (
+                            <span className="flex shrink-0 items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
+                              <Loader2 className="h-3 w-3 animate-spin" /> stimo…
+                            </span>
+                          ) : (
+                            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                              da verificare
+                            </span>
+                          )
                         )}
                       </div>
                     </li>

@@ -70,33 +70,74 @@ export function correctName(raw) {
   return joined.charAt(0).toUpperCase() + joined.slice(1);
 }
 
-function formatKg(kg) {
-  const r = Math.round(kg * 100) / 100;
-  return String(r).replace(".", ",") + " kg";
+// --- Quantità: parsing e normalizzazione delle unità ---
+// Famiglie: peso (g/hg/kg…), volume (ml/cl/dl/l), conteggio (pezzi, pacchi,
+// confezioni, barattoli…) e "altro" (unità libere non riconosciute).
+// Pesi e volumi vengono convertiti in g/ml, così "1 kg" − "300 g" funziona;
+// i sinonimi di conteggio si sommano/sottraggono tra loro.
+const WEIGHT_UNITS = { g: 1, gr: 1, grammo: 1, grammi: 1, hg: 100, etto: 100, etti: 100, kg: 1000 };
+const VOLUME_UNITS = { ml: 1, cl: 10, dl: 100, l: 1000, lt: 1000, litro: 1000, litri: 1000 };
+const COUNT_PAIRS = [
+  ["pezzo", "pezzi"], ["pacco", "pacchi"], ["confezione", "confezioni"],
+  ["scatola", "scatole"], ["scatoletta", "scatolette"], ["barattolo", "barattoli"],
+  ["bottiglia", "bottiglie"], ["lattina", "lattine"], ["vasetto", "vasetti"],
+  ["sacchetto", "sacchetti"], ["busta", "buste"], ["panetto", "panetti"],
+  ["tavoletta", "tavolette"], ["rotolo", "rotoli"], ["mazzo", "mazzi"],
+];
+const COUNT_UNITS = new Set(["", "pz", "conf", ...COUNT_PAIRS.flat()]);
+
+export function parseQty(s) {
+  const str = String(s ?? "").trim();
+  const m = str.replace(",", ".").match(/-?\d+(\.\d+)?/);
+  if (!m) return null;
+  const n = parseFloat(m[0]);
+  const unit = str.replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
+  if (unit in WEIGHT_UNITS) return { family: "weight", base: n * WEIGHT_UNITS[unit], unit };
+  if (unit in VOLUME_UNITS) return { family: "volume", base: n * VOLUME_UNITS[unit], unit };
+  if (COUNT_UNITS.has(unit)) return { family: "count", base: n, unit };
+  return { family: "other", base: n, unit };
 }
 
-export function normalizeWeight(qty) {
-  const m = String(qty).trim().match(/^(\d+(?:[.,]\d+)?)\s*(gr|g|grammi)$/i);
-  if (m) {
-    const g = parseFloat(m[1].replace(",", "."));
-    if (g >= 1000) return formatKg(g / 1000);
+function fmtNum(n) {
+  const r = Math.round(n * 100) / 100;
+  return String(r).replace(".", ",");
+}
+export function fmtWeight(g) {
+  return g >= 1000 ? `${fmtNum(g / 1000)} kg` : `${fmtNum(g)} g`;
+}
+export function fmtVolume(ml) {
+  return ml >= 1000 ? `${fmtNum(ml / 1000)} l` : `${fmtNum(ml)} ml`;
+}
+// Parola di conteggio nel numero giusto ("1 pacco" / "3 pacchi").
+function countWord(unit, n) {
+  for (const [sing, plur] of COUNT_PAIRS) {
+    if (unit === sing || unit === plur) return n === 1 ? sing : plur;
   }
+  return unit; // pz, conf e parole ignote restano invariate
+}
+function fmtCount(n, unit) {
+  const u = countWord(unit, n);
+  return `${fmtNum(n)}${u ? " " + u : ""}`;
+}
+
+// "1500 g" -> "1,5 kg", "1000 ml" -> "1 l"; il resto resta com'è.
+export function normalizeWeight(qty) {
+  const p = parseQty(qty);
+  if (p?.family === "weight" && p.base >= 1000) return fmtWeight(p.base);
+  if (p?.family === "volume" && p.base >= 1000) return fmtVolume(p.base);
   return qty;
 }
 
 export function mergeQty(a, b) {
-  const sa = String(a), sb = String(b);
-  const ma = sa.replace(",", ".").match(/-?\d+(\.\d+)?/);
-  const mb = sb.replace(",", ".").match(/-?\d+(\.\d+)?/);
-  const unitA = sa.replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
-  const unitB = sb.replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
-  if (ma && mb && unitA === unitB) {
-    const sum = parseFloat(ma[0]) + parseFloat(mb[0]);
-    const sumStr = Number.isInteger(sum) ? String(sum) : String(sum).replace(".", ",");
-    const unit = sa.replace(/-?\d+([.,]\d+)?/, "").trim();
-    return `${sumStr}${unit ? " " + unit : ""}`.trim();
+  const pa = parseQty(a), pb = parseQty(b);
+  if (pa && pb && pa.family === pb.family) {
+    const sum = pa.base + pb.base;
+    if (pa.family === "weight") return fmtWeight(sum);
+    if (pa.family === "volume") return fmtVolume(sum);
+    if (pa.family === "count") return fmtCount(sum, pa.unit || pb.unit);
+    if (pa.unit === pb.unit) return `${fmtNum(sum)}${pa.unit ? " " + pa.unit : ""}`;
   }
-  return `${sa} + ${sb}`;
+  return `${String(a)} + ${String(b)}`;
 }
 
 export function scaleQty(qty, factor) {
@@ -109,16 +150,22 @@ export function scaleQty(qty, factor) {
 }
 
 export function subtractQty(stock, used) {
-  const ms = String(stock).replace(",", ".").match(/-?\d+(\.\d+)?/);
-  const mu = String(used).replace(",", ".").match(/-?\d+(\.\d+)?/);
-  const unitS = String(stock).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
-  const unitU = String(used).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
-  if (ms && mu && (unitS === unitU || unitU === "")) {
-    let n = parseFloat(ms[0]) - parseFloat(mu[0]);
-    if (n < 0) n = 0;
-    const numStr = Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10).replace(".", ",");
-    const unit = String(stock).replace(/-?\d+([.,]\d+)?/, "").trim();
-    return { ok: true, value: `${numStr}${unit ? " " + unit : ""}`.trim() };
+  const ps = parseQty(stock), pu = parseQty(used);
+  if (ps && pu) {
+    // Stessa famiglia (peso−peso anche tra g e kg, conteggio−conteggio anche
+    // tra sinonimi), oppure ricetta senza unità su prodotto contato
+    // ("2 uova" − "2"). Pacchi−grammi resta irrisolvibile qui: ci pensa l'AI.
+    const compatible =
+      ps.family === pu.family || (pu.unit === "" && ps.family === "count");
+    if (compatible) {
+      const left = Math.max(0, ps.base - pu.base);
+      if (ps.family === "weight") return { ok: true, value: fmtWeight(left) };
+      if (ps.family === "volume") return { ok: true, value: fmtVolume(left) };
+      if (ps.family === "count") return { ok: true, value: fmtCount(left, ps.unit) };
+      if (ps.unit === pu.unit) {
+        return { ok: true, value: `${fmtNum(left)}${ps.unit ? " " + ps.unit : ""}` };
+      }
+    }
   }
   return { ok: false, value: stock };
 }

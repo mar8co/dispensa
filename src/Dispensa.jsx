@@ -72,7 +72,7 @@ export default function Dispensa({ session }) {
   // form aggiunta
   const [newName, setNewName] = useState("");
   const [newQty, setNewQty] = useState("1");
-  const [grams, setGrams] = useState(false);
+  const [newUnit, setNewUnit] = useState(""); // "" = pezzi, oppure g/kg/ml/l
   const [newExpiry, setNewExpiry] = useState("");
   const [adding, setAdding] = useState(false);
 
@@ -130,6 +130,7 @@ export default function Dispensa({ session }) {
   // "Ho cucinato questo"
   const [cookOpen, setCookOpen] = useState(false);
   const [cookRows, setCookRows] = useState([]);
+  const [cookEstimating, setCookEstimating] = useState(false);
   const [cookDone, setCookDone] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
 
@@ -318,7 +319,7 @@ export default function Dispensa({ session }) {
     const raw = String(rawName ?? newName).trim();
     if (!raw || adding) return null;
     const n = String(newQty).trim() || "1";
-    const qty = normalizeWeight(grams ? `${n} gr` : n);
+    const qty = normalizeWeight(newUnit ? `${n} ${newUnit}` : n);
     setAdding(true);
     const name = correctName(raw);
     const category = guessCategory(name) || "Altro";
@@ -344,7 +345,7 @@ export default function Dispensa({ session }) {
     } catch (e) {
       console.error("Errore aggiunta prodotto:", e);
     }
-    setNewName(""); setNewQty("1"); setNewExpiry(""); setAdding(false);
+    setNewName(""); setNewQty("1"); setNewUnit(""); setNewExpiry(""); setAdding(false);
     return result;
   }
 
@@ -1104,6 +1105,36 @@ export default function Dispensa({ session }) {
   const factor = servings / baseServings;
 
   // --- "Ho cucinato questo" ---
+
+  // Per le righe che la matematica locale non risolve (es. "1 pacco" meno
+  // "320 g"), l'AI stima quanto rimane usando i formati tipici delle
+  // confezioni italiane; la stima arriva precompilata e si può correggere.
+  async function estimateCookRows(rows) {
+    const pending = rows.filter((r) => !r.auto);
+    if (!pending.length) return;
+    setCookEstimating(true);
+    try {
+      const prompt =
+        `Sei un assistente di cucina italiano. Per ogni prodotto ti do la quantità in dispensa ` +
+        `(a volte in pezzi/pacchi/confezioni) e quanto ne è stato usato in una ricetta. ` +
+        `Stima quanto rimane VEROSIMILMENTE, basandoti sui formati tipici delle confezioni italiane ` +
+        `(es. pasta 500 g, riso 1 kg, passata 700 g, tonno 80 g, latte 1 l). ` +
+        `Esprimi il rimanente in unità metriche (g, kg, ml, l) oppure in pezzi se più sensato; "0" se finito. ` +
+        `Prodotti: ${JSON.stringify(pending.map((p) => ({ nome: p.name, in_dispensa: p.before, usato: p.used })))} ` +
+        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"nome":"...","rimane":"..."}]}`;
+      const parsed = await callClaude([{ type: "text", text: prompt }], 400);
+      const map = new Map((parsed?.items || []).map((x) => [norm(x.nome), String(x.rimane ?? "").trim()]));
+      setCookRows((prev) => prev.map((r) => {
+        if (r.auto) return r;
+        const est = map.get(norm(r.name));
+        return est ? { ...r, after: est, estimated: true } : r;
+      }));
+    } catch (e) {
+      console.warn("Stima AI non disponibile:", e?.message || e);
+    }
+    setCookEstimating(false);
+  }
+
   function openCookModal() {
     if (!recipe) return;
     const rows = [];
@@ -1121,6 +1152,7 @@ export default function Dispensa({ session }) {
     }
     setCookRows(rows);
     setCookOpen(true);
+    estimateCookRows(rows); // parte in background, precompila le righe ambigue
   }
   function setRowAfter(idx, val) {
     setCookRows((rows) => rows.map((r, i) => (i === idx ? { ...r, after: val } : r)));
@@ -1279,7 +1311,7 @@ export default function Dispensa({ session }) {
       {manualOpen && (
         <ManualAddModal
           newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
-          grams={grams} setGrams={setGrams} newExpiry={newExpiry} setNewExpiry={setNewExpiry}
+          unit={newUnit} setUnit={setNewUnit} newExpiry={newExpiry} setNewExpiry={setNewExpiry}
           adding={adding} onSubmit={submitManual} onQuickAdd={addManual}
           onClose={() => setManualOpen(false)}
           historyNames={sortedNames(shopHist)} pantryNames={items.map((i) => i.name)}
@@ -1305,6 +1337,7 @@ export default function Dispensa({ session }) {
       {cookOpen && (
         <CookModal
           rows={cookRows}
+          estimating={cookEstimating}
           onClose={() => setCookOpen(false)}
           onSetAfter={setRowAfter}
           onRemoveRow={removeRow}
