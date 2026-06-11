@@ -8,7 +8,7 @@ import {
   CalendarPlus, SlidersHorizontal, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
-import { expiryStatus, formatExpiry } from "../lib/pantry.js";
+import { expiryStatus, formatExpiry, adjustQty, atMinQty } from "../lib/pantry.js";
 
 const EXP_STYLE = {
   scaduto: "bg-tomato text-white",
@@ -242,27 +242,43 @@ export default function PantryTab({
                         onKeyDown={(e) => e.key === "Enter" && saveEdit()}
                         placeholder="Nome"
                       />
-                      {/* Quantità: campo libero + chips unità rapide */}
-                      <div className="flex items-center gap-1.5">
+                      {/* Quantità: −/+ a passi (pz 1 · g 50 · kg/l 0,25) + chips unità */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <button
+                          onClick={() => setEditQty(adjustQty(editQty, -1))}
+                          disabled={atMinQty(editQty)}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone-300 text-base leading-none text-stone-600 transition hover:border-ink hover:text-ink active:scale-95 disabled:border-hair disabled:text-stone-300"
+                          aria-label="Diminuisci"
+                        >−</button>
                         <input
-                          className={`${editCls} w-24 shrink-0 text-center font-bold`}
+                          className={`${editCls} w-16 shrink-0 text-center font-bold`}
                           value={editQty}
                           onChange={(e) => setEditQty(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && saveEdit()}
                           placeholder="Qtà"
                           aria-label="Quantità"
                         />
+                        <button
+                          onClick={() => setEditQty(adjustQty(editQty, 1))}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone-300 text-base leading-none text-stone-600 transition hover:border-tomato hover:text-tomato active:scale-95"
+                          aria-label="Aumenta"
+                        >+</button>
                         {(() => {
+                          const STEPS = { "": 1, g: 50, kg: 0.25, l: 0.25 };
                           const curUnit = String(editQty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
-                          return ["", "g", "kg", "ml", "l"].map((u) => {
+                          return ["", "g", "kg", "l"].map((u) => {
                             const active = u === "" ? curUnit === "" : curUnit === u;
                             return (
                               <button
                                 key={u || "pz"}
                                 onClick={() => {
+                                  // Cambiando unità il numero si aggancia al passo
+                                  const st = STEPS[u];
                                   const m = String(editQty).replace(",", ".").match(/-?\d+(\.\d+)?/);
-                                  const n = m ? m[0].replace(".", ",") : "1";
-                                  setEditQty(u ? `${n} ${u}` : n);
+                                  let n = m ? parseFloat(m[0]) : st;
+                                  n = Math.max(st, Math.round(n / st) * st);
+                                  const nStr = String(Math.round(n * 1000) / 1000).replace(".", ",");
+                                  setEditQty(u ? `${nStr} ${u}` : nStr);
                                 }}
                                 aria-pressed={active}
                                 className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${

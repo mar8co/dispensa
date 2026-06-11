@@ -189,19 +189,37 @@ export function norm(s) {
     .trim();
 }
 
-// Incrementa/decrementa il primo numero in una quantità mantenendo l'unità
-// (es. adjustQty("2 barattoli", -1) -> "1 barattoli"). Se non c'è un numero
-// (es. "poca quantità") restituisce la stringa invariata.
+// Passo dello stepper in base all'unità: pezzi ±1, grammi ±50,
+// kg e litri ±0,25 (ml ±250). Scelte dell'utente.
+export function qtyStep(qty) {
+  const unit = String(qty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
+  if (unit in WEIGHT_UNITS) return WEIGHT_UNITS[unit] >= 1000 ? 0.25 : 50;
+  if (unit in VOLUME_UNITS) return VOLUME_UNITS[unit] >= 1000 ? 0.25 : 250;
+  return 1;
+}
+
+// Incrementa/decrementa il primo numero in una quantità mantenendo l'unità,
+// di un passo adeguato all'unità (vedi qtyStep), agganciandosi ai multipli
+// del passo (es. "0,3 kg" + 1 passo -> "0,5 kg"). delta = ±1 passi.
+// Se non c'è un numero (es. "poca quantità") restituisce la stringa invariata.
 export function adjustQty(qty, delta) {
   const s = String(qty);
   const m = s.match(/-?\d+(?:[.,]\d+)?/);
   if (!m) return qty;
-  let next = parseFloat(m[0].replace(",", ".")) + delta;
+  const step = qtyStep(qty);
+  let next = parseFloat(m[0].replace(",", ".")) + delta * step;
+  next = Math.round(next / step) * step;
   if (next < 0) next = 0;
-  const nextStr = Number.isInteger(next)
-    ? String(next)
-    : String(Math.round(next * 10) / 10).replace(".", ",");
-  return s.replace(m[0], nextStr);
+  next = Math.round(next * 1000) / 1000;
+  return s.replace(m[0], String(next).replace(".", ","));
+}
+
+// True se un ulteriore "−" porterebbe a zero o sotto: il minimo è un passo
+// (1 pz, 50 g, 0,25 kg/l) — il "−" parte quindi dal secondo passo.
+export function atMinQty(qty) {
+  const next = adjustQty(qty, -1);
+  const m = String(next).replace(",", ".").match(/-?\d+(\.\d+)?/);
+  return !m || parseFloat(m[0]) <= 0;
 }
 
 // --- Scadenze (date in formato "YYYY-MM-DD") ---

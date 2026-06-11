@@ -6,7 +6,7 @@ import { useState } from "react";
 import { X, Check, Plus, Minus } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import Sheet from "./Sheet.jsx";
-import { adjustQty } from "../lib/pantry.js";
+import { adjustQty, atMinQty } from "../lib/pantry.js";
 
 function tmpId() {
   return Math.random().toString(36).slice(2, 10);
@@ -31,11 +31,8 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
   function remove(id) {
     setItems((arr) => arr.filter((x) => x.id !== id));
   }
-  // Il "−" è attivo solo dal 2 in su (non si scende sotto 1).
-  function atMin(qty) {
-    const m = String(qty).replace(",", ".").match(/-?\d+(\.\d+)?/);
-    return !m || parseFloat(m[0]) <= 1;
-  }
+  // Il "−" è attivo solo dal secondo passo in su (1 pz / 50 g / 0,25 kg-l).
+  const atMin = atMinQty;
 
   // Raggruppa per categoria nell'ordine di CATEGORIES.
   const grouped = CATEGORIES

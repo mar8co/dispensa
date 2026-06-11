@@ -623,10 +623,11 @@ export default function Dispensa({ session }) {
     } catch (e) { console.error("Errore selezione totale spesa:", e); }
   }
   async function adjustShoppingQty(it, delta) {
-    const cur = parseFloat(String(it.qty).replace(",", ".")) || 1;
-    if (delta < 0 && cur <= 1) return; // minimo 1 nella lista spesa
     const next = adjustQty(it.qty, delta);
     if (next === it.qty) return;
+    // In lista non si scende sotto un passo (1 pz, 50 g, 0,25 kg/l).
+    const m = String(next).replace(",", ".").match(/-?\d+(\.\d+)?/);
+    if (delta < 0 && m && parseFloat(m[0]) <= 0) return;
     setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: next } : x)));
     try { await updateShopping(it.id, { qty: next }); }
     catch (e) { console.error("Errore aggiornamento quantità spesa:", e); }

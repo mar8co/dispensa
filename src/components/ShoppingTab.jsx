@@ -8,7 +8,7 @@ import {
   Share2, Lightbulb, Mic, X, Pencil,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON, AISLE_ORDER } from "../constants.js";
-import { norm } from "../lib/pantry.js";
+import { norm, atMinQty } from "../lib/pantry.js";
 
 const editCls =
   "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -73,8 +73,7 @@ function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
     setEditing(false);
   }
 
-  const n = parseFloat(String(it.qty).replace(",", "."));
-  const atMin = !isNaN(n) && n <= 1;
+  const atMin = atMinQty(it.qty);
 
   if (editing) {
     return (

@@ -15,8 +15,12 @@ function formatDateIt(d) {
 }
 
 const UNITS = [
-  ["", "pz"], ["g", "g"], ["kg", "kg"], ["ml", "ml"], ["l", "l"],
+  ["", "pz"], ["g", "g"], ["kg", "kg"], ["l", "l"],
 ];
+// Passi del contatore per unità: pz ±1, g ±50, kg/l ±0,25.
+const STEPS = { "": 1, g: 50, kg: 0.25, l: 0.25 };
+const parseV = (v) => parseFloat(String(v).replace(",", ".")) || 0;
+const fmtV = (n) => String(Math.round(n * 1000) / 1000).replace(".", ",");
 
 export default function ManualAddModal({
   newName, setNewName, newQty, setNewQty, unit, setUnit,
@@ -29,6 +33,27 @@ export default function ManualAddModal({
   // automatica che si aggiorna mentre scrivi.
   const guessed = newName.trim() ? (guessCategory(correctName(newName)) || "Altro") : "Altro";
   const effCat = CATEGORIES.includes(newCat) ? newCat : guessed;
+
+  // Contatore a passi: pz 1,2,3… · g 50,100,150… · kg/l 0,25 0,5 0,75…
+  const step = STEPS[unit] ?? 1;
+  function bumpQty(dir) {
+    setNewQty((v) => {
+      let n = parseV(v) + dir * step;
+      n = Math.round(n / step) * step;
+      if (n < step) n = step;
+      return fmtV(n);
+    });
+  }
+  // Cambiando unità il numero si aggancia al passo (1 → 50 g, 1,3 → 1,25 kg).
+  function chooseUnit(u) {
+    setUnit(u);
+    const st = STEPS[u] ?? 1;
+    setNewQty((v) => {
+      let n = parseV(v);
+      n = Math.max(st, Math.round(n / st) * st);
+      return fmtV(n);
+    });
+  }
 
   const inputCls =
     "w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -127,19 +152,20 @@ export default function ManualAddModal({
         <div className="mt-2.5 flex items-center gap-1.5">
           <div className="flex shrink-0 items-center rounded-xl border border-hair bg-paper">
             <button
-              onClick={() => setNewQty((v) => String(Math.max(1, (parseFloat(String(v).replace(",", ".")) || 1) - 1)))}
-              className="flex h-11 w-9 items-center justify-center rounded-l-xl text-stone-500 hover:bg-stone-100"
+              onClick={() => bumpQty(-1)}
+              disabled={parseV(newQty) <= step}
+              className="flex h-11 w-9 items-center justify-center rounded-l-xl text-stone-500 hover:bg-stone-100 disabled:opacity-30"
               aria-label="Meno"
             ><Minus className="h-4 w-4" /></button>
             <input
-              type="text" inputMode="numeric" value={newQty}
+              type="text" inputMode="decimal" value={newQty}
               onChange={(e) => setNewQty(e.target.value.replace(/[^0-9.,]/g, ""))}
               onFocus={(e) => e.target.select()}
               onKeyDown={(e) => e.key === "Enter" && submit()}
-              className="w-9 border-0 bg-transparent text-center text-base font-bold text-ink outline-none"
+              className="w-12 border-0 bg-transparent text-center text-base font-bold text-ink outline-none"
             />
             <button
-              onClick={() => setNewQty((v) => String((parseFloat(String(v).replace(",", ".")) || 0) + 1))}
+              onClick={() => bumpQty(1)}
               className="flex h-11 w-9 items-center justify-center rounded-r-xl text-stone-500 hover:bg-stone-100"
               aria-label="Più"
             ><Plus className="h-4 w-4" /></button>
@@ -174,7 +200,7 @@ export default function ManualAddModal({
           {UNITS.map(([value, label]) => (
             <button
               key={label}
-              onClick={() => setUnit(value)}
+              onClick={() => chooseUnit(value)}
               aria-pressed={unit === value}
               className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition ${
                 unit === value ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
