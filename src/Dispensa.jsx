@@ -182,6 +182,16 @@ export default function Dispensa({ session }) {
             SEED_DATA.map(([name, qty, category]) => ({ name, qty, category }))
           );
         }
+        // Migrazione categorie: i prodotti con etichette vecchie (es.
+        // "Fresco e Verdure") vengono ri-categorizzati con le nuove regole
+        // e salvati sul DB in background. Una tantum.
+        const stale = rows.filter((x) => !CATEGORIES.includes(x.category));
+        if (stale.length) {
+          const recat = (x) => guessCategory(x.name) || "Altro";
+          rows = rows.map((x) => (CATEGORIES.includes(x.category) ? x : { ...x, category: recat(x) }));
+          Promise.all(stale.map((x) => updateItem(x.id, { category: recat(x) })))
+            .catch((e) => console.warn("Migrazione categorie parziale:", e));
+        }
         setItems(rows);
         try {
           // Applica le impostazioni dal DB solo se più recenti della cache
@@ -493,7 +503,11 @@ export default function Dispensa({ session }) {
   }
 
   // Reparto di un articolo: correzione manuale (per nome) o stima automatica.
-  const catForShopping = (name) => shopCats[norm(name)] || guessCategory(name) || "Altro";
+  // Le correzioni che puntano a categorie non più esistenti vengono ignorate.
+  const catForShopping = (name) => {
+    const manual = shopCats[norm(name)];
+    return CATEGORIES.includes(manual) ? manual : (guessCategory(name) || "Altro");
+  };
 
   // Aggiunge alla lista fondendo i duplicati per nome (le quantità si
   // sommano) e registrando lo storico. entries: [{ name, qty }]

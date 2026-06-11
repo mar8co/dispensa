@@ -1,26 +1,31 @@
 // Costanti dell'app: categorie, icone, occasioni di ricetta, prompt AI,
 // chiavi di persistenza e dati iniziali. Identiche all'originale dispensa-ui.jsx.
 
+// Ordine di default = frequenza d'uso: il fresco che compri spesso in alto,
+// condimenti e spezie (acquisti rari) in fondo. Resta riordinabile a mano.
 export const CATEGORIES = [
-  "Pasta e Cereali", "Legumi e Conserve", "Frutta Secca", "Condimenti e Oli",
-  "Latticini e Formaggi", "Fresco e Verdure", "Carne", "Pesce", "Congelato",
-  "Spezie ed Erbe", "Bevande", "Altro",
+  "Verdura", "Frutta", "Carne", "Salumi", "Pesce", "Latticini e Uova",
+  "Pane e Forno", "Pasta, Riso e Cereali", "Legumi", "Conserve",
+  "Surgelati", "Bevande", "Dolci", "Frutta Secca",
+  "Condimenti e Salse", "Spezie ed Erbe", "Altro",
 ];
 
 // Ordine dei reparti come si incontrano in un supermercato tipico:
 // frutta/verdura all'ingresso, banchi freschi, scaffali, surgelati e
 // bevande verso le casse. Usato dalla lista della spesa "Per reparto".
 export const AISLE_ORDER = [
-  "Fresco e Verdure", "Carne", "Pesce", "Latticini e Formaggi",
-  "Pasta e Cereali", "Legumi e Conserve", "Condimenti e Oli",
-  "Spezie ed Erbe", "Frutta Secca", "Congelato", "Bevande", "Altro",
+  "Verdura", "Frutta", "Pane e Forno", "Carne", "Salumi", "Pesce",
+  "Latticini e Uova", "Pasta, Riso e Cereali", "Legumi", "Conserve",
+  "Condimenti e Salse", "Spezie ed Erbe", "Frutta Secca", "Dolci",
+  "Surgelati", "Bevande", "Altro",
 ];
 
 export const CAT_ICON = {
-  "Pasta e Cereali": "🌾", "Legumi e Conserve": "🥫", "Frutta Secca": "🥜",
-  "Condimenti e Oli": "🫙", "Latticini e Formaggi": "🧀", "Fresco e Verdure": "🥬",
-  "Carne": "🥩", "Pesce": "🐟", "Congelato": "🧊", "Spezie ed Erbe": "🌿",
-  "Bevande": "🥤", "Altro": "📦",
+  "Verdura": "🥬", "Frutta": "🍎", "Carne": "🥩", "Salumi": "🥓",
+  "Pesce": "🐟", "Latticini e Uova": "🥚", "Pane e Forno": "🍞",
+  "Pasta, Riso e Cereali": "🌾", "Legumi": "🫘", "Conserve": "🥫",
+  "Surgelati": "🧊", "Bevande": "🥤", "Dolci": "🍪", "Frutta Secca": "🥜",
+  "Condimenti e Salse": "🫙", "Spezie ed Erbe": "🌿", "Altro": "📦",
 };
 
 export const MODES = [
@@ -56,9 +61,10 @@ Metti l'eventuale peso o formato nel campo "qty" (es. "500 g") — MAI nel nome.
 Ignora prodotti non alimentari. Se non riconosci alcun alimento, restituisci una lista vuota.
 Rispondi SOLO con JSON valido senza markdown:
 {"items":[{"name":"...","qty":"...","category":"..."}]}
-Categorie possibili: Pasta e Cereali, Legumi e Conserve, Frutta Secca,
-Condimenti e Oli, Latticini e Formaggi, Fresco e Verdure,
-Carne, Pesce, Congelato, Spezie ed Erbe, Bevande, Altro`;
+Categorie possibili: Verdura, Frutta, Carne, Salumi, Pesce, Latticini e Uova,
+Pane e Forno, Pasta, Riso e Cereali (unica categoria), Legumi, Conserve, Surgelati,
+Bevande, Dolci, Frutta Secca, Condimenti e Salse, Spezie ed Erbe, Altro.
+NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Latticini e Uova".`;
 
 export const STORAGE_KEY = "dispensa-v1";
 export const COLLAPSE_KEY = "dispensa-collapsed-v1";
@@ -67,39 +73,39 @@ export const MODE_ORDER_KEY = "dispensa-mode-order-v1";
 export const MODEL = "claude-sonnet-4-20250514";
 
 export const SEED_DATA = [
-  ["Pasta (vari formati)", "4 pacchi", "Pasta e Cereali"],
-  ["Cous cous", "1 conf.", "Pasta e Cereali"],
-  ["Riso basmati", "1 kg", "Pasta e Cereali"],
-  ["Riso carnaroli", "1 conf.", "Pasta e Cereali"],
-  ["Fiocchi di avena", "1 conf.", "Pasta e Cereali"],
-  ["Farina", "1 conf.", "Pasta e Cereali"],
-  ["Pan grattato", "1 conf.", "Pasta e Cereali"],
-  ["Piadina", "1", "Pasta e Cereali"],
-  ["Tonno in scatola", "12", "Legumi e Conserve"],
-  ["Ceci", "2 barattoli", "Legumi e Conserve"],
-  ["Fagioli", "1 barattolo", "Legumi e Conserve"],
-  ["Pomodori pelati", "1 barattolo", "Legumi e Conserve"],
+  ["Pasta (vari formati)", "4 pacchi", "Pasta, Riso e Cereali"],
+  ["Cous cous", "1 conf.", "Pasta, Riso e Cereali"],
+  ["Riso basmati", "1 kg", "Pasta, Riso e Cereali"],
+  ["Riso carnaroli", "1 conf.", "Pasta, Riso e Cereali"],
+  ["Fiocchi di avena", "1 conf.", "Pasta, Riso e Cereali"],
+  ["Farina", "1 conf.", "Pasta, Riso e Cereali"],
+  ["Pan grattato", "1 conf.", "Pasta, Riso e Cereali"],
+  ["Piadina", "1", "Pane e Forno"],
+  ["Tonno in scatola", "12", "Conserve"],
+  ["Pomodori pelati", "1 barattolo", "Conserve"],
+  ["Ceci", "2 barattoli", "Legumi"],
+  ["Fagioli", "1 barattolo", "Legumi"],
   ["Mandorle", "1 conf.", "Frutta Secca"],
   ["Pistacchi", "1 conf.", "Frutta Secca"],
   ["Pinoli", "poca quantità", "Frutta Secca"],
   ["Noci sgusciate", "poca quantità", "Frutta Secca"],
-  ["Olio EVO", "1 bottiglia", "Condimenti e Oli"],
-  ["Salsa di soia", "1 bottiglia", "Condimenti e Oli"],
-  ["Aceto balsamico", "1 bottiglia", "Condimenti e Oli"],
-  ["Aceto di mele", "1 bottiglia", "Condimenti e Oli"],
-  ["Parmigiano grattugiato", "1 conf.", "Latticini e Formaggi"],
-  ["Pecorino romano", "1 pezzo", "Latticini e Formaggi"],
-  ["Pomodorini", "1 vaschetta", "Fresco e Verdure"],
-  ["Limone", "1", "Fresco e Verdure"],
-  ["Fish burger di merluzzo", "2", "Congelato"],
-  ["Sovracoscie di pollo (marinata al rosmarino)", "2", "Congelato"],
-  ["Bocconcini di pollo al curry", "1,5 porzioni", "Congelato"],
-  ["Fettine di pollo yogurt e paprika", "1 conf.", "Congelato"],
-  ["Fettine di bovino", "1 conf.", "Congelato"],
-  ["Spinaci", "1 conf.", "Congelato"],
-  ["Minestrone", "1 conf.", "Congelato"],
-  ["Broccoli", "1 conf.", "Congelato"],
-  ["Piselli", "1 conf.", "Congelato"],
+  ["Olio EVO", "1 bottiglia", "Condimenti e Salse"],
+  ["Salsa di soia", "1 bottiglia", "Condimenti e Salse"],
+  ["Aceto balsamico", "1 bottiglia", "Condimenti e Salse"],
+  ["Aceto di mele", "1 bottiglia", "Condimenti e Salse"],
+  ["Parmigiano grattugiato", "1 conf.", "Latticini e Uova"],
+  ["Pecorino romano", "1 pezzo", "Latticini e Uova"],
+  ["Pomodorini", "1 vaschetta", "Verdura"],
+  ["Limone", "1", "Frutta"],
+  ["Fish burger di merluzzo", "2", "Surgelati"],
+  ["Sovracoscie di pollo (marinata al rosmarino)", "2", "Surgelati"],
+  ["Bocconcini di pollo al curry", "1,5 porzioni", "Surgelati"],
+  ["Fettine di pollo yogurt e paprika", "1 conf.", "Surgelati"],
+  ["Fettine di bovino", "1 conf.", "Surgelati"],
+  ["Spinaci", "1 conf.", "Surgelati"],
+  ["Minestrone", "1 conf.", "Surgelati"],
+  ["Broccoli", "1 conf.", "Surgelati"],
+  ["Piselli", "1 conf.", "Surgelati"],
   ["Paprika dolce", "1 barattolo", "Spezie ed Erbe"],
   ["Paprika piccante", "1 barattolo", "Spezie ed Erbe"],
   ["Pepe", "1 barattolo", "Spezie ed Erbe"],

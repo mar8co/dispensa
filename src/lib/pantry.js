@@ -13,22 +13,32 @@ export function seed() {
 }
 
 const CATEGORY_KEYWORDS = {
-  "Pasta e Cereali": ["pasta", "spaghetti", "penne", "fusilli", "riso", "cous", "couscous", "farina", "avena", "cereali", "orzo", "farro", "pane", "piadina", "cracker", "polenta", "gnocchi", "pangrattato", "pan grattato", "grano"],
-  "Legumi e Conserve": ["fagioli", "ceci", "lenticchie", "tonno", "pelati", "passata", "in scatola", "barattolo", "legumi", "acciughe", "sardine", "olive", "conserva", "mais in scatola"],
-  "Frutta Secca": ["mandorle", "noci", "nocciole", "pistacchi", "pinoli", "anacardi", "arachidi", "uvetta", "datteri"],
-  "Condimenti e Oli": ["olio", "aceto", "salsa", "soia", "maionese", "ketchup", "senape", "pesto", "sugo", "condimento", "tahina", "brodo"],
-  "Latticini e Formaggi": ["latte", "formaggio", "parmigiano", "pecorino", "mozzarella", "yogurt", "burro", "panna", "ricotta", "mascarpone", "grana", "gorgonzola", "stracchino", "philadelphia"],
-  "Fresco e Verdure": ["pomodoro", "pomodorini", "insalata", "lattuga", "zucchine", "melanzane", "peperoni", "carote", "cipolla", "aglio", "patate", "limone", "arancia", "mela", "banana", "frutta", "verdura", "zucca", "finocchi", "sedano", "funghi", "avocado", "broccoli", "spinaci"],
-  "Carne": ["pollo", "manzo", "maiale", "tacchino", "vitello", "salsicc", "macinato", "bistecca", "prosciutto", "salam", "wurst", "bovino", "agnello", "carne", "fettine", "hamburger", "burger", "speck", "bresaola", "pancetta", "polpett", "cotolett", "spezzatino", "arrosto", "coscia", "sovracosc", "petto", "lonza", "tagliata", "porchetta", "mortadella", "coppa"],
-  "Pesce": ["pesce", "salmone", "merluzzo", "gamber", "calamar", "vongole", "cozze", "branzino", "orata", "baccala", "spigola", "seppi", "polpo", "sgombro", "tonno fresco", "trota", "sogliola", "platessa", "nasello", "spada", "alici", "scampi", "totani", "tilapia", "pangasio", "frutti di mare", "filetto di pesce", "bastoncini di pesce"],
-  "Congelato": ["surgelat", "congelat", "gelato", "minestrone", "bastoncini"],
-  "Spezie ed Erbe": ["sale", "pepe", "paprika", "curcuma", "cumino", "origano", "basilico", "rosmarino", "timo", "prezzemolo", "cannella", "zenzero", "peperoncino", "noce moscata", "spezie", "aglio in polvere", "curry", "zafferano", "alloro", "salvia"],
-  "Bevande": ["acqua", "caffe", "caffè", "succo", "vino", "birra", "bibita", "cola", "aranciata", "tisana", "spremuta", "camomilla"],
+  "Verdura": ["pomodoro", "pomodori", "pomodorini", "insalata", "lattuga", "zucchine", "zucchina", "melanzane", "peperoni", "carote", "carota", "cipolla", "cipolle", "aglio", "patate", "patata", "verdura", "verdure", "zucca", "finocchi", "sedano", "funghi", "avocado", "broccoli", "spinaci", "cavolfiore", "cavolo", "porri", "asparagi", "rucola", "radicchio", "bietole", "fagiolini", "cetrioli", "ravanelli", "scalogno"],
+  "Frutta": ["limone", "limoni", "arancia", "arance", "mela", "mele", "banana", "banane", "frutta fresca", "fragole", "pere", "pera", "pesche", "pesca", "kiwi", "uva", "anguria", "melone", "ananas", "mandarini", "mandaranci", "albicocche", "ciliegie", "prugne", "fichi", "mirtilli", "lamponi", "pompelmo", "frutti di bosco", "cachi", "melograno"],
+  "Carne": ["pollo", "manzo", "maiale", "tacchino", "vitello", "salsicc", "macinato", "bistecca", "bovino", "agnello", "carne", "fettine", "hamburger", "burger di", "polpett", "cotolett", "spezzatino", "arrosto", "coscia", "sovracosc", "petto", "lonza", "tagliata", "costine", "scaloppine"],
+  "Salumi": ["prosciutto", "salame", "salami", "mortadella", "speck", "bresaola", "pancetta", "wurstel", "wurst", "coppa", "porchetta", "salumi", "affettati", "guanciale", "lardo", "culatello", "lonzino"],
+  "Pesce": ["pesce", "salmone", "merluzzo", "gamber", "calamar", "vongole", "cozze", "branzino", "orata", "baccala", "spigola", "seppi", "polpo", "sgombro", "tonno fresco", "trota", "sogliola", "platessa", "nasello", "spada", "alici fresche", "scampi", "totani", "tilapia", "pangasio", "frutti di mare", "filetto di pesce"],
+  "Latticini e Uova": ["latte", "formaggio", "parmigiano", "pecorino", "mozzarella", "yogurt", "burro", "panna", "ricotta", "mascarpone", "grana", "gorgonzola", "stracchino", "philadelphia", "uova", "uovo", "scamorza", "provola", "fontina", "crescenza", "kefir", "albume"],
+  "Pane e Forno": ["pane", "piadina", "piadine", "cracker", "grissini", "pancarre", "pancarrè", "focaccia", "taralli", "panini", "baguette", "tortillas", "pita", "friselle", "pan bauletto"],
+  "Pasta, Riso e Cereali": ["pasta", "spaghetti", "penne", "fusilli", "rigatoni", "riso", "cous", "couscous", "farina", "avena", "cereali", "orzo", "farro", "polenta", "gnocchi", "pangrattato", "pan grattato", "grano", "quinoa", "bulgur", "semola", "lievito"],
+  "Legumi": ["fagioli", "ceci", "lenticchie", "piselli secchi", "legumi", "fave", "lupini", "soia", "edamame"],
+  "Conserve": ["tonno", "pelati", "passata", "passata di pomodoro", "pomodori pelati", "in scatola", "barattolo", "acciughe", "sardine", "olive", "conserva", "mais in scatola", "sottoli", "sottaceti", "capperi", "concentrato di pomodoro", "polpa di pomodoro", "carciofini", "pesto in barattolo"],
+  "Condimenti e Salse": ["olio", "aceto", "salsa", "soia", "maionese", "ketchup", "senape", "pesto", "sugo", "condimento", "tahina", "brodo", "dado", "besciamella", "tabasco", "worcester"],
+  "Spezie ed Erbe": ["sale", "pepe", "paprika", "curcuma", "cumino", "origano", "basilico", "rosmarino", "timo", "prezzemolo", "cannella", "zenzero", "peperoncino", "noce moscata", "spezie", "aglio in polvere", "curry", "zafferano", "alloro", "salvia", "erba cipollina", "menta", "vaniglia"],
+  "Frutta Secca": ["mandorle", "noci", "nocciole", "pistacchi", "pinoli", "anacardi", "arachidi", "uvetta", "datteri", "semi di", "noccioline", "frutta secca"],
+  "Dolci": ["biscotti", "cioccolato", "cioccolata", "merendine", "marmellata", "miele", "zucchero", "torta", "caramelle", "crema spalmabile", "nutella", "muesli", "fette biscottate", "brioche", "croissant", "wafer", "budino", "gelatina", "cacao", "savoiardi", "pan di spagna", "granella"],
+  "Surgelati": ["surgelat", "congelat", "gelato", "bastoncini", "sofficini", "ghiaccioli", "in freezer"],
+  "Bevande": ["acqua", "caffe", "caffè", "succo", "vino", "birra", "bibita", "cola", "aranciata", "tisana", "spremuta", "camomilla", "tè", "the verde", "energy drink", "tonica", "prosecco", "spumante"],
 };
 
 export function guessCategory(name) {
   const n = String(name).toLowerCase();
   if (!n.trim()) return null;
+  // Il freezer vince su tutto: "gelato al pistacchio" è un surgelato,
+  // non frutta secca; "spinaci surgelati" idem.
+  for (const w of CATEGORY_KEYWORDS["Surgelati"]) {
+    if (n.includes(w)) return "Surgelati";
+  }
   let best = null, bestLen = 0;
   for (const cat in CATEGORY_KEYWORDS) {
     for (const w of CATEGORY_KEYWORDS[cat]) {
