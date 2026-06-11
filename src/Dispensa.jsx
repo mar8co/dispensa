@@ -73,6 +73,7 @@ export default function Dispensa({ session }) {
   const [newName, setNewName] = useState("");
   const [newQty, setNewQty] = useState("1");
   const [newUnit, setNewUnit] = useState(""); // "" = pezzi, oppure g/kg/ml/l
+  const [newCat, setNewCat] = useState("");   // "" = categoria automatica
   const [newExpiry, setNewExpiry] = useState("");
   const [adding, setAdding] = useState(false);
 
@@ -332,7 +333,11 @@ export default function Dispensa({ session }) {
     const qty = normalizeWeight(newUnit ? `${n} ${newUnit}` : n);
     setAdding(true);
     const name = correctName(raw);
-    const category = guessCategory(name) || "Altro";
+    // Categoria: quella scelta a mano nel foglio vince sull'automatica
+    // (solo per il nome digitato, non per i suggerimenti rapidi).
+    const category = (!rawName && CATEGORIES.includes(newCat))
+      ? newCat
+      : (guessCategory(name) || "Altro");
     const expiry = newExpiry || null;
     let result = null;
     try {
@@ -343,19 +348,17 @@ export default function Dispensa({ session }) {
         if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
         await updateItem(existing.id, fields);
         setItems((prev) => prev.map((x) => (x.id === existing.id ? { ...x, ...fields } : x)));
-        result = { name: existing.name, merged: true };
+        result = { name: existing.name, merged: true, category: existing.category };
       } else {
         const row = await insertItem({ name, qty, category, expiry });
         setItems((prev) => [...prev, row]);
-        result = { name, merged: false };
+        result = { name, merged: false, category };
       }
       bumpShopHistory([name]);
-      // Apri la categoria interessata, così vedi subito dov'è finito.
-      setCollapsed((prev) => ({ ...prev, [category]: false }));
     } catch (e) {
       console.error("Errore aggiunta prodotto:", e);
     }
-    setNewName(""); setNewQty("1"); setNewUnit(""); setNewExpiry(""); setAdding(false);
+    setNewName(""); setNewQty("1"); setNewUnit(""); setNewCat(""); setNewExpiry(""); setAdding(false);
     return result;
   }
 
@@ -1354,7 +1357,8 @@ export default function Dispensa({ session }) {
       {manualOpen && (
         <ManualAddModal
           newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
-          unit={newUnit} setUnit={setNewUnit} newExpiry={newExpiry} setNewExpiry={setNewExpiry}
+          unit={newUnit} setUnit={setNewUnit} newCat={newCat} setNewCat={setNewCat}
+          newExpiry={newExpiry} setNewExpiry={setNewExpiry}
           adding={adding} onSubmit={submitManual} onQuickAdd={addManual}
           onClose={() => setManualOpen(false)}
           historyNames={sortedNames(shopHist)} pantryNames={items.map((i) => i.name)}

@@ -5,7 +5,8 @@
 import { useMemo, useState } from "react";
 import { Plus, Minus, Loader2, CalendarPlus, X, Check } from "lucide-react";
 import Sheet from "./Sheet.jsx";
-import { norm } from "../lib/pantry.js";
+import { norm, correctName, guessCategory } from "../lib/pantry.js";
+import { CATEGORIES, CAT_ICON } from "../constants.js";
 
 function formatDateIt(d) {
   if (!d) return "";
@@ -19,10 +20,15 @@ const UNITS = [
 
 export default function ManualAddModal({
   newName, setNewName, newQty, setNewQty, unit, setUnit,
-  newExpiry, setNewExpiry, adding, onSubmit, onQuickAdd, onClose,
+  newCat, setNewCat, newExpiry, setNewExpiry, adding, onSubmit, onQuickAdd, onClose,
   historyNames = [], pantryNames = [],
 }) {
-  const [lastAdded, setLastAdded] = useState(null); // { name, merged }
+  const [lastAdded, setLastAdded] = useState(null); // { name, merged, category }
+
+  // Categoria mostrata: la scelta manuale vince, altrimenti la stima
+  // automatica che si aggiorna mentre scrivi.
+  const guessed = newName.trim() ? (guessCategory(correctName(newName)) || "Altro") : "Altro";
+  const effCat = CATEGORIES.includes(newCat) ? newCat : guessed;
 
   const inputCls =
     "w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -73,6 +79,34 @@ export default function ManualAddModal({
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
+
+        {/* Categoria riconosciuta: visibile e correggibile prima di aggiungere */}
+        {newName.trim() && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="shrink-0 text-xs text-stone-400">Categoria</span>
+            <select
+              value={effCat}
+              onChange={(e) => setNewCat(e.target.value)}
+              className={`min-w-0 flex-1 rounded-lg border bg-paper px-2.5 py-2 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15 ${
+                CATEGORIES.includes(newCat) ? "border-tomato/40 text-ink" : "border-hair text-ink"
+              }`}
+              aria-label="Categoria"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{CAT_ICON[c]} {c}</option>
+              ))}
+            </select>
+            {CATEGORIES.includes(newCat) && (
+              <button
+                onClick={() => setNewCat("")}
+                className="shrink-0 text-[11px] font-semibold text-stone-400 underline hover:text-ink"
+                title="Torna alla categoria automatica"
+              >
+                auto
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Completamenti: un tap e il prodotto è dentro */}
         {suggestions.length > 0 && (
@@ -168,7 +202,9 @@ export default function ManualAddModal({
             <Check className="h-3.5 w-3.5 shrink-0 text-tomato" />
             <span className="min-w-0 truncate">
               <strong className="text-ink">{lastAdded.name}</strong>{" "}
-              {lastAdded.merged ? "era già in dispensa: quantità aumentata" : "aggiunto in dispensa"}
+              {lastAdded.merged
+                ? "era già in dispensa: quantità aumentata"
+                : <>aggiunto in <strong className="text-ink">{CAT_ICON[lastAdded.category]} {lastAdded.category}</strong></>}
             </span>
           </p>
         )}
