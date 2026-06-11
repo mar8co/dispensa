@@ -332,53 +332,56 @@ export default function ShoppingTab({
       </div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">La spesa</h1>
 
-      {/* Inserimento in linea: scrivi e il prodotto appare qui sotto.
-          È nel flusso della pagina, quindi la tastiera iOS non lo copre. */}
-      <div className="mt-4 flex items-center gap-2">
-        <div className="relative flex-1">
-          <Plus className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
-          <input
-            ref={inputRef}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-            placeholder="Scrivi cosa ti manca…"
-            className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-2 text-sm text-ink outline-none focus:border-ink"
-          />
+      {/* Inserimento in linea, FISSO in alto durante lo scroll: scrivi e il
+          prodotto appare qui sotto. È nel flusso della pagina (sticky, non
+          fixed in basso), quindi la tastiera iOS non lo copre. */}
+      <div className="sticky top-0 z-20 -mx-5 mt-2 bg-cream/95 px-5 pb-2.5 pt-2.5 backdrop-blur">
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex-1">
+            <Plus className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
+            <input
+              ref={inputRef}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && add()}
+              placeholder="Scrivi cosa ti manca…"
+              className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-2 text-sm text-ink outline-none focus:border-ink"
+            />
+          </div>
+          {name.trim() ? (
+            <button
+              onClick={() => add()}
+              className="flex h-11 shrink-0 items-center justify-center rounded-full bg-tomato px-4 text-xs font-bold text-white shadow-lg shadow-tomato/30 transition hover:bg-tomato-700 active:scale-95"
+            >
+              Aggiungi
+            </button>
+          ) : (
+            <button
+              onClick={onOpenVoice}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-tomato text-white shadow-lg shadow-tomato/30 transition hover:bg-tomato-700 active:scale-95"
+              aria-label="Aggiungi a voce"
+              title="Aggiungi a voce"
+            >
+              <Mic className="h-5 w-5" />
+            </button>
+          )}
         </div>
-        {name.trim() ? (
-          <button
-            onClick={() => add()}
-            className="flex h-9 shrink-0 items-center justify-center rounded-full bg-tomato px-3.5 text-xs font-bold text-white transition hover:bg-tomato-700 active:scale-95"
-          >
-            Aggiungi
-          </button>
-        ) : (
-          <button
-            onClick={onOpenVoice}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-hair text-tomato transition hover:bg-tomato/5 active:scale-95"
-            aria-label="Aggiungi a voce"
-            title="Aggiungi a voce"
-          >
-            <Mic className="h-4 w-4" />
-          </button>
+
+        {/* Completamenti / acquisti frequenti: un tap e sono in lista */}
+        {suggestions.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {suggestions.map((n) => (
+              <button
+                key={n}
+                onClick={() => add(n)}
+                className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+              >
+                {q ? n : `+ ${n}`}
+              </button>
+            ))}
+          </div>
         )}
       </div>
-
-      {/* Completamenti / acquisti frequenti: un tap e sono in lista */}
-      {suggestions.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {suggestions.map((n) => (
-            <button
-              key={n}
-              onClick={() => add(n)}
-              className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
-            >
-              {q ? n : `+ ${n}`}
-            </button>
-          ))}
-        </div>
-      )}
 
       {shopping.length === 0 && (
         <p className="py-12 text-center text-sm text-stone-400">

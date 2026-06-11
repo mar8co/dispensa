@@ -1,14 +1,14 @@
 // Pulsante "+" fluttuante in basso a destra: aprendolo, i 4 modi di aggiunta
-// compaiono ad arco (quarto di cerchio) verso l'alto-sinistra.
+// si impilano in verticale (speed-dial), ognuno con l'etichetta accanto —
+// così le etichette non vengono mai coperte dagli altri bollini.
 import { Plus, Pencil, Camera, ScanBarcode, Mic } from "lucide-react";
 
 export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBarcode, onVoice }) {
-  // Posizioni ad arco (verso alto-sinistra). x<0 = sinistra, y<0 = alto.
   const options = [
-    { id: "manual", icon: Pencil, label: "A mano", action: onManual, x: -6, y: -90 },
-    { id: "photo", icon: Camera, label: "Foto", action: onPhoto, x: -48, y: -76 },
-    { id: "barcode", icon: ScanBarcode, label: "Barcode", action: onBarcode, x: -76, y: -48 },
-    { id: "voice", icon: Mic, label: "Voce", action: onVoice, x: -90, y: -6 },
+    { id: "manual", icon: Pencil, label: "A mano", action: onManual },
+    { id: "photo", icon: Camera, label: "Foto", action: onPhoto },
+    { id: "barcode", icon: ScanBarcode, label: "Barcode", action: onBarcode },
+    { id: "voice", icon: Mic, label: "Voce", action: onVoice },
   ];
 
   return (
@@ -30,23 +30,27 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
         <div className="relative h-14 w-14">
           {options.map((o, i) => {
             const Icon = o.icon;
+            // Distanza verticale dal "+": l'ultima opzione è la più vicina.
+            const lift = 58 * (options.length - i) + 8;
             return (
               <div
                 key={o.id}
-                className="absolute bottom-1 right-1 flex w-12 flex-col items-center"
+                className="absolute bottom-1 right-1 flex items-center gap-2"
                 style={{
-                  transform: menuOpen
-                    ? `translate(${o.x}px, ${o.y}px) scale(1)`
-                    : "translate(0,0) scale(0.4)",
+                  transform: menuOpen ? `translateY(${-lift}px)` : "translateY(0) scale(0.4)",
+                  transformOrigin: "100% 100%",
                   opacity: menuOpen ? 1 : 0,
                   pointerEvents: menuOpen ? "auto" : "none",
                   transition: menuOpen
                     ? "transform 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease"
                     : "transform 0.24s cubic-bezier(0.4,0,0.6,1), opacity 0.2s ease",
                   // stagger in apertura e in chiusura (ordine inverso, più rapido)
-                  transitionDelay: menuOpen ? `${i * 45}ms` : `${(options.length - 1 - i) * 25}ms`,
+                  transitionDelay: menuOpen ? `${i * 40}ms` : `${(options.length - 1 - i) * 25}ms`,
                 }}
               >
+                <span className="pointer-events-none whitespace-nowrap rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white">
+                  {o.label}
+                </span>
                 <button
                   onClick={() => { setMenuOpen(false); o.action(); }}
                   aria-label={o.label}
@@ -54,10 +58,6 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
                 >
                   <Icon className="h-[22px] w-[22px]" />
                 </button>
-                {/* Etichetta sotto il bollino: leggibile sullo sfondo scurito */}
-                <span className="pointer-events-none mt-1 whitespace-nowrap rounded-full bg-black/60 px-1.5 py-px text-[9px] font-bold text-white">
-                  {o.label}
-                </span>
               </div>
             );
           })}
