@@ -5,7 +5,7 @@
 import { useState } from "react";
 import {
   Trash2, Pencil, Check, X, Search, ShoppingCart, AlertTriangle, ChefHat,
-  CalendarPlus, ArrowUpDown, ArrowUp, ArrowDown,
+  CalendarPlus, SlidersHorizontal, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry } from "../lib/pantry.js";
@@ -121,7 +121,7 @@ export default function PantryTab({
             aria-label="Ordinamento"
             title="Ordinamento"
           >
-            <ArrowUpDown className="h-4 w-4" />
+            <SlidersHorizontal className="h-4 w-4" />
           </button>
         )}
       </div>
