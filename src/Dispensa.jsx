@@ -422,6 +422,17 @@ export default function Dispensa({ session }) {
     setEditCat(it.category); setEditExpiry(it.expiry || "");
   }
 
+  // Imposta/cambia la scadenza direttamente dal calendario in linea.
+  async function setItemExpiry(it, expiry) {
+    const fields = { expiry: expiry || null };
+    setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...fields } : x)));
+    try {
+      await updateItem(it.id, fields);
+    } catch (e) {
+      console.error("Errore scadenza:", e);
+    }
+  }
+
   async function saveEdit() {
     const orig = items.find((x) => x.id === editId);
     const name = editName.trim() || (orig ? orig.name : "");
@@ -1226,12 +1237,11 @@ export default function Dispensa({ session }) {
             onOpenProfile={() => setProfileOpen(true)}
             userInitial={(session.user.email || "?").trim().charAt(0).toUpperCase()}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
-            grouped={grouped} collapsed={collapsed} setCollapsed={setCollapsed} cardRefs={cardRefs}
-            allCollapsed={allCollapsed} onToggleAll={toggleAllCategories}
+            grouped={grouped} cardRefs={cardRefs}
             dragCat={dragCat} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd}
-            onAdjustQty={adjustItemQty}
-            editId={editId} editName={editName} setEditName={setEditName} editQty={editQty} setEditQty={setEditQty}
-            editCat={editCat} setEditCat={setEditCat} editExpiry={editExpiry} setEditExpiry={setEditExpiry}
+            onAdjustQty={adjustItemQty} onSetExpiry={setItemExpiry}
+            editId={editId} editName={editName} setEditName={setEditName}
+            editCat={editCat} setEditCat={setEditCat}
             startEdit={startEdit} saveEdit={saveEdit} setEditId={setEditId} removeItem={removeItem}
             expiringCount={expiringItems.length} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}

@@ -1,10 +1,11 @@
-// Scheda Dispensa — stile editoriale: ricerca, striscia scadenze, sezioni
-// separate da righe sottili, +/- rapido, swipe-to-delete, scadenze, modifica
-// in-line. L'aggiunta è gestita dal menù "+" fluttuante.
-import { useState, useRef } from "react";
+// Scheda Dispensa — vista "scaffali": una card per categoria con righe
+// compatte (nome + quantità), tutta la dispensa a colpo d'occhio. Toccando
+// un prodotto si aprono lì sotto i comandi: quantità, scadenza, modifica,
+// elimina. Un solo prodotto aperto alla volta.
+import { useState } from "react";
 import {
   Trash2, Pencil, Check, X, Search, ShoppingCart, AlertTriangle, ChefHat,
-  ChevronDown, ChevronRight, GripVertical, ChevronsDownUp, ChevronsUpDown,
+  CalendarPlus, GripVertical,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry } from "../lib/pantry.js";
@@ -21,14 +22,14 @@ function ExpiryBadge({ date }) {
   const st = expiryStatus(date);
   if (!st) return null;
   return (
-    <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-bold ${EXP_STYLE[st]}`}>
+    <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${EXP_STYLE[st]}`}>
       {formatExpiry(date)}
     </span>
   );
 }
 
 const editCls =
-  "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
+  "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
 const SORTS = [
   ["recenti", "Recenti"],
@@ -36,97 +37,29 @@ const SORTS = [
   ["scadenza", "Scadenza"],
 ];
 
-// Riga con gesto di scorrimento orizzontale per eliminare (come in Spesa).
-function SwipeRow({ onDelete, children }) {
-  const [dx, setDx] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const [out, setOut] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const start = useRef(null);
-  const axis = useRef(null);
-  const THRESHOLD = 80;
-
-  function onPointerDown(e) {
-    start.current = { x: e.clientX, y: e.clientY };
-    axis.current = null;
-    setDragging(true);
-  }
-  function onPointerMove(e) {
-    if (!start.current) return;
-    const ddx = e.clientX - start.current.x;
-    const ddy = e.clientY - start.current.y;
-    if (axis.current == null) {
-      if (Math.abs(ddx) < 8 && Math.abs(ddy) < 8) return;
-      axis.current = Math.abs(ddx) > Math.abs(ddy) ? "h" : "v";
-      if (axis.current === "h") {
-        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
-      }
-    }
-    if (axis.current === "h") setDx(ddx);
-  }
-  function onPointerEnd(e) {
-    if (!start.current) return;
-    const ddx = e.clientX - start.current.x;
-    start.current = null;
-    setDragging(false);
-    if (axis.current === "h" && Math.abs(ddx) > THRESHOLD) {
-      const w = typeof window !== "undefined" ? window.innerWidth : 400;
-      setOut(true);
-      setDx(ddx > 0 ? w : -w);
-      setTimeout(() => setRemoving(true), 200);
-      setTimeout(onDelete, 500);
-    } else {
-      setDx(0);
-    }
-    axis.current = null;
-  }
-
-  return (
-    <li
-      data-noswipe
-      className="relative overflow-hidden border-b border-hair"
-      style={{
-        maxHeight: removing ? 0 : "6rem",
-        opacity: removing ? 0 : 1,
-        transition: "max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease",
-      }}
-    >
-      <div
-        className={`absolute inset-0 flex items-center bg-tomato px-5 text-white transition-opacity duration-200 ${dx > 0 ? "justify-start" : "justify-end"} ${out ? "opacity-0" : "opacity-100"}`}
-      >
-        <Trash2 className="h-5 w-5" />
-      </div>
-      <div
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerEnd}
-        onPointerCancel={onPointerEnd}
-        style={{
-          transform: `translateX(${dx}px)`,
-          touchAction: "pan-y",
-          transition: dragging
-            ? "none"
-            : out
-              ? "transform 0.22s cubic-bezier(0.55, 0, 1, 0.45)"
-              : "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-        className="relative flex items-center gap-2 bg-cream py-3"
-      >
-        {children}
-      </div>
-    </li>
-  );
+// Tono del nome a riposo: spento se finito, rosso se scade a brevissimo,
+// ambra se scade in settimana.
+function nameTone(it, out) {
+  if (out) return "text-stone-400";
+  const st = expiryStatus(it.expiry);
+  if (st === "scaduto" || st === "oggi" || st === "presto") return "text-tomato";
+  if (st === "settimana") return "text-amber-700";
+  return "text-ink";
 }
+
+// Quantità a riposo: i numeri puri diventano "×3", il resto resta com'è.
+const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}` : q);
 
 export default function PantryTab({
   search, setSearch, sort, setSort, onOpenProfile, userInitial,
-  grouped, collapsed, setCollapsed, cardRefs, allCollapsed, onToggleAll,
-  dragCat, onDragStart, onDragMove, onDragEnd, onAdjustQty,
-  editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
-  editExpiry, setEditExpiry, startEdit, saveEdit, setEditId, removeItem,
+  grouped, cardRefs,
+  dragCat, onDragStart, onDragMove, onDragEnd, onAdjustQty, onSetExpiry,
+  editId, editName, setEditName, editCat, setEditCat,
+  startEdit, saveEdit, setEditId, removeItem,
   expiringCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping,
 }) {
   const searchActive = search.trim() !== "";
+  const [openId, setOpenId] = useState(null); // prodotto coi comandi aperti
 
   return (
     <div className="pt-2">
@@ -144,7 +77,7 @@ export default function PantryTab({
       </div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Ciao 👋<br />Hai fame?</h1>
 
-      {/* Ricerca minimale: solo riga sotto, nessun bordo/box */}
+      {/* Ricerca minimale */}
       <div className="relative mt-4">
         <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
         <input
@@ -164,7 +97,7 @@ export default function PantryTab({
         )}
       </div>
 
-      {/* Striscia scadenze: tap = filtra solo ciò che scade entro 7 giorni */}
+      {/* Striscia scadenze */}
       {expiringCount > 0 && (
         <div className="mt-3 overflow-hidden rounded-xl border border-amber-700/30 bg-amber-100/60">
           <button
@@ -190,25 +123,20 @@ export default function PantryTab({
         </div>
       )}
 
-      {/* Ordinamento (chips) + apri/chiudi */}
+      {/* Ordinamento (dentro ogni scaffale) */}
       {grouped.length > 0 && (
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="flex gap-1.5">
-            {SORTS.map(([v, l]) => (
-              <button
-                key={v}
-                onClick={() => setSort(v)}
-                className={`rounded-lg border px-2 py-1.5 text-xs font-semibold transition ${
-                  sort === v ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-                }`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-          <button onClick={onToggleAll} className="flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-stone-500 hover:text-ink">
-            {allCollapsed ? (<><ChevronsUpDown className="h-3.5 w-3.5" /> Apri</>) : (<><ChevronsDownUp className="h-3.5 w-3.5" /> Chiudi</>)}
-          </button>
+        <div className="mt-3 flex gap-1.5">
+          {SORTS.map(([v, l]) => (
+            <button
+              key={v}
+              onClick={() => setSort(v)}
+              className={`rounded-lg border px-2 py-1.5 text-xs font-semibold transition ${
+                sort === v ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
         </div>
       )}
 
@@ -218,113 +146,153 @@ export default function PantryTab({
         </p>
       )}
 
-      {/* Sezioni (niente scatole: righe sottili) */}
-      <div className="mt-4 space-y-6">
-        {grouped.map(({ cat, list }) => {
-          const open = !collapsed[cat] || searchActive || expFilter;
-          return (
-            <section key={cat} ref={(el) => { cardRefs.current[cat] = el; }} className={dragCat === cat ? "rounded-2xl ring-2 ring-tomato/30" : ""}>
-              <div className="flex items-center gap-2 border-b border-ink/15 pb-2">
-                <button onClick={() => setCollapsed((c) => ({ ...c, [cat]: !c[cat] }))} className="flex min-w-0 flex-1 items-baseline gap-2 text-left">
-                  <span className="text-base">{CAT_ICON[cat]}</span>
-                  <h2 className="font-display text-lg font-semibold text-ink">{cat}</h2>
-                  <span className="font-display text-sm font-bold text-tomato">{String(list.length).padStart(2, "0")}</span>
-                  <span className="ml-auto">
-                    {open ? <ChevronDown className="h-4 w-4 text-stone-400" /> : <ChevronRight className="h-4 w-4 text-stone-400" />}
-                  </span>
-                </button>
-                <button
-                  data-noswipe
-                  onPointerDown={(e) => onDragStart(e, cat)}
-                  onPointerMove={onDragMove}
-                  onPointerUp={onDragEnd}
-                  onPointerCancel={onDragEnd}
-                  style={{ touchAction: "none" }}
-                  className="shrink-0 cursor-grab rounded-lg p-1 text-stone-300 hover:text-stone-600 active:cursor-grabbing"
-                  aria-label="Trascina per riordinare"
-                >
-                  <GripVertical className="h-4 w-4" />
-                </button>
-              </div>
+      {/* Scaffali: una card per categoria, in due colonne */}
+      <div className="mt-4 columns-2 gap-3">
+        {grouped.map(({ cat, list }) => (
+          <section
+            key={cat}
+            ref={(el) => { cardRefs.current[cat] = el; }}
+            className={`mb-3 break-inside-avoid rounded-2xl border bg-paper p-3 ${dragCat === cat ? "border-tomato ring-2 ring-tomato/20" : "border-hair"}`}
+          >
+            <div className="mb-1 flex items-center gap-1.5">
+              <span className="text-sm">{CAT_ICON[cat]}</span>
+              <h2 className="min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-[0.08em] text-tomato">{cat}</h2>
+              <span className="text-[11px] font-bold text-stone-400">{list.length}</span>
+              <button
+                onPointerDown={(e) => onDragStart(e, cat)}
+                onPointerMove={onDragMove}
+                onPointerUp={onDragEnd}
+                onPointerCancel={onDragEnd}
+                style={{ touchAction: "none" }}
+                className="-mr-1.5 shrink-0 cursor-grab rounded p-1 text-stone-300 hover:text-stone-600 active:cursor-grabbing"
+                aria-label="Trascina per riordinare"
+              >
+                <GripVertical className="h-3.5 w-3.5" />
+              </button>
+            </div>
 
-              {open && (
-                <ul>
-                  {list.map((it) => {
-                    if (editId === it.id) {
-                      return (
-                        <li key={it.id} className="space-y-2 border-b border-hair py-3">
-                          <input className={editCls} value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nome" />
-                          <div className="flex gap-2">
-                            <input className={editCls} value={editQty} onChange={(e) => setEditQty(e.target.value)} placeholder="Quantità" />
-                            <select className={editCls} value={editCat} onChange={(e) => setEditCat(e.target.value)}>
-                              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                          </div>
-                          <label className="flex items-center gap-2 text-xs text-stone-500">
-                            <span className="shrink-0">Scadenza:</span>
-                            <input type="date" className={editCls} value={editExpiry || ""} onChange={(e) => setEditExpiry(e.target.value)} />
-                            {editExpiry && (
-                              <button onClick={() => setEditExpiry("")} className="shrink-0 rounded-md p-1 text-stone-400 hover:bg-stone-100" aria-label="Rimuovi scadenza"><X className="h-4 w-4" /></button>
-                            )}
-                          </label>
-                          <div className="flex gap-2">
-                            <button onClick={saveEdit} className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90"><Check className="h-4 w-4" /> Salva</button>
-                            <button onClick={() => setEditId(null)} className="flex items-center justify-center rounded-xl border border-hair px-3 py-2 text-stone-500 hover:bg-stone-50"><X className="h-4 w-4" /></button>
-                          </div>
-                        </li>
-                      );
-                    }
-                    const out = isOut(it);
-                    return (
-                      <SwipeRow key={it.id} onDelete={() => removeItem(it)}>
-                        <div className="min-w-0 flex-1">
-                          <p className={`truncate text-[15px] font-semibold ${out ? "text-stone-400" : "text-ink"}`}>
-                            {it.name}
-                            <ExpiryBadge date={it.expiry} />
-                          </p>
-                          {out && (
-                            <button
-                              onClick={() => onToShopping(it)}
-                              className="mt-1 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-bold text-tomato transition hover:bg-tomato/20"
-                            >
-                              <ShoppingCart className="h-3 w-3" /> finito · metti in lista
-                            </button>
-                          )}
-                        </div>
+            <ul>
+              {list.map((it) => {
+                const out = isOut(it);
+
+                // Modifica: nome + categoria, in linea nello scaffale
+                if (editId === it.id) {
+                  return (
+                    <li key={it.id} className="-mx-1 my-1 space-y-2 rounded-xl bg-stone-50 p-2.5">
+                      <input
+                        autoFocus
+                        className={editCls}
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                        placeholder="Nome"
+                      />
+                      <select className={editCls} value={editCat} onChange={(e) => setEditCat(e.target.value)}>
+                        {CATEGORIES.map((c) => <option key={c} value={c}>{CAT_ICON[c]} {c}</option>)}
+                      </select>
+                      <div className="flex gap-2">
+                        <button onClick={saveEdit} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-ink px-2 py-2 text-xs font-semibold text-white hover:opacity-90">
+                          <Check className="h-3.5 w-3.5" /> Salva
+                        </button>
+                        <button onClick={() => setEditId(null)} className="flex items-center justify-center rounded-lg border border-hair px-2.5 text-stone-500 hover:bg-stone-100" aria-label="Annulla">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </li>
+                  );
+                }
+
+                // Espanso: comandi sotto il prodotto toccato
+                if (openId === it.id) {
+                  return (
+                    <li key={it.id} className="-mx-1 my-1 rounded-xl bg-stone-50 p-2.5">
+                      <button onClick={() => setOpenId(null)} className="flex w-full items-center text-left">
+                        <span className={`min-w-0 truncate text-[13px] font-bold ${nameTone(it, out)}`}>
+                          {it.name}
+                          <ExpiryBadge date={it.expiry} />
+                        </span>
+                      </button>
+                      {out && (
+                        <button
+                          onClick={() => onToShopping(it)}
+                          className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-bold text-tomato transition hover:bg-tomato/20"
+                        >
+                          <ShoppingCart className="h-3 w-3" /> finito · metti in lista
+                        </button>
+                      )}
+                      <div className="mt-2 flex items-center justify-between gap-2">
                         {/\d/.test(it.qty) ? (
-                          <div className="flex shrink-0 items-center gap-1.5">
+                          <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => onAdjustQty(it, -1)}
                               disabled={out}
-                              className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                              className={`flex h-8 w-8 items-center justify-center rounded-full border text-base leading-none transition ${
                                 out ? "border-hair text-stone-300" : "border-stone-300 text-stone-600 hover:border-ink hover:text-ink active:scale-95"
                               }`}
                               aria-label="Diminuisci"
-                            >
-                              <span className="text-base leading-none">−</span>
-                            </button>
-                            <span className={`min-w-[1.75rem] px-0.5 text-center text-sm font-bold tabular-nums ${out ? "text-stone-400" : "text-ink"}`}>{it.qty}</span>
+                            >−</button>
+                            <span className="min-w-[2.25rem] text-center text-sm font-bold tabular-nums text-ink">{it.qty}</span>
                             <button
                               onClick={() => onAdjustQty(it, 1)}
-                              className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-tomato hover:bg-tomato/5 hover:text-tomato active:scale-95"
+                              className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 text-base leading-none text-stone-600 transition hover:border-tomato hover:text-tomato active:scale-95"
                               aria-label="Aumenta"
-                            >
-                              <span className="text-base leading-none">+</span>
-                            </button>
+                            >+</button>
                           </div>
                         ) : (
-                          <span className="shrink-0 text-xs text-stone-400">{it.qty}</span>
+                          <span className="text-xs text-stone-500">{it.qty}</span>
                         )}
-                        <button onClick={() => startEdit(it)} className="ml-0.5 shrink-0 rounded-lg p-1.5 text-stone-300 hover:bg-stone-100 hover:text-stone-700" aria-label="Modifica"><Pencil className="h-4 w-4" /></button>
-                        <button onClick={() => removeItem(it)} className="shrink-0 rounded-lg p-1.5 text-stone-300 hover:bg-tomato/10 hover:text-tomato" aria-label="Elimina"><Trash2 className="h-4 w-4" /></button>
-                      </SwipeRow>
-                    );
-                  })}
-                </ul>
-              )}
-            </section>
-          );
-        })}
+                        <div className="flex gap-1.5">
+                          <label
+                            title="Scadenza"
+                            className={`relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border transition ${
+                              it.expiry ? "border-tomato/40 bg-tomato/5 text-tomato" : "border-hair text-stone-500 hover:text-tomato"
+                            }`}
+                          >
+                            <CalendarPlus className="h-4 w-4" />
+                            <input
+                              type="date"
+                              value={it.expiry || ""}
+                              onChange={(e) => onSetExpiry(it, e.target.value)}
+                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                              aria-label="Scadenza"
+                            />
+                          </label>
+                          <button
+                            onClick={() => startEdit(it)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-hair text-stone-500 transition hover:bg-stone-100 hover:text-ink"
+                            aria-label="Modifica"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => { setOpenId(null); removeItem(it); }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-hair text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+                            aria-label="Elimina"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                }
+
+                // A riposo: solo nome + quantità
+                return (
+                  <li key={it.id}>
+                    <button
+                      onClick={() => setOpenId(it.id)}
+                      className="flex w-full items-center justify-between gap-2 py-1 text-left"
+                    >
+                      <span className={`min-w-0 truncate text-[13px] font-semibold ${nameTone(it, out)}`}>{it.name}</span>
+                      <span className="shrink-0 text-xs text-stone-400">{qtyLabel(it.qty)}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
       </div>
     </div>
   );
