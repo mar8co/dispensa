@@ -570,9 +570,9 @@ export default function Dispensa({ session }) {
   }
 
   // Salvataggio automatico dal pannello di modifica della spesa (come quello
-  // della dispensa): nome/quantità sul DB, reparto nelle impostazioni;
-  // toast "Modifica salvata" con Annulla che ripristina i valori di apertura.
-  async function autoSaveShopping(it, fields, restore) {
+  // della dispensa) ma SILENZIOSO: nessun toast "Modifica salvata".
+  // Nome/quantità sul DB, reparto nelle impostazioni.
+  async function autoSaveShopping(it, fields) {
     const { category, ...rowFields } = fields;
     if (Object.keys(rowFields).length) {
       setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...rowFields } : x)));
@@ -581,17 +581,6 @@ export default function Dispensa({ session }) {
     if (CATEGORIES.includes(category)) {
       setShopCats((prev) => ({ ...prev, [norm(rowFields.name ?? it.name)]: category }));
     }
-    showToast(<strong>Modifica salvata</strong>, async () => {
-      const { category: prevCat, ...prevRow } = restore;
-      if (Object.keys(prevRow).length) {
-        setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...prevRow } : x)));
-        try { await updateShopping(it.id, prevRow); } catch (e) { console.error("Errore ripristino spesa:", e); }
-      }
-      if (CATEGORIES.includes(prevCat)) {
-        setShopCats((prev) => ({ ...prev, [norm(prevRow.name ?? it.name)]: prevCat }));
-      }
-      dismissToast();
-    }, "Annulla", "ink");
   }
 
   // Aggiunta a voce per la spesa: estrae i prodotti dalla frase e li

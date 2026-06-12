@@ -5,7 +5,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Trash2, X, Search, ShoppingCart, AlertTriangle, ChefHat,
-  CalendarPlus, SlidersHorizontal, ArrowUp, ArrowDown,
+  CalendarPlus, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, atMinQty } from "../lib/pantry.js";
@@ -51,6 +51,12 @@ function nameTone(it, out) {
 // Quantità a riposo: i numeri puri diventano "×3", il resto resta com'è.
 const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}` : q);
 
+const pad2 = (n) => String(n).padStart(2, "0");
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
 
 export default function PantryTab({
   search, setSearch, sort, setSort, onOpenProfile, userInitial,
@@ -66,6 +72,12 @@ export default function PantryTab({
   const [expiryEditId, setExpiryEditId] = useState(null);
   const [expDraft, setExpDraft] = useState("");
   const [catPickerOpen, setCatPickerOpen] = useState(false);
+  // Barra sticky: lente che trasforma la barra in ricerca + espansione
+  // verticale di tutti i reparti (niente swipe obbligatorio).
+  const [barSearch, setBarSearch] = useState(false);
+  const [catsExpanded, setCatsExpanded] = useState(false);
+  const expOpenTsRef = useRef(0);       // momento di apertura del picker data
+  const expProvisionalRef = useRef(false); // "oggi" auto-impostato da iOS, non scelto
 
   // --- Pannello prodotto con salvataggio automatico ---
   // Le modifiche si applicano da sole (nome al blur, quantità con una breve
@@ -115,6 +127,18 @@ export default function PantryTab({
   function scheduleExpiry(v) {
     setExpDraft(v);
     clearTimeout(expTimer.current);
+    // Aprendo il picker, iOS imposta subito "oggi" da solo: non è una
+    // scelta dell'utente — si mostra ma NON si salva (niente toast).
+    // Qualsiasi modifica successiva è una scelta vera e si salva.
+    const auto =
+      !snapRef.current.expiry &&
+      v === todayIso() &&
+      Date.now() - expOpenTsRef.current < 600;
+    if (auto) {
+      expProvisionalRef.current = true;
+      return;
+    }
+    expProvisionalRef.current = false;
     expTimer.current = setTimeout(() => commitExpiryNow(v), 700);
   }
   function flushPending() {
@@ -124,7 +148,7 @@ export default function PantryTab({
     if (!it) return;
     commitQtyNow(qtyDraft);
     commitNameNow();
-    if (expiryEditId === it.id) commitExpiryNow(expDraft);
+    if (expiryEditId === it.id && !expProvisionalRef.current) commitExpiryNow(expDraft);
   }
   function openPanel(it) {
     flushPending();
@@ -272,18 +296,80 @@ export default function PantryTab({
         </div>
       )}
 
-      {/* Barra salta-reparto: fissa in alto durante lo scroll */}
-      {grouped.length > 1 && (
-        <div className="no-scrollbar sticky top-0 z-20 -mx-5 mt-3 flex h-12 items-center gap-1.5 overflow-x-auto bg-cream/95 px-5 backdrop-blur">
-          {grouped.map(({ cat }) => (
-            <button
-              key={cat}
-              onClick={() => jumpTo(cat)}
-              className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
-            >
-              {CAT_ICON[cat]} {cat}
-            </button>
-          ))}
+      {/* Barra salta-reparto, fissa in alto: lente (ricerca rapida ovunque
+          tu sia nello scroll) + chips scorrevoli + freccia che espande tutti
+          i reparti in verticale (niente swipe obbligatorio). */}
+      {(grouped.length > 0 || searchActive) && (
+        <div className="sticky top-0 z-20 -mx-5 mt-3 bg-cream/95 px-5 py-2 backdrop-blur">
+          {barSearch ? (
+            <div className="flex h-8 items-center gap-2">
+              <Search className="h-4 w-4 shrink-0 text-tomato" />
+              <input
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cerca un prodotto…"
+                className="min-w-0 flex-1 border-0 bg-transparent text-sm text-ink outline-none"
+              />
+              <button
+                onClick={() => { setBarSearch(false); setSearch(""); }}
+                className="shrink-0 rounded-md p-1 text-stone-400 hover:bg-stone-100"
+                aria-label="Chiudi ricerca"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex h-8 items-center gap-1.5">
+              <button
+                onClick={() => { setCatsExpanded(false); setBarSearch(true); }}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-hair bg-paper text-stone-500 transition hover:border-tomato hover:text-tomato"
+                aria-label="Cerca un prodotto"
+                title="Cerca"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+              <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+                {grouped.map(({ cat }) => (
+                  <button
+                    key={cat}
+                    onClick={() => jumpTo(cat)}
+                    className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                  >
+                    {CAT_ICON[cat]} {cat}
+                  </button>
+                ))}
+              </div>
+              {grouped.length > 1 && (
+                <button
+                  onClick={() => setCatsExpanded((v) => !v)}
+                  aria-expanded={catsExpanded}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${
+                    catsExpanded ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-500 hover:border-tomato hover:text-tomato"
+                  }`}
+                  aria-label="Mostra tutti i reparti"
+                  title="Tutti i reparti"
+                >
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${catsExpanded ? "rotate-180" : ""}`} />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Tutti i reparti in verticale: tap = salta là e si richiude */}
+          {catsExpanded && !barSearch && (
+            <div className="animate-fade-in mt-2 flex flex-wrap gap-1.5 rounded-xl bg-stone-50 p-2.5">
+              {grouped.map(({ cat, list }) => (
+                <button
+                  key={cat}
+                  onClick={() => { setCatsExpanded(false); jumpTo(cat); }}
+                  className="rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                >
+                  {CAT_ICON[cat]} {cat} <span className="text-tomato">{list.length}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -367,6 +453,8 @@ export default function PantryTab({
                             setExpDraft(it.expiry || "");
                             setCatPickerOpen(false);
                             setExpiryEditId(it.id);
+                            expOpenTsRef.current = Date.now();
+                            expProvisionalRef.current = false;
                           }}
                           title="Scadenza"
                           className={`relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border transition ${
