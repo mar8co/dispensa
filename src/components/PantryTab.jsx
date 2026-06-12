@@ -7,7 +7,7 @@ import {
   Trash2, X, Search, ShoppingCart, AlertTriangle, ChefHat,
   CalendarPlus, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown,
 } from "lucide-react";
-import { CATEGORIES, CAT_ICON } from "../constants.js";
+import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, atMinQty } from "../lib/pantry.js";
 
 const EXP_STYLE = {
@@ -449,7 +449,7 @@ export default function PantryTab({
                       {/* Categorie come chips: un solo tap per scegliere */}
                       {catPickerOpen && (
                         <div className="animate-fade-in flex flex-wrap gap-1.5">
-                          {CATEGORIES.map((c) => (
+                          {PICKER_CATS.map((c) => (
                             <button
                               key={c}
                               onClick={() => chooseCategory(c)}
@@ -483,7 +483,7 @@ export default function PantryTab({
                               onClick={() => { clearTimeout(expTimer.current); setExpDraft(""); commitExpiryNow(""); setExpiryEditId(null); }}
                               className="shrink-0 rounded-lg border border-tomato/30 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
                             >
-                              {expDraft && expDraft !== (snapRef.current.expiry || "") ? "Elimina" : "Togli"}
+                              Annulla
                             </button>
                           )}
                         </div>

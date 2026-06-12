@@ -7,7 +7,7 @@ import {
   Plus, Trash2, Check, Minus, PackagePlus, Loader2, ListChecks, Store,
   Share2, Lightbulb, Mic, X,
 } from "lucide-react";
-import { CATEGORIES, CAT_ICON, AISLE_ORDER } from "../constants.js";
+import { CATEGORIES, PICKER_CATS, CAT_ICON, AISLE_ORDER } from "../constants.js";
 import { norm, atMinQty, adjustQty } from "../lib/pantry.js";
 
 const editCls =
@@ -312,7 +312,7 @@ export default function ShoppingTab({
         {/* Reparti come chips: un solo tap per scegliere */}
         {catPickerOpen && (
           <div className="animate-fade-in flex flex-wrap gap-1.5">
-            {CATEGORIES.map((c) => (
+            {PICKER_CATS.map((c) => (
               <button
                 key={c}
                 onClick={() => chooseCategory(c)}

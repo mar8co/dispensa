@@ -20,6 +20,14 @@ export const AISLE_ORDER = [
   "Surgelati", "Bevande", "Altro",
 ];
 
+// Ordine delle chips nel selettore categoria dei pannelli: "Altro" sale
+// accanto a "Frutta Secca" per non occupare una riga da solo in fondo.
+export const PICKER_CATS = (() => {
+  const arr = CATEGORIES.filter((c) => c !== "Altro");
+  arr.splice(arr.indexOf("Frutta Secca") + 1, 0, "Altro");
+  return arr;
+})();
+
 export const CAT_ICON = {
   "Verdura": "🥬", "Frutta": "🍎", "Carne": "🥩", "Salumi": "🥓",
   "Pesce": "🐟", "Latticini": "🧀", "Pane e Forno": "🍞",
