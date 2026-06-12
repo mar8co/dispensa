@@ -72,9 +72,7 @@ export default function PantryTab({
   const [expiryEditId, setExpiryEditId] = useState(null);
   const [expDraft, setExpDraft] = useState("");
   const [catPickerOpen, setCatPickerOpen] = useState(false);
-  // Barra sticky: lente che trasforma la barra in ricerca + espansione
-  // verticale di tutti i reparti (niente swipe obbligatorio).
-  const [barSearch, setBarSearch] = useState(false);
+  // Barra sticky: espansione verticale di tutti i reparti (niente swipe).
   const [catsExpanded, setCatsExpanded] = useState(false);
   const expOpenTsRef = useRef(0);       // momento di apertura del picker data
   const expProvisionalRef = useRef(false); // "oggi" auto-impostato da iOS, non scelto
@@ -296,68 +294,37 @@ export default function PantryTab({
         </div>
       )}
 
-      {/* Barra salta-reparto, fissa in alto: lente (ricerca rapida ovunque
-          tu sia nello scroll) + chips scorrevoli + freccia che espande tutti
-          i reparti in verticale (niente swipe obbligatorio). */}
-      {(grouped.length > 0 || searchActive) && (
+      {/* Barra salta-reparto, fissa in alto: chips scorrevoli + freccina che
+          espande tutti i reparti in verticale (niente swipe obbligatorio). */}
+      {grouped.length > 1 && (
         <div className="sticky top-0 z-20 -mx-5 mt-3 bg-cream/95 px-5 py-2 backdrop-blur">
-          {barSearch ? (
-            <div className="flex h-8 items-center gap-2">
-              <Search className="h-4 w-4 shrink-0 text-tomato" />
-              <input
-                autoFocus
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cerca un prodotto…"
-                className="min-w-0 flex-1 border-0 bg-transparent text-sm text-ink outline-none"
-              />
-              <button
-                onClick={() => { setBarSearch(false); setSearch(""); }}
-                className="shrink-0 rounded-md p-1 text-stone-400 hover:bg-stone-100"
-                aria-label="Chiudi ricerca"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex h-8 items-center gap-1.5">
-              <button
-                onClick={() => { setCatsExpanded(false); setBarSearch(true); }}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-hair bg-paper text-stone-500 transition hover:border-tomato hover:text-tomato"
-                aria-label="Cerca un prodotto"
-                title="Cerca"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-              <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
-                {grouped.map(({ cat }) => (
-                  <button
-                    key={cat}
-                    onClick={() => jumpTo(cat)}
-                    className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
-                  >
-                    {CAT_ICON[cat]} {cat}
-                  </button>
-                ))}
-              </div>
-              {grouped.length > 1 && (
+          <div className="flex h-8 items-center gap-1.5">
+            <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+              {grouped.map(({ cat }) => (
                 <button
-                  onClick={() => setCatsExpanded((v) => !v)}
-                  aria-expanded={catsExpanded}
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${
-                    catsExpanded ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-500 hover:border-tomato hover:text-tomato"
-                  }`}
-                  aria-label="Mostra tutti i reparti"
-                  title="Tutti i reparti"
+                  key={cat}
+                  onClick={() => jumpTo(cat)}
+                  className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
                 >
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${catsExpanded ? "rotate-180" : ""}`} />
+                  {CAT_ICON[cat]} {cat}
                 </button>
-              )}
+              ))}
             </div>
-          )}
+            <button
+              onClick={() => setCatsExpanded((v) => !v)}
+              aria-expanded={catsExpanded}
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
+                catsExpanded ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-400 hover:border-tomato hover:text-tomato"
+              }`}
+              aria-label="Mostra tutti i reparti"
+              title="Tutti i reparti"
+            >
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${catsExpanded ? "rotate-180" : ""}`} />
+            </button>
+          </div>
 
           {/* Tutti i reparti in verticale: tap = salta là e si richiude */}
-          {catsExpanded && !barSearch && (
+          {catsExpanded && (
             <div className="animate-fade-in mt-2 flex flex-wrap gap-1.5 rounded-xl bg-stone-50 p-2.5">
               {grouped.map(({ cat, list }) => (
                 <button
