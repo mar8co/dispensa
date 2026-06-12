@@ -611,6 +611,10 @@ export default function Dispensa({ session }) {
     }
   }
   async function toggleShoppingItem(id, checked) {
+    if (checked) {
+      const it = shopping.find((x) => x.id === id);
+      if (it) showToast(<><strong>{it.name}</strong> spostato nel carrello</>);
+    }
     setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
     try { await updateShopping(id, { checked }); }
     catch (e) { console.error("Errore aggiornamento spesa:", e); }

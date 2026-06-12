@@ -5,7 +5,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Plus, Trash2, Check, Minus, PackagePlus, Loader2, ListChecks, Store,
-  Share2, Lightbulb, Mic, X, Pencil,
+  Share2, Lightbulb, Mic, X,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON, AISLE_ORDER } from "../constants.js";
 import { norm, atMinQty } from "../lib/pantry.js";
@@ -141,10 +141,10 @@ function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
         >
           <Check className="h-4 w-4" />
         </button>
-        {/* Tap sul nome = spunta "comprato"; per modificare c'è la matita */}
+        {/* Tap sul nome = modifica; la spunta si fa col quadratino a sinistra */}
         <p
-          onClick={() => onToggle(it.id, !it.checked)}
-          title={it.checked ? "Tocca per segnare da comprare" : "Tocca per segnare come preso"}
+          onClick={startEdit}
+          title="Tocca per modificare"
           className={`min-w-0 flex-1 cursor-pointer truncate text-[15px] font-semibold ${it.checked ? "text-stone-400 line-through" : "text-ink"}`}
         >
           {it.name}
@@ -175,13 +175,6 @@ function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
             it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{it.qty}</span>
           )}
         </div>
-        <button
-          onClick={startEdit}
-          className="shrink-0 rounded-lg p-1.5 text-stone-300 transition hover:bg-stone-100 hover:text-stone-700"
-          aria-label="Modifica"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
       </div>
     </li>
   );
@@ -420,7 +413,7 @@ export default function ShoppingTab({
         {inCart.length > 0 && (
           <section className="mt-7">
             <div className="flex items-center gap-2 border-b border-ink/15 pb-2">
-              <Check className="h-4 w-4 text-stone-400" />
+              <span className="text-base">🛒</span>
               <h4 className="font-display text-base font-bold uppercase tracking-wide text-stone-400">Nel carrello</h4>
               <span className="font-display text-sm font-bold text-tomato">{String(inCart.length).padStart(2, "0")}</span>
             </div>
@@ -431,7 +424,7 @@ export default function ShoppingTab({
 
       {shopping.length > 0 && showHint && (
         <p className="mt-3 text-center text-[11px] text-stone-400">
-          Tocca il nome per spuntarlo · scorri di lato per eliminarlo · matita per modificarlo
+          Spunta il quadratino quando lo prendi · tocca il nome per modificarlo · scorri di lato per eliminarlo
         </p>
       )}
 

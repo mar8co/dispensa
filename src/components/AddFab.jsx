@@ -27,7 +27,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
         className="fixed z-40"
         style={{ right: "18px", bottom: "calc(80px + env(safe-area-inset-bottom))" }}
       >
-        <div className="relative h-14 w-14">
+        <div className="relative h-12 w-12">
           {options.map((o, i) => {
             const Icon = o.icon;
             // Distanza verticale dal "+": l'ultima opzione è la più vicina.
@@ -35,7 +35,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
             return (
               <div
                 key={o.id}
-                className="absolute bottom-1 right-1 flex items-center gap-2"
+                className="absolute bottom-0 right-0 flex items-center gap-2"
                 style={{
                   transform: menuOpen ? `translateY(${-lift}px)` : "translateY(0) scale(0.4)",
                   transformOrigin: "100% 100%",
@@ -67,9 +67,9 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
           <button
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Aggiungi"
-            className="relative z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-tomato text-white shadow-xl shadow-tomato/30 transition active:scale-95"
+            className="relative z-40 flex h-12 w-12 items-center justify-center rounded-2xl bg-tomato text-white shadow-xl shadow-tomato/30 transition active:scale-95"
           >
-            <Plus className={`h-7 w-7 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} strokeWidth={2.4} />
+            <Plus className={`h-6 w-6 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} strokeWidth={2.4} />
           </button>
         </div>
       </div>
