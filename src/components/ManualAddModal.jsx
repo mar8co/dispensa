@@ -44,15 +44,11 @@ export default function ManualAddModal({
       return fmtV(n);
     });
   }
-  // Cambiando unità il numero si aggancia al passo (1 → 50 g, 1,3 → 1,25 kg).
+  // Cambiando unità la quantità si RESETTA al default dell'unità scelta
+  // (mai ereditata dal valore precedente): pz → 1, g → 100, kg/l → 1.
   function chooseUnit(u) {
     setUnit(u);
-    const st = STEPS[u] ?? 1;
-    setNewQty((v) => {
-      let n = parseV(v);
-      n = Math.max(st, Math.round(n / st) * st);
-      return fmtV(n);
-    });
+    setNewQty(u === "g" ? "100" : "1");
   }
 
   const inputCls =

@@ -168,17 +168,12 @@ export default function PantryTab({
     openItemRef.current = { ...it, category: c };
     onAutoSave(it, { category: c }, { category: snapRef.current.category });
   }
-  // Cambio unità: kg e litri partono da 1 (passi 0,25), i grammi da 100
-  // (passi 50), i pezzi restano interi.
+  // Cambio unità: la quantità si RESETTA sempre al default dell'unità
+  // scelta (mai ereditata dal valore precedente — 100 g → pz dà 1 pz,
+  // non 100 pz): pz → 1, g → 100, kg → 1, l → 1.
   function applyUnit(u) {
-    let v;
-    if (u === "g") v = "100 g";
-    else if (u === "kg") v = "1 kg";
-    else if (u === "l") v = "1 l";
-    else {
-      const m = String(qtyDraft).replace(",", ".").match(/-?\d+(\.\d+)?/);
-      v = String(Math.max(1, Math.round(m ? parseFloat(m[0]) : 1)));
-    }
+    const DEFAULTS = { "": "1", g: "100 g", kg: "1 kg", l: "1 l" };
+    const v = DEFAULTS[u] ?? "1";
     setQtyDraft(v);
     clearTimeout(qtyTimer.current);
     commitQtyNow(v);
@@ -495,6 +490,7 @@ export default function PantryTab({
                             aria-label="Diminuisci"
                           >−</button>
                           <input
+                            inputMode="decimal"
                             className="w-16 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
                             value={qtyDraft}
                             onChange={(e) => scheduleQty(e.target.value)}

@@ -102,6 +102,7 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
                               <Minus className="h-3.5 w-3.5" />
                             </button>
                             <input
+                              inputMode="decimal"
                               className="w-16 border-0 bg-transparent text-center text-sm font-bold tabular-nums text-ink outline-none"
                               value={it.qty}
                               onChange={(e) => update(it.id, "qty", e.target.value)}

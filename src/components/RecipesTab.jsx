@@ -396,7 +396,7 @@ export default function RecipesTab({
             onClick={() => setCooking(true)}
             className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-ink py-3 text-sm font-bold text-ink transition hover:bg-ink hover:text-white"
           >
-            <ChefHat className="h-4 w-4" /> Modalità cucina
+            <ChefHat className="h-4 w-4 text-tomato" /> Modalità cucina
           </button>
 
           <h3 className="mb-4 mt-7 font-display text-base font-bold uppercase tracking-wide text-ink">Procedimento</h3>
