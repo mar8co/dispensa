@@ -42,24 +42,25 @@ export default function CookModal({ rows, estimating, onClose, onSetAfter, onRem
                           <X className="h-4 w-4" />
                         </button>
                       </div>
-                      <div className="mt-2 flex items-center gap-2">
+                      {/* flex-wrap: il badge va a capo invece di sforare dal box */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span className="shrink-0 text-xs text-stone-500">Rimane:</span>
                         <input
-                          className="flex-1 rounded-lg border border-stone-300 bg-paper px-2 py-1.5 text-sm text-ink outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
+                          className="min-w-[6rem] flex-1 rounded-lg border border-stone-300 bg-paper px-2 py-1.5 text-sm text-ink outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
                           value={r.after}
                           onChange={(e) => onSetAfter(i, e.target.value)}
                         />
                         {!r.auto && (
                           r.estimated ? (
-                            <span className="flex shrink-0 items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-xs font-medium text-tomato">
+                            <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-tomato/10 px-2 py-0.5 text-xs font-medium text-tomato">
                               <Sparkles className="h-3 w-3" /> stima AI · controlla
                             </span>
                           ) : estimating ? (
-                            <span className="flex shrink-0 items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
+                            <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
                               <Loader2 className="h-3 w-3 animate-spin" /> stimo…
                             </span>
                           ) : (
-                            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                            <span className="whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
                               da verificare
                             </span>
                           )

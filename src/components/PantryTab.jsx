@@ -51,6 +51,22 @@ function nameTone(it, out) {
 // Quantità a riposo: i numeri puri diventano "×3", il resto resta com'è.
 const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}` : q);
 
+// --- Date (formato ISO "YYYY-MM-DD") per il selettore rapido ---
+const pad2 = (n) => String(n).padStart(2, "0");
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+// Sposta giorno/mese/anno gestendo i cambi di mese e gli anni bisestili.
+function shiftDate(iso, part, delta) {
+  const d = new Date(`${iso || todayIso()}T00:00:00`);
+  if (isNaN(d.getTime())) return todayIso();
+  if (part === "d") d.setDate(d.getDate() + delta);
+  if (part === "m") d.setMonth(d.getMonth() + delta);
+  if (part === "y") d.setFullYear(d.getFullYear() + delta);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
 export default function PantryTab({
   search, setSearch, sort, setSort, onOpenProfile, userInitial,
   grouped, cardRefs,
@@ -77,6 +93,7 @@ export default function PantryTab({
   const snapRef = useRef({});       // valori originali per "Annulla"
   const lastRef = useRef({});       // ultimi valori salvati (rileva i cambi)
   const qtyTimer = useRef(null);
+  const expTimer = useRef(null);
 
   function commitQtyNow(v) {
     const it = openItemRef.current;
@@ -100,18 +117,36 @@ export default function PantryTab({
     setDraftName(cap);
     onAutoSave(it, { name: cap }, { name: snapRef.current.name });
   }
+  // Scadenza: ogni modifica (calendario o selettore rapido) si salva da sola
+  // con una breve attesa; nessun pulsante "Salva".
+  function commitExpiryNow(v) {
+    const it = openItemRef.current;
+    if (!it) return;
+    const val = v || "";
+    if (val === lastRef.current.expiry) return;
+    lastRef.current.expiry = val;
+    onSetExpiry(it, val);
+  }
+  function scheduleExpiry(v) {
+    setExpDraft(v);
+    clearTimeout(expTimer.current);
+    expTimer.current = setTimeout(() => commitExpiryNow(v), 700);
+  }
   function flushPending() {
     clearTimeout(qtyTimer.current);
-    if (!openItemRef.current) return;
+    clearTimeout(expTimer.current);
+    const it = openItemRef.current;
+    if (!it) return;
     commitQtyNow(qtyDraft);
     commitNameNow();
+    if (expiryEditId === it.id) commitExpiryNow(expDraft);
   }
   function openPanel(it) {
     flushPending();
     setOpenId(it.id);
     openItemRef.current = it;
     snapRef.current = { name: it.name, qty: it.qty, category: it.category, expiry: it.expiry };
-    lastRef.current = { name: it.name, qty: it.qty };
+    lastRef.current = { name: it.name, qty: it.qty, expiry: it.expiry || "" };
     setDraftName(it.name);
     setQtyDraft(it.qty);
     setCatPickerOpen(false);
@@ -120,6 +155,7 @@ export default function PantryTab({
   function closePanel(flush = true) {
     if (flush) flushPending();
     clearTimeout(qtyTimer.current);
+    clearTimeout(expTimer.current);
     setOpenId(null);
     openItemRef.current = null;
     setCatPickerOpen(false);
@@ -385,32 +421,58 @@ export default function PantryTab({
                         </div>
                       )}
 
-                      {/* Scadenza: si salva solo con "Salva" — chiudere il
-                          calendario senza confermare non cambia nulla. */}
+                      {/* Scadenza: doppia modalità sincronizzata — calendario
+                          + selettore rapido G/M/A su una riga. Ogni modifica
+                          si salva da sola (toast con Annulla), niente "Salva". */}
                       {expiryEditId === it.id && (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="date"
-                            value={expDraft}
-                            onChange={(e) => setExpDraft(e.target.value)}
-                            className="min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-1.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                            aria-label="Data di scadenza"
-                          />
-                          <button
-                            onClick={() => { onSetExpiry(it, expDraft); setExpiryEditId(null); }}
-                            disabled={!expDraft || expDraft === (it.expiry || "")}
-                            className="shrink-0 rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
-                          >
-                            Salva
-                          </button>
-                          {it.expiry && (
-                            <button
-                              onClick={() => { onSetExpiry(it, ""); setExpiryEditId(null); }}
-                              className="shrink-0 rounded-lg border border-tomato/30 px-3 py-2 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
-                            >
-                              Togli
-                            </button>
-                          )}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={expDraft}
+                              onChange={(e) => scheduleExpiry(e.target.value)}
+                              className="min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-1.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+                              aria-label="Data di scadenza (calendario)"
+                            />
+                            {it.expiry && (
+                              <button
+                                onClick={() => { clearTimeout(expTimer.current); setExpDraft(""); commitExpiryNow(""); setExpiryEditId(null); }}
+                                className="shrink-0 rounded-lg border border-tomato/30 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
+                              >
+                                Togli
+                              </button>
+                            )}
+                          </div>
+                          {(() => {
+                            const base = expDraft || todayIso();
+                            const [yy, mm, dd] = base.split("-");
+                            const groups = [
+                              ["d", dd, "Giorno"],
+                              ["m", mm, "Mese"],
+                              ["y", yy, "Anno"],
+                            ];
+                            return (
+                              <div className="flex items-center justify-between gap-1">
+                                {groups.map(([part, val, label]) => (
+                                  <div key={part} className="flex items-center rounded-lg border border-hair bg-paper">
+                                    <button
+                                      onClick={() => scheduleExpiry(shiftDate(expDraft || todayIso(), part, -1))}
+                                      className="px-2 py-1.5 text-base leading-none text-stone-500 transition hover:text-ink active:scale-90"
+                                      aria-label={`${label} meno`}
+                                    >−</button>
+                                    <span className={`text-center text-sm font-bold tabular-nums text-ink ${part === "y" ? "min-w-[4ch]" : "min-w-[2.5ch]"}`}>
+                                      {val}
+                                    </span>
+                                    <button
+                                      onClick={() => scheduleExpiry(shiftDate(expDraft || todayIso(), part, 1))}
+                                      className="px-2 py-1.5 text-base leading-none text-stone-500 transition hover:text-tomato active:scale-90"
+                                      aria-label={`${label} più`}
+                                    >+</button>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
 
