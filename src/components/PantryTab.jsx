@@ -51,21 +51,6 @@ function nameTone(it, out) {
 // Quantità a riposo: i numeri puri diventano "×3", il resto resta com'è.
 const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}` : q);
 
-// --- Date (formato ISO "YYYY-MM-DD") per il selettore rapido ---
-const pad2 = (n) => String(n).padStart(2, "0");
-function todayIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-}
-// Sposta giorno/mese/anno gestendo i cambi di mese e gli anni bisestili.
-function shiftDate(iso, part, delta) {
-  const d = new Date(`${iso || todayIso()}T00:00:00`);
-  if (isNaN(d.getTime())) return todayIso();
-  if (part === "d") d.setDate(d.getDate() + delta);
-  if (part === "m") d.setMonth(d.getMonth() + delta);
-  if (part === "y") d.setFullYear(d.getFullYear() + delta);
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-}
 
 export default function PantryTab({
   search, setSearch, sort, setSort, onOpenProfile, userInitial,
@@ -416,58 +401,27 @@ export default function PantryTab({
                         </div>
                       )}
 
-                      {/* Scadenza: doppia modalità sincronizzata — calendario
-                          + selettore rapido G/M/A su una riga. Ogni modifica
-                          si salva da sola (toast con Annulla), niente "Salva". */}
+                      {/* Scadenza: solo la vista calendario — la data scelta
+                          si salva da sola (toast con Annulla), niente "Salva".
+                          Il pulsante è "Togli" e diventa "Elimina" dopo una
+                          nuova selezione in questa sessione. */}
                       {expiryEditId === it.id && (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="date"
-                              value={expDraft}
-                              onChange={(e) => scheduleExpiry(e.target.value)}
-                              className="min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-1.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                              aria-label="Data di scadenza (calendario)"
-                            />
-                            {it.expiry && (
-                              <button
-                                onClick={() => { clearTimeout(expTimer.current); setExpDraft(""); commitExpiryNow(""); setExpiryEditId(null); }}
-                                className="shrink-0 rounded-lg border border-tomato/30 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
-                              >
-                                Togli
-                              </button>
-                            )}
-                          </div>
-                          {(() => {
-                            const base = expDraft || todayIso();
-                            const [yy, mm, dd] = base.split("-");
-                            const groups = [
-                              ["d", dd, "Giorno"],
-                              ["m", mm, "Mese"],
-                              ["y", yy, "Anno"],
-                            ];
-                            return (
-                              <div className="flex items-center justify-between gap-1">
-                                {groups.map(([part, val, label]) => (
-                                  <div key={part} className="flex items-center rounded-lg border border-hair bg-paper">
-                                    <button
-                                      onClick={() => scheduleExpiry(shiftDate(expDraft || todayIso(), part, -1))}
-                                      className="px-2 py-1.5 text-base leading-none text-stone-500 transition hover:text-ink active:scale-90"
-                                      aria-label={`${label} meno`}
-                                    >−</button>
-                                    <span className={`text-center text-sm font-bold tabular-nums text-ink ${part === "y" ? "min-w-[4ch]" : "min-w-[2.5ch]"}`}>
-                                      {val}
-                                    </span>
-                                    <button
-                                      onClick={() => scheduleExpiry(shiftDate(expDraft || todayIso(), part, 1))}
-                                      className="px-2 py-1.5 text-base leading-none text-stone-500 transition hover:text-tomato active:scale-90"
-                                      aria-label={`${label} più`}
-                                    >+</button>
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })()}
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="date"
+                            value={expDraft}
+                            onChange={(e) => scheduleExpiry(e.target.value)}
+                            className="min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-1.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+                            aria-label="Data di scadenza"
+                          />
+                          {(it.expiry || expDraft) && (
+                            <button
+                              onClick={() => { clearTimeout(expTimer.current); setExpDraft(""); commitExpiryNow(""); setExpiryEditId(null); }}
+                              className="shrink-0 rounded-lg border border-tomato/30 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
+                            >
+                              {expDraft && expDraft !== (snapRef.current.expiry || "") ? "Elimina" : "Togli"}
+                            </button>
+                          )}
                         </div>
                       )}
 
