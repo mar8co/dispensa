@@ -273,9 +273,9 @@ export default function Dispensa({ session }) {
 
   // Mostra un toast per ~6 secondi, con eventuale azione ("Annulla" di
   // default, oppure un'etichetta personalizzata es. "In lista spesa").
-  function showToast(message, onUndo, actionLabel) {
+  function showToast(message, onUndo, actionLabel, actionTone) {
     clearTimeout(toastTimer.current);
-    setToast({ message, onUndo, actionLabel });
+    setToast({ message, onUndo, actionLabel, actionTone });
     toastTimer.current = setTimeout(() => setToast(null), 6000);
   }
   function dismissToast() {
@@ -435,15 +435,34 @@ export default function Dispensa({ session }) {
     setEditCat(it.category); setEditExpiry(it.expiry || "");
   }
 
-  // Imposta/cambia la scadenza direttamente dal calendario in linea.
-  async function setItemExpiry(it, expiry) {
-    const fields = { expiry: expiry || null };
+  // Salvataggio automatico dal pannello prodotto: aggiorna subito e mostra
+  // il toast "Modifica salvata" con Annulla (ripristina i valori di apertura).
+  async function autoSaveItem(it, fields, restore) {
     setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...fields } : x)));
     try {
       await updateItem(it.id, fields);
     } catch (e) {
-      console.error("Errore scadenza:", e);
+      console.error("Errore salvataggio modifica:", e);
     }
+    // Quantità arrivata a zero: proponi la lista invece del semplice "salvata".
+    const m = fields.qty != null ? String(fields.qty).replace(",", ".").match(/-?\d+(\.\d+)?/) : null;
+    if (m && parseFloat(m[0]) === 0) {
+      showToast(<>Hai finito <strong>{it.name}</strong></>, async () => {
+        await addToShoppingMerged([{ name: it.name, qty: "1" }]);
+        dismissToast();
+      }, "In lista spesa");
+      return;
+    }
+    showToast(<strong>Modifica salvata</strong>, async () => {
+      setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...restore } : x)));
+      try { await updateItem(it.id, restore); } catch (e) { console.error("Errore ripristino:", e); }
+      dismissToast();
+    }, "Annulla", "ink");
+  }
+
+  // Imposta/cambia la scadenza dal pannello (stesso flusso con Annulla).
+  async function setItemExpiry(it, expiry) {
+    await autoSaveItem(it, { expiry: expiry || null }, { expiry: it.expiry || null });
   }
 
   async function saveEdit() {
@@ -1276,11 +1295,7 @@ export default function Dispensa({ session }) {
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} cardRefs={cardRefs}
             onMoveCat={moveCategory}
-            onAdjustQty={adjustItemQty} onSetExpiry={setItemExpiry}
-            editId={editId} editName={editName} setEditName={setEditName}
-            editQty={editQty} setEditQty={setEditQty}
-            editCat={editCat} setEditCat={setEditCat}
-            startEdit={startEdit} saveEdit={saveEdit} setEditId={setEditId} removeItem={removeItem}
+            onAutoSave={autoSaveItem} onSetExpiry={setItemExpiry} removeItem={removeItem}
             expiringCount={expiringItems.length} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
           />
@@ -1429,7 +1444,7 @@ export default function Dispensa({ session }) {
         />
       )}
 
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} />}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} actionTone={toast.actionTone} />}
     </div>
   );
 }

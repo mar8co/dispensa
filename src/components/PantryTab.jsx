@@ -2,9 +2,9 @@
 // righe compatte con puntini di guida (nome ……… quantità), barra
 // salta-reparto e intestazioni fisse durante lo scroll. Toccando un prodotto
 // si aprono lì sotto i comandi: quantità, scadenza, modifica, elimina.
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
-  Trash2, Pencil, Check, X, Search, ShoppingCart, AlertTriangle, ChefHat,
+  Trash2, X, Search, ShoppingCart, AlertTriangle, ChefHat,
   CalendarPlus, SlidersHorizontal, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
@@ -54,27 +54,110 @@ const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}
 export default function PantryTab({
   search, setSearch, sort, setSort, onOpenProfile, userInitial,
   grouped, cardRefs,
-  onMoveCat, onAdjustQty, onSetExpiry,
-  editId, editName, setEditName, editQty, setEditQty, editCat, setEditCat,
-  startEdit, saveEdit, setEditId, removeItem,
+  onMoveCat, onAutoSave, onSetExpiry, removeItem,
   expiringCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping,
 }) {
   const searchActive = search.trim() !== "";
-  const [openId, setOpenId] = useState(null); // prodotto coi comandi aperti
+  const [openId, setOpenId] = useState(null); // pannello prodotto aperto
   const [sortOpen, setSortOpen] = useState(false); // chips ordinamento a comparsa
   // Scadenza: si modifica in una riga dedicata e si salva SOLO con "Salva"
   // (su iOS il date picker, anche chiuso senza scegliere, imposta "oggi").
   const [expiryEditId, setExpiryEditId] = useState(null);
   const [expDraft, setExpDraft] = useState("");
-  // Modulo di modifica compatto: il nome diventa campo solo toccando la
-  // matita; le categorie compaiono come chips toccando l'emoji.
-  const [editNameMode, setEditNameMode] = useState(false);
   const [catPickerOpen, setCatPickerOpen] = useState(false);
 
-  function toggleOpen(id) {
-    setExpiryEditId(null);
-    setOpenId((cur) => (cur === id ? null : id));
+  // --- Pannello prodotto con salvataggio automatico ---
+  // Le modifiche si applicano da sole (nome al blur, quantità con una breve
+  // attesa, categoria al tap) e il toast "Modifica salvata · Annulla"
+  // permette di tornare ai valori di apertura.
+  const [draftName, setDraftName] = useState("");
+  const [qtyDraft, setQtyDraft] = useState("");
+  const panelRef = useRef(null);
+  const openItemRef = useRef(null); // prodotto aperto (com'era all'apertura)
+  const snapRef = useRef({});       // valori originali per "Annulla"
+  const lastRef = useRef({});       // ultimi valori salvati (rileva i cambi)
+  const qtyTimer = useRef(null);
+
+  function commitQtyNow(v) {
+    const it = openItemRef.current;
+    const val = String(v).trim();
+    if (!it || !val || val === String(lastRef.current.qty)) return;
+    lastRef.current.qty = val;
+    onAutoSave(it, { qty: val }, { qty: snapRef.current.qty });
   }
+  function scheduleQty(v) {
+    setQtyDraft(v);
+    clearTimeout(qtyTimer.current);
+    qtyTimer.current = setTimeout(() => commitQtyNow(v), 800);
+  }
+  function commitNameNow() {
+    const it = openItemRef.current;
+    if (!it) return;
+    const val = draftName.trim();
+    if (!val || val === lastRef.current.name) return;
+    const cap = val.charAt(0).toUpperCase() + val.slice(1);
+    lastRef.current.name = cap;
+    setDraftName(cap);
+    onAutoSave(it, { name: cap }, { name: snapRef.current.name });
+  }
+  function flushPending() {
+    clearTimeout(qtyTimer.current);
+    if (!openItemRef.current) return;
+    commitQtyNow(qtyDraft);
+    commitNameNow();
+  }
+  function openPanel(it) {
+    flushPending();
+    setOpenId(it.id);
+    openItemRef.current = it;
+    snapRef.current = { name: it.name, qty: it.qty, category: it.category, expiry: it.expiry };
+    lastRef.current = { name: it.name, qty: it.qty };
+    setDraftName(it.name);
+    setQtyDraft(it.qty);
+    setCatPickerOpen(false);
+    setExpiryEditId(null);
+  }
+  function closePanel(flush = true) {
+    if (flush) flushPending();
+    clearTimeout(qtyTimer.current);
+    setOpenId(null);
+    openItemRef.current = null;
+    setCatPickerOpen(false);
+    setExpiryEditId(null);
+  }
+  function chooseCategory(c) {
+    const it = openItemRef.current;
+    setCatPickerOpen(false);
+    if (!it || c === it.category) return;
+    openItemRef.current = { ...it, category: c };
+    onAutoSave(it, { category: c }, { category: snapRef.current.category });
+  }
+  // Cambio unità: kg e litri partono da 1 (passi 0,25), i grammi da 100
+  // (passi 50), i pezzi restano interi.
+  function applyUnit(u) {
+    let v;
+    if (u === "g") v = "100 g";
+    else if (u === "kg") v = "1 kg";
+    else if (u === "l") v = "1 l";
+    else {
+      const m = String(qtyDraft).replace(",", ".").match(/-?\d+(\.\d+)?/);
+      v = String(Math.max(1, Math.round(m ? parseFloat(m[0]) : 1)));
+    }
+    setQtyDraft(v);
+    clearTimeout(qtyTimer.current);
+    commitQtyNow(v);
+  }
+
+  // Il pannello si chiude toccando un punto qualsiasi fuori da esso.
+  useEffect(() => {
+    if (!openId) return;
+    const onDoc = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) closePanel();
+    };
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId, qtyDraft, draftName]);
 
   // Salta alla categoria: l'offset lascia spazio alla barra fissa.
   function jumpTo(cat) {
@@ -235,50 +318,51 @@ export default function PantryTab({
                 const out = isOut(it);
 
                 // Modifica: nome + categoria, in linea
-                if (editId === it.id) {
-                  const dirty =
-                    editName !== it.name ||
-                    String(editQty) !== String(it.qty) ||
-                    editCat !== it.category;
+                // Pannello prodotto: tutto modificabile, salvataggio automatico.
+                if (openId === it.id) {
+                  const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
                   return (
-                    <li key={it.id} className="-mx-2 my-1 space-y-2 rounded-xl bg-stone-50 p-3">
-                      {/* Riga 1: nome (tap senza modifiche = chiudi; matita = rinomina) + emoji categoria */}
+                    <li key={it.id} ref={panelRef} className="-mx-2 my-1 space-y-2.5 rounded-xl bg-stone-50 p-3">
+                      {/* Riga 1: nome editabile + categoria · calendario · elimina */}
                       <div className="flex items-center gap-1.5">
-                        {editNameMode ? (
-                          <input
-                            autoFocus
-                            className={`${editCls} min-w-0 flex-1`}
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && dirty && saveEdit()}
-                            placeholder="Nome"
-                          />
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => { if (!dirty) setEditId(null); }}
-                              className="min-w-0 flex-1 text-left"
-                            >
-                              <span className="truncate text-[15px] font-bold text-ink">{editName}</span>
-                            </button>
-                            <button
-                              onClick={() => setEditNameMode(true)}
-                              className="shrink-0 rounded-lg p-1.5 text-stone-400 transition hover:text-ink"
-                              aria-label="Rinomina"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                          </>
-                        )}
+                        <input
+                          className={`${editCls} min-w-0 flex-1`}
+                          value={draftName}
+                          onChange={(e) => setDraftName(e.target.value)}
+                          onBlur={commitNameNow}
+                          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                          aria-label="Nome prodotto"
+                        />
                         <button
-                          onClick={() => setCatPickerOpen((v) => !v)}
+                          onClick={() => { setCatPickerOpen((v) => !v); setExpiryEditId(null); }}
                           aria-label="Categoria"
                           title="Categoria"
                           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-base transition ${
                             catPickerOpen ? "border-tomato bg-tomato/5" : "border-hair bg-paper"
                           }`}
                         >
-                          {CAT_ICON[editCat]}
+                          {CAT_ICON[it.category]}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setExpDraft(it.expiry || "");
+                            setCatPickerOpen(false);
+                            setExpiryEditId(expiryEditId === it.id ? null : it.id);
+                          }}
+                          title="Scadenza"
+                          aria-label="Scadenza"
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition ${
+                            it.expiry ? "border-tomato/40 bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-500 hover:text-tomato"
+                          }`}
+                        >
+                          <CalendarPlus className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => { closePanel(false); removeItem(it); }}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+                          aria-label="Elimina"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
 
@@ -288,9 +372,9 @@ export default function PantryTab({
                           {CATEGORIES.map((c) => (
                             <button
                               key={c}
-                              onClick={() => { setEditCat(c); setCatPickerOpen(false); }}
+                              onClick={() => chooseCategory(c)}
                               className={`rounded-full border px-2.5 py-1.5 text-xs font-semibold transition ${
-                                c === editCat
+                                c === it.category
                                   ? "border-tomato bg-tomato text-white"
                                   : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
                               }`}
@@ -301,145 +385,10 @@ export default function PantryTab({
                         </div>
                       )}
 
-                      {/* Riga 2: stepper nudo a sinistra, unità a destra */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-3 px-1">
-                          <button
-                            onClick={() => setEditQty(adjustQty(editQty, -1))}
-                            disabled={atMinQty(editQty)}
-                            className="text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
-                            aria-label="Diminuisci"
-                          >−</button>
-                          <input
-                            className="w-14 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
-                            value={editQty}
-                            onChange={(e) => setEditQty(e.target.value)}
-                            aria-label="Quantità"
-                          />
-                          <button
-                            onClick={() => setEditQty(adjustQty(editQty, 1))}
-                            className="text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
-                            aria-label="Aumenta"
-                          >+</button>
-                        </div>
-                        <div className="flex gap-1">
-                          {(() => {
-                            const STEPS = { "": 1, g: 50, kg: 0.25, l: 0.25 };
-                            const curUnit = String(editQty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
-                            return ["", "g", "kg", "l"].map((u) => {
-                              const active = u === "" ? curUnit === "" : curUnit === u;
-                              return (
-                                <button
-                                  key={u || "pz"}
-                                  onClick={() => {
-                                    // Cambiando unità il numero si aggancia al passo
-                                    const st = STEPS[u];
-                                    const m = String(editQty).replace(",", ".").match(/-?\d+(\.\d+)?/);
-                                    let n = m ? parseFloat(m[0]) : st;
-                                    n = Math.max(st, Math.round(n / st) * st);
-                                    const nStr = String(Math.round(n * 1000) / 1000).replace(".", ",");
-                                    setEditQty(u ? `${nStr} ${u}` : nStr);
-                                  }}
-                                  aria-pressed={active}
-                                  className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
-                                    active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-                                  }`}
-                                >
-                                  {u || "pz"}
-                                </button>
-                              );
-                            });
-                          })()}
-                        </div>
-                      </div>
-
-                      {/* Salva/Annulla: compaiono solo se hai modificato qualcosa */}
-                      {dirty && (
-                        <div className="animate-fade-in flex gap-2 pt-0.5">
-                          <button onClick={saveEdit} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-ink px-2 py-2 text-xs font-semibold text-white hover:opacity-90">
-                            <Check className="h-3.5 w-3.5" /> Salva
-                          </button>
-                          <button onClick={() => setEditId(null)} className="flex items-center justify-center rounded-lg border border-hair px-2.5 text-stone-500 hover:bg-stone-100" aria-label="Annulla">
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    </li>
-                  );
-                }
-
-                // Espanso: comandi sotto il prodotto toccato
-                if (openId === it.id) {
-                  return (
-                    <li key={it.id} className="-mx-2 my-1 rounded-xl bg-stone-50 p-3">
-                      <button onClick={() => toggleOpen(it.id)} className="flex w-full items-center gap-2 text-left">
-                        <span className={`min-w-0 truncate text-[15px] font-bold ${nameTone(it, out)}`}>{it.name}</span>
-                        <ExpiryBadge date={it.expiry} />
-                      </button>
-                      {out && (
-                        <button
-                          onClick={() => onToShopping(it)}
-                          className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-bold text-tomato transition hover:bg-tomato/20"
-                        >
-                          <ShoppingCart className="h-3 w-3" /> finito · metti in lista
-                        </button>
-                      )}
-                      <div className="mt-2.5 flex items-center justify-between gap-2">
-                        {/\d/.test(it.qty) ? (
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => onAdjustQty(it, -1)}
-                              disabled={out}
-                              className={`flex h-8 w-8 items-center justify-center rounded-full border text-base leading-none transition ${
-                                out ? "border-hair text-stone-300" : "border-stone-300 text-stone-600 hover:border-ink hover:text-ink active:scale-95"
-                              }`}
-                              aria-label="Diminuisci"
-                            >−</button>
-                            <span className="min-w-[2.5rem] text-center text-sm font-bold tabular-nums text-ink">{it.qty}</span>
-                            <button
-                              onClick={() => onAdjustQty(it, 1)}
-                              className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 text-base leading-none text-stone-600 transition hover:border-tomato hover:text-tomato active:scale-95"
-                              aria-label="Aumenta"
-                            >+</button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-stone-500">{it.qty}</span>
-                        )}
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={() => {
-                              setExpDraft(it.expiry || "");
-                              setExpiryEditId(expiryEditId === it.id ? null : it.id);
-                            }}
-                            title="Scadenza"
-                            aria-label="Scadenza"
-                            className={`flex h-8 w-8 items-center justify-center rounded-lg border transition ${
-                              it.expiry ? "border-tomato/40 bg-tomato/5 text-tomato" : "border-hair text-stone-500 hover:text-tomato"
-                            }`}
-                          >
-                            <CalendarPlus className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => { startEdit(it); setEditNameMode(false); setCatPickerOpen(false); }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-hair text-stone-500 transition hover:bg-stone-100 hover:text-ink"
-                            aria-label="Modifica"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => { setOpenId(null); removeItem(it); }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-hair text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
-                            aria-label="Elimina"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-
                       {/* Scadenza: si salva solo con "Salva" — chiudere il
                           calendario senza confermare non cambia nulla. */}
                       {expiryEditId === it.id && (
-                        <div className="mt-2.5 flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <input
                             type="date"
                             value={expDraft}
@@ -464,6 +413,55 @@ export default function PantryTab({
                           )}
                         </div>
                       )}
+
+                      {out && (
+                        <button
+                          onClick={() => onToShopping(it)}
+                          className="inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-bold text-tomato transition hover:bg-tomato/20"
+                        >
+                          <ShoppingCart className="h-3 w-3" /> finito · metti in lista
+                        </button>
+                      )}
+
+                      {/* Riga 2: stepper nudo a sinistra, unità a destra */}
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-3 px-1">
+                          <button
+                            onClick={() => scheduleQty(adjustQty(qtyDraft, -1))}
+                            disabled={out}
+                            className="text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
+                            aria-label="Diminuisci"
+                          >−</button>
+                          <input
+                            className="w-16 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
+                            value={qtyDraft}
+                            onChange={(e) => scheduleQty(e.target.value)}
+                            aria-label="Quantità"
+                          />
+                          <button
+                            onClick={() => scheduleQty(adjustQty(qtyDraft, 1))}
+                            className="text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
+                            aria-label="Aumenta"
+                          >+</button>
+                        </div>
+                        <div className="flex gap-1">
+                          {["", "g", "kg", "l"].map((u) => {
+                            const active = u === "" ? curUnit === "" : curUnit === u;
+                            return (
+                              <button
+                                key={u || "pz"}
+                                onClick={() => applyUnit(u)}
+                                aria-pressed={active}
+                                className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
+                                  active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+                                }`}
+                              >
+                                {u || "pz"}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </li>
                   );
                 }
@@ -472,7 +470,7 @@ export default function PantryTab({
                 return (
                   <li key={it.id}>
                     <button
-                      onClick={() => toggleOpen(it.id)}
+                      onClick={() => openPanel(it)}
                       className="flex w-full items-baseline gap-2 py-[7px] text-left"
                     >
                       <span className={`min-w-0 truncate text-[15px] font-semibold ${nameTone(it, out)}`}>{it.name}</span>
