@@ -8,21 +8,18 @@ import {
   Share2, Lightbulb, Mic, X,
 } from "lucide-react";
 import { CATEGORIES, CAT_ICON, AISLE_ORDER } from "../constants.js";
-import { norm, atMinQty } from "../lib/pantry.js";
+import { norm, atMinQty, adjustQty } from "../lib/pantry.js";
 
 const editCls =
-  "w-full rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
+  "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
 // Riga con gesto di scorrimento orizzontale per eliminare; toccando il nome
-// si modificano nome e reparto.
-function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
+// si apre il pannello di modifica (gestito da ShoppingTab).
+function SwipeItem({ it, onToggle, onAdjustQty, onDelete, onStartEdit }) {
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [out, setOut] = useState(false);       // fase 1: scivola fuori dallo schermo
   const [removing, setRemoving] = useState(false); // fase 2: la riga si richiude
-  const [editing, setEditing] = useState(false);
-  const [eName, setEName] = useState("");
-  const [eCat, setECat] = useState(category);
   const start = useRef(null);
   const axis = useRef(null);
   const THRESHOLD = 80;
@@ -63,43 +60,7 @@ function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
     axis.current = null;
   }
 
-  function startEdit() {
-    setEName(it.name);
-    setECat(category);
-    setEditing(true);
-  }
-  function saveEdit() {
-    onEdit(it, eName, eCat);
-    setEditing(false);
-  }
-
   const atMin = atMinQty(it.qty);
-
-  if (editing) {
-    return (
-      <li data-noswipe className="space-y-2 py-3">
-        <input
-          autoFocus
-          className={editCls}
-          value={eName}
-          onChange={(e) => setEName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-          placeholder="Nome"
-        />
-        <div className="flex gap-2">
-          <select className={`${editCls} flex-1`} value={eCat} onChange={(e) => setECat(e.target.value)}>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{CAT_ICON[c]} {c}</option>)}
-          </select>
-          <button onClick={saveEdit} className="flex items-center justify-center rounded-xl bg-ink px-3.5 text-white hover:opacity-90" aria-label="Salva">
-            <Check className="h-4 w-4" />
-          </button>
-          <button onClick={() => setEditing(false)} className="flex items-center justify-center rounded-xl border border-hair px-3.5 text-stone-500 hover:bg-stone-50" aria-label="Annulla">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      </li>
-    );
-  }
 
   return (
     <li
@@ -143,7 +104,7 @@ function SwipeItem({ it, category, onToggle, onAdjustQty, onDelete, onEdit }) {
         </button>
         {/* Tap sul nome = modifica; la spunta si fa col quadratino a sinistra */}
         <p
-          onClick={startEdit}
+          onClick={() => onStartEdit(it)}
           title="Tocca per modificare"
           className={`min-w-0 flex-1 cursor-pointer truncate text-[15px] font-semibold ${it.checked ? "text-stone-400 line-through" : "text-ink"}`}
         >
@@ -184,7 +145,7 @@ export default function ShoppingTab({
   shopping,
   onAdd, onToggle, onDelete, onAdjustQty, onToggleAll, onMoveChecked, onClearChecked,
   movingChecked, byAisle, setByAisle,
-  catFor, onEdit, onOpenVoice, onNotify, historyNames, pantryNames,
+  catFor, onAutoSave, onOpenVoice, onNotify, historyNames, pantryNames,
 }) {
   const [name, setName] = useState(""); // campo di inserimento in linea
   const inputRef = useRef(null);
@@ -229,6 +190,186 @@ export default function ShoppingTab({
       setShowHint(false);
     }
     onDelete(id);
+  }
+
+  // --- Pannello di modifica (come quello della dispensa, senza scadenze) ---
+  // Salvataggio automatico: nome al blur, quantità con breve attesa,
+  // reparto al tap; si chiude toccando fuori.
+  const [editId, setEditId] = useState(null);
+  const [draftName, setDraftName] = useState("");
+  const [qtyDraft, setQtyDraft] = useState("");
+  const [catPickerOpen, setCatPickerOpen] = useState(false);
+  const panelRef = useRef(null);
+  const openItemRef = useRef(null);
+  const snapRef = useRef({});
+  const lastRef = useRef({});
+  const qtyTimer = useRef(null);
+
+  function commitQtyNow(v) {
+    const it = openItemRef.current;
+    const val = String(v).trim();
+    if (!it || !val || val === String(lastRef.current.qty)) return;
+    lastRef.current.qty = val;
+    onAutoSave(it, { qty: val }, { qty: snapRef.current.qty });
+  }
+  function scheduleQty(v) {
+    setQtyDraft(v);
+    clearTimeout(qtyTimer.current);
+    qtyTimer.current = setTimeout(() => commitQtyNow(v), 800);
+  }
+  function commitNameNow() {
+    const it = openItemRef.current;
+    if (!it) return;
+    const val = draftName.trim();
+    if (!val || val === lastRef.current.name) return;
+    const cap = val.charAt(0).toUpperCase() + val.slice(1);
+    lastRef.current.name = cap;
+    setDraftName(cap);
+    onAutoSave(it, { name: cap }, { name: snapRef.current.name });
+  }
+  function flushEdit() {
+    clearTimeout(qtyTimer.current);
+    if (!openItemRef.current) return;
+    commitQtyNow(qtyDraft);
+    commitNameNow();
+  }
+  function openEdit(it) {
+    flushEdit();
+    setEditId(it.id);
+    openItemRef.current = it;
+    snapRef.current = { name: it.name, qty: it.qty, category: catFor(it.name) };
+    lastRef.current = { name: it.name, qty: it.qty };
+    setDraftName(it.name);
+    setQtyDraft(it.qty);
+    setCatPickerOpen(false);
+  }
+  function closeEdit(flush = true) {
+    if (flush) flushEdit();
+    clearTimeout(qtyTimer.current);
+    setEditId(null);
+    openItemRef.current = null;
+    setCatPickerOpen(false);
+  }
+  function chooseCategory(c) {
+    const it = openItemRef.current;
+    setCatPickerOpen(false);
+    if (!it || c === catFor(it.name)) return;
+    onAutoSave(it, { category: c }, { category: snapRef.current.category });
+  }
+  // Cambio unità: la quantità si resetta sempre al default dell'unità.
+  function applyUnit(u) {
+    const DEFAULTS = { "": "1", g: "100 g", kg: "1 kg", l: "1 l" };
+    const v = DEFAULTS[u] ?? "1";
+    setQtyDraft(v);
+    clearTimeout(qtyTimer.current);
+    commitQtyNow(v);
+  }
+
+  // Il pannello si chiude toccando un punto qualsiasi fuori da esso.
+  useEffect(() => {
+    if (!editId) return;
+    const onDoc = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) closeEdit();
+    };
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId, qtyDraft, draftName]);
+
+  function renderEditPanel(it) {
+    const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
+    return (
+      <li key={it.id} ref={panelRef} className="-mx-1 my-1 space-y-2.5 rounded-xl bg-stone-50 p-3">
+        {/* Riga 1: nome editabile + reparto · elimina */}
+        <div className="flex items-center gap-1.5">
+          <input
+            className={`${editCls} min-w-0 flex-1`}
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            onBlur={commitNameNow}
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            aria-label="Nome prodotto"
+          />
+          <button
+            onClick={() => setCatPickerOpen((v) => !v)}
+            aria-label="Reparto"
+            title="Reparto"
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-base transition ${
+              catPickerOpen ? "border-tomato bg-tomato/5" : "border-hair bg-paper"
+            }`}
+          >
+            {CAT_ICON[catFor(it.name)]}
+          </button>
+          <button
+            onClick={() => { closeEdit(false); handleDelete(it.id); }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+            aria-label="Elimina"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Reparti come chips: un solo tap per scegliere */}
+        {catPickerOpen && (
+          <div className="animate-fade-in flex flex-wrap gap-1.5">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c}
+                onClick={() => chooseCategory(c)}
+                className={`rounded-full border px-2.5 py-1.5 text-xs font-semibold transition ${
+                  c === catFor(it.name)
+                    ? "border-tomato bg-tomato text-white"
+                    : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
+                }`}
+              >
+                {CAT_ICON[c]} {c}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Riga 2: stepper nudo a sinistra, unità a destra */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3 px-1">
+            <button
+              onClick={() => scheduleQty(adjustQty(qtyDraft, -1))}
+              disabled={atMinQty(qtyDraft)}
+              className="text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
+              aria-label="Diminuisci"
+            >−</button>
+            <input
+              inputMode="decimal"
+              className="w-16 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
+              value={qtyDraft}
+              onChange={(e) => scheduleQty(e.target.value)}
+              aria-label="Quantità"
+            />
+            <button
+              onClick={() => scheduleQty(adjustQty(qtyDraft, 1))}
+              className="text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
+              aria-label="Aumenta"
+            >+</button>
+          </div>
+          <div className="flex gap-1">
+            {["", "g", "kg", "l"].map((u) => {
+              const active = u === "" ? curUnit === "" : curUnit === u;
+              return (
+                <button
+                  key={u || "pz"}
+                  onClick={() => applyUnit(u)}
+                  aria-pressed={active}
+                  className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
+                    active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+                  }`}
+                >
+                  {u || "pz"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </li>
+    );
   }
 
   // --- Inserimento in linea: i nuovi prodotti appaiono subito qui sotto ---
@@ -281,12 +422,16 @@ export default function ShoppingTab({
     .filter((g) => g.list.length > 0);
 
   const renderItems = (list) =>
-    list.map((it) => (
-      <SwipeItem
-        key={it.id} it={it} category={catFor(it.name)}
-        onToggle={onToggle} onAdjustQty={onAdjustQty} onDelete={handleDelete} onEdit={onEdit}
-      />
-    ));
+    list.map((it) =>
+      editId === it.id ? (
+        renderEditPanel(it)
+      ) : (
+        <SwipeItem
+          key={it.id} it={it}
+          onToggle={onToggle} onAdjustQty={onAdjustQty} onDelete={handleDelete} onStartEdit={openEdit}
+        />
+      )
+    );
 
   return (
     <div className="pt-2">

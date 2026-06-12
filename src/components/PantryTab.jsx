@@ -359,20 +359,29 @@ export default function PantryTab({
                         >
                           {CAT_ICON[it.category]}
                         </button>
-                        <button
+                        {/* Il tap sull'icona apre SUBITO il calendario nativo
+                            (input invisibile sopra l'icona, clippato per non
+                            rubare i tap ai bottoni accanto su iOS). */}
+                        <label
                           onClick={() => {
                             setExpDraft(it.expiry || "");
                             setCatPickerOpen(false);
-                            setExpiryEditId(expiryEditId === it.id ? null : it.id);
+                            setExpiryEditId(it.id);
                           }}
                           title="Scadenza"
-                          aria-label="Scadenza"
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition ${
+                          className={`relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border transition ${
                             it.expiry ? "border-tomato/40 bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-500 hover:text-tomato"
                           }`}
                         >
                           <CalendarPlus className="h-4 w-4" />
-                        </button>
+                          <input
+                            type="date"
+                            value={it.expiry || ""}
+                            onChange={(e) => { setExpiryEditId(it.id); scheduleExpiry(e.target.value); }}
+                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                            aria-label="Scadenza"
+                          />
+                        </label>
                         <button
                           onClick={() => { closePanel(false); removeItem(it); }}
                           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"

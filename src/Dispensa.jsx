@@ -273,10 +273,10 @@ export default function Dispensa({ session }) {
 
   // Mostra un toast per ~6 secondi, con eventuale azione ("Annulla" di
   // default, oppure un'etichetta personalizzata es. "In lista spesa").
-  function showToast(message, onUndo, actionLabel, actionTone) {
+  function showToast(message, onUndo, actionLabel, actionTone, duration = 6000) {
     clearTimeout(toastTimer.current);
     setToast({ message, onUndo, actionLabel, actionTone });
-    toastTimer.current = setTimeout(() => setToast(null), 6000);
+    toastTimer.current = setTimeout(() => setToast(null), duration);
   }
   function dismissToast() {
     clearTimeout(toastTimer.current);
@@ -569,18 +569,29 @@ export default function Dispensa({ session }) {
     return { merged: res.merged > 0 };
   }
 
-  // Modifica nome e reparto di un articolo: il reparto scelto a mano viene
-  // ricordato nelle impostazioni (per nome) e sincronizzato tra dispositivi.
-  async function editShoppingItem(it, name, category) {
-    let newName = String(name || "").trim() || it.name;
-    newName = newName.charAt(0).toUpperCase() + newName.slice(1); // maiuscola
-    try {
-      if (newName !== it.name) await updateShopping(it.id, { name: newName });
-      setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, name: newName } : x)));
-      if (CATEGORIES.includes(category)) {
-        setShopCats((prev) => ({ ...prev, [norm(newName)]: category }));
+  // Salvataggio automatico dal pannello di modifica della spesa (come quello
+  // della dispensa): nome/quantità sul DB, reparto nelle impostazioni;
+  // toast "Modifica salvata" con Annulla che ripristina i valori di apertura.
+  async function autoSaveShopping(it, fields, restore) {
+    const { category, ...rowFields } = fields;
+    if (Object.keys(rowFields).length) {
+      setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...rowFields } : x)));
+      try { await updateShopping(it.id, rowFields); } catch (e) { console.error("Errore salvataggio spesa:", e); }
+    }
+    if (CATEGORIES.includes(category)) {
+      setShopCats((prev) => ({ ...prev, [norm(rowFields.name ?? it.name)]: category }));
+    }
+    showToast(<strong>Modifica salvata</strong>, async () => {
+      const { category: prevCat, ...prevRow } = restore;
+      if (Object.keys(prevRow).length) {
+        setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...prevRow } : x)));
+        try { await updateShopping(it.id, prevRow); } catch (e) { console.error("Errore ripristino spesa:", e); }
       }
-    } catch (e) { console.error("Errore modifica spesa:", e); }
+      if (CATEGORIES.includes(prevCat)) {
+        setShopCats((prev) => ({ ...prev, [norm(prevRow.name ?? it.name)]: prevCat }));
+      }
+      dismissToast();
+    }, "Annulla", "ink");
   }
 
   // Aggiunta a voce per la spesa: estrae i prodotti dalla frase e li
@@ -613,7 +624,7 @@ export default function Dispensa({ session }) {
   async function toggleShoppingItem(id, checked) {
     if (checked) {
       const it = shopping.find((x) => x.id === id);
-      if (it) showToast(<><strong>{it.name}</strong> spostato nel carrello</>);
+      if (it) showToast(<><strong>{it.name}</strong> spostato nel carrello</>, undefined, undefined, undefined, 3500);
     }
     setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
     try { await updateShopping(id, { checked }); }
@@ -1338,7 +1349,7 @@ export default function Dispensa({ session }) {
             movingChecked={movingChecked}
             byAisle={byAisle} setByAisle={setByAisle}
             catFor={catForShopping}
-            onEdit={editShoppingItem}
+            onAutoSave={autoSaveShopping}
             onOpenVoice={() => setShopVoiceOpen(true)}
             onNotify={showToast}
             historyNames={sortedNames(shopHist)}
