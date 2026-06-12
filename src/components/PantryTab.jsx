@@ -66,6 +66,10 @@ export default function PantryTab({
   // (su iOS il date picker, anche chiuso senza scegliere, imposta "oggi").
   const [expiryEditId, setExpiryEditId] = useState(null);
   const [expDraft, setExpDraft] = useState("");
+  // Modulo di modifica compatto: il nome diventa campo solo toccando la
+  // matita; le categorie compaiono come chips toccando l'emoji.
+  const [editNameMode, setEditNameMode] = useState(false);
+  const [catPickerOpen, setCatPickerOpen] = useState(false);
 
   function toggleOpen(id) {
     setExpiryEditId(null);
@@ -232,76 +236,134 @@ export default function PantryTab({
 
                 // Modifica: nome + categoria, in linea
                 if (editId === it.id) {
+                  const dirty =
+                    editName !== it.name ||
+                    String(editQty) !== String(it.qty) ||
+                    editCat !== it.category;
                   return (
                     <li key={it.id} className="-mx-2 my-1 space-y-2 rounded-xl bg-stone-50 p-3">
-                      <input
-                        autoFocus
-                        className={editCls}
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                        placeholder="Nome"
-                      />
-                      {/* Quantità: −/+ a passi (pz 1 · g 50 · kg/l 0,25) + chips unità */}
-                      <div className="flex flex-wrap items-center gap-1.5">
+                      {/* Riga 1: nome (tap senza modifiche = chiudi; matita = rinomina) + emoji categoria */}
+                      <div className="flex items-center gap-1.5">
+                        {editNameMode ? (
+                          <input
+                            autoFocus
+                            className={`${editCls} min-w-0 flex-1`}
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && dirty && saveEdit()}
+                            placeholder="Nome"
+                          />
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => { if (!dirty) setEditId(null); }}
+                              className="min-w-0 flex-1 text-left"
+                            >
+                              <span className="truncate text-[15px] font-bold text-ink">{editName}</span>
+                            </button>
+                            <button
+                              onClick={() => setEditNameMode(true)}
+                              className="shrink-0 rounded-lg p-1.5 text-stone-400 transition hover:text-ink"
+                              aria-label="Rinomina"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
                         <button
-                          onClick={() => setEditQty(adjustQty(editQty, -1))}
-                          disabled={atMinQty(editQty)}
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone-300 text-base leading-none text-stone-600 transition hover:border-ink hover:text-ink active:scale-95 disabled:border-hair disabled:text-stone-300"
-                          aria-label="Diminuisci"
-                        >−</button>
-                        <input
-                          className={`${editCls} w-16 shrink-0 text-center font-bold`}
-                          value={editQty}
-                          onChange={(e) => setEditQty(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                          placeholder="Qtà"
-                          aria-label="Quantità"
-                        />
-                        <button
-                          onClick={() => setEditQty(adjustQty(editQty, 1))}
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone-300 text-base leading-none text-stone-600 transition hover:border-tomato hover:text-tomato active:scale-95"
-                          aria-label="Aumenta"
-                        >+</button>
-                        {(() => {
-                          const STEPS = { "": 1, g: 50, kg: 0.25, l: 0.25 };
-                          const curUnit = String(editQty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
-                          return ["", "g", "kg", "l"].map((u) => {
-                            const active = u === "" ? curUnit === "" : curUnit === u;
-                            return (
-                              <button
-                                key={u || "pz"}
-                                onClick={() => {
-                                  // Cambiando unità il numero si aggancia al passo
-                                  const st = STEPS[u];
-                                  const m = String(editQty).replace(",", ".").match(/-?\d+(\.\d+)?/);
-                                  let n = m ? parseFloat(m[0]) : st;
-                                  n = Math.max(st, Math.round(n / st) * st);
-                                  const nStr = String(Math.round(n * 1000) / 1000).replace(".", ",");
-                                  setEditQty(u ? `${nStr} ${u}` : nStr);
-                                }}
-                                aria-pressed={active}
-                                className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
-                                  active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-                                }`}
-                              >
-                                {u || "pz"}
-                              </button>
-                            );
-                          });
-                        })()}
-                      </div>
-                      <select className={editCls} value={editCat} onChange={(e) => setEditCat(e.target.value)}>
-                        {CATEGORIES.map((c) => <option key={c} value={c}>{CAT_ICON[c]} {c}</option>)}
-                      </select>
-                      <div className="flex gap-2">
-                        <button onClick={saveEdit} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-ink px-2 py-2 text-xs font-semibold text-white hover:opacity-90">
-                          <Check className="h-3.5 w-3.5" /> Salva
-                        </button>
-                        <button onClick={() => setEditId(null)} className="flex items-center justify-center rounded-lg border border-hair px-2.5 text-stone-500 hover:bg-stone-100" aria-label="Annulla">
-                          <X className="h-4 w-4" />
+                          onClick={() => setCatPickerOpen((v) => !v)}
+                          aria-label="Categoria"
+                          title="Categoria"
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-base transition ${
+                            catPickerOpen ? "border-tomato bg-tomato/5" : "border-hair bg-paper"
+                          }`}
+                        >
+                          {CAT_ICON[editCat]}
                         </button>
                       </div>
+
+                      {/* Categorie come chips: un solo tap per scegliere */}
+                      {catPickerOpen && (
+                        <div className="animate-fade-in flex flex-wrap gap-1.5">
+                          {CATEGORIES.map((c) => (
+                            <button
+                              key={c}
+                              onClick={() => { setEditCat(c); setCatPickerOpen(false); }}
+                              className={`rounded-full border px-2.5 py-1.5 text-xs font-semibold transition ${
+                                c === editCat
+                                  ? "border-tomato bg-tomato text-white"
+                                  : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
+                              }`}
+                            >
+                              {CAT_ICON[c]} {c}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Riga 2: stepper nudo a sinistra, unità a destra */}
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-3 px-1">
+                          <button
+                            onClick={() => setEditQty(adjustQty(editQty, -1))}
+                            disabled={atMinQty(editQty)}
+                            className="text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
+                            aria-label="Diminuisci"
+                          >−</button>
+                          <input
+                            className="w-14 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
+                            value={editQty}
+                            onChange={(e) => setEditQty(e.target.value)}
+                            aria-label="Quantità"
+                          />
+                          <button
+                            onClick={() => setEditQty(adjustQty(editQty, 1))}
+                            className="text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
+                            aria-label="Aumenta"
+                          >+</button>
+                        </div>
+                        <div className="flex gap-1">
+                          {(() => {
+                            const STEPS = { "": 1, g: 50, kg: 0.25, l: 0.25 };
+                            const curUnit = String(editQty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
+                            return ["", "g", "kg", "l"].map((u) => {
+                              const active = u === "" ? curUnit === "" : curUnit === u;
+                              return (
+                                <button
+                                  key={u || "pz"}
+                                  onClick={() => {
+                                    // Cambiando unità il numero si aggancia al passo
+                                    const st = STEPS[u];
+                                    const m = String(editQty).replace(",", ".").match(/-?\d+(\.\d+)?/);
+                                    let n = m ? parseFloat(m[0]) : st;
+                                    n = Math.max(st, Math.round(n / st) * st);
+                                    const nStr = String(Math.round(n * 1000) / 1000).replace(".", ",");
+                                    setEditQty(u ? `${nStr} ${u}` : nStr);
+                                  }}
+                                  aria-pressed={active}
+                                  className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
+                                    active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+                                  }`}
+                                >
+                                  {u || "pz"}
+                                </button>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Salva/Annulla: compaiono solo se hai modificato qualcosa */}
+                      {dirty && (
+                        <div className="animate-fade-in flex gap-2 pt-0.5">
+                          <button onClick={saveEdit} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-ink px-2 py-2 text-xs font-semibold text-white hover:opacity-90">
+                            <Check className="h-3.5 w-3.5" /> Salva
+                          </button>
+                          <button onClick={() => setEditId(null)} className="flex items-center justify-center rounded-lg border border-hair px-2.5 text-stone-500 hover:bg-stone-100" aria-label="Annulla">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </li>
                   );
                 }
@@ -358,7 +420,7 @@ export default function PantryTab({
                             <CalendarPlus className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => startEdit(it)}
+                            onClick={() => { startEdit(it); setEditNameMode(false); setCatPickerOpen(false); }}
                             className="flex h-8 w-8 items-center justify-center rounded-lg border border-hair text-stone-500 transition hover:bg-stone-100 hover:text-ink"
                             aria-label="Modifica"
                           >
