@@ -103,7 +103,7 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
                             </button>
                             <input
                               inputMode="decimal"
-                              className="w-16 border-0 bg-transparent text-center text-sm font-bold tabular-nums text-ink outline-none"
+                              className="w-12 border-0 bg-transparent text-center text-sm font-bold tabular-nums text-ink outline-none"
                               value={it.qty}
                               onChange={(e) => update(it.id, "qty", e.target.value)}
                               aria-label="Quantità"
@@ -116,16 +116,35 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
                               <Plus className="h-3.5 w-3.5" />
                             </button>
                           </div>
-                          <select
-                            className={`${fieldCls} min-w-0 flex-1`}
-                            value={it.category}
-                            onChange={(e) => update(it.id, "category", e.target.value)}
-                          >
-                            {CATEGORIES.map((c) => (
-                              <option key={c} value={c}>{CAT_ICON[c]} {c}</option>
-                            ))}
-                          </select>
+                          {/* Unità: come nel resto dell'app (cambio = reset al default) */}
+                          <div className="flex shrink-0 gap-1">
+                            {["", "g", "kg", "l"].map((u) => {
+                              const cur = String(it.qty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
+                              const active = u === "" ? cur === "" : cur === u;
+                              return (
+                                <button
+                                  key={u || "pz"}
+                                  onClick={() => update(it.id, "qty", { "": "1", g: "100 g", kg: "1 kg", l: "1 l" }[u])}
+                                  aria-pressed={active}
+                                  className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
+                                    active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+                                  }`}
+                                >
+                                  {u || "pz"}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
+                        <select
+                          className={`${fieldCls} mt-2 w-full`}
+                          value={it.category}
+                          onChange={(e) => update(it.id, "category", e.target.value)}
+                        >
+                          {CATEGORIES.map((c) => (
+                            <option key={c} value={c}>{CAT_ICON[c]} {c}</option>
+                          ))}
+                        </select>
                       </li>
                     ))}
                   </ul>

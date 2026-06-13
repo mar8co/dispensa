@@ -42,6 +42,8 @@ import Toast from "./components/Toast.jsx";
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
 // solo quando si apre la scansione del codice a barre.
 const BarcodeScanModal = lazy(() => import("./components/BarcodeScanModal.jsx"));
+// Anche la fotocamera integrata per lo scontrino è on-demand (usa getUserMedia).
+const ReceiptScanModal = lazy(() => import("./components/ReceiptScanModal.jsx"));
 
 // Applica un cambio di vista dentro una View Transition del browser
 // (dissolvenza nativa tra schermate); dove l'API manca, applica e basta.
@@ -107,6 +109,7 @@ export default function Dispensa({ session }) {
 
   // scontrino
   const [processing, setProcessing] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false); // fotocamera integrata scontrino
   const [scanOpen, setScanOpen] = useState(false);
   const [scanItems, setScanItems] = useState([]);
   const [barcodeOpen, setBarcodeOpen] = useState(false);
@@ -784,16 +787,16 @@ export default function Dispensa({ session }) {
   }
 
   // --- Scontrino ---
-  async function handleReceipt(e) {
-    const input = e.target;
-    const file = input.files?.[0];
-    if (!file) return;
+  // L'immagine arriva già come base64 (scattata dalla fotocamera integrata o
+  // scelta dalla galleria nel ReceiptScanModal). Mostra l'overlay di analisi,
+  // poi apre la revisione.
+  async function analyzeReceipt(data64, mediaType) {
+    setReceiptOpen(false);
+    if (!data64) return;
     setProcessing(true);
     try {
-      const data64 = await fileToBase64(file);
-      const media_type = file.type || "image/jpeg";
       const parsed = await callClaude([
-        { type: "image", source: { type: "base64", media_type, data: data64 } },
+        { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: data64 } },
         { type: "text", text: RECEIPT_PROMPT },
       ], 1000);
       const list = Array.isArray(parsed.items) ? parsed.items : [];
@@ -808,7 +811,6 @@ export default function Dispensa({ session }) {
       showToast("Impossibile leggere l'immagine. Riprova con una foto più nitida.");
     } finally {
       setProcessing(false);
-      input.value = "";
     }
   }
 
@@ -1366,14 +1368,38 @@ export default function Dispensa({ session }) {
           menuOpen={addMenuOpen}
           setMenuOpen={setAddMenuOpen}
           onManual={() => setManualOpen(true)}
-          onPhoto={() => fileInputRef.current?.click()}
+          onPhoto={() => setReceiptOpen(true)}
           onBarcode={() => setBarcodeOpen(true)}
           onVoice={() => setVoiceOpen(true)}
         />
       )}
 
-      {/* Input nascosto per la foto (azionato dal menù +) */}
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleReceipt} />
+      {/* Fotocamera integrata per lo scontrino (anteprima live + galleria) */}
+      {receiptOpen && (
+        <Suspense fallback={null}>
+          <ReceiptScanModal
+            onClose={() => setReceiptOpen(false)}
+            onCapture={analyzeReceipt}
+          />
+        </Suspense>
+      )}
+
+      {/* Overlay di analisi: copre il momento di attesa dell'AI */}
+      {processing && (
+        <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-5 bg-cream/95 px-10 text-center backdrop-blur">
+          <div className="relative flex h-24 w-24 items-center justify-center">
+            <span className="absolute inset-0 animate-ping rounded-2xl bg-tomato/15" />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-tomato/10 text-5xl">🧾</div>
+          </div>
+          <Loader2 className="h-5 w-5 animate-spin text-tomato" />
+          <div>
+            <p className="font-display text-xl font-extrabold tracking-tight text-ink">Sto analizzando lo scontrino…</p>
+            <p className="mx-auto mt-1.5 max-w-xs text-sm text-stone-500">
+              Identifico i prodotti e li aggiungo automaticamente alla tua lista.
+            </p>
+          </div>
+        </div>
+      )}
 
       {manualOpen && (
         <ManualAddModal

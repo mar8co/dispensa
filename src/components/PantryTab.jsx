@@ -330,10 +330,8 @@ export default function PantryTab({
                 <button
                   key={cat}
                   onClick={() => jumpTo(cat)}
-                  // Aperto: chip grandi e ariose; chiuso: compatte per la barra sticky.
-                  className={`shrink-0 rounded-full border border-hair bg-paper font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato ${
-                    catsExpanded ? "px-4 py-2.5 text-sm" : "px-3 py-1.5 text-xs"
-                  }`}
+                  // Stessa misura sia nella barra scorrevole sia nel menù aperto.
+                  className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
                 >
                   {CAT_ICON[cat]} {cat}
                 </button>

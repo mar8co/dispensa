@@ -487,7 +487,10 @@ export default function ShoppingTab({
           </div>
           {name.trim() ? (
             <button
-              onClick={() => add()}
+              // pointerdown + preventDefault: aggiunge come "Invio" senza far
+              // perdere il focus all'input — la tastiera resta aperta per il
+              // prodotto successivo.
+              onPointerDown={(e) => { e.preventDefault(); add(); }}
               className="flex h-11 shrink-0 items-center justify-center rounded-full bg-tomato px-4 text-xs font-bold text-white shadow-lg shadow-tomato/30 transition hover:bg-tomato-700 active:scale-95"
             >
               Aggiungi
