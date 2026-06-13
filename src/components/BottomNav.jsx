@@ -28,7 +28,7 @@ export default function BottomNav({ view, setView, shoppingCount }) {
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-40 px-3"
-      style={{ paddingBottom: "calc(8px + env(safe-area-inset-bottom))" }}
+      style={{ paddingBottom: "calc(3px + env(safe-area-inset-bottom))" }}
     >
       <div className="mx-auto flex max-w-md items-center justify-around rounded-[26px] border border-hair bg-cream/90 px-2 py-1.5 shadow-[0_4px_22px_rgba(0,0,0,0.12)] backdrop-blur">
         <Tab id="dispensa" view={view} setView={setView} icon={Package} label="Dispensa" />

@@ -256,9 +256,9 @@ export default function RecipesTab({
           {ideas.length > 0 && !loadingIdeas && (
             <button
               onClick={onRegenerate}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-hair py-3 text-sm font-semibold text-stone-600 transition hover:border-ink hover:text-ink"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-ink py-3 text-sm font-bold text-ink transition hover:bg-ink hover:text-white"
             >
-              <RefreshCw className="h-4 w-4" /> Altre idee
+              <RefreshCw className="h-4 w-4 text-tomato" /> Altre idee
             </button>
           )}
         </>
