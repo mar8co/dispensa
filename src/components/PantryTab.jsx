@@ -314,10 +314,10 @@ export default function PantryTab({
                 stesse chip vanno a capo su più righe — la prima riga coincide
                 con quella già visibile, niente duplicazione. */}
             <div
-              className={`min-w-0 flex-1 gap-1.5 ${
+              className={`min-w-0 flex-1 ${
                 catsExpanded
-                  ? "flex flex-wrap"
-                  : "no-scrollbar flex flex-nowrap overflow-x-auto"
+                  ? "flex flex-wrap gap-2"
+                  : "no-scrollbar flex flex-nowrap gap-1.5 overflow-x-auto"
               }`}
               // Da chiuso, le chip sfumano sul bordo destro invece di
               // essere troncate di netto (effetto più morbido verso la freccia).
@@ -330,7 +330,10 @@ export default function PantryTab({
                 <button
                   key={cat}
                   onClick={() => jumpTo(cat)}
-                  className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                  // Aperto: chip grandi e ariose; chiuso: compatte per la barra sticky.
+                  className={`shrink-0 rounded-full border border-hair bg-paper font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato ${
+                    catsExpanded ? "px-4 py-2.5 text-sm" : "px-3 py-1.5 text-xs"
+                  }`}
                 >
                   {CAT_ICON[cat]} {cat}
                 </button>
