@@ -218,8 +218,9 @@ export default function PantryTab({
       </div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Ciao 👋<br />Hai fame?</h1>
 
-      {/* Ricerca minimale, con l'ordinamento dietro l'icona ⇅ a destra */}
-      <div className="relative mt-4">
+      {/* Ricerca minimale, sticky in alto (con l'ordinamento dietro l'icona) */}
+      <div className="sticky top-0 z-30 -mx-5 mt-4 bg-cream/95 px-5 py-1.5 backdrop-blur">
+      <div className="relative">
         <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
         <input
           className={`w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 text-sm text-ink outline-none focus:border-ink ${searchActive ? "pr-16" : "pr-9"}`}
@@ -253,7 +254,7 @@ export default function PantryTab({
 
       {/* Chips ordinamento: compaiono solo al tocco dell'icona */}
       {sortOpen && grouped.length > 0 && (
-        <div className="animate-fade-in mt-3 flex gap-1.5">
+        <div className="animate-fade-in mt-2 flex gap-1.5">
           {SORTS.map(([v, l]) => (
             <button
               key={v}
@@ -267,6 +268,7 @@ export default function PantryTab({
           ))}
         </div>
       )}
+      </div>{/* fine barra ricerca sticky */}
 
       {/* Striscia scadenze */}
       {expiringCount > 0 && (
@@ -299,7 +301,7 @@ export default function PantryTab({
           riga visibile è la prima riga del menù espanso. Niente scorrimento
           laterale, niente numeri. */}
       {grouped.length > 1 && (
-        <div className="sticky top-0 z-20 -mx-5 mt-3 bg-cream/95 px-5 py-2 backdrop-blur">
+        <div className="sticky top-[3.25rem] z-20 -mx-5 mt-3 bg-cream/95 px-5 py-2 backdrop-blur">
           <div className="flex items-start gap-1.5">
             {/* Chiuso: riga unica scorrevole (swipe) come prima. Aperto: le
                 stesse chip vanno a capo su più righe — la prima riga coincide
@@ -324,13 +326,13 @@ export default function PantryTab({
             <button
               onClick={() => setCatsExpanded((v) => !v)}
               aria-expanded={catsExpanded}
-              className={`mt-[3px] flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
-                catsExpanded ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-400 hover:border-tomato hover:text-tomato"
+              className={`mt-1 shrink-0 p-1 transition ${
+                catsExpanded ? "text-tomato" : "text-stone-400 hover:text-tomato"
               }`}
               aria-label="Mostra tutti i reparti"
               title="Tutti i reparti"
             >
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${catsExpanded ? "rotate-180" : ""}`} />
+              <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${catsExpanded ? "rotate-180" : ""}`} strokeWidth={2.2} />
             </button>
           </div>
         </div>
