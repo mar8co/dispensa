@@ -319,6 +319,12 @@ export default function PantryTab({
                   ? "flex flex-wrap"
                   : "no-scrollbar flex flex-nowrap overflow-x-auto"
               }`}
+              // Da chiuso, le chip sfumano sul bordo destro invece di
+              // essere troncate di netto (effetto più morbido verso la freccia).
+              style={catsExpanded ? undefined : {
+                maskImage: "linear-gradient(to right, #000 calc(100% - 20px), transparent)",
+                WebkitMaskImage: "linear-gradient(to right, #000 calc(100% - 20px), transparent)",
+              }}
             >
               {grouped.map(({ cat }) => (
                 <button
