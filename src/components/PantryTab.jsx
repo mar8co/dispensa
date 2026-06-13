@@ -314,7 +314,7 @@ export default function PantryTab({
                 stesse chip vanno a capo su più righe — la prima riga coincide
                 con quella già visibile, niente duplicazione. */}
             <div
-              className={`min-w-0 flex-1 gap-1 ${
+              className={`min-w-0 flex-1 gap-1.5 ${
                 catsExpanded
                   ? "flex flex-wrap"
                   : "no-scrollbar flex flex-nowrap overflow-x-auto"
@@ -330,7 +330,7 @@ export default function PantryTab({
                 <button
                   key={cat}
                   onClick={() => jumpTo(cat)}
-                  className="shrink-0 rounded-full border border-hair bg-paper px-2.5 py-1 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                  className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
                 >
                   {CAT_ICON[cat]} {cat}
                 </button>
