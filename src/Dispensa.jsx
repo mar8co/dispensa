@@ -1353,9 +1353,9 @@ export default function Dispensa({ session }) {
         onTap={() => changeView("ricette")}
         bottom={view === "spesa"
           ? (shopping.some((s) => s.checked)
-              ? "calc(176px + env(safe-area-inset-bottom))"
-              : "calc(122px + env(safe-area-inset-bottom))")
-          : "calc(72px + env(safe-area-inset-bottom))"}
+              ? "calc(192px + env(safe-area-inset-bottom))"
+              : "calc(138px + env(safe-area-inset-bottom))")
+          : "calc(86px + env(safe-area-inset-bottom))"}
       />
 
       {/* Il badge conta solo ciò che resta da comprare */}

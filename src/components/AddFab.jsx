@@ -25,7 +25,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
 
       <div
         className="fixed z-40"
-        style={{ right: "18px", bottom: "calc(80px + env(safe-area-inset-bottom))" }}
+        style={{ right: "18px", bottom: "calc(92px + env(safe-area-inset-bottom))" }}
       >
         <div className="relative h-12 w-12">
           {options.map((o, i) => {

@@ -573,14 +573,14 @@ export default function ShoppingTab({
         </p>
       )}
 
-      <div className={checkedCount > 0 ? "h-44" : "h-28"} />
+      <div className={checkedCount > 0 ? "h-52" : "h-32"} />
 
       {/* Barra in basso (sopra la navigazione): l'azione di chiusura della
           spesa appare qui, grande e sempre visibile, appena spunti qualcosa. */}
       {shopping.length > 0 && (
         <div
           className="fixed inset-x-0 z-20 border-t border-hair bg-cream/95 backdrop-blur"
-          style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
+          style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}
         >
           <div className="mx-auto max-w-md px-5 py-2.5">
             {checkedCount > 0 && (
