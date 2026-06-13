@@ -294,16 +294,27 @@ export default function PantryTab({
         </div>
       )}
 
-      {/* Barra salta-reparto, fissa in alto: chips scorrevoli + freccina che
-          espande tutti i reparti in verticale (niente swipe obbligatorio). */}
+      {/* Barra salta-reparto, fissa in alto: una riga di chips (quelle che
+          ci stanno) e la freccina che "srotola" le righe successive — la
+          riga visibile è la prima riga del menù espanso. Niente scorrimento
+          laterale, niente numeri. */}
       {grouped.length > 1 && (
         <div className="sticky top-0 z-20 -mx-5 mt-3 bg-cream/95 px-5 py-2 backdrop-blur">
-          <div className="flex h-8 items-center gap-1.5">
-            <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+          <div className="flex items-start gap-1.5">
+            {/* Chiuso: riga unica scorrevole (swipe) come prima. Aperto: le
+                stesse chip vanno a capo su più righe — la prima riga coincide
+                con quella già visibile, niente duplicazione. */}
+            <div
+              className={`min-w-0 flex-1 gap-1.5 ${
+                catsExpanded
+                  ? "flex flex-wrap"
+                  : "no-scrollbar flex flex-nowrap overflow-x-auto"
+              }`}
+            >
               {grouped.map(({ cat }) => (
                 <button
                   key={cat}
-                  onClick={() => jumpTo(cat)}
+                  onClick={() => { setCatsExpanded(false); jumpTo(cat); }}
                   className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
                 >
                   {CAT_ICON[cat]} {cat}
@@ -313,7 +324,7 @@ export default function PantryTab({
             <button
               onClick={() => setCatsExpanded((v) => !v)}
               aria-expanded={catsExpanded}
-              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
+              className={`mt-[3px] flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
                 catsExpanded ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-400 hover:border-tomato hover:text-tomato"
               }`}
               aria-label="Mostra tutti i reparti"
@@ -322,21 +333,6 @@ export default function PantryTab({
               <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${catsExpanded ? "rotate-180" : ""}`} />
             </button>
           </div>
-
-          {/* Tutti i reparti in verticale: tap = salta là e si richiude */}
-          {catsExpanded && (
-            <div className="animate-fade-in mt-2 flex flex-wrap gap-1.5 rounded-xl bg-stone-50 p-2.5">
-              {grouped.map(({ cat, list }) => (
-                <button
-                  key={cat}
-                  onClick={() => { setCatsExpanded(false); jumpTo(cat); }}
-                  className="rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
-                >
-                  {CAT_ICON[cat]} {cat} <span className="text-tomato">{list.length}</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
