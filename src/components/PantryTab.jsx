@@ -197,9 +197,16 @@ export default function PantryTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openId, qtyDraft, draftName]);
 
-  // Salta alla categoria: l'offset lascia spazio alla barra fissa.
+  // Salta alla categoria: si chiude prima il menù espanso, poi (frame
+  // successivo, a layout aggiornato) si scrolla — altrimenti l'altezza del
+  // menù aperto falsa la posizione e si finisce sulla categoria sotto.
   function jumpTo(cat) {
-    cardRefs.current[cat]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setCatsExpanded(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        cardRefs.current[cat]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
   }
 
   return (
@@ -307,7 +314,7 @@ export default function PantryTab({
                 stesse chip vanno a capo su più righe — la prima riga coincide
                 con quella già visibile, niente duplicazione. */}
             <div
-              className={`min-w-0 flex-1 gap-1.5 ${
+              className={`min-w-0 flex-1 gap-1 ${
                 catsExpanded
                   ? "flex flex-wrap"
                   : "no-scrollbar flex flex-nowrap overflow-x-auto"
@@ -316,8 +323,8 @@ export default function PantryTab({
               {grouped.map(({ cat }) => (
                 <button
                   key={cat}
-                  onClick={() => { setCatsExpanded(false); jumpTo(cat); }}
-                  className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                  onClick={() => jumpTo(cat)}
+                  className="shrink-0 rounded-full border border-hair bg-paper px-2.5 py-1 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
                 >
                   {CAT_ICON[cat]} {cat}
                 </button>
@@ -350,7 +357,7 @@ export default function PantryTab({
           <section
             key={cat}
             ref={(el) => { cardRefs.current[cat] = el; }}
-            style={{ scrollMarginTop: "48px" }}
+            style={{ scrollMarginTop: "104px" }}
           >
             <div className="sticky top-12 z-10 -mx-1 flex items-center gap-2 border-b border-ink/15 bg-cream px-1 pb-2 pt-2">
               <span className="text-base">{CAT_ICON[cat]}</span>
