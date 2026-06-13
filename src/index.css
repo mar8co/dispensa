@@ -6,8 +6,8 @@
    bg-tomato/10). La modalità scura segue il sistema e ribalta i toni. */
 :root {
   color-scheme: light dark;
-  --cream: 255 255 255;   /* tela di fondo */
-  --paper: 255 255 255;   /* superfici/card */
+  --cream: 247 246 241;   /* tela di fondo: avorio leggero (#F7F6F1) */
+  --paper: 255 255 255;   /* superfici/card in bianco puro, per lo stacco */
   --ink: 26 26 26;        /* testo principale */
   --hair: 236 236 236;    /* righe sottili */
   --white: 255 255 255;   /* superfici "bianche" e testo su ink/tomato */

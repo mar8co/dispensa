@@ -2,7 +2,7 @@
 // La scelta è per-dispositivo (localStorage), così telefono e PC possono
 // avere temi diversi e il tema vale anche sulla schermata di login.
 const KEY = "dispensa-theme";
-const COLORS = { light: "#ffffff", dark: "#121211" };
+const COLORS = { light: "#f7f6f1", dark: "#121211" };
 
 export function getTheme() {
   try {
