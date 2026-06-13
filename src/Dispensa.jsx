@@ -24,6 +24,7 @@ import { checkTimers } from "./lib/timers.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
 import { loadHistory, saveHistory, bumpedHistory, sortedNames } from "./lib/history.js";
+import { loadSavedRecipes, saveSavedRecipes, localRecipeId } from "./lib/recipes.js";
 
 import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
@@ -127,7 +128,7 @@ export default function Dispensa({ session }) {
   const [loadingIdeas, setLoadingIdeas] = useState(false);
   const [loadingRecipe, setLoadingRecipe] = useState(false);
   const [recipeErr, setRecipeErr] = useState("");
-  const [savedRecipes, setSavedRecipes] = useState([]); // ricettario (salvate + cucinate)
+  const [savedRecipes, setSavedRecipes] = useState(() => loadSavedRecipes(session.user.id) || []); // ricettario (salvate + cucinate)
   const [prefServings, setPrefServings] = useState(null); // "a casa siamo in X" (persistito)
   const [foodPrefs, setFoodPrefs] = useState("");          // preferenze alimentari (persistite)
 
@@ -209,9 +210,14 @@ export default function Dispensa({ session }) {
           }
         } catch (e) { console.error(e); }
         try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
-        // Ricettario: se la tabella non esiste ancora (migration-4.sql non
-        // eseguita) la funzione fallisce e la sezione resta semplicemente vuota.
-        try { setSavedRecipes(await fetchSavedRecipes()); } catch (e) { console.warn("Ricettario non disponibile:", e?.message || e); }
+        // Ricettario: se la tabella esiste (migration-4) il DB è la fonte e
+        // si aggiorna la copia locale; altrimenti si tiene quella locale, così
+        // i preferiti funzionano comunque (per-dispositivo).
+        try {
+          const rows = await fetchSavedRecipes();
+          setSavedRecipes(rows);
+          saveSavedRecipes(uid, rows);
+        } catch (e) { console.warn("Ricettario dal DB non disponibile, uso la copia locale.", e?.message || e); }
       } catch (e) {
         console.warn("Rete non disponibile: uso i dati in cache.", e);
         if (!cached) setItems([]);
@@ -799,7 +805,23 @@ export default function Dispensa({ session }) {
         { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: data64 } },
         { type: "text", text: RECEIPT_PROMPT },
       ], 1000);
-      const list = Array.isArray(parsed.items) ? parsed.items : [];
+      const raw = Array.isArray(parsed.items) ? parsed.items : [];
+      // Rete di sicurezza: anche se l'AI non aggrega, uniamo qui i prodotti
+      // con lo stesso nome sommando le quantità compatibili (mergeQty).
+      const byName = new Map();
+      for (const it of raw) {
+        const name = String(it?.name || "").trim();
+        if (!name) continue;
+        const k = norm(name);
+        const qty = normalizeWeight(String(it?.qty || "1").trim() || "1");
+        if (byName.has(k)) {
+          const ex = byName.get(k);
+          ex.qty = normalizeWeight(mergeQty(ex.qty, qty));
+        } else {
+          byName.set(k, { name, qty, category: it?.category });
+        }
+      }
+      const list = [...byName.values()];
       if (!list.length) showToast("Nessun alimento riconosciuto nell'immagine.");
       else {
         // Non aggiunge subito: apre la modale di revisione per nome/categoria.
@@ -1026,71 +1048,91 @@ export default function Dispensa({ session }) {
     });
   }
 
-  // Cuore sulla ricetta aperta: salva/rimuove dal ricettario.
-  async function toggleSaveRecipe() {
+  // Aggiorna stato + copia locale insieme (la copia locale è la fonte sicura).
+  function commitRecipes(next) {
+    setSavedRecipes(next);
+    saveSavedRecipes(session.user.id, next);
+  }
+  // Sincronizza una riga sul DB "best effort": se la tabella manca o c'è un
+  // errore non si mostra nulla all'utente (la copia locale ha già salvato).
+  // Quando l'upsert riesce, rimpiazza la riga locale con quella reale (id DB).
+  function syncRecipeUpsert(localId, fields) {
+    upsertSavedRecipe(fields)
+      .then((row) => {
+        if (!row) return;
+        setSavedRecipes((prev) => {
+          const next = prev.map((r) => (r.id === localId ? row : r));
+          saveSavedRecipes(session.user.id, next);
+          return next;
+        });
+      })
+      .catch((e) => console.warn("Sync ricetta sul DB non riuscito (tengo il locale).", e?.message || e));
+  }
+
+  // Cuore sulla ricetta aperta: salva/rimuove dal ricettario (local-first).
+  function toggleSaveRecipe() {
     if (!recipe) return;
     const ex = savedByTitle(recipe.title);
-    try {
-      if (ex && ex.saved) {
-        // Tolto il cuore: se mai cucinata si elimina, altrimenti resta nello storico.
-        if (ex.cooked_count > 0) {
-          await updateSavedRecipe(ex.id, { saved: false });
-          setSavedRecipes((prev) => prev.map((r) => (r.id === ex.id ? { ...r, saved: false } : r)));
-        } else {
-          await deleteSavedRecipe(ex.id);
-          setSavedRecipes((prev) => prev.filter((r) => r.id !== ex.id));
-        }
-      } else if (ex) {
-        await updateSavedRecipe(ex.id, { saved: true });
-        setSavedRecipes((prev) => prev.map((r) => (r.id === ex.id ? { ...r, saved: true } : r)));
+    if (ex && ex.saved) {
+      // Tolto il cuore: se mai cucinata si elimina, altrimenti resta nello storico.
+      if (ex.cooked_count > 0) {
+        commitRecipes(savedRecipes.map((r) => (r.id === ex.id ? { ...r, saved: false } : r)));
+        updateSavedRecipe(ex.id, { saved: false }).catch(() => {});
       } else {
-        const row = await upsertSavedRecipe({
-          title: recipe.title, data: recipe, image: recipe.image || null, saved: true,
-        });
-        setSavedRecipes((prev) => [row, ...prev]);
+        commitRecipes(savedRecipes.filter((r) => r.id !== ex.id));
+        deleteSavedRecipe(ex.id).catch(() => {});
       }
-    } catch (e) {
-      console.error("Errore salvataggio ricetta:", e);
-      showToast("Non riesco a salvare: hai eseguito migration-4.sql su Supabase?");
+    } else if (ex) {
+      commitRecipes(savedRecipes.map((r) => (r.id === ex.id ? { ...r, saved: true } : r)));
+      updateSavedRecipe(ex.id, { saved: true }).catch(() => {});
+    } else {
+      const id = localRecipeId();
+      const row = {
+        id, title: recipe.title, data: recipe, image: recipe.image || null,
+        saved: true, cooked_count: 0, last_cooked_at: null, created_at: new Date().toISOString(),
+      };
+      commitRecipes([row, ...savedRecipes]);
+      syncRecipeUpsert(id, { title: recipe.title, data: recipe, image: recipe.image || null, saved: true });
     }
   }
 
   // Registra una cottura nello storico (chiamata da "Ho cucinato questo").
-  async function recordCookedRecipe() {
+  function recordCookedRecipe() {
     if (!recipe) return;
     const ex = savedByTitle(recipe.title);
     const now = new Date().toISOString();
-    try {
-      if (ex) {
-        const fields = { cooked_count: (ex.cooked_count || 0) + 1, last_cooked_at: now };
-        await updateSavedRecipe(ex.id, fields);
-        setSavedRecipes((prev) => prev.map((r) => (r.id === ex.id ? { ...r, ...fields } : r)));
-      } else {
-        const row = await upsertSavedRecipe({
-          title: recipe.title, data: recipe, image: recipe.image || null,
-          saved: false, cooked_count: 1, last_cooked_at: now,
-        });
-        setSavedRecipes((prev) => [row, ...prev]);
-      }
-    } catch (e) { console.warn("Storico cucinate non disponibile:", e?.message || e); }
+    if (ex) {
+      const fields = { cooked_count: (ex.cooked_count || 0) + 1, last_cooked_at: now };
+      commitRecipes(savedRecipes.map((r) => (r.id === ex.id ? { ...r, ...fields } : r)));
+      updateSavedRecipe(ex.id, fields).catch(() => {});
+    } else {
+      const id = localRecipeId();
+      const row = {
+        id, title: recipe.title, data: recipe, image: recipe.image || null,
+        saved: false, cooked_count: 1, last_cooked_at: now, created_at: now,
+      };
+      commitRecipes([row, ...savedRecipes]);
+      syncRecipeUpsert(id, {
+        title: recipe.title, data: recipe, image: recipe.image || null,
+        saved: false, cooked_count: 1, last_cooked_at: now,
+      });
+    }
   }
 
   // Elimina una riga del ricettario (con Annulla).
-  async function removeSavedRecipe(row) {
-    try {
-      await deleteSavedRecipe(row.id);
-      setSavedRecipes((prev) => prev.filter((r) => r.id !== row.id));
-      showToast(<><strong>{row.title}</strong> rimossa dal ricettario</>, async () => {
-        try {
-          const back = await upsertSavedRecipe({
-            title: row.title, data: row.data, image: row.image, saved: row.saved,
-            cooked_count: row.cooked_count, last_cooked_at: row.last_cooked_at,
-          });
-          setSavedRecipes((prev) => [back, ...prev]);
-          dismissToast();
-        } catch (e) { console.error("Errore ripristino ricetta:", e); }
+  function removeSavedRecipe(row) {
+    commitRecipes(savedRecipes.filter((r) => r.id !== row.id));
+    deleteSavedRecipe(row.id).catch(() => {});
+    showToast(<><strong>{row.title}</strong> rimossa dal ricettario</>, () => {
+      const id = localRecipeId();
+      const back = { ...row, id };
+      commitRecipes([back, ...savedRecipes.filter((r) => r.id !== row.id)]);
+      syncRecipeUpsert(id, {
+        title: row.title, data: row.data, image: row.image, saved: row.saved,
+        cooked_count: row.cooked_count, last_cooked_at: row.last_cooked_at,
       });
-    } catch (e) { console.error("Errore eliminazione ricetta:", e); }
+      dismissToast();
+    });
   }
 
   function backToModes() {

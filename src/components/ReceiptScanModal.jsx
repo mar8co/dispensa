@@ -86,16 +86,20 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-black">
-      {/* Testata */}
+      {/* Testata: scrim scuro per la leggibilità sopra la fotocamera */}
       <div
-        className="flex items-center justify-between px-4 pb-3 text-white"
-        style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
+        className="z-10 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 pb-6 text-white"
+        style={{ paddingTop: "calc(0.85rem + env(safe-area-inset-top))" }}
       >
-        <div className="flex items-center gap-2 text-sm font-semibold">
+        <div className="flex items-center gap-2 text-base font-bold drop-shadow">
           <Camera className="h-5 w-5" /> Scatta lo scontrino
         </div>
-        <button onClick={onClose} className="rounded-lg p-1.5 text-white/80 hover:bg-white/10" aria-label="Chiudi">
-          <X className="h-6 w-6" />
+        <button
+          onClick={onClose}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/60"
+          aria-label="Chiudi"
+        >
+          <X className="h-5 w-5" />
         </button>
       </div>
 
@@ -117,8 +121,8 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
               }`}
             />
             <span
-              className={`absolute top-[16%] rounded-full px-3 py-1 text-xs font-semibold backdrop-blur transition ${
-                sharp ? "bg-emerald-400/90 text-emerald-950" : "bg-black/45 text-white"
+              className={`absolute top-[15%] rounded-full px-3.5 py-1.5 text-xs font-bold shadow-lg backdrop-blur transition ${
+                sharp ? "bg-emerald-400 text-emerald-950" : "bg-black/65 text-white"
               }`}
             >
               {sharp ? "A fuoco — scatta" : "Inquadra lo scontrino nel riquadro"}
@@ -127,28 +131,28 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
         )}
       </div>
 
-      {/* Comandi: scatto al centro, galleria discreta in basso a destra */}
+      {/* Comandi: scrim scuro + scatto al centro, galleria in basso a destra */}
       <div
-        className="relative flex items-center justify-center px-6 pt-4"
-        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+        className="relative z-10 flex items-center justify-center bg-gradient-to-t from-black/75 to-transparent px-6 pt-10"
+        style={{ paddingBottom: "calc(1.6rem + env(safe-area-inset-bottom))" }}
       >
         {!error && (
           <button
             onClick={emitFromVideo}
             aria-label="Scatta"
-            className={`flex h-16 w-16 items-center justify-center rounded-full ring-4 ring-white/30 transition active:scale-95 ${
-              sharp ? "bg-emerald-400" : "bg-white"
+            className={`flex h-[72px] w-[72px] items-center justify-center rounded-full ring-4 transition active:scale-95 ${
+              sharp ? "bg-emerald-400 ring-emerald-200/70" : "bg-white ring-white/40"
             }`}
           >
-            <span className="h-12 w-12 rounded-full border-4 border-black/10 bg-white" />
+            <span className={`h-14 w-14 rounded-full border-[3px] ${sharp ? "border-emerald-700/30 bg-emerald-400" : "border-stone-300 bg-white"}`} />
           </button>
         )}
         <button
           onClick={() => fileRef.current?.click()}
           aria-label="Scegli dalla galleria"
           title="Dalla galleria"
-          className={`absolute right-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/25 bg-white/10 text-white transition hover:bg-white/20 ${
-            error ? "static" : ""
+          className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-white/50 bg-black/45 text-white backdrop-blur transition hover:bg-black/60 ${
+            error ? "" : "absolute right-6"
           }`}
         >
           <Image className="h-6 w-6" />

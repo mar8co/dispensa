@@ -66,6 +66,7 @@ L'immagine può essere di tre tipi: (a) uno scontrino della spesa, (b) uno scree
 Per ogni alimento applica queste regole sul nome:
 ${NAME_RULES}
 Metti l'eventuale peso o formato nel campo "qty" (es. "500 g") — MAI nel nome. Se non è indicato ma riesci a contare gli oggetti nella foto, usa quel numero (es. "3" per tre mele); altrimenti "1". Usa SOLO unità metriche (g, kg, ml, l) — mai cups/oz.
+IMPORTANTISSIMO: AGGREGA i prodotti uguali in UNA SOLA voce sommando le quantità, anche se compaiono in righe non consecutive. Esempio: "Yogurt greco", "Pane", "Yogurt greco", "Yogurt greco" -> {"name":"Yogurt greco","qty":"3"} e {"name":"Pane","qty":"1"}. Non ripetere mai lo stesso prodotto su più righe.
 Ignora prodotti non alimentari. Se non riconosci alcun alimento, restituisci una lista vuota.
 Rispondi SOLO con JSON valido senza markdown:
 {"items":[{"name":"...","qty":"...","category":"..."}]}
