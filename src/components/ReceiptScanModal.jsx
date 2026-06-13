@@ -117,12 +117,12 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div
               className={`h-[64%] w-[80%] rounded-2xl border-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
-                sharp ? "border-emerald-400" : "border-white/80"
+                sharp ? "border-tomato" : "border-white/80"
               }`}
             />
             <span
               className={`absolute top-[15%] rounded-full px-3.5 py-1.5 text-xs font-bold shadow-lg backdrop-blur transition ${
-                sharp ? "bg-emerald-400 text-emerald-950" : "bg-black/65 text-white"
+                sharp ? "bg-tomato text-white" : "bg-black/65 text-white"
               }`}
             >
               {sharp ? "A fuoco — scatta" : "Inquadra lo scontrino nel riquadro"}
@@ -141,10 +141,10 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
             onClick={emitFromVideo}
             aria-label="Scatta"
             className={`flex h-[72px] w-[72px] items-center justify-center rounded-full ring-4 transition active:scale-95 ${
-              sharp ? "bg-emerald-400 ring-emerald-200/70" : "bg-white ring-white/40"
+              sharp ? "bg-tomato ring-tomato/40" : "bg-white ring-white/40"
             }`}
           >
-            <span className={`h-14 w-14 rounded-full border-[3px] ${sharp ? "border-emerald-700/30 bg-emerald-400" : "border-stone-300 bg-white"}`} />
+            <span className={`h-14 w-14 rounded-full border-[3px] ${sharp ? "border-tomato-700/40 bg-tomato" : "border-stone-300 bg-white"}`} />
           </button>
         )}
         <button
