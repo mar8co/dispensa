@@ -88,7 +88,7 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
     <div className="fixed inset-0 z-[60] flex flex-col bg-black">
       {/* Testata: scrim scuro per la leggibilità sopra la fotocamera */}
       <div
-        className="z-10 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 pb-6 text-white"
+        className="z-10 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 pb-6 text-[#fff]"
         style={{ paddingTop: "calc(0.85rem + env(safe-area-inset-top))" }}
       >
         <div className="flex items-center gap-2 text-base font-bold drop-shadow">
@@ -96,7 +96,7 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
         </div>
         <button
           onClick={onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/60"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-[#fff] backdrop-blur transition hover:bg-black/60"
           aria-label="Chiudi"
         >
           <X className="h-5 w-5" />
@@ -110,19 +110,20 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
         )}
         {error ? (
           <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
-            <Image className="h-10 w-10 text-white/60" />
-            <p className="text-sm font-medium text-white/80">{error}</p>
+            <Image className="h-10 w-10 text-[#fff]/60" />
+            <p className="text-sm font-medium text-[#fff]/80">{error}</p>
           </div>
         ) : (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            {/* Rettangolo stretto e alto, a forma di scontrino */}
             <div
-              className={`h-[64%] w-[80%] rounded-2xl border-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
-                sharp ? "border-tomato" : "border-white/80"
+              className={`h-[74%] w-[58%] rounded-2xl border-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
+                sharp ? "border-tomato" : "border-[#fff]/85"
               }`}
             />
             <span
-              className={`absolute top-[15%] rounded-full px-3.5 py-1.5 text-xs font-bold shadow-lg backdrop-blur transition ${
-                sharp ? "bg-tomato text-white" : "bg-black/65 text-white"
+              className={`absolute top-[10%] rounded-full px-3.5 py-1.5 text-xs font-bold shadow-lg backdrop-blur transition ${
+                sharp ? "bg-tomato text-[#fff]" : "bg-black/70 text-[#fff]"
               }`}
             >
               {sharp ? "A fuoco — scatta" : "Inquadra lo scontrino nel riquadro"}
@@ -141,17 +142,17 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
             onClick={emitFromVideo}
             aria-label="Scatta"
             className={`flex h-[72px] w-[72px] items-center justify-center rounded-full ring-4 transition active:scale-95 ${
-              sharp ? "bg-tomato ring-tomato/40" : "bg-white ring-white/40"
+              sharp ? "bg-tomato ring-tomato/40" : "bg-[#fff] ring-[#fff]/40"
             }`}
           >
-            <span className={`h-14 w-14 rounded-full border-[3px] ${sharp ? "border-tomato-700/40 bg-tomato" : "border-stone-300 bg-white"}`} />
+            <span className={`h-14 w-14 rounded-full border-[3px] ${sharp ? "border-[#fff]/40 bg-tomato" : "border-black/10 bg-[#fff]"}`} />
           </button>
         )}
         <button
           onClick={() => fileRef.current?.click()}
           aria-label="Scegli dalla galleria"
           title="Dalla galleria"
-          className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-white/50 bg-black/45 text-white backdrop-blur transition hover:bg-black/60 ${
+          className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-[#fff]/50 bg-black/45 text-[#fff] backdrop-blur transition hover:bg-black/60 ${
             error ? "" : "absolute right-6"
           }`}
         >
