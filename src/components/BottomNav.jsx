@@ -39,7 +39,7 @@ export default function BottomNav({ view, setView, shoppingCount, addSlot }) {
           <Tab id="ricette" view={view} setView={setView} icon={ChefHat} label="Ricette" />
         </div>
         {addSlot && (
-          <div className="absolute right-0 top-1/2 -translate-y-[calc(50%+10px)]">{addSlot}</div>
+          <div className="absolute right-0 top-1/2 -translate-y-[calc(50%+24px)]">{addSlot}</div>
         )}
       </div>
     </div>

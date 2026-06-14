@@ -1435,7 +1435,7 @@ export default function Dispensa({ session }) {
           onClick={() => setAddMenuOpen(false)}
           aria-label="Chiudi menù"
           tabIndex={addMenuOpen ? 0 : -1}
-          className={`fixed inset-0 z-30 bg-black/35 backdrop-blur-md transition-opacity duration-300 ${
+          className={`fixed inset-0 z-30 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
             addMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         />
