@@ -1335,7 +1335,7 @@ export default function Dispensa({ session }) {
         </div>
       )}
       {/* Sulla dispensa più spazio in fondo, così il "+" non copre l'ultima categoria */}
-      <div className={`mx-auto max-w-md px-5 pt-7 ${view === "dispensa" ? "pb-52" : "pb-28"}`}>
+      <div className="mx-auto max-w-md px-5 pt-7 pb-28">
         {view === "dispensa" && (
           <PantryTab
             onOpenProfile={() => setProfileOpen(true)}
@@ -1402,19 +1402,23 @@ export default function Dispensa({ session }) {
           : "calc(86px + env(safe-area-inset-bottom))"}
       />
 
-      {/* Il badge conta solo ciò che resta da comprare */}
-      <BottomNav view={view} setView={changeView} shoppingCount={shopping.filter((s) => !s.checked).length} />
-
-      {view === "dispensa" && (
-        <AddFab
-          menuOpen={addMenuOpen}
-          setMenuOpen={setAddMenuOpen}
-          onManual={() => setManualOpen(true)}
-          onPhoto={() => setReceiptOpen(true)}
-          onBarcode={() => setBarcodeOpen(true)}
-          onVoice={() => setVoiceOpen(true)}
-        />
-      )}
+      {/* Il badge conta solo ciò che resta da comprare; il "+" è sulla riga
+          della navbar, accanto alla pillola, solo nella Dispensa. */}
+      <BottomNav
+        view={view}
+        setView={changeView}
+        shoppingCount={shopping.filter((s) => !s.checked).length}
+        addSlot={view === "dispensa" ? (
+          <AddFab
+            menuOpen={addMenuOpen}
+            setMenuOpen={setAddMenuOpen}
+            onManual={() => setManualOpen(true)}
+            onPhoto={() => setReceiptOpen(true)}
+            onBarcode={() => setBarcodeOpen(true)}
+            onVoice={() => setVoiceOpen(true)}
+          />
+        ) : null}
+      />
 
       {/* Fotocamera integrata per lo scontrino (anteprima live + galleria) */}
       {receiptOpen && (

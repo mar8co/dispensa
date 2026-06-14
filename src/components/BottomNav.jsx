@@ -24,16 +24,20 @@ function Tab({ id, view, setView, icon: Icon, label, badge }) {
   );
 }
 
-export default function BottomNav({ view, setView, shoppingCount }) {
+export default function BottomNav({ view, setView, shoppingCount, addSlot }) {
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3"
       style={{ paddingBottom: "calc(3px + env(safe-area-inset-bottom))" }}
     >
-      <div className="flex w-fit items-center gap-1 rounded-[26px] border border-hair bg-cream/70 px-2 py-1.5 shadow-[0_4px_22px_rgba(0,0,0,0.12)] backdrop-blur-md">
-        <Tab id="dispensa" view={view} setView={setView} icon={Package} label="Dispensa" />
-        <Tab id="spesa" view={view} setView={setView} icon={ShoppingCart} label="Spesa" badge={shoppingCount} />
-        <Tab id="ricette" view={view} setView={setView} icon={ChefHat} label="Ricette" />
+      {/* pillola + (solo in Dispensa) il "+", centrati insieme come gruppo */}
+      <div className="flex items-center gap-2.5">
+        <div className="flex w-fit items-center gap-1 rounded-[26px] border border-hair bg-cream/70 px-2 py-1.5 shadow-[0_4px_22px_rgba(0,0,0,0.12)] backdrop-blur-md">
+          <Tab id="dispensa" view={view} setView={setView} icon={Package} label="Dispensa" />
+          <Tab id="spesa" view={view} setView={setView} icon={ShoppingCart} label="Spesa" badge={shoppingCount} />
+          <Tab id="ricette" view={view} setView={setView} icon={ChefHat} label="Ricette" />
+        </div>
+        {addSlot}
       </div>
     </div>
   );
