@@ -1402,6 +1402,20 @@ export default function Dispensa({ session }) {
           : "calc(86px + env(safe-area-inset-bottom))"}
       />
 
+      {/* Overlay sfocato del menù "+": a livello di pagina (NON dentro la
+          navbar, che ha transform), così copre tutto lo schermo e chiude il
+          menù al tocco esterno. */}
+      {view === "dispensa" && (
+        <button
+          onClick={() => setAddMenuOpen(false)}
+          aria-label="Chiudi menù"
+          tabIndex={addMenuOpen ? 0 : -1}
+          className={`fixed inset-0 z-30 bg-black/35 backdrop-blur-md transition-opacity duration-300 ${
+            addMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        />
+      )}
+
       {/* Il badge conta solo ciò che resta da comprare; il "+" è sulla riga
           della navbar, accanto alla pillola, solo nella Dispensa. */}
       <BottomNav

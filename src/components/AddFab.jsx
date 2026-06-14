@@ -11,21 +11,11 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
     { id: "voice", icon: Mic, label: "Voce", action: onVoice },
   ];
 
+  // NB: l'overlay sfocato è renderizzato dalla pagina (Dispensa), non qui:
+  // dentro un contenitore con transform un elemento `fixed` non si ancora al
+  // viewport e non coprirebbe lo schermo.
+  // In-flow nella riga della navbar; le opzioni si aprono verso l'alto.
   return (
-    <>
-      {/* Overlay sfocato: copre tutto lo schermo, sfuma in entrata/uscita e
-          chiude il menù al tocco in QUALSIASI punto esterno. */}
-      <button
-        onClick={() => setMenuOpen(false)}
-        aria-label="Chiudi menù"
-        tabIndex={menuOpen ? 0 : -1}
-        className={`fixed inset-0 z-30 bg-black/35 backdrop-blur-md transition-opacity duration-300 ${
-          menuOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-      />
-
-      {/* In-flow: sta dentro la riga della navbar. Le opzioni si aprono verso
-          l'alto (ancorate al "+"). */}
       <div className="relative z-40 h-14 w-14 shrink-0">
         {options.map((o, i) => {
           const Icon = o.icon;
@@ -71,6 +61,5 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
           <Plus className={`h-8 w-8 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} strokeWidth={2.5} />
         </button>
       </div>
-    </>
   );
 }
