@@ -49,17 +49,11 @@ export default function Auth() {
       <div className="w-full max-w-sm">
         {/* Logo + titolo */}
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-tomato shadow-lg shadow-tomato/30">
-            <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="4.5" y="3.5" width="15" height="15" rx="1.6" fill="white" fillOpacity="0.18" />
-              <line x1="4.5" y1="6.8" x2="19.5" y2="6.8" />
-              <line x1="12" y1="6.8" x2="12" y2="18.5" />
-              <circle cx="10.6" cy="12.5" r="0.75" fill="white" stroke="none" />
-              <circle cx="13.4" cy="12.5" r="0.75" fill="white" stroke="none" />
-              <line x1="6.8" y1="18.5" x2="6.8" y2="20.3" />
-              <line x1="17.2" y1="18.5" x2="17.2" y2="20.3" />
-            </svg>
-          </div>
+          <img
+            src="/icon.svg"
+            alt="La Mia Dispensa"
+            className="mx-auto mb-4 h-16 w-16 rounded-[22%] shadow-lg shadow-black/10"
+          />
           <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La mia dispensa</div>
           <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Bentornato 👋</h1>
           <p className="mt-2 text-sm text-stone-500">Accedi per ritrovare la tua dispensa ovunque.</p>

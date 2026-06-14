@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 import {
-  CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, NAME_RULES,
+  CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES,
 } from "./constants.js";
 import {
   guessCategory, correctName,
@@ -20,7 +20,7 @@ import {
   updateShopping, deleteShopping, deleteShoppingItems,
   fetchSavedRecipes, upsertSavedRecipe, updateSavedRecipe, deleteSavedRecipe,
 } from "./lib/db.js";
-import { checkTimers } from "./lib/timers.js";
+import { checkTimers, stopAlarm } from "./lib/timers.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
 import { loadHistory, saveHistory, bumpedHistory, sortedNames } from "./lib/history.js";
@@ -38,6 +38,7 @@ import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
 import TimerBar from "./components/TimerBar.jsx";
+import Onboarding from "./components/Onboarding.jsx";
 import Toast from "./components/Toast.jsx";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
@@ -142,6 +143,9 @@ export default function Dispensa({ session }) {
   // foglio profilo (tema, svuota dispensa, logout)
   const [profileOpen, setProfileOpen] = useState(false);
 
+  // onboarding al primo accesso
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
   // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
   // NB: lo stato "collassato" NON viene ripristinato: le categorie partono
   // sempre chiuse a ogni apertura/ricarica dell'app (default voluto).
@@ -181,11 +185,15 @@ export default function Dispensa({ session }) {
     (async () => {
       try {
         let rows = await fetchPantry();
-        // Seed iniziale solo al primissimo accesso (nessuna cache + DB vuoto).
+        // Primissimo accesso (nessuna cache + DB vuoto): popola i prodotti
+        // demo e avvia l'onboarding, che alla fine li svuota per partire
+        // puliti. Se l'onboarding è già stato fatto su questo dispositivo,
+        // riparte dal seed classico.
         if (rows.length === 0 && !cached) {
-          rows = await insertMany(
-            SEED_DATA.map(([name, qty, category]) => ({ name, qty, category }))
-          );
+          const onboarded = (() => { try { return localStorage.getItem(`dispensa-onboarded-${uid}`) === "1"; } catch { return false; } })();
+          const src = onboarded ? SEED_DATA : DEMO_DATA;
+          rows = await insertMany(src.map(([name, qty, category]) => ({ name, qty, category })));
+          if (!onboarded) setOnboardingOpen(true);
         }
         // Migrazione categorie: i prodotti con etichette vecchie (es.
         // "Fresco e Verdure") vengono ri-categorizzati con le nuove regole
@@ -303,8 +311,17 @@ export default function Dispensa({ session }) {
   // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
   useEffect(() => {
     const tick = () => {
-      for (const t of checkTimers()) {
-        showToast(<>⏱️ Timer finito{t.label ? <>: <strong>{t.label}</strong></> : null}</>);
+      const expired = checkTimers();
+      if (expired.length) {
+        const t = expired[0];
+        // Il toast resta finché non tocchi "Stop", che zittisce l'allarme.
+        showToast(
+          <>⏱️ {t.label ? <><strong>{t.label}</strong> è pronto!</> : "Tempo scaduto!"}</>,
+          () => { stopAlarm(); dismissToast(); },
+          "Stop",
+          "ink",
+          30000
+        );
       }
     };
     const int = setInterval(tick, 500);
@@ -520,6 +537,14 @@ export default function Dispensa({ session }) {
 
   async function logout() {
     await supabase.auth.signOut();
+  }
+
+  // Fine onboarding: segna come fatto e svuota i prodotti demo, così l'utente
+  // parte da una dispensa pulita.
+  async function finishOnboarding() {
+    setOnboardingOpen(false);
+    try { localStorage.setItem(`dispensa-onboarded-${session.user.id}`, "1"); } catch { /* */ }
+    try { await deleteAllPantry(); setItems([]); } catch (e) { console.error("Errore pulizia demo:", e); }
   }
 
   // --- Lista della spesa ---
@@ -1533,6 +1558,8 @@ export default function Dispensa({ session }) {
           confirmLabel="Aggiungi alla lista"
         />
       )}
+
+      {onboardingOpen && <Onboarding onFinish={finishOnboarding} />}
 
       {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} actionTone={toast.actionTone} />}
     </div>

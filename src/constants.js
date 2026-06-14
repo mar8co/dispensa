@@ -75,6 +75,33 @@ Pane e Forno, Pasta, Riso e Cereali (unica categoria), Legumi, Conserve, Surgela
 Bevande, Dolci, Frutta Secca, Condimenti e Salse, Spezie ed Erbe, Altro.
 NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Altro".`;
 
+// Prodotti demo per l'onboarding (1-2 per categoria): popolano la dispensa
+// durante il tutorial e vengono eliminati alla fine, per un avvio pulito.
+export const DEMO_DATA = [
+  ["Zucchine", "3", "Verdura"],
+  ["Pomodorini", "500 g", "Verdura"],
+  ["Mele", "4", "Frutta"],
+  ["Limoni", "2", "Frutta"],
+  ["Petto di pollo", "500 g", "Carne"],
+  ["Prosciutto crudo", "100 g", "Salumi"],
+  ["Tonno fresco", "300 g", "Pesce"],
+  ["Parmigiano", "200 g", "Latticini"],
+  ["Yogurt greco", "4", "Latticini"],
+  ["Pane", "1", "Pane e Forno"],
+  ["Spaghetti", "500 g", "Pasta, Riso e Cereali"],
+  ["Riso", "1 kg", "Pasta, Riso e Cereali"],
+  ["Ceci", "1 barattolo", "Legumi"],
+  ["Pomodori pelati", "1 barattolo", "Conserve"],
+  ["Tonno in scatola", "3", "Conserve"],
+  ["Piselli", "1 conf.", "Surgelati"],
+  ["Acqua", "6", "Bevande"],
+  ["Caffè", "250 g", "Bevande"],
+  ["Biscotti", "1", "Dolci"],
+  ["Mandorle", "1 conf.", "Frutta Secca"],
+  ["Olio EVO", "1 l", "Condimenti e Salse"],
+  ["Sale", "1", "Spezie ed Erbe"],
+];
+
 export const STORAGE_KEY = "dispensa-v1";
 export const COLLAPSE_KEY = "dispensa-collapsed-v1";
 export const ORDER_KEY = "dispensa-order-v1";

@@ -43,9 +43,5 @@
 
     <!-- ripiano basso: scatola -->
     <rect x="224" y="358" width="64" height="42" rx="11" fill="none" stroke-width="13"/>
-
-    <!-- piedini -->
-    <line x1="186" y1="415" x2="186" y2="445" stroke-width="22"/>
-    <line x1="326" y1="415" x2="326" y2="445" stroke-width="22"/>
   </g>
 </svg>

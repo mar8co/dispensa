@@ -52,7 +52,7 @@ export default function StepTimer({ minutes, id, label }) {
         {fmt(left)}
       </span>
       {done ? (
-        <span className="px-1 text-xs font-bold text-tomato">fatto!</span>
+        <span className="px-1 text-xs font-bold text-tomato">pronto!</span>
       ) : (
         <button
           onClick={() => (running ? pause() : start())}
