@@ -13,19 +13,20 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
 
   return (
     <>
-      {/* Sfondo sempre montato: sfuma in entrata e in uscita (niente scatto). */}
+      {/* Overlay sfocato: copre tutto lo schermo, sfuma in entrata/uscita e
+          chiude il menù al tocco in QUALSIASI punto esterno. */}
       <button
         onClick={() => setMenuOpen(false)}
-        aria-label="Chiudi"
+        aria-label="Chiudi menù"
         tabIndex={menuOpen ? 0 : -1}
-        className={`fixed inset-0 z-30 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`fixed inset-0 z-30 bg-black/35 backdrop-blur-md transition-opacity duration-300 ${
           menuOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
 
       {/* In-flow: sta dentro la riga della navbar. Le opzioni si aprono verso
           l'alto (ancorate al "+"). */}
-      <div className="relative z-40 h-12 w-12 shrink-0">
+      <div className="relative z-40 h-14 w-14 shrink-0">
         {options.map((o, i) => {
           const Icon = o.icon;
           // Distanza verticale dal "+": l'ultima opzione è la più vicina.
@@ -65,9 +66,9 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Aggiungi"
-          className="relative z-40 flex h-12 w-12 items-center justify-center rounded-2xl bg-tomato text-[#fff] shadow-xl shadow-tomato/30 transition active:scale-95"
+          className="relative z-40 flex h-14 w-14 items-center justify-center rounded-[20px] bg-tomato text-[#fff] shadow-xl shadow-tomato/40 transition active:scale-95"
         >
-          <Plus className={`h-6 w-6 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} strokeWidth={2.4} />
+          <Plus className={`h-8 w-8 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} strokeWidth={2.5} />
         </button>
       </div>
     </>
