@@ -8,7 +8,7 @@
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
       <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="shelf" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#E2533C"/>
       <stop offset="100%" stop-color="#C63C28"/>
     </linearGradient>
@@ -24,22 +24,28 @@
   <rect width="512" height="512" fill="url(#tile)"/>
   <rect width="512" height="512" fill="url(#sheen)"/>
 
-  <!-- credenza / dispensa -->
-  <g filter="url(#soft)">
-    <!-- corpo -->
-    <rect x="162" y="120" width="188" height="272" rx="30"
-          fill="#FBF4EC" stroke="#2B2A28" stroke-width="17"/>
-    <!-- cassetto in alto -->
-    <line x1="171" y1="182" x2="341" y2="182" stroke="#2B2A28" stroke-width="14" stroke-linecap="round"/>
-    <line x1="238" y1="151" x2="274" y2="151" stroke="#2B2A28" stroke-width="13" stroke-linecap="round"/>
-    <!-- mensola pomodoro (l'accento) -->
-    <rect x="171" y="236" width="170" height="26" rx="13" fill="url(#shelf)"/>
-    <!-- ante in basso: divisore + maniglie -->
-    <line x1="256" y1="284" x2="256" y2="372" stroke="#2B2A28" stroke-width="13" stroke-linecap="round"/>
-    <circle cx="231" cy="326" r="8" fill="#2B2A28"/>
-    <circle cx="281" cy="326" r="8" fill="#2B2A28"/>
+  <!-- dispensa a scaffali con barattoli a vista -->
+  <g filter="url(#soft)" stroke="#2B2A28" stroke-linecap="round" stroke-linejoin="round">
+    <!-- mobile -->
+    <rect x="138" y="118" width="236" height="297" rx="40" fill="#FBF4EC" stroke-width="22"/>
+    <!-- ripiani -->
+    <line x1="138" y1="230" x2="374" y2="230" stroke-width="15"/>
+    <line x1="138" y1="328" x2="374" y2="328" stroke-width="15"/>
+
+    <!-- ripiano alto: due barattoli (uno col tappo pomodoro) -->
+    <rect x="179" y="160" width="46" height="61" rx="13" fill="none" stroke-width="13"/>
+    <rect x="176" y="150" width="52" height="18" rx="8" fill="url(#red)" stroke="none"/>
+    <rect x="266" y="170" width="46" height="51" rx="13" fill="none" stroke-width="13"/>
+
+    <!-- ripiano centrale: lattina pomodoro + barattolo tondo -->
+    <rect x="189" y="256" width="42" height="62" rx="11" fill="url(#red)" stroke="none"/>
+    <circle cx="292" cy="287" r="31" fill="none" stroke-width="13"/>
+
+    <!-- ripiano basso: scatola -->
+    <rect x="224" y="358" width="64" height="42" rx="11" fill="none" stroke-width="13"/>
+
     <!-- piedini -->
-    <line x1="196" y1="392" x2="196" y2="416" stroke="#2B2A28" stroke-width="15" stroke-linecap="round"/>
-    <line x1="316" y1="392" x2="316" y2="416" stroke="#2B2A28" stroke-width="15" stroke-linecap="round"/>
+    <line x1="186" y1="415" x2="186" y2="445" stroke-width="22"/>
+    <line x1="326" y1="415" x2="326" y2="445" stroke-width="22"/>
   </g>
 </svg>
