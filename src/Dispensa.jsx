@@ -1009,10 +1009,10 @@ export default function Dispensa({ session }) {
     chooseMode({ id: t, icon: "✨", custom: true });
   }
 
-  // Porzioni di partenza: la preferenza dell'utente, altrimenti quelle
-  // della ricetta. Ogni cambio manuale viene ricordato ("a casa siamo in X").
-  function initialServings(r) {
-    return prefServings || Number(r?.servings) || 2;
+  // Porzioni di partenza: 1 persona di default (la preferenza dell'utente,
+  // se impostata cambiando le porzioni a mano, ha la precedenza).
+  function initialServings() {
+    return prefServings || 1;
   }
   function changeServings(n) {
     const v = Math.max(1, n);
