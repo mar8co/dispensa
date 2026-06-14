@@ -199,12 +199,14 @@ export default function RecipesTab({
 
       {mode && !recipe && !loadingRecipe && (
         <>
-          <button onClick={backToModes} className="mb-4 flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Occasioni
-          </button>
-          <div className="mb-4 flex items-center gap-2">
-            <span className="text-xl">{mode.icon}</span>
-            <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">{mode.id}</h1>
+          {/* Header sticky: indietro + nome categoria, sempre visibile durante
+              lo scroll delle proposte. */}
+          <div className="sticky top-0 z-20 -mx-5 mb-3 flex items-center gap-2 border-b border-hair bg-cream/95 px-5 py-2.5 backdrop-blur">
+            <button onClick={backToModes} aria-label="Torna alle occasioni" className="-ml-1 shrink-0 rounded-lg p-1 text-stone-500 transition hover:text-ink">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <span className="shrink-0 text-xl">{mode.icon}</span>
+            <h1 className="min-w-0 truncate font-display text-[26px] font-extrabold tracking-tight text-ink">{mode.id}</h1>
           </div>
 
           {loadingIdeas && (
