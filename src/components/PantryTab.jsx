@@ -11,8 +11,8 @@ import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, atMinQty } from "../lib/pantry.js";
 
 const EXP_STYLE = {
-  scaduto: "bg-tomato text-white",
-  oggi: "bg-tomato text-white",
+  scaduto: "bg-tomato text-[#fff] ring-2 ring-tomato/30",
+  oggi: "bg-tomato text-[#fff]",
   presto: "bg-tomato/10 text-tomato",
   settimana: "bg-amber-100 text-amber-700",
   ok: "bg-stone-100 text-stone-500",
@@ -59,7 +59,7 @@ function todayIso() {
 
 
 export default function PantryTab({
-  search, setSearch, sort, setSort, onOpenProfile, userInitial,
+  search, setSearch, sort, setSort,
   grouped, cardRefs,
   onMoveCat, onAutoSave, onSetExpiry, removeItem,
   expiringCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping,
@@ -67,15 +67,10 @@ export default function PantryTab({
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
   const [sortOpen, setSortOpen] = useState(false); // chips ordinamento a comparsa
-  // Scadenza: si modifica in una riga dedicata e si salva SOLO con "Salva"
-  // (su iOS il date picker, anche chiuso senza scegliere, imposta "oggi").
-  const [expiryEditId, setExpiryEditId] = useState(null);
-  const [expDraft, setExpDraft] = useState("");
+  const [expDraft, setExpDraft] = useState(""); // scadenza nel pannello (sempre visibile)
   const [catPickerOpen, setCatPickerOpen] = useState(false);
   // Barra sticky: espansione verticale di tutti i reparti (niente swipe).
   const [catsExpanded, setCatsExpanded] = useState(false);
-  const expOpenTsRef = useRef(0);       // momento di apertura del picker data
-  const expProvisionalRef = useRef(false); // "oggi" auto-impostato da iOS, non scelto
 
   // --- Pannello prodotto con salvataggio automatico ---
   // Le modifiche si applicano da sole (nome al blur, quantità con una breve
@@ -122,31 +117,20 @@ export default function PantryTab({
     lastRef.current.expiry = val;
     onSetExpiry(it, val);
   }
+  // La scadenza è un campo visibile nel pannello: ogni scelta dal calendario
+  // (onChange = scelta reale, non provvisoria) si salva con una breve attesa.
   function scheduleExpiry(v) {
     setExpDraft(v);
     clearTimeout(expTimer.current);
-    // Aprendo il picker, iOS imposta subito "oggi" da solo: non è una
-    // scelta dell'utente — si mostra ma NON si salva (niente toast).
-    // Qualsiasi modifica successiva è una scelta vera e si salva.
-    const auto =
-      !snapRef.current.expiry &&
-      v === todayIso() &&
-      Date.now() - expOpenTsRef.current < 600;
-    if (auto) {
-      expProvisionalRef.current = true;
-      return;
-    }
-    expProvisionalRef.current = false;
-    expTimer.current = setTimeout(() => commitExpiryNow(v), 700);
+    expTimer.current = setTimeout(() => commitExpiryNow(v), 400);
   }
   function flushPending() {
     clearTimeout(qtyTimer.current);
     clearTimeout(expTimer.current);
-    const it = openItemRef.current;
-    if (!it) return;
+    if (!openItemRef.current) return;
     commitQtyNow(qtyDraft);
     commitNameNow();
-    if (expiryEditId === it.id && !expProvisionalRef.current) commitExpiryNow(expDraft);
+    commitExpiryNow(expDraft);
   }
   function openPanel(it) {
     flushPending();
@@ -156,8 +140,8 @@ export default function PantryTab({
     lastRef.current = { name: it.name, qty: it.qty, expiry: it.expiry || "" };
     setDraftName(it.name);
     setQtyDraft(it.qty);
+    setExpDraft(it.expiry || "");
     setCatPickerOpen(false);
-    setExpiryEditId(null);
   }
   function closePanel(flush = true) {
     if (flush) flushPending();
@@ -166,7 +150,6 @@ export default function PantryTab({
     setOpenId(null);
     openItemRef.current = null;
     setCatPickerOpen(false);
-    setExpiryEditId(null);
   }
   function chooseCategory(c) {
     const it = openItemRef.current;
@@ -211,18 +194,8 @@ export default function PantryTab({
 
   return (
     <div className="pt-2">
-      {/* Header editoriale */}
-      <div className="flex items-start justify-between">
-        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua dispensa</div>
-        <button
-          onClick={onOpenProfile}
-          className="-mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-sm font-extrabold text-white shadow-sm transition hover:opacity-90 active:scale-95"
-          aria-label="Profilo"
-          title="Profilo"
-        >
-          {userInitial}
-        </button>
-      </div>
+      {/* Header editoriale (il profilo è nella navbar in basso) */}
+      <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua dispensa</div>
       <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Ciao 👋<br />Hai fame?</h1>
 
       {/* Ricerca minimale, sticky in alto (con l'ordinamento dietro l'icona) */}
@@ -415,7 +388,7 @@ export default function PantryTab({
                           aria-label="Nome prodotto"
                         />
                         <button
-                          onClick={() => { setCatPickerOpen((v) => !v); setExpiryEditId(null); }}
+                          onClick={() => setCatPickerOpen((v) => !v)}
                           aria-label="Categoria"
                           title="Categoria"
                           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-base transition ${
@@ -424,31 +397,6 @@ export default function PantryTab({
                         >
                           {CAT_ICON[it.category]}
                         </button>
-                        {/* Il tap sull'icona apre SUBITO il calendario nativo
-                            (input invisibile sopra l'icona, clippato per non
-                            rubare i tap ai bottoni accanto su iOS). */}
-                        <label
-                          onClick={() => {
-                            setExpDraft(it.expiry || "");
-                            setCatPickerOpen(false);
-                            setExpiryEditId(it.id);
-                            expOpenTsRef.current = Date.now();
-                            expProvisionalRef.current = false;
-                          }}
-                          title="Scadenza"
-                          className={`relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border transition ${
-                            it.expiry ? "border-tomato/40 bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-500 hover:text-tomato"
-                          }`}
-                        >
-                          <CalendarPlus className="h-4 w-4" />
-                          <input
-                            type="date"
-                            value={it.expiry || ""}
-                            onChange={(e) => { setExpiryEditId(it.id); scheduleExpiry(e.target.value); }}
-                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                            aria-label="Scadenza"
-                          />
-                        </label>
                         <button
                           onClick={() => { closePanel(false); removeItem(it); }}
                           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
@@ -477,29 +425,26 @@ export default function PantryTab({
                         </div>
                       )}
 
-                      {/* Scadenza: solo la vista calendario — la data scelta
-                          si salva da sola (toast con Annulla), niente "Salva".
-                          Il pulsante è "Togli" e diventa "Elimina" dopo una
-                          nuova selezione in questa sessione. */}
-                      {expiryEditId === it.id && (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="date"
-                            value={expDraft}
-                            onChange={(e) => scheduleExpiry(e.target.value)}
-                            className="min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-1.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                            aria-label="Data di scadenza"
-                          />
-                          {(it.expiry || expDraft) && (
-                            <button
-                              onClick={() => { clearTimeout(expTimer.current); setExpDraft(""); commitExpiryNow(""); setExpiryEditId(null); }}
-                              className="shrink-0 rounded-lg border border-tomato/30 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
-                            >
-                              Annulla
-                            </button>
-                          )}
-                        </div>
-                      )}
+                      {/* Scadenza: campo SEMPRE visibile, modifica immediata
+                          dal calendario nativo (si salva da sola). */}
+                      <div className="flex items-center gap-2">
+                        <CalendarPlus className="h-4 w-4 shrink-0 text-stone-400" />
+                        <input
+                          type="date"
+                          value={expDraft}
+                          onChange={(e) => scheduleExpiry(e.target.value)}
+                          className="min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+                          aria-label="Data di scadenza"
+                        />
+                        {expDraft && (
+                          <button
+                            onClick={() => { clearTimeout(expTimer.current); setExpDraft(""); commitExpiryNow(""); }}
+                            className="shrink-0 rounded-lg border border-tomato/30 px-2.5 py-2 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
+                          >
+                            Rimuovi
+                          </button>
+                        )}
+                      </div>
 
                       {out && (
                         <button
@@ -562,7 +507,7 @@ export default function PantryTab({
                       className="flex w-full items-baseline gap-2 py-[7px] text-left"
                     >
                       <span className={`min-w-0 truncate text-[15px] font-semibold ${nameTone(it, out)}`}>{it.name}</span>
-                      <ExpiryBadge date={it.expiry} onlyUrgent />
+                      <ExpiryBadge date={it.expiry} />
                       {out && <span className="shrink-0 text-[11px] font-bold text-tomato">finito</span>}
                       <span aria-hidden="true" className="border-b border-dotted border-stone-300" style={{ flex: "1 0 12px" }} />
                       <span className="shrink-0 text-xs font-medium text-stone-400">{qtyLabel(it.qty)}</span>

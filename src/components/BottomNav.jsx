@@ -1,22 +1,22 @@
-// Navigazione principale: barra flottante a pillola, staccata dal bordo,
-// con indicatore (pillola pomodoro) sulla scheda attiva.
+// Navigazione principale: barra con Dispensa · Spesa · [+] · Ricette · Profilo.
+// Il "+" è un pulsante centrale rialzato (lo slot addSlot lo riceve).
 import { Package, ShoppingCart, ChefHat } from "lucide-react";
 
-function Tab({ id, view, setView, icon: Icon, label, badge }) {
-  const active = view === id;
+function Tab({ active, onClick, icon: Icon, emoji, label, badge }) {
   return (
-    <button onClick={() => setView(id)} className="relative flex flex-col items-center gap-0.5 px-2 py-1">
-      <div className={`flex items-center justify-center rounded-full px-4 py-1 transition ${active ? "bg-tomato/10" : ""}`}>
-        <Icon
-          className={`h-[22px] w-[22px] ${active ? "text-tomato" : "text-stone-400"}`}
-          strokeWidth={active ? 2.3 : 1.9}
-        />
-      </div>
+    <button onClick={onClick} className="relative flex flex-1 flex-col items-center gap-0.5 py-1">
+      <span className={`flex items-center justify-center rounded-full px-3 py-1 transition ${active ? "bg-tomato/10" : ""}`}>
+        {emoji ? (
+          <span className="text-[20px] leading-none">{emoji}</span>
+        ) : (
+          <Icon className={`h-[21px] w-[21px] ${active ? "text-tomato" : "text-stone-400"}`} strokeWidth={active ? 2.3 : 1.9} />
+        )}
+      </span>
       <span className={`text-[10px] font-semibold tracking-wide ${active ? "text-tomato" : "text-stone-400"}`}>
         {label}
       </span>
       {badge > 0 && (
-        <span className="absolute right-4 top-0 min-w-[16px] rounded-full bg-tomato px-1 text-center text-[9px] font-bold leading-4 text-white">
+        <span className="absolute right-3 top-0 min-w-[16px] rounded-full bg-tomato px-1 text-center text-[9px] font-bold leading-4 text-[#fff]">
           {badge}
         </span>
       )}
@@ -24,22 +24,25 @@ function Tab({ id, view, setView, icon: Icon, label, badge }) {
   );
 }
 
-export default function BottomNav({ view, setView, shoppingCount, addSlot }) {
+export default function BottomNav({ view, setView, onProfile, profileAvatar, shoppingCount, addSlot }) {
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-40 px-4"
+      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3"
       style={{ paddingBottom: "max(4px, calc(env(safe-area-inset-bottom) - 12px))" }}
     >
-      {/* La pillola resta CENTRATA; il "+" (solo in Dispensa) è staccato e
-          ancorato a destra, sulla stessa riga. */}
-      <div className="relative flex justify-center">
-        <div className="flex w-fit items-center gap-1 rounded-[26px] border border-hair bg-cream/70 px-2 py-1.5 shadow-[0_4px_22px_rgba(0,0,0,0.12)] backdrop-blur-md">
-          <Tab id="dispensa" view={view} setView={setView} icon={Package} label="Dispensa" />
-          <Tab id="spesa" view={view} setView={setView} icon={ShoppingCart} label="Spesa" badge={shoppingCount} />
-          <Tab id="ricette" view={view} setView={setView} icon={ChefHat} label="Ricette" />
+      <div className="relative w-full max-w-md">
+        {/* Barra: 2 tab · spazio centrale · 2 tab */}
+        <div className="flex items-stretch rounded-[26px] border border-hair bg-cream/80 px-1.5 py-1.5 shadow-[0_4px_22px_rgba(0,0,0,0.12)] backdrop-blur-md">
+          <Tab active={view === "dispensa"} onClick={() => setView("dispensa")} icon={Package} label="Dispensa" />
+          <Tab active={view === "spesa"} onClick={() => setView("spesa")} icon={ShoppingCart} label="Spesa" badge={shoppingCount} />
+          <div className="w-14 shrink-0" aria-hidden="true" />
+          <Tab active={view === "ricette"} onClick={() => setView("ricette")} icon={ChefHat} label="Ricette" />
+          <Tab active={false} onClick={onProfile} emoji={profileAvatar} label="Profilo" />
         </div>
+
+        {/* "+" centrale rialzato */}
         {addSlot && (
-          <div className="absolute right-0 top-1/2 -translate-y-[calc(50%+24px)]">{addSlot}</div>
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[26px]">{addSlot}</div>
         )}
       </div>
     </div>

@@ -102,6 +102,10 @@ export const DEMO_DATA = [
   ["Sale", "1", "Spezie ed Erbe"],
 ];
 
+// Avatar profilo a tema food (emoji: stile uniforme, facili da ampliare —
+// basta aggiungerne alla lista). Il primo è il default.
+export const AVATARS = ["🍅", "🥑", "🍳", "🧀", "🥕", "🍓", "🥦", "🌶️", "🍋", "🍄"];
+
 export const STORAGE_KEY = "dispensa-v1";
 export const COLLAPSE_KEY = "dispensa-collapsed-v1";
 export const ORDER_KEY = "dispensa-order-v1";

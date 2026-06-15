@@ -132,6 +132,7 @@ export default function Dispensa({ session }) {
   const [savedRecipes, setSavedRecipes] = useState(() => loadSavedRecipes(session.user.id) || []); // ricettario (salvate + cucinate)
   const [prefServings, setPrefServings] = useState(null); // "a casa siamo in X" (persistito)
   const [foodPrefs, setFoodPrefs] = useState("");          // preferenze alimentari (persistite)
+  const [avatar, setAvatar] = useState("🍅");              // avatar profilo (persistito)
 
   // "Ho cucinato questo"
   const [cookOpen, setCookOpen] = useState(false);
@@ -155,6 +156,7 @@ export default function Dispensa({ session }) {
     if (s.shopCats && typeof s.shopCats === "object") setShopCats(s.shopCats);
     if (Number(s.prefServings) >= 1) setPrefServings(Number(s.prefServings));
     if (typeof s.foodPrefs === "string") setFoodPrefs(s.foodPrefs);
+    if (typeof s.avatar === "string" && s.avatar) setAvatar(s.avatar);
     if (Array.isArray(s.catOrder)) {
       setCatOrder([
         ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
@@ -241,9 +243,9 @@ export default function Dispensa({ session }) {
     saveCache(session.user.id, {
       items,
       shopping,
-      settings: { collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs },
+      settings: { collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, avatar },
     });
-  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
+  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, avatar, loaded]);
 
   // --- Indicatore stato connessione ---
   useEffect(() => {
@@ -303,10 +305,10 @@ export default function Dispensa({ session }) {
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
     if (!loaded) return;
-    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs }).catch((e) =>
+    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, avatar }).catch((e) =>
       console.error("Errore salvataggio impostazioni:", e)
     );
-  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
+  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, avatar, loaded]);
 
   // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
   useEffect(() => {
@@ -1363,8 +1365,6 @@ export default function Dispensa({ session }) {
       <div className="mx-auto max-w-md px-5 pt-7 pb-28">
         {view === "dispensa" && (
           <PantryTab
-            onOpenProfile={() => setProfileOpen(true)}
-            userInitial={(session.user.email || "?").trim().charAt(0).toUpperCase()}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} cardRefs={cardRefs}
             onMoveCat={moveCategory}
@@ -1430,24 +1430,24 @@ export default function Dispensa({ session }) {
       {/* Overlay sfocato del menù "+": a livello di pagina (NON dentro la
           navbar, che ha transform), così copre tutto lo schermo e chiude il
           menù al tocco esterno. */}
-      {view === "dispensa" && (
-        <button
-          onClick={() => setAddMenuOpen(false)}
-          aria-label="Chiudi menù"
-          tabIndex={addMenuOpen ? 0 : -1}
-          className={`fixed inset-0 z-30 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
-            addMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
-          }`}
-        />
-      )}
+      <button
+        onClick={() => setAddMenuOpen(false)}
+        aria-label="Chiudi menù"
+        tabIndex={addMenuOpen ? 0 : -1}
+        className={`fixed inset-0 z-30 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
+          addMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
 
-      {/* Il badge conta solo ciò che resta da comprare; il "+" è sulla riga
-          della navbar, accanto alla pillola, solo nella Dispensa. */}
+      {/* Navbar: Dispensa · Spesa · [+] · Ricette · Profilo. Il "+" è centrale
+          e globale (aggiunge un prodotto da qualunque scheda). */}
       <BottomNav
         view={view}
         setView={changeView}
+        onProfile={() => setProfileOpen(true)}
+        profileAvatar={avatar}
         shoppingCount={shopping.filter((s) => !s.checked).length}
-        addSlot={view === "dispensa" ? (
+        addSlot={
           <AddFab
             menuOpen={addMenuOpen}
             setMenuOpen={setAddMenuOpen}
@@ -1456,7 +1456,7 @@ export default function Dispensa({ session }) {
             onBarcode={() => setBarcodeOpen(true)}
             onVoice={() => setVoiceOpen(true)}
           />
-        ) : null}
+        }
       />
 
       {/* Fotocamera integrata per lo scontrino (anteprima live + galleria) */}
@@ -1501,6 +1501,8 @@ export default function Dispensa({ session }) {
         <ProfileSheet
           email={session.user.email}
           itemCount={items.length}
+          avatar={avatar}
+          onPickAvatar={setAvatar}
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
           onClose={() => setProfileOpen(false)}
