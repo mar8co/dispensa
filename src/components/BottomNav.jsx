@@ -1,16 +1,12 @@
 // Navigazione principale: barra con Dispensa · Spesa · [+] · Ricette · Profilo.
 // Il "+" è un pulsante centrale rialzato (lo slot addSlot lo riceve).
-import { Package, ShoppingCart, ChefHat } from "lucide-react";
+import { Package, ShoppingCart, ChefHat, User } from "lucide-react";
 
-function Tab({ active, onClick, icon: Icon, emoji, label, badge }) {
+function Tab({ active, onClick, icon: Icon, label, badge }) {
   return (
     <button onClick={onClick} className="relative flex flex-1 flex-col items-center gap-0.5 py-1">
       <span className={`flex items-center justify-center rounded-full px-3 py-1 transition ${active ? "bg-tomato/10" : ""}`}>
-        {emoji ? (
-          <span className="text-[20px] leading-none">{emoji}</span>
-        ) : (
-          <Icon className={`h-[21px] w-[21px] ${active ? "text-tomato" : "text-stone-400"}`} strokeWidth={active ? 2.3 : 1.9} />
-        )}
+        <Icon className={`h-[21px] w-[21px] ${active ? "text-tomato" : "text-stone-400"}`} strokeWidth={active ? 2.3 : 1.9} />
       </span>
       <span className={`text-[10px] font-semibold tracking-wide ${active ? "text-tomato" : "text-stone-400"}`}>
         {label}
@@ -24,7 +20,7 @@ function Tab({ active, onClick, icon: Icon, emoji, label, badge }) {
   );
 }
 
-export default function BottomNav({ view, setView, onProfile, profileAvatar, shoppingCount, addSlot }) {
+export default function BottomNav({ view, setView, onProfile, shoppingCount, addSlot }) {
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3"
@@ -37,7 +33,7 @@ export default function BottomNav({ view, setView, onProfile, profileAvatar, sho
           <Tab active={view === "spesa"} onClick={() => setView("spesa")} icon={ShoppingCart} label="Spesa" badge={shoppingCount} />
           <div className="w-14 shrink-0" aria-hidden="true" />
           <Tab active={view === "ricette"} onClick={() => setView("ricette")} icon={ChefHat} label="Ricette" />
-          <Tab active={false} onClick={onProfile} emoji={profileAvatar} label="Profilo" />
+          <Tab active={false} onClick={onProfile} icon={User} label="Profilo" />
         </div>
 
         {/* "+" centrale rialzato */}

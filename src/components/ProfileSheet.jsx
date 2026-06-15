@@ -2,10 +2,9 @@
 // scelta del tema (auto/chiaro/scuro, salvata sul dispositivo), svuota
 // dispensa e uscita con conferma.
 import { useState } from "react";
-import { X, SunMoon, Sun, Moon, Trash2, LogOut } from "lucide-react";
+import { X, SunMoon, Sun, Moon, Trash2, LogOut, User } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import { getTheme, setTheme } from "../lib/theme.js";
-import { AVATARS } from "../constants.js";
 
 const THEMES = [
   { id: "auto", label: "Auto", icon: SunMoon },
@@ -14,7 +13,7 @@ const THEMES = [
 ];
 
 export default function ProfileSheet({
-  email, itemCount, avatar, onPickAvatar, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout,
+  email, itemCount, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout,
 }) {
   const [theme, setThemeState] = useState(getTheme());
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -37,8 +36,8 @@ export default function ProfileSheet({
 
           {/* Account */}
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-tomato/10 text-2xl">
-              {avatar || "🍅"}
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-tomato/10 text-tomato">
+              <User className="h-6 w-6" />
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-ink">{email}</p>
@@ -46,24 +45,6 @@ export default function ProfileSheet({
                 {itemCount} {itemCount === 1 ? "prodotto" : "prodotti"} in dispensa
               </p>
             </div>
-          </div>
-
-          {/* Avatar a tema food: un tap per cambiarlo */}
-          <p className="mb-2 mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Avatar</p>
-          <div className="flex flex-wrap gap-2">
-            {AVATARS.map((a) => (
-              <button
-                key={a}
-                onClick={() => onPickAvatar(a)}
-                aria-label={`Avatar ${a}`}
-                aria-pressed={avatar === a}
-                className={`flex h-11 w-11 items-center justify-center rounded-full border text-xl transition ${
-                  avatar === a ? "border-tomato bg-tomato/10 ring-2 ring-tomato/30" : "border-hair bg-paper hover:border-stone-300"
-                }`}
-              >
-                {a}
-              </button>
-            ))}
           </div>
 
           {/* Tema */}

@@ -132,7 +132,6 @@ export default function Dispensa({ session }) {
   const [savedRecipes, setSavedRecipes] = useState(() => loadSavedRecipes(session.user.id) || []); // ricettario (salvate + cucinate)
   const [prefServings, setPrefServings] = useState(null); // "a casa siamo in X" (persistito)
   const [foodPrefs, setFoodPrefs] = useState("");          // preferenze alimentari (persistite)
-  const [avatar, setAvatar] = useState("🍅");              // avatar profilo (persistito)
 
   // "Ho cucinato questo"
   const [cookOpen, setCookOpen] = useState(false);
@@ -156,7 +155,6 @@ export default function Dispensa({ session }) {
     if (s.shopCats && typeof s.shopCats === "object") setShopCats(s.shopCats);
     if (Number(s.prefServings) >= 1) setPrefServings(Number(s.prefServings));
     if (typeof s.foodPrefs === "string") setFoodPrefs(s.foodPrefs);
-    if (typeof s.avatar === "string" && s.avatar) setAvatar(s.avatar);
     if (Array.isArray(s.catOrder)) {
       setCatOrder([
         ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
@@ -243,9 +241,9 @@ export default function Dispensa({ session }) {
     saveCache(session.user.id, {
       items,
       shopping,
-      settings: { collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, avatar },
+      settings: { collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs },
     });
-  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, avatar, loaded]);
+  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
 
   // --- Indicatore stato connessione ---
   useEffect(() => {
@@ -305,10 +303,10 @@ export default function Dispensa({ session }) {
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
     if (!loaded) return;
-    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, avatar }).catch((e) =>
+    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs }).catch((e) =>
       console.error("Errore salvataggio impostazioni:", e)
     );
-  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, avatar, loaded]);
+  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
 
   // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
   useEffect(() => {
@@ -933,9 +931,14 @@ export default function Dispensa({ session }) {
     setScanItems([]);
   }
 
+  // Porta la pagina in cima (ogni sezione/categoria riparte dall'alto).
+  function scrollToTop() {
+    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+  }
+
   // Cambio scheda con dissolvenza (View Transition).
   function changeView(v) {
-    if (v !== view) animateUI(() => setView(v));
+    if (v !== view) { animateUI(() => setView(v)); scrollToTop(); }
   }
 
   // --- Ricette ---
@@ -961,6 +964,7 @@ export default function Dispensa({ session }) {
   }
 
   async function chooseMode(m, force = false) {
+    scrollToTop(); // le 4 proposte partono sempre dall'alto
     // Richiesta libera ("Cosa ti va?"): niente cache, sempre fresca.
     if (!force && !m.custom) {
       const hit = loadIdeasCache()[m.id];
@@ -1026,6 +1030,7 @@ export default function Dispensa({ session }) {
     savedRecipes.find((r) => norm(r.title) === norm(String(title || "")));
 
   async function openRecipe(title) {
+    scrollToTop(); // la ricetta parte dall'alto
     // Se è già nel ricettario, si apre da lì: istantanea e senza quota AI.
     const saved = savedByTitle(title);
     if (saved?.data?.steps?.length) {
@@ -1164,9 +1169,11 @@ export default function Dispensa({ session }) {
 
   function backToModes() {
     animateUI(() => { setMode(null); setIdeas([]); setRecipe(null); setRecipeErr(""); setCookDone(""); });
+    scrollToTop();
   }
   function backToIdeas() {
     animateUI(() => { setRecipe(null); setRecipeErr(""); setCookDone(""); });
+    scrollToTop();
   }
 
   // --- Scadenze: prodotti che scadono entro 7 giorni (o già scaduti) ---
@@ -1445,7 +1452,6 @@ export default function Dispensa({ session }) {
         view={view}
         setView={changeView}
         onProfile={() => setProfileOpen(true)}
-        profileAvatar={avatar}
         shoppingCount={shopping.filter((s) => !s.checked).length}
         addSlot={
           <AddFab
@@ -1501,8 +1507,6 @@ export default function Dispensa({ session }) {
         <ProfileSheet
           email={session.user.email}
           itemCount={items.length}
-          avatar={avatar}
-          onPickAvatar={setAvatar}
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
           onClose={() => setProfileOpen(false)}

@@ -5,8 +5,10 @@
 import { Plus, Pencil, Camera, ScanBarcode, Mic } from "lucide-react";
 
 // Posizioni lungo un arco superiore (x orizzontale, y negativo = in alto).
-const R = 96;
-const ANGLES = [158, 116, 64, 22]; // gradi, da sinistra a destra
+// Le due interne sono più centrate (∓33px), le esterne più larghe: ventaglio
+// simmetrico, sopra il pulsante, senza finire sotto le tab della navbar.
+const R = 106;
+const ANGLES = [146, 108, 72, 34]; // gradi, da sinistra a destra
 const pos = (deg) => ({
   x: Math.round(R * Math.cos((deg * Math.PI) / 180)),
   y: Math.round(-R * Math.sin((deg * Math.PI) / 180)),
@@ -48,7 +50,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
             >
               <Icon className="h-[21px] w-[21px]" />
             </button>
-            <span className="whitespace-nowrap rounded-full bg-ink px-2 py-0.5 text-[11px] font-bold text-[#fff] shadow">
+            <span className="whitespace-nowrap rounded-full bg-black/80 px-2 py-0.5 text-[11px] font-bold text-[#fff] shadow">
               {o.label}
             </span>
           </div>
