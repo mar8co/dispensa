@@ -2,7 +2,7 @@
 // scelta del tema (auto/chiaro/scuro, salvata sul dispositivo), svuota
 // dispensa e uscita con conferma.
 import { useState } from "react";
-import { X, SunMoon, Sun, Moon, Trash2, LogOut, User } from "lucide-react";
+import { X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import { getTheme, setTheme } from "../lib/theme.js";
 
@@ -13,7 +13,7 @@ const THEMES = [
 ];
 
 export default function ProfileSheet({
-  email, itemCount, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout,
+  email, itemCount, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout, onReplayTour,
 }) {
   const [theme, setThemeState] = useState(getTheme());
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -86,6 +86,12 @@ export default function ProfileSheet({
 
           {/* Azioni */}
           <div className="mt-6 space-y-2">
+            <button
+              onClick={() => { close(); onReplayTour?.(); }}
+              className="flex w-full items-center gap-2.5 rounded-xl border border-hair px-4 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
+            >
+              <GraduationCap className="h-4 w-4 text-stone-400" /> Rivedi il tutorial
+            </button>
             <button
               onClick={() => { close(); onClearPantry(); }}
               className="flex w-full items-center gap-2.5 rounded-xl border border-hair px-4 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"

@@ -225,6 +225,7 @@ export default function RecipesTab({
             {ideas.map((r, i) => (
               <button
                 key={i}
+                data-tour={i === 0 ? "recipe-idea" : undefined}
                 onClick={() => openRecipe(r.title)}
                 className="block w-full overflow-hidden rounded-2xl border border-hair bg-paper text-left transition hover:border-ink"
               >
@@ -311,6 +312,7 @@ export default function RecipesTab({
               </div>
             )}
             <button
+              data-tour="recipe-heart"
               onClick={onToggleSave}
               aria-label={isSaved ? "Rimuovi dalle salvate" : "Salva nel ricettario"}
               className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur transition active:scale-90"

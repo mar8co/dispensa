@@ -3,6 +3,7 @@
 // L'overlay che chiude al tocco esterno è renderizzato dalla pagina (Dispensa)
 // perché un `fixed` dentro un contenitore con transform non coprirebbe lo schermo.
 import { Plus, Pencil, Camera, ScanBarcode, Mic } from "lucide-react";
+import { tourSignal } from "../lib/tour.js";
 
 // Posizioni lungo un arco superiore (x orizzontale, y negativo = in alto).
 // Le due interne sono più centrate (∓33px), le esterne più larghe: ventaglio
@@ -44,7 +45,12 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
             }}
           >
             <button
-              onClick={() => { setMenuOpen(false); o.action(); }}
+              data-tour={o.id === "manual" ? "add-manual-option" : undefined}
+              onClick={() => {
+                if (o.id === "manual") tourSignal("add-manual-chosen");
+                setMenuOpen(false);
+                o.action();
+              }}
               aria-label={o.label}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-tomato text-[#fff] shadow-lg shadow-tomato/30 active:scale-95"
             >
@@ -58,7 +64,8 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
       })}
 
       <button
-        onClick={() => setMenuOpen((v) => !v)}
+        data-tour="add-fab"
+        onClick={() => setMenuOpen((v) => { const next = !v; if (next) tourSignal("add-menu-opened"); return next; })}
         aria-label={menuOpen ? "Chiudi" : "Aggiungi"}
         className="relative z-40 flex h-[58px] w-[58px] items-center justify-center rounded-full border-4 border-cream bg-tomato text-[#fff] shadow-xl shadow-tomato/40 transition active:scale-95"
       >

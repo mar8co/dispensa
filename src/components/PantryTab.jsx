@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, atMinQty } from "../lib/pantry.js";
+import { tourSignal } from "../lib/tour.js";
 
 const EXP_STYLE = {
   scaduto: "bg-tomato text-[#fff] ring-2 ring-tomato/30",
@@ -91,6 +92,7 @@ export default function PantryTab({
     if (!it || !val || val === String(lastRef.current.qty)) return;
     lastRef.current.qty = val;
     onAutoSave(it, { qty: val }, { qty: snapRef.current.qty });
+    tourSignal("qty-changed");
   }
   function scheduleQty(v) {
     setQtyDraft(v);
@@ -135,6 +137,7 @@ export default function PantryTab({
   function openPanel(it) {
     flushPending();
     setOpenId(it.id);
+    tourSignal("product-opened");
     openItemRef.current = it;
     snapRef.current = { name: it.name, qty: it.qty, category: it.category, expiry: it.expiry };
     lastRef.current = { name: it.name, qty: it.qty, expiry: it.expiry || "" };
@@ -167,6 +170,7 @@ export default function PantryTab({
     setQtyDraft(v);
     clearTimeout(qtyTimer.current);
     commitQtyNow(v);
+    tourSignal("unit-changed");
   }
 
   // Il pannello si chiude toccando un punto qualsiasi fuori da esso.
@@ -177,8 +181,11 @@ export default function PantryTab({
     };
     document.addEventListener("pointerdown", onDoc);
     return () => document.removeEventListener("pointerdown", onDoc);
+    // expDraft incluso: senza, chiudendo il pannello subito dopo aver scelto
+    // SOLO la scadenza, il flush usava un expDraft "vecchio" e la data non
+    // veniva salvata (a meno di toccare anche la quantità).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openId, qtyDraft, draftName]);
+  }, [openId, qtyDraft, draftName, expDraft]);
 
   // Salta alla categoria: si chiude prima il menù espanso, poi (frame
   // successivo, a layout aggiornato) si scrolla — altrimenti l'altezza del
@@ -191,6 +198,9 @@ export default function PantryTab({
       });
     });
   }
+
+  // Primo prodotto in assoluto: bersaglio dello spotlight nel tutorial.
+  const firstItemId = grouped[0]?.list?.[0]?.id;
 
   return (
     <div className="pt-2">
@@ -427,7 +437,7 @@ export default function PantryTab({
 
                       {/* Scadenza: campo SEMPRE visibile, modifica immediata
                           dal calendario nativo (si salva da sola). */}
-                      <div className="flex items-center gap-2">
+                      <div data-tour="expiry-field" className="flex items-center gap-2">
                         <CalendarPlus className="h-4 w-4 shrink-0 text-stone-400" />
                         <input
                           type="date"
@@ -457,7 +467,7 @@ export default function PantryTab({
 
                       {/* Riga 2: stepper nudo a sinistra, unità a destra */}
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-3 px-1">
+                        <div data-tour="qty-stepper" className="flex items-center gap-3 px-1">
                           <button
                             onClick={() => scheduleQty(adjustQty(qtyDraft, -1))}
                             disabled={out}
@@ -477,7 +487,7 @@ export default function PantryTab({
                             aria-label="Aumenta"
                           >+</button>
                         </div>
-                        <div className="flex gap-1">
+                        <div data-tour="unit-chips" className="flex gap-1">
                           {["", "g", "kg", "l"].map((u) => {
                             const active = u === "" ? curUnit === "" : curUnit === u;
                             return (
@@ -503,6 +513,7 @@ export default function PantryTab({
                 return (
                   <li key={it.id}>
                     <button
+                      data-tour={it.id === firstItemId ? "pantry-first-item" : undefined}
                       onClick={() => openPanel(it)}
                       className="flex w-full items-baseline gap-2 py-[7px] text-left"
                     >

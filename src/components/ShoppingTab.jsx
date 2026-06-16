@@ -473,7 +473,7 @@ export default function ShoppingTab({
           prodotto appare qui sotto. È nel flusso della pagina (sticky, non
           fixed in basso), quindi la tastiera iOS non lo copre. */}
       <div className="sticky top-0 z-20 -mx-5 mt-2 bg-cream/95 px-5 pb-2.5 pt-2.5 backdrop-blur">
-        <div className="flex items-center gap-2.5">
+        <div data-tour="shopping-input" className="flex items-center gap-2.5">
           <div className="relative flex-1">
             <Plus className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
             <input

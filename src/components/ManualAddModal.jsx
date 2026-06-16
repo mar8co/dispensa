@@ -94,6 +94,7 @@ export default function ManualAddModal({
 
         <input
           autoFocus
+          data-tour="manual-add"
           className={inputCls}
           placeholder="Cosa hai in dispensa?"
           value={newName}

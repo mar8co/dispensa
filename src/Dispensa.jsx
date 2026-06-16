@@ -38,8 +38,12 @@ import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
 import TimerBar from "./components/TimerBar.jsx";
-import Onboarding from "./components/Onboarding.jsx";
+import TourCoach from "./components/TourCoach.jsx";
 import Toast from "./components/Toast.jsx";
+import {
+  useTourState, startTour, stopTour, tourSignal, visibleSteps,
+  TOUR_MODE, TOUR_IDEA, TOUR_RECIPE,
+} from "./lib/tour.js";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
 // solo quando si apre la scansione del codice a barre.
@@ -143,8 +147,8 @@ export default function Dispensa({ session }) {
   // foglio profilo (tema, svuota dispensa, logout)
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // onboarding al primo accesso
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  // tutorial interattivo (primo accesso + ripetibile dal Profilo)
+  const tour = useTourState();
 
   // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
   // NB: lo stato "collassato" NON viene ripristinato: le categorie partono
@@ -193,7 +197,7 @@ export default function Dispensa({ session }) {
           const onboarded = (() => { try { return localStorage.getItem(`dispensa-onboarded-${uid}`) === "1"; } catch { return false; } })();
           const src = onboarded ? SEED_DATA : DEMO_DATA;
           rows = await insertMany(src.map(([name, qty, category]) => ({ name, qty, category })));
-          if (!onboarded) setOnboardingOpen(true);
+          if (!onboarded) startTour(true);
         }
         // Migrazione categorie: i prodotti con etichette vecchie (es.
         // "Fresco e Verdure") vengono ri-categorizzati con le nuove regole
@@ -385,6 +389,7 @@ export default function Dispensa({ session }) {
       console.error("Errore aggiunta prodotto:", e);
     }
     setNewName(""); setNewQty("1"); setNewUnit(""); setNewCat(""); setNewExpiry(""); setAdding(false);
+    if (result) tourSignal("product-added");
     return result;
   }
 
@@ -539,13 +544,53 @@ export default function Dispensa({ session }) {
     await supabase.auth.signOut();
   }
 
-  // Fine onboarding: segna come fatto e svuota i prodotti demo, così l'utente
-  // parte da una dispensa pulita.
-  async function finishOnboarding() {
-    setOnboardingOpen(false);
+  // --- Tutorial interattivo ---
+  const markOnboarded = () => {
     try { localStorage.setItem(`dispensa-onboarded-${session.user.id}`, "1"); } catch { /* */ }
+  };
+  // Svuota dispensa e lista di esempio inserite per il tutorial.
+  async function tourEmptyDemo() {
     try { await deleteAllPantry(); setItems([]); } catch (e) { console.error("Errore pulizia demo:", e); }
+    const ids = shopping.map((x) => x.id);
+    if (ids.length) {
+      try { await deleteShoppingItems(ids); setShopping([]); }
+      catch (e) { console.error("Errore pulizia lista demo:", e); }
+    }
   }
+  // Chiusura del tutorial: torna alle occasioni e, al primo accesso, dimentica
+  // la ricetta demo salutata col cuore, poi segna l'onboarding come fatto.
+  function tourComplete() {
+    markOnboarded();
+    animateUI(() => { setMode(null); setIdeas([]); setRecipe(null); setRecipeErr(""); });
+    if (tour.firstRun) {
+      const demo = savedRecipes.find((r) => norm(r.title) === norm(TOUR_RECIPE.title));
+      if (demo) { commitRecipes(savedRecipes.filter((r) => r.id !== demo.id)); deleteSavedRecipe(demo.id).catch(() => {}); }
+    }
+    stopTour();
+  }
+  // "Esci dal tutorial": al primo accesso pulisce comunque i dati demo.
+  async function tourExit() {
+    if (tour.firstRun) await tourEmptyDemo();
+    tourComplete();
+  }
+  // Ripeti il tutorial dal Profilo (non tocca la dispensa reale).
+  function replayTour() { startTour(false); }
+
+  // Prepara vista e contenuti demo richiesti dal passo corrente del tutorial:
+  // chiude le modali non pertinenti e, nelle Ricette, mostra la proposta demo.
+  useEffect(() => {
+    if (!tour.active) return;
+    const step = visibleSteps(tour.firstRun)[tour.index];
+    if (!step) return;
+    if (step.id !== "add-manual") setManualOpen(false);
+    if (step.id !== "add-modes" && step.id !== "add-manual") setAddMenuOpen(false);
+    if (step.view && view !== step.view) setView(step.view);
+    if (step.id === "open-recipe") {
+      setMode(TOUR_MODE); setRecipe(null); setIdeas([TOUR_IDEA]);
+      setLoadingIdeas(false); setLoadingRecipe(false); setRecipeErr("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tour.active, tour.index, tour.firstRun]);
 
   // --- Lista della spesa ---
 
@@ -600,6 +645,7 @@ export default function Dispensa({ session }) {
   // dizionario della dispensa, zero AI) + prima lettera maiuscola.
   async function addShoppingItem(name, qty) {
     const res = await addToShoppingMerged([{ name: correctName(String(name)), qty }]);
+    tourSignal("shopping-added");
     return { merged: res.merged > 0 };
   }
 
@@ -939,6 +985,7 @@ export default function Dispensa({ session }) {
   // Cambio scheda con dissolvenza (View Transition).
   function changeView(v) {
     if (v !== view) { animateUI(() => setView(v)); scrollToTop(); }
+    tourSignal(`view-${v}`);
   }
 
   // --- Ricette ---
@@ -1030,6 +1077,16 @@ export default function Dispensa({ session }) {
     savedRecipes.find((r) => norm(r.title) === norm(String(title || "")));
 
   async function openRecipe(title) {
+    // Durante il tutorial la ricetta d'esempio è precaricata (niente AI).
+    if (tour.active && norm(title) === norm(TOUR_RECIPE.title)) {
+      scrollToTop();
+      animateUI(() => {
+        setRecipe(TOUR_RECIPE); setServings(initialServings(TOUR_RECIPE));
+        setRecipeErr(""); setLoadingRecipe(false); setCookDone("");
+      });
+      tourSignal("recipe-opened");
+      return;
+    }
     scrollToTop(); // la ricetta parte dall'alto
     // Se è già nel ricettario, si apre da lì: istantanea e senza quota AI.
     const saved = savedByTitle(title);
@@ -1117,6 +1174,7 @@ export default function Dispensa({ session }) {
     } else if (ex) {
       commitRecipes(savedRecipes.map((r) => (r.id === ex.id ? { ...r, saved: true } : r)));
       updateSavedRecipe(ex.id, { saved: true }).catch(() => {});
+      tourSignal("recipe-saved");
     } else {
       const id = localRecipeId();
       const row = {
@@ -1125,6 +1183,7 @@ export default function Dispensa({ session }) {
       };
       commitRecipes([row, ...savedRecipes]);
       syncRecipeUpsert(id, { title: recipe.title, data: recipe, image: recipe.image || null, saved: true });
+      tourSignal("recipe-saved");
     }
   }
 
@@ -1512,6 +1571,7 @@ export default function Dispensa({ session }) {
           onClose={() => setProfileOpen(false)}
           onClearPantry={() => setConfirmClear(true)}
           onLogout={logout}
+          onReplayTour={replayTour}
         />
       )}
 
@@ -1565,7 +1625,9 @@ export default function Dispensa({ session }) {
         />
       )}
 
-      {onboardingOpen && <Onboarding onFinish={finishOnboarding} />}
+      {tour.active && (
+        <TourCoach onExit={tourExit} onComplete={tourComplete} onEmptyDemo={tourEmptyDemo} />
+      )}
 
       {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} actionTone={toast.actionTone} />}
     </div>

@@ -1,149 +1,118 @@
 # HANDOFF — "La Mia Dispensa" (PWA dispensa + ricette)
 
-> Documento auto-contenuto per riprendere lo sviluppo in una nuova conversazione.
-> Rispondere SEMPRE in italiano. Unità metriche (g/kg/ml/l) — mai cups/oz.
+> Documento auto-contenuto per riprendere lo sviluppo in una **nuova conversazione**.
+> Leggere anche `CLAUDE.md` (regole permanenti) e `ARCHITECTURE.md` (architettura completa).
+> **Rispondere SEMPRE in italiano. Unità metriche (g/kg/ml/l) — mai cups/oz.**
+
+Ultimo aggiornamento: giugno 2026 (sessione: tutorial interattivo + fix scadenza).
 
 ---
 
 ## 1. Obiettivo dell'app
-App personale (in italiano) per gestire la dispensa di casa e cucinare con ciò che si ha. Chiude un **ciclo completo**: registri la spesa (a mano / voce / barcode / foto scontrino) → la dispensa sa cosa hai → l'AI propone ricette con quegli ingredienti → cucini (timer + scala-dispensa automatico) → ciò che manca va in lista spesa → ricominci. 3 schede: **Dispensa**, **Spesa**, **Ricette**.
+App **personale** (in italiano) per gestire la dispensa di casa e cucinare con ciò che si ha. Chiude un **ciclo completo**:
+registri la spesa (a mano / voce / barcode / foto scontrino) → la dispensa sa cosa hai → l'AI propone ricette con quegli ingredienti → cucini (timer + scala-dispensa automatico) → ciò che manca va in lista spesa → ricominci.
+3 schede: **Dispensa**, **Spesa**, **Ricette** (+ Profilo nella navbar).
 
 ## 2. Stack tecnologico
 - **Frontend**: React 18.3 + Vite 6 + Tailwind v3.4 (PostCSS). PWA con `vite-plugin-pwa` (Workbox `generateSW`, `/api` escluso dalla cache).
 - **Backend dati/auth**: Supabase (Postgres + RLS + Realtime + Auth magic-link & Google).
-- **AI**: Google **Gemini `gemini-2.5-flash`** (free tier, `thinkingConfig.thinkingBudget=0`) dietro proxy serverless. NON Anthropic.
-- **Foto ricette**: Pexels (free) dietro proxy.
+- **AI**: Google **Gemini `gemini-2.5-flash`** (free tier, `thinkingConfig.thinkingBudget=0`) dietro proxy serverless. **NON Anthropic** (il client però parla "stile Anthropic", vedi §5).
+- **Foto ricette**: **Pexels** (free) dietro proxy.
 - **Barcode**: `@zxing/browser` + `@zxing/library` + Open Food Facts.
 - **Icone UI**: `lucide-react`. **Icona app**: `sharp` genera i PNG da `public/icon.svg`.
 - **Hosting**: Vercel (auto-deploy a ogni push su `main`). Repo GitHub **PUBBLICO** `mar8co/dispensa`.
 - **Produzione**: https://la-dispensa-omega.vercel.app
-- **Dir locale**: `C:\Users\pasqu\Downloads\dispensa`
+- **Dir locale**: `C:\Users\pasqu\Downloads\dispensa` (Windows, PowerShell).
 
-## 3. Struttura del progetto
-```
-src/
-  App.jsx                 # gate auth (mostra Auth o Dispensa)
-  Dispensa.jsx            # ~1400 righe: STATO GLOBALE + logica di tutta l'app (god component)
-  main.jsx                # mount + applyTheme()
-  constants.js            # CATEGORIES, AISLE_ORDER, PICKER_CATS, CAT_ICON, MODES, RECEIPT_PROMPT, NAME_RULES, SEED_DATA, DEMO_DATA
-  index.css               # variabili CSS (palette light/dark), keyframe, anti-zoom iOS
-  components/
-    Auth.jsx              # login magic-link + Google (logo = /icon.svg)
-    PantryTab.jsx         # scheda Dispensa: vista "indice", pannello prodotto auto-save, barra reparti sticky
-    ShoppingTab.jsx       # scheda Spesa: input in-line sticky, pannello modifica, swipe, sposta-in-dispensa
-    RecipesTab.jsx        # scheda Ricette: occasioni, 4 proposte (header sticky), dettaglio, ricettario
-    BottomNav.jsx         # navbar flottante a pillola (centrata) + slot "+"
-    AddFab.jsx            # "+" in-flow nella navbar (solo Dispensa) + speed-dial
-    Sheet.jsx             # bottom-sheet riutilizzabile (maniglia, drag-to-dismiss)
-    ManualAddModal.jsx    # aggiunta a mano (sheet): chips unità, categoria auto visibile
-    VoiceAddModal.jsx     # dettatura (Web Speech API), UI assistente
-    ReceiptScanModal.jsx  # fotocamera integrata scontrino (getUserMedia, guida, nitidezza, galleria)
-    ReviewScanModal.jsx   # revisione prodotti riconosciuti (sheet): stepper + chips unità
-    BarcodeScanModal.jsx  # scanner codice a barre (lazy)
-    CookModal.jsx         # "Ho cucinato": aggiorna dispensa + stima AI quantità
-    CookingMode.jsx       # modalità cucina fullscreen (step, wake lock, timer)
-    StepTimer.jsx         # timer di un passaggio (vista su lib/timers.js)
-    TimerBar.jsx          # barretta timer flottante globale
-    ProfileSheet.jsx      # profilo: email, tema, preferenze alimentari, svuota dispensa, logout
-    ConfirmClearModal.jsx # conferma svuota dispensa (sheet)
-    Onboarding.jsx        # tutorial primo accesso (11 schede)
-    Toast.jsx             # toast con azione (Annulla/Stop, tone tomato/ink, durata)
-    AddMenu.jsx, ProfileTab.jsx  # ORFANI (non usati)
-  hooks/useAuth.js        # sessione Supabase
-  lib/
-    supabase.js           # client
-    db.js                 # query Supabase (pantry/shopping/settings/saved_recipes)
-    claude.js             # callClaude (proxy /api/claude), fetchPhotos (/api/photo), fileToBase64
-    pantry.js             # PURO: guessCategory, correctName(Levenshtein), parseQty, mergeQty, subtractQty,
-                          #       adjustQty/qtyStep/atMinQty (passi per unità), normalizeWeight, findMatch, scadenze
-    cache.js              # mirror localStorage di items/shopping/settings (offline read)
-    history.js            # storico acquisti (suggerimenti spesa) in localStorage
-    recipes.js            # ricettario local-first (localStorage) + id locali
-    timers.js             # store globale timer (module-level + localStorage) + allarme audio/vibrazione
-    theme.js              # tema auto/chiaro/scuro (localStorage + data-theme + meta theme-color)
-server/claude.js, server/photo.js   # core proxy (framework-agnostic)
-api/claude.js, api/photo.js         # serverless Vercel (wrappano server/*)
-vite.config.js            # plugin react + PWA + middleware dev /api (devApi factory)
-supabase/                 # schema.sql, migration-2/3/4.sql
-scripts/generate-icons.mjs  # genera i PNG icona da public/icon.svg (node scripts/generate-icons.mjs)
-public/icon.svg + *.png   # icona app (dispensa a scaffali, stile clay)
-```
+## 3. Funzionalità completate
+- **Dispensa** (`PantryTab.jsx`): vista "indice" (sezioni full-width, righe `nome … qty` con puntini guida); barra reparti **sticky** (chips scorrevoli + freccia che espande tutti i reparti); ricerca **sticky** con icona ordinamento (Recenti / A-Z / Scadenza); pannello prodotto **auto-save** (nome al blur, qty debounce 800 ms, unità pz/g/kg/l, categoria a chips, calendario scadenza, elimina) con toast "Modifica salvata · Annulla"; badge scadenza sempre visibile; striscia "in scadenza entro 7 giorni" + "Cucina con questi"; prodotti finiti (qty 0) → "metti in lista"; riordino categorie con frecce su/giù.
+- **Spesa** (`ShoppingTab.jsx`): input in-line **sticky** in cima con suggerimenti/frequenti; "Aggiungi" = Invio (pointerdown, la tastiera resta aperta); merge duplicati; vista **per reparto** (ordine supermercato `AISLE_ORDER`); spunta = sezione "Nel carrello"; pannello modifica come in dispensa; **"Sposta in dispensa"** grande nella barra fissa; condividi lista; wake-lock; swipe-to-delete in due tempi; correzione ortografica locale.
+- **Ricette** (`RecipesTab.jsx`): 12 occasioni riordinabili (drag) + campo libero "Cosa ti va?"; 4 proposte (cache 24h per occasione + "Altre idee"; header categoria **sticky**); foto Pexels (fade-in); dettaglio con grammature scalabili (**default 1 porzione**, preferenza ricordata), "cosa mi manca" → spesa, **timer per passaggio**, **Modalità cucina** fullscreen; **ricettario** (cuore/preferiti + storico cucinate) **local-first**.
+- **Input multimodali**: foto scontrino (fotocamera integrata + overlay "Sto analizzando…" + deduplica AI/client), barcode (lazy), voce (Web Speech API), manuale.
+- **Quantità/unità** (`lib/pantry.js`): parser per famiglie (peso/volume/conteggio), passi per unità (pz±1, g±50, kg/l±0,25), cambio unità = reset al default dell'unità; stima AI nel "Ho cucinato" per pacchi↔grammi.
+- **Timer globali** (`lib/timers.js`): continuano cambiando scheda; allarme a raffiche ripetute (~30 s o fino a "Stop") + vibrazione + notifica; barretta flottante (`TimerBar.jsx`).
+- **Tutorial interattivo primo accesso** (`lib/tour.js` + `TourCoach.jsx`) — **NUOVO, vedi §5/§6**: spotlight che guida azioni reali; ripetibile da Profilo.
+- **UI/UX**: dark mode (auto + manuale), View Transitions, skeleton, bottom-sheet, navbar flottante a pillola (Dispensa · Spesa · [+] · Ricette · Profilo) con "+" centrale a semicerchio, light mode avorio #F7F6F1.
+- **Profilo** (`ProfileSheet.jsx`): tema, preferenze alimentari (iniettate nei prompt ricetta), **"Rivedi il tutorial"**, svuota dispensa, logout con conferma.
 
-## 4. Stato attuale
-### Completato
-- **Dispensa**: vista "indice" (sezioni full-width, righe `nome … qty`, puntini guida); barra reparti **sticky** (chips scorrevoli + freccia che espande tutti i reparti); ricerca **sticky** con icona ordinamento (Recenti/A-Z/Scadenza); pannello prodotto **auto-save** (nome blur, qty debounce 800ms, categoria a chips, calendario, elimina) con toast "Modifica salvata · Annulla"; striscia scadenze + "Cucina con questi"; prodotti finiti (qty 0) → "metti in lista"; riordino categorie con frecce su/giù.
-- **Spesa**: input in-line **sticky** in cima (no popup) con suggerimenti/frequenti; "Aggiungi" = Invio (pointerdown, tastiera resta); merge duplicati; per-reparto (ordine supermercato `AISLE_ORDER`); spunta = "Nel carrello"; pannello modifica = come dispensa; **"Sposta in dispensa"** grande nella barra fissa; condividi lista; wake-lock; correzione ortografica locale.
-- **Ricette**: 12 occasioni riordinabili + campo libero "Cosa ti va?"; 4 proposte (cache 24h per occasione + "Altre idee"; header categoria **sticky**); foto Pexels (fade-in); dettaglio con grammature scalabili (**default 1 porzione**, preferenza ricordata), "cosa mi manca" → spesa, timer per passaggio, **Modalità cucina** fullscreen; **ricettario** (cuore/preferiti + storico cucinate) **local-first**.
-- **Input multimodali**: foto scontrino (fotocamera integrata + overlay "Sto analizzando…" + deduplica AI/client), barcode, voce, manuale.
-- **Quantità/unità**: parser per famiglie (peso/volume/conteggio), passi per unità (pz±1, g±50, kg/l±0,25), cambio unità = reset al default; stima AI nel "Ho cucinato" per pacchi↔grammi.
-- **Timer globali**: continuano cambiando scheda; allarme a raffiche ripetute (~30s o fino a "Stop") + vibrazione + notifica; barretta flottante.
-- **UI/UX moderna**: dark mode (auto + manuale), View Transitions, skeleton, bottom-sheet, navbar flottante a pillola con indicatore attivo + "+" in-flow, light mode avorio #F7F6F1.
-- **Onboarding** primo accesso (demo + tutorial + pulizia).
-- **Profilo**: tema, preferenze alimentari (iniettate nei prompt), svuota dispensa, logout con conferma.
+## 4. Funzionalità in sviluppo / non finite
+- **Icona dell'app — NON finalizzata.** L'attuale `public/icon.svg` è la "dispensa a scaffali" (stile clay) che **all'utente NON piace più**. Si stava cercando una nuova direzione: l'ultima proposta accettata era **piatto + posate + scintilla AI**, in **stile flat moderno**, su sfondo rosso pomodoro (brand). Sono stati mostrati 6 mockup (coperto/posate, piatto con ingredienti, silhouette bianca, outline, ciotola, minimale); **manca la scelta finale dell'utente**. Dopo la scelta: scrivere il nuovo `public/icon.svg`, poi `node scripts/generate-icons.mjs`, verificare i PNG, build + commit + push.
+- TODO prioritari: vedi §8.
 
-### Limiti noti (non bug)
-- I **timer non suonano** a telefono bloccato/app chiusa (limite web/PWA: nessuna scheduled-notification senza push infra). Suonano al rientro in primo piano.
+## 5. Tutorial interattivo (la novità principale di questa sessione)
+Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx` **eliminato**).
+
+**Decisioni concordate con l'utente:**
+- I passi "Ricette" e "Scontrino" sono **simulati** (ricetta demo precaricata `TOUR_RECIPE` → niente chiamata AI / quota / attesa; scansione scontrino mostrata come esempio `TOUR_SCAN` → niente fotocamera). Funziona sempre, offline e a costo zero.
+- Blocco **rigido guidato**: a ogni passo è toccabile **solo** l'elemento evidenziato; il resto è bloccato. Resta sempre "Esci dal tutorial" (+ un "salta" discreto, per non restare mai bloccati se un segnale non scatta).
+
+**Come funziona (architettura):**
+- `src/lib/tour.js` — store esterno (`useSyncExternalStore`) + array `STEPS` (19 passi) + contenuti demo (`TOUR_RECIPE`, `TOUR_IDEA`, `TOUR_SCAN`, `TOUR_MODE`). API: `useTourState()`, `startTour(firstRun)`, `stopTour()`, `tourGoNext()`, `tourSignal(name)`, `visibleSteps(firstRun)`.
+- `src/components/TourCoach.jsx` — overlay: 3 rese → **card** (riquadro centrale: benvenuto/scontrino/svuota/fine), **banner** (striscia in alto sopra le modali), **spotlight** (4 pannelli scuri attorno a un buco luminoso + anello + tooltip). Misura il bersaglio in rAF (segue scroll/animazioni). Se il bersaglio non si trova, ripiega su banner (non si blocca mai).
+- I bersagli sono marcati con attributi **`data-tour="…"`** sparsi nei componenti (`add-fab`, `add-manual-option`, `pantry-first-item`, `qty-stepper`, `unit-chips`, `expiry-field`, `tab-spesa`, `tab-ricette`, `shopping-input`, `recipe-idea`, `recipe-heart`, `step-timer`, `manual-add`).
+- L'app **emette segnali** con `tourSignal('nome')` quando l'utente compie l'azione reale (apre prodotto, cambia qty/unità, apre il "+", sceglie "A mano", aggiunge, cambia scheda, apre/salva ricetta, avvia timer). Il passo avanza solo se aspetta proprio quel segnale (altrimenti no-op).
+- `Dispensa.jsx` orchestra: `useTourState()`, un `useEffect` che a ogni passo imposta la vista giusta, chiude le modali non pertinenti e (nelle Ricette) precarica la proposta demo; handler `tourEmptyDemo` / `tourComplete` / `tourExit` / `replayTour`; `openRecipe` ha un ramo demo (no AI) quando `tour.active`.
+- **Primo accesso**: il caricamento iniziale popola `DEMO_DATA` e chiama `startTour(true)`; alla fine i dati demo vengono cancellati (dispensa reale vuota) e si segna `localStorage` `dispensa-onboarded-<uid>=1`.
+- **Replay**: Profilo → "Rivedi il tutorial" → `startTour(false)` (NON tocca la dispensa reale; il passo "svuota demo" è escluso).
+
+## 6. Bug noti / limiti
+### Bug recentemente risolti (questa sessione)
+- **Scadenza non salvata se modificata da sola** (RISOLTO). Causa: stale closure — l'effetto "tocco fuori → chiudi pannello" in `PantryTab.jsx` aveva dipendenze `[openId, qtyDraft, draftName]` **senza `expDraft`**; chiudendo subito dopo aver scelto solo la data, il flush usava un `expDraft` vecchio e la commit veniva scartata. Fix: aggiunto `expDraft` alle dipendenze. (Toccare anche la quantità "sbloccava" il salvataggio: era il sintomo della closure vecchia.)
+
+### Limiti noti (NON bug — limiti della piattaforma web)
+- I **timer non suonano** a telefono bloccato/app chiusa (nessuna scheduled-notification senza infrastruttura push). Suonano al rientro in primo piano.
 - **Quota Gemini free** esauribile: limite/minuto (~1 min reset) e /giorno (reset ~09:00 ora IT). `callClaude` fa 2 retry con backoff su 429/500/502/503.
-- **Modifiche offline** non persistite (cache è sola lettura).
-- `migration-4.sql` (saved_recipes) potrebbe NON essere stata eseguita su Supabase → i preferiti funzionano comunque in locale (local-first), ma NON si sincronizzano tra dispositivi finché non si esegue.
+- **Modifiche offline non persistite** (la cache locale è di sola lettura).
+- `migration-4.sql` (saved_recipes) potrebbe NON essere stata eseguita su Supabase → i preferiti funzionano comunque in locale (local-first) ma NON si sincronizzano tra dispositivi finché non la si esegue.
 
 ### Bug aperti
-- Nessuno noto al momento dell'handoff.
+- Nessuno noto. (Il tutorial è stato verificato col build; **non** è stato percorso end-to-end in runtime perché parte solo dopo il login Supabase — vedi §9.)
 
-## 5. Architettura
-- **`Dispensa.jsx` è il god component**: tiene TUTTO lo stato (items, shopping, settings, ricette, modali, timer ticker) e passa props/callback ai figli. È il principale debito tecnico.
-- **Dati**: caricamento **cache-first** (localStorage) poi refresh da Supabase; **Realtime** su `pantry_items` e `shopping_items`; impostazioni in `user_settings` (jsonb) sincronizzate con confronto timestamp (le impostazioni DB si applicano solo se più recenti della cache — fix anti-regressione).
-- **AI proxy**: client manda blocchi "stile Anthropic" a `/api/claude`; `server/claude.js` li traduce in formato Gemini e ritraduce la risposta (così prompt/client non cambiano se si cambia provider). Endpoint **protetto**: verifica token Supabase → 401 senza. Stessa cosa per `/api/photo` → Pexels. **In dev**, `vite.config.js` espone gli stessi endpoint via middleware (`devApi`).
-- **Segreti SOLO server**: `GEMINI_API_KEY`, `PEXELS_API_KEY` vivono in `.env.local` (gitignored) e nelle env di Vercel. Mai nel bundle client.
-- **Timer**: store **module-level** in `lib/timers.js` (fuori da React) + mirror localStorage; un ticker in `Dispensa.jsx` (setInterval 500ms + on focus/visibility) chiama `checkTimers()` che fa scattare allarme/notifica/toast.
-- **Quantità**: tutta la matematica è in `lib/pantry.js` (funzioni pure).
-
-## 6. Design system e UX/UI
-- **Stile "Editoriale"**: sfondo chiaro (avorio **#F7F6F1**, token `--cream`), testo **ink** (#1a1a1a), accento **rosso pomodoro `tomato` #d6442f** (700 = #b8351f), righe sottili `hair`, font UNICO **Hanken Grotesk** (sans + `font-display` con tracking stretto, NON serif).
-- **Palette via CSS variables** in `index.css` (terne RGB) + Tailwind che mappa con `rgb(var(--x) / <alpha-value>)`. **Dark mode**: media query `prefers-color-scheme` + override manuale `:root[data-theme=...]` (i due blocchi scuri vanno tenuti identici).
-- **TRAPPOLA: il token Tailwind `white` è TEMATO** (si scurisce in dark). Su fondi scuri *letterali* (camera, chip nere, scrim) usare **`text-[#fff]` / `bg-[#fff]`**, non `text-white`.
-- **Navbar**: pillola flottante centrata (`bg-cream/70 backdrop-blur-md`), scheda attiva con pillola `tomato/10`; "+" 56px in-flow a destra (solo Dispensa), alzato sopra la riga.
-- **Bottom-sheet** (`Sheet.jsx`) per quasi tutti i modali; ricerca/aggiunta in alto (la tastiera iOS copre ciò che è fisso in basso).
-- **Componenti chiave coerenti**: chips unità pz/g/kg/l, stepper −/+ rotondi, toast in basso, swipe-to-delete in due tempi.
-
-## 7. File importanti (dove guardare per primo)
-- `src/Dispensa.jsx` — stato e logica di tutto.
-- `src/lib/pantry.js` — categorizzazione e matematica quantità (delicato).
-- `src/constants.js` — categorie (17), ordine reparti, prompt scontrino, dati seed/demo.
+## 7. File più importanti (dove guardare per primo)
+- `src/Dispensa.jsx` — **god component**: stato e logica di tutta l'app (~1600 righe), orchestrazione tutorial.
+- `src/lib/tour.js` + `src/components/TourCoach.jsx` — motore tutorial interattivo.
+- `src/lib/pantry.js` — categorizzazione e matematica quantità (delicato, funzioni pure).
+- `src/constants.js` — 17 categorie, ordine reparti, occasioni (`MODES`), prompt scontrino, `NAME_RULES`, `SEED_DATA`, `DEMO_DATA`.
 - `src/lib/db.js` — tutte le query Supabase.
-- `server/claude.js` — traduzione Anthropic↔Gemini.
-- `vite.config.js` — PWA + middleware dev /api.
+- `server/claude.js` — traduzione "stile Anthropic" ↔ Gemini (+ auth token).
+- `vite.config.js` — PWA + middleware dev `/api` (`devApi`).
 - `src/index.css` + `tailwind.config.js` — design tokens e dark mode.
 
 ## 8. Decisioni tecniche prese
-- **Gemini, non Anthropic** (l'account non ha credito API; abbonamento Claude.ai ≠ API). Modello `gemini-2.5-flash` (i `2.0` davano limite 0 sul free tier).
+- **Gemini, non Anthropic** (l'account non ha credito API Anthropic; l'abbonamento Claude.ai ≠ API). Modello `gemini-2.5-flash` (i `2.0` davano limite 0 sul free tier). Il client resta "stile Anthropic" così il provider è sostituibile senza toccare prompt/client.
 - **Pexels, non immagini AI** (i modelli immagine Gemini free hanno limite 0).
 - **Repo pubblico**: su Vercel Hobby + repo privato i deploy venivano bloccati se l'autore del commit ≠ membro team. Reso pubblico (nessun segreto committato).
 - **Ricettario local-first** per non mostrare errori se `migration-4` manca.
-- **17 categorie** ordinate per frequenza d'uso (fresco in alto, spezie/condimenti in fondo); le **uova → "Altro"** (scelta utente), prodotti congelati → sempre "Surgelati" (early-return in `guessCategory`).
+- **17 categorie** ordinate per frequenza d'uso; **uova → "Altro"** (scelta utente); congelati → sempre "Surgelati" (early-return in `guessCategory`).
 - **Default 1 porzione** nelle ricette; preferenza manuale ricordata (`prefServings` in settings).
 - **Aggiunta a mano SENZA AI** (solo `correctName`+`guessCategory` locali) per non consumare quota; l'AI resta per scontrino/voce/barcode.
+- **Tutorial: passi AI/fotocamera simulati + blocco rigido** (vedi §5).
 
-## 9. Cose da NON modificare (o con cautela)
-- **API key MAI nel client** (regola assoluta dell'utente).
-- Non rompere il **pattern proxy** Anthropic↔Gemini (client/prompt non devono cambiare formato).
-- Non usare **`text-white`/`bg-white` su fondi scuri letterali** → usare `#fff` (vedi §6).
-- `<input type="date">` invisibile dentro una label: serve **`overflow-hidden`** (su iOS sfora e ruba i tap). Un elemento **`fixed` dentro un `transform`** si ancora al genitore, non al viewport (overlay del "+" è renderizzato a livello pagina apposta).
-- Calendario scadenza: **non salvare da `onChange` diretto** (iOS imposta "oggi" alla chiusura); c'è un debounce + toast Annulla.
-- I due blocchi di palette **dark** in `index.css` devono restare identici (media query + `[data-theme="dark"]`).
-- Non riportare il **seed permanente** sul primo accesso: ora il primo accesso popola DEMO_DATA e l'onboarding li pulisce.
+## 9. Stato git / cosa NON è ancora deployato
+> ⚠️ **Importante per la nuova chat.**
+- Le modifiche di questa sessione — **tutorial interattivo** (nuovi `lib/tour.js`, `components/TourCoach.jsx`; `Onboarding.jsx` eliminato; `data-tour`/`tourSignal` in BottomNav/AddFab/PantryTab/ShoppingTab/RecipesTab/StepTimer/ManualAddModal; orchestrazione in `Dispensa.jsx`; "Rivedi il tutorial" in `ProfileSheet.jsx`) e il **fix scadenza** — sono **state implementate e il build passa**, ma **NON sono ancora state committate/pushate** (l'utente ha chiesto prima questi documenti di handoff). Da fare: `npm run build` → `git commit` → `git push origin main`.
+- L'**icona** è ancora in fase di scelta (§4): non modificarla finché l'utente non sceglie il mockup.
 
 ## 10. TODO prioritari
-1. **Refactor `Dispensa.jsx`**: spezzare in custom hooks (`usePantry`, `useShopping`, `useRecipes`) o store leggero (Zustand). Debito principale.
-2. **Notifiche scadenze** (push/local) — feature ad alto valore (i dati ci sono già).
-3. **Coda sync offline-write** (oggi offline è sola lettura).
-4. **Dispensa condivisa** col partner (Realtime c'è già).
-5. **Scelta tra più suoni** del timer (predisposto).
-6. Test sulle funzioni pure di `lib/pantry.js`; valutare TypeScript.
-7. Coach-mark interattivi nell'onboarding (oggi è descrittivo a schede).
+1. **Finalizzare l'icona app** (scelta utente in sospeso) → scrivere `public/icon.svg` → `node scripts/generate-icons.mjs` → verifica → deploy.
+2. **Committare + pushare** il lavoro di questa sessione (tutorial + fix scadenza) dopo eventuale verifica dell'utente.
+3. **Refactor `Dispensa.jsx`**: spezzare in custom hooks (`usePantry`, `useShopping`, `useRecipes`) o store leggero. Debito principale.
+4. **Notifiche scadenze** (push/local) — alto valore (i dati ci sono già).
+5. **Coda sync offline-write** (oggi offline è sola lettura).
+6. **Dispensa condivisa** col partner (Realtime già presente).
+7. Test sulle funzioni pure di `lib/pantry.js`; valutare TypeScript.
 8. Aggiornare dipendenze (React 19 / Tailwind 4 / Vite 7) — nessuna urgenza.
 
-## 11. Istruzioni per riprendere in una nuova chat
+## 11. Cose da NON modificare (o con molta cautela)
+- **API key MAI nel client** (regola assoluta). `GEMINI_API_KEY`/`PEXELS_API_KEY` solo lato server.
+- Non rompere il **pattern proxy** "stile Anthropic" ↔ Gemini (client/prompt non devono cambiare formato).
+- Non usare **`text-white`/`bg-white` su fondi scuri letterali** → usare `text-[#fff]`/`bg-[#fff]` (il token Tailwind `white` è TEMATO e si scurisce in dark).
+- `<input type="date">` invisibile dentro una label: serve **`overflow-hidden`** (su iOS sfora e ruba i tap). Un elemento **`fixed` dentro un `transform`** si ancora al genitore, non al viewport (overlay del "+" è renderizzato a livello pagina apposta; idem TourCoach).
+- Calendario scadenza nel pannello dispensa: il salvataggio passa da un **debounce + flush alla chiusura**; l'effetto di chiusura DEVE includere `expDraft` nelle dipendenze (vedi §6).
+- I due blocchi di palette **dark** in `index.css` (media query + `[data-theme="dark"]`) devono restare **identici**.
+- Non reintrodurre il **seed permanente** al primo accesso: ora popola `DEMO_DATA` e il tutorial li pulisce.
+
+## 12. Istruzioni per riprendere in una nuova chat
 **Ambiente** (Windows, PowerShell):
 - Dir: `C:\Users\pasqu\Downloads\dispensa`
 - Dev: `npm run dev` (porta 5173). Build: `npm run build`.
@@ -152,13 +121,14 @@ public/icon.svg + *.png   # icona app (dispensa a scaffali, stile clay)
 **Workflow modifiche** (rispettare SEMPRE):
 `edit → npm run build → git commit → git push origin main` → Vercel auto-deploy.
 Commit message: terminare con `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Committare/pushare **solo quando l'utente lo chiede**.
 
-**Verifica**: si può usare il preview locale (login page visibile; le viste interne richiedono auth). La build che passa è la verifica autorevole; ignorare gli errori HMR transitori durante edit multi-step.
+**Verifica**: il preview locale mostra la login page; le viste interne (e il tutorial) richiedono auth Supabase, quindi spesso non sono percorribili da Claude. La **build che passa è la verifica autorevole**; ignorare gli errori HMR transitori durante edit multi-step.
 
 **Config persistente** (NON serve riconfigurare):
-- Supabase project ref: `tikcnxwqynpytysrrtaz`. Tabelle: `pantry_items`, `user_settings`, `shopping_items`, `saved_recipes`.
+- Supabase project ref: `tikcnxwqynpytysrrtaz`. Tabelle: `pantry_items`, `shopping_items`, `user_settings`, `saved_recipes`.
 - `.env.local` (gitignored, già presente): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `GEMINI_API_KEY`, `PEXELS_API_KEY`.
 - Env Vercel (già impostate): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `PEXELS_API_KEY`.
-- `migration-4.sql` (saved_recipes): da eseguire nel SQL Editor di Supabase se si vuole la sync preferiti tra dispositivi (l'app funziona anche senza).
+- `migration-4.sql` (saved_recipes): da eseguire nel SQL Editor di Supabase per la sync preferiti tra dispositivi (l'app funziona anche senza).
 
-**Note sull'utente**: risponde in italiano, usa iPhone Safari/PWA, è molto attento a dettagli UX/UI; spesso chiede **mockup** prima di applicare modifiche visive (offrirli). iOS cache-a l'icona PWA: per aggiornarla va rimossa e re-installata.
+**Note sull'utente**: risponde in italiano, usa iPhone Safari/PWA, è molto attento ai dettagli UX/UI; spesso chiede **mockup** prima di applicare modifiche visive (offrirli via widget). iOS cache-a l'icona PWA: per aggiornarla va rimossa e re-installata.
