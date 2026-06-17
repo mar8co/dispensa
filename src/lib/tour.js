@@ -85,7 +85,7 @@ export const STEPS = [
   },
   {
     id: "unit", view: "dispensa", overlay: "spotlight", target: '[data-tour="unit-chips"]',
-    title: "Scegli l'unità", text: "Pezzi, grammi, chili o litri: tocca un'unità di misura.",
+    title: "Scegli l'unità", text: "Pezzi, grammi, chili o litri: scegli l'unità di misura.",
     advance: "unit-changed", hint: true,
   },
   {
