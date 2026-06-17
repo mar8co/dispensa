@@ -125,6 +125,7 @@ export default function PantryTab({
   // (onChange = scelta reale, non provvisoria) si salva con una breve attesa.
   function scheduleExpiry(v) {
     setExpDraft(v);
+    if (v) tourSignal("expiry-set"); // data scelta: fa avanzare il tutorial
     clearTimeout(expTimer.current);
     expTimer.current = setTimeout(() => commitExpiryNow(v), 400);
   }
