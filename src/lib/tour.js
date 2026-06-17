@@ -75,7 +75,7 @@ export const STEPS = [
   },
   {
     id: "open-product", view: "dispensa", overlay: "spotlight", target: '[data-tour="pantry-first-item"]',
-    title: "Apri un prodotto", text: "Tocca un prodotto per gestirlo.",
+    title: "Apri un prodotto", text: "Tocca un prodotto per modificarlo.",
     advance: "product-opened", hint: true,
   },
   {
