@@ -4,7 +4,7 @@
 > Leggere anche `CLAUDE.md` (regole permanenti) e `ARCHITECTURE.md` (architettura completa).
 > **Rispondere SEMPRE in italiano. Unità metriche (g/kg/ml/l) — mai cups/oz.**
 
-Ultimo aggiornamento: 17 giugno 2026 (tutorial + fix scadenza, fix UX, scadenza a comparsa, occhiello rosso sticky — tutto **committato e pushato**, ultimo commit `f2dd977`).
+Ultimo aggiornamento: 17 giugno 2026 (tutorial + fix scadenza, fix UX, scadenza a comparsa con calendario nativo a un tap, occhiello rosso sticky — tutto **committato e pushato**, ultimo commit `a1afe20`). **Da ora commit/push automatici (vedi CLAUDE.md §0.4).**
 
 ---
 
@@ -95,6 +95,7 @@ Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx`
 - **Fix UX** (commit `606f2f1`): blocco scroll di sfondo nei bottom-sheet (`Sheet.jsx`), barra "Cosa ti va?" sticky in Ricette, funzione Foto chiarita per scontrino *e* spesa (`ReceiptScanModal.jsx`, `lib/tour.js`, `TourCoach.jsx`). **Committato e pushato.**
 - **Scadenza a comparsa** nel pannello prodotto (commit `9ab9734`): box nascosto di default, apertura su tocco calendario con transizione, riga principale in stile mockup; quantità/unità mantenute. **Committato e pushato.**
 - **Occhiello rosso sticky** nelle 3 schede (commit `f2dd977`): eyebrow dentro il blocco sticky sopra la barra; offset sticky Dispensa ritarati. **Committato e pushato.**
+- **Calendario nativo a un tap** (commit `a1afe20`): l'icona calendario nel pannello prodotto apre subito il selettore data (`input.showPicker()`, fallback `focus()`). **Committato e pushato.**
 - ⚠️ Tutte le novità UI vivono **dietro il login Supabase**: build OK ma runtime non ancora percorso da Claude → **da provare sul telefono**.
 - L'**icona** è ancora in fase di scelta (§4): non modificarla finché l'utente non sceglie il mockup. (Rinviata: "la vediamo più avanti".)
 
@@ -126,7 +127,7 @@ Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx`
 **Workflow modifiche** (rispettare SEMPRE):
 `edit → npm run build → git commit → git push origin main` → Vercel auto-deploy.
 Commit message: terminare con `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
-Committare/pushare **solo quando l'utente lo chiede**.
+Committare/pushare **sempre in automatico** dopo ogni modifica con build verde (preferenza utente del 17 giu 2026), senza attendere richiesta.
 
 **Verifica**: il preview locale mostra la login page; le viste interne (e il tutorial) richiedono auth Supabase, quindi spesso non sono percorribili da Claude. La **build che passa è la verifica autorevole**; ignorare gli errori HMR transitori durante edit multi-step.
 

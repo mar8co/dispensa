@@ -9,7 +9,7 @@
 1. **Rispondi SEMPRE in italiano.**
 2. **Solo unità metriche**: g, kg, ml, l. Mai cups/oz/tbsp/tsp (vale anche nei prompt AI e nei dati demo).
 3. **API key MAI nel client.** `GEMINI_API_KEY` e `PEXELS_API_KEY` vivono solo nelle env server (`server/*`, serverless Vercel, middleware dev). Nel bundle client possono finire SOLO le var `VITE_*` (URL e anon key Supabase).
-4. **Workflow di rilascio**: `edit → npm run build → git commit → git push origin main` (Vercel auto-deploy). **Committa/pusha solo quando l'utente lo chiede.** Messaggio di commit terminante con:
+4. **Workflow di rilascio**: `edit → npm run build → git commit → git push origin main` (Vercel auto-deploy). **Committa e pusha SEMPRE in automatico** dopo ogni modifica con build verde, senza che l'utente lo chieda (preferenza esplicita del 17 giu 2026). Messaggio di commit terminante con:
    `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`
 5. **Mockup prima delle modifiche visive**: l'utente è molto attento all'UX/UI e di solito vuole vedere mockup (via widget di visualizzazione) prima di applicare cambiamenti estetici. Offrirli.
 6. **Non rompere il pattern proxy** "stile Anthropic ↔ Gemini" (vedi §5): prompt e formato lato client non devono cambiare.
@@ -75,7 +75,7 @@
 - Lavora in modo **decisionale**: quando hai abbastanza per agire, agisci; dai una raccomandazione, non un sondaggio.
 - Mantieni lo **stile dei file vicini** (commenti italiani, Tailwind, naming).
 - Dopo le modifiche: `npm run build`; riferisci onestamente cosa è verificato e cosa no (il tutorial e le viste interne richiedono login, spesso non verificabili da Claude).
-- **Non** committare/pushare senza richiesta esplicita dell'utente.
+- **Committa e pusha sempre in automatico** dopo ogni modifica con build verde (vedi §0.4): non serve attendere il via libera dell'utente.
 
 ## 8. Info che una nuova istanza dovrebbe conoscere
 - App **personale**, single-user di fatto (ma multi-utente via RLS). iPhone Safari/PWA è il dispositivo target.
