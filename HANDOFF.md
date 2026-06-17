@@ -4,7 +4,7 @@
 > Leggere anche `CLAUDE.md` (regole permanenti) e `ARCHITECTURE.md` (architettura completa).
 > **Rispondere SEMPRE in italiano. Unità metriche (g/kg/ml/l) — mai cups/oz.**
 
-Ultimo aggiornamento: 17 giugno 2026 (tutorial interattivo + fix scadenza — **committato e pushato**, commit `08607b9`).
+Ultimo aggiornamento: 17 giugno 2026 (tutorial + fix scadenza, fix UX, scadenza a comparsa — tutto **committato e pushato**, ultimo commit `9ab9734`).
 
 ---
 
@@ -25,10 +25,11 @@ registri la spesa (a mano / voce / barcode / foto scontrino) → la dispensa sa 
 - **Dir locale**: `C:\Users\pasqu\Downloads\dispensa` (Windows, PowerShell).
 
 ## 3. Funzionalità completate
-- **Dispensa** (`PantryTab.jsx`): vista "indice" (sezioni full-width, righe `nome … qty` con puntini guida); barra reparti **sticky** (chips scorrevoli + freccia che espande tutti i reparti); ricerca **sticky** con icona ordinamento (Recenti / A-Z / Scadenza); pannello prodotto **auto-save** (nome al blur, qty debounce 800 ms, unità pz/g/kg/l, categoria a chips, calendario scadenza, elimina) con toast "Modifica salvata · Annulla"; badge scadenza sempre visibile; striscia "in scadenza entro 7 giorni" + "Cucina con questi"; prodotti finiti (qty 0) → "metti in lista"; riordino categorie con frecce su/giù.
+- **Dispensa** (`PantryTab.jsx`): vista "indice" (sezioni full-width, righe `nome … qty` con puntini guida); barra reparti **sticky** (chips scorrevoli + freccia che espande tutti i reparti); ricerca **sticky** con icona ordinamento (Recenti / A-Z / Scadenza); pannello prodotto **auto-save** (nome al blur, qty debounce 800 ms, unità pz/g/kg/l, categoria inline emoji+nome+chevron→chips, elimina) con toast "Modifica salvata · Annulla"; **scadenza a comparsa**: il box "Data di scadenza" è nascosto di default e si apre (transizione `max-height`+fade, 300 ms) solo al tocco dell'icona calendario (evidenziata in tomato se c'è una data); la "X" svuota e richiude il box; badge scadenza sempre visibile nella riga a riposo; striscia "in scadenza entro 7 giorni" + "Cucina con questi"; prodotti finiti (qty 0) → "metti in lista"; riordino categorie con frecce su/giù.
 - **Spesa** (`ShoppingTab.jsx`): input in-line **sticky** in cima con suggerimenti/frequenti; "Aggiungi" = Invio (pointerdown, la tastiera resta aperta); merge duplicati; vista **per reparto** (ordine supermercato `AISLE_ORDER`); spunta = sezione "Nel carrello"; pannello modifica come in dispensa; **"Sposta in dispensa"** grande nella barra fissa; condividi lista; wake-lock; swipe-to-delete in due tempi; correzione ortografica locale.
-- **Ricette** (`RecipesTab.jsx`): 12 occasioni riordinabili (drag) + campo libero "Cosa ti va?"; 4 proposte (cache 24h per occasione + "Altre idee"; header categoria **sticky**); foto Pexels (fade-in); dettaglio con grammature scalabili (**default 1 porzione**, preferenza ricordata), "cosa mi manca" → spesa, **timer per passaggio**, **Modalità cucina** fullscreen; **ricettario** (cuore/preferiti + storico cucinate) **local-first**.
-- **Input multimodali**: foto scontrino (fotocamera integrata + overlay "Sto analizzando…" + deduplica AI/client), barcode (lazy), voce (Web Speech API), manuale.
+- **Ricette** (`RecipesTab.jsx`): 12 occasioni riordinabili (drag) + campo libero "Cosa ti va?" reso **sticky** in alto nella vista occasioni; 4 proposte (cache 24h per occasione + "Altre idee"; header categoria **sticky**); foto Pexels (fade-in); dettaglio con grammature scalabili (**default 1 porzione**, preferenza ricordata), "cosa mi manca" → spesa, **timer per passaggio**, **Modalità cucina** fullscreen; **ricettario** (cuore/preferiti + storico cucinate) **local-first**.
+- **Input multimodali**: **Foto** (fotocamera integrata) per **scontrino *o* spesa/prodotti/sacchetti** — titolo/hint e badge guida lo comunicano esplicitamente; overlay "Sto analizzando…" + deduplica AI/client; barcode (lazy), voce (Web Speech API), manuale.
+- **Bottom-sheet** (`Sheet.jsx`): **scroll di sfondo bloccato** mentre un foglio è aperto (body `position:fixed`+restore, contatore per fogli annidati) e contenuto scrollabile internamente (`overscroll-contain`) — niente scroll-bleed col menu profilo.
 - **Quantità/unità** (`lib/pantry.js`): parser per famiglie (peso/volume/conteggio), passi per unità (pz±1, g±50, kg/l±0,25), cambio unità = reset al default dell'unità; stima AI nel "Ho cucinato" per pacchi↔grammi.
 - **Timer globali** (`lib/timers.js`): continuano cambiando scheda; allarme a raffiche ripetute (~30 s o fino a "Stop") + vibrazione + notifica; barretta flottante (`TimerBar.jsx`).
 - **Tutorial interattivo primo accesso** (`lib/tour.js` + `TourCoach.jsx`) — **NUOVO, vedi §5/§6**: spotlight che guida azioni reali; ripetibile da Profilo.
@@ -90,7 +91,9 @@ Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx`
 
 ## 9. Stato git / cosa NON è ancora deployato
 - Il **tutorial interattivo** (nuovi `lib/tour.js`, `components/TourCoach.jsx`; `Onboarding.jsx` eliminato; `data-tour`/`tourSignal` in BottomNav/AddFab/PantryTab/ShoppingTab/RecipesTab/StepTimer/ManualAddModal; orchestrazione in `Dispensa.jsx`; "Rivedi il tutorial" in `ProfileSheet.jsx`) e il **fix scadenza** sono **committati e pushati** su `main` (commit `08607b9`, 17 giu 2026). Vercel ha fatto auto-deploy. Nel commit sono inclusi anche `CLAUDE.md`, `ARCHITECTURE.md`, `HANDOFF.md`.
-  - ⚠️ Il flusso runtime del tutorial **non** è ancora stato percorso end-to-end (parte solo dopo il login Supabase): da provare sul telefono.
+- **Fix UX** (commit `606f2f1`): blocco scroll di sfondo nei bottom-sheet (`Sheet.jsx`), barra "Cosa ti va?" sticky in Ricette, funzione Foto chiarita per scontrino *e* spesa (`ReceiptScanModal.jsx`, `lib/tour.js`, `TourCoach.jsx`). **Committato e pushato.**
+- **Scadenza a comparsa** nel pannello prodotto (commit `9ab9734`): box nascosto di default, apertura su tocco calendario con transizione, riga principale in stile mockup; quantità/unità mantenute. **Committato e pushato.**
+- ⚠️ Tutte le novità UI vivono **dietro il login Supabase**: build OK ma runtime non ancora percorso da Claude → **da provare sul telefono**.
 - L'**icona** è ancora in fase di scelta (§4): non modificarla finché l'utente non sceglie il mockup. (Rinviata: "la vediamo più avanti".)
 
 ## 10. TODO prioritari
