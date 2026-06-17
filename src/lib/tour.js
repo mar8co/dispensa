@@ -125,7 +125,7 @@ export const STEPS = [
   },
   {
     id: "open-recipe", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-idea"]',
-    title: "Apri una ricetta", text: "L'app propone piatti con quello che hai. Apri questa ricetta d'esempio.",
+    title: "Apri una ricetta", text: "Ti propongo piatti solo con quello che hai in dispensa. Apri questa ricetta.",
     advance: "recipe-opened", hint: true,
   },
   {

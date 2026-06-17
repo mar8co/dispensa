@@ -74,10 +74,17 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
 
   // Pulsante avanti/CTA: presente sui passi informativi; sui passi d'azione
   // c'è solo un "salta" discreto (l'avanzamento avviene compiendo l'azione).
+  // Sui passi d'azione: badge "Tocca l'elemento" a sinistra e "salta" a destra,
+  // sulla STESSA riga (niente spazio vuoto). Sui passi informativi: solo "Avanti".
   const Controls = (
-    <div className="mt-3 flex items-center justify-end gap-3">
+    <div className={`mt-3 flex items-center gap-3 ${step.hint ? "justify-between" : "justify-end"}`}>
+      {step.hint && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-tomato/10 px-2.5 py-1 text-[11px] font-bold text-tomato">
+          <Hand className="h-3.5 w-3.5" /> Tocca l'elemento evidenziato
+        </span>
+      )}
       {step.hint ? (
-        <button onClick={primary} className="text-[11px] font-semibold text-stone-400 underline transition hover:text-ink">
+        <button onClick={primary} className="shrink-0 text-[11px] font-semibold text-stone-400 underline transition hover:text-ink">
           salta
         </button>
       ) : (
@@ -90,12 +97,6 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
       )}
     </div>
   );
-
-  const HintRow = step.hint ? (
-    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-tomato/10 px-2.5 py-1 text-[11px] font-bold text-tomato">
-      <Hand className="h-3.5 w-3.5" /> Tocca l'elemento evidenziato
-    </div>
-  ) : null;
 
   // --- Resa a riquadro centrale (benvenuto / scontrino / svuota / fine) ---
   if (isCard) {
@@ -156,7 +157,6 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
             {ExitBtn}
           </div>
           <p className="text-sm leading-relaxed text-stone-500">{step.text}</p>
-          {HintRow}
           {Controls}
         </div>
       </div>
@@ -207,7 +207,6 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
           {ExitBtn}
         </div>
         <p className="text-sm leading-relaxed text-stone-500">{step.text}</p>
-        {HintRow}
         {Controls}
       </div>
     </>
