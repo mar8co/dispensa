@@ -49,8 +49,6 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
 
   if (!step) return null;
 
-  const total = steps.length;
-  const progress = `Passo ${index + 1} di ${total}`;
   const isCard = step.overlay === "card";
   // Se l'elemento da evidenziare non si trova (es. non ancora montato), si
   // ripiega su una striscia in alto, così il tour non si blocca mai.
@@ -77,8 +75,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   // Pulsante avanti/CTA: presente sui passi informativi; sui passi d'azione
   // c'è solo un "salta" discreto (l'avanzamento avviene compiendo l'azione).
   const Controls = (
-    <div className="mt-3 flex items-center justify-between gap-3">
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-tomato/80">{progress}</span>
+    <div className="mt-3 flex items-center justify-end gap-3">
       {step.hint ? (
         <button onClick={primary} className="text-[11px] font-semibold text-stone-400 underline transition hover:text-ink">
           salta
@@ -105,8 +102,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
     return (
       <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="w-full max-w-sm rounded-3xl bg-cream p-6 shadow-2xl">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-tomato/80">{progress}</span>
+          <div className="mb-3 flex items-center justify-end">
             {ExitBtn}
           </div>
           <h2 className="font-display text-2xl font-extrabold leading-tight tracking-tight text-ink">{step.title}</h2>
