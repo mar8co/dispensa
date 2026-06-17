@@ -120,7 +120,7 @@ export const STEPS = [
   },
   {
     id: "go-ricette", view: "spesa", overlay: "spotlight", target: '[data-tour="tab-ricette"]',
-    title: "Le ricette", text: "Vediamo le ricette: tocca la scheda Ricette.",
+    title: "Le ricette", text: "Tocca la scheda Ricette: ti propongo piatti con quello che hai in casa.",
     advance: "view-ricette", hint: true,
   },
   {
