@@ -182,9 +182,13 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   const cx = rect.left + rect.width / 2;
   const left = Math.max(12, Math.min(cx - W / 2, vw - W - 12));
   const below = holeBottom < vh * 0.62;
-  const tipStyle = below
-    ? { top: holeBottom + 14, left, width: W }
-    : { top: hole.top - 14, left, width: W, transform: "translateY(-100%)" };
+  // step.tip === "top": ancora il tooltip in alto (utile quando il bersaglio è
+  // in mezzo a elementi vicini, es. il menù "+" a semicerchio, per non coprirli).
+  const tipStyle = step.tip === "top"
+    ? { top: "calc(env(safe-area-inset-top) + 12px)", left, width: W }
+    : below
+      ? { top: holeBottom + 14, left, width: W }
+      : { top: hole.top - 14, left, width: W, transform: "translateY(-100%)" };
 
   return (
     <>
