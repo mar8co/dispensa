@@ -161,12 +161,12 @@ export default function PantryTab({
   function toggleExpiry() {
     if (expOpen) { setExpOpen(false); return; }
     setExpOpen(true);
-    // Atteso il frame in cui il box si apre, così l'input è visibile per il picker.
-    requestAnimationFrame(() => {
-      const el = expInputRef.current;
-      if (!el) return;
-      try { el.showPicker(); } catch { el.focus(); } // fallback se showPicker non c'è
-    });
+    // showPicker DEVE essere chiamato in modo SINCRONO nel gestore del tocco:
+    // iOS Safari richiede la user-activation immediata (un rAF/timeout la perde
+    // e il calendario non si apre). L'input è già nel DOM (clippato dal box),
+    // quindi il selettore nativo compare subito insieme alla barra.
+    const el = expInputRef.current;
+    if (el) { try { el.showPicker(); } catch { el.focus(); } } // fallback se showPicker non c'è
   }
   function closePanel(flush = true) {
     if (flush) flushPending();
@@ -500,9 +500,9 @@ export default function PantryTab({
                               <button
                                 onClick={clearExpiry}
                                 aria-label="Rimuovi scadenza"
-                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-tomato/30 text-tomato transition hover:bg-tomato/5"
+                                className="flex h-9 shrink-0 items-center rounded-lg border border-tomato/30 px-3 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
                               >
-                                <X className="h-4 w-4" />
+                                Elimina
                               </button>
                             )}
                           </div>
