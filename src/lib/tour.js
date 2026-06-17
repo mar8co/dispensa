@@ -63,8 +63,8 @@ export const TOUR_SCAN = [
 export const STEPS = [
   {
     id: "welcome", view: "dispensa", overlay: "card",
-    title: "Benvenuto in La Mia Dispensa! 👋",
-    text: "Facciamo un giro pratico: userai davvero le funzioni principali, una alla volta. Bastano un paio di minuti.",
+    title: "Benvenuto! 👋",
+    text: "Facciamo un giro insieme: ti mostro come utilizzare le funzioni principali. Bastano un paio di minuti.",
     advance: "next", cta: "Iniziamo",
   },
   {
