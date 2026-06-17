@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => {
         registerType: "autoUpdate",
         includeAssets: ["favicon-32x32.png", "apple-touch-icon.png", "icon.svg"],
         manifest: {
-          name: "La Mia Dispensa",
+          name: "Dispensa",
           short_name: "Dispensa",
           description: "Gestisci la dispensa e cucina con ciò che hai.",
           lang: "it",

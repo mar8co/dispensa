@@ -51,10 +51,10 @@ export default function Auth() {
         <div className="mb-7 text-center">
           <img
             src="/icon.svg"
-            alt="La Mia Dispensa"
+            alt="Dispensa"
             className="mx-auto mb-4 h-16 w-16 rounded-[22%] shadow-lg shadow-black/10"
           />
-          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La mia dispensa</div>
+          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Dispensa</div>
           <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Bentornato 👋</h1>
           <p className="mt-2 text-sm text-stone-500">Accedi per ritrovare la tua dispensa ovunque.</p>
         </div>
