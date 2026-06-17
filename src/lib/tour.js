@@ -107,7 +107,7 @@ export const STEPS = [
   {
     id: "add-modes", view: "dispensa", overlay: "spotlight", target: '[data-tour="add-manual-option"]',
     tip: "top",
-    title: "4 modi per aggiungere la tua spesa nella tua dispensa", text: "A mano, fotografando lo scontrino o la spesa, col codice a barre e a voce. Proviamo “A mano”.",
+    title: "4 modi per aggiungere la spesa", text: "A mano, fotografando lo scontrino o la spesa, col codice a barre e a voce. Proviamo “A mano”.",
     advance: "add-manual-chosen", hint: true,
   },
   {
