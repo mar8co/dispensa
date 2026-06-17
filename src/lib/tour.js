@@ -80,7 +80,7 @@ export const STEPS = [
   },
   {
     id: "qty", view: "dispensa", overlay: "spotlight", target: '[data-tour="qty-stepper"]',
-    title: "Cambia la quantità", text: "Usa − e + per aggiornare la quantità. Si salva da solo, senza pulsanti.",
+    title: "Cambia la quantità", text: "Tocca − o + per aggiornare le quantità. Si salva da solo, senza pulsanti.",
     advance: "qty-changed", hint: true,
   },
   {
