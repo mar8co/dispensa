@@ -436,8 +436,8 @@ export default function ShoppingTab({
   return (
     <div className="pt-2">
       <div className="flex items-start justify-between">
-        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua lista</div>
-        <div className="-mr-1 -mt-1 flex gap-0.5">
+        <h1 className="font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">La spesa</h1>
+        <div className="-mr-1 mt-1 flex gap-0.5">
           {wakeSupported && shopping.length > 0 && (
             <button
               onClick={() => {
@@ -467,12 +467,12 @@ export default function ShoppingTab({
           )}
         </div>
       </div>
-      <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">La spesa</h1>
 
-      {/* Inserimento in linea, FISSO in alto durante lo scroll: scrivi e il
-          prodotto appare qui sotto. È nel flusso della pagina (sticky, non
-          fixed in basso), quindi la tastiera iOS non lo copre. */}
+      {/* Occhiello rosso + inserimento in linea: bloccati insieme in alto
+          durante lo scroll. È nel flusso (sticky, non fixed in basso), quindi
+          la tastiera iOS non lo copre. */}
       <div className="sticky top-0 z-20 -mx-5 mt-2 bg-cream/95 px-5 pb-2.5 pt-2.5 backdrop-blur">
+        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua lista</div>
         <div data-tour="shopping-input" className="flex items-center gap-2.5">
           <div className="relative flex-1">
             <Plus className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />

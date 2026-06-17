@@ -81,13 +81,13 @@ export default function RecipesTab({
     <div className="pt-2">
       {!mode && (
         <>
-          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Ricette</div>
-          <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Cosa<br />cuciniamo?</h1>
+          <h1 className="font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Cosa<br />cuciniamo?</h1>
           <p className="mt-2.5 text-sm text-stone-500">Idee con quello che hai in dispensa.</p>
 
-          {/* Richiesta libera: proposte su misura. Resta SEMPRE visibile (sticky
-              in alto) mentre si scorrono occasioni e ricettario. */}
-          <div className="sticky top-0 z-20 -mx-5 mt-4 bg-cream/95 px-5 py-3 backdrop-blur">
+          {/* Occhiello rosso + ricerca ingredienti: bloccati insieme in alto
+              mentre si scorrono occasioni e ricettario. */}
+          <div className="sticky top-0 z-20 -mx-5 mt-4 bg-cream/95 px-5 pb-3 pt-2 backdrop-blur">
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Ricette</div>
             <form
               className="relative"
               onSubmit={(e) => { e.preventDefault(); if (ask.trim()) { onCustomAsk(ask); setAsk(""); } }}
