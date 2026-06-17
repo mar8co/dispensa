@@ -155,7 +155,7 @@ export const STEPS = [
   },
   {
     id: "done", view: "dispensa", overlay: "card",
-    title: "Tutto pronto! 🎉", text: "Hai usato concretamente le funzioni principali. La dispensa ora è vuota e tua. Puoi rivedere questo tutorial quando vuoi da Profilo › Rivedi il tutorial.",
+    title: "Tutto pronto! 🎉", text: "Ci siamo, sai già tutto! Ora la dispensa è tutta tua: inizia ad aggiungere quello che hai in casa. Vuoi rifare il giro? Lo ritrovi in Profilo › Rivedi il tutorial.",
     advance: "finish", cta: "Inizia a usare l'app",
   },
 ];
