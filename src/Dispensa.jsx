@@ -293,7 +293,7 @@ export default function Dispensa({ session }) {
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   // Mostra un toast per ~6 secondi, con eventuale azione ("Annulla" di
-  // default, oppure un'etichetta personalizzata es. "In lista spesa").
+  // default, oppure un'etichetta personalizzata es. "metti nella lista").
   function showToast(message, onUndo, actionLabel, actionTone, duration = 6000) {
     clearTimeout(toastTimer.current);
     setToast({ message, onUndo, actionLabel, actionTone });
@@ -457,7 +457,7 @@ export default function Dispensa({ session }) {
       showToast(<>Hai finito <strong>{it.name}</strong></>, async () => {
         await addToShoppingMerged([{ name: it.name, qty: "1" }]);
         dismissToast();
-      }, "In lista spesa");
+      }, "metti nella lista");
     }
   }
 
@@ -481,7 +481,7 @@ export default function Dispensa({ session }) {
       showToast(<>Hai finito <strong>{it.name}</strong></>, async () => {
         await addToShoppingMerged([{ name: it.name, qty: "1" }]);
         dismissToast();
-      }, "In lista spesa");
+      }, "metti nella lista");
       return;
     }
     showToast(<strong>Modifica salvata</strong>, async () => {
@@ -1406,7 +1406,7 @@ export default function Dispensa({ session }) {
           await addToShoppingMerged(finished.map((name) => ({ name, qty: "1" })));
           dismissToast();
         },
-        "In lista spesa"
+        "metti nella lista"
       );
     }
   }

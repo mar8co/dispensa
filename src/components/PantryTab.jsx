@@ -514,7 +514,7 @@ export default function PantryTab({
                           onClick={() => onToShopping(it)}
                           className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-bold text-tomato transition hover:bg-tomato/20"
                         >
-                          <ShoppingCart className="h-3 w-3" /> finito · metti in lista
+                          <ShoppingCart className="h-3 w-3" /> finito · metti nella lista della spesa
                         </button>
                       )}
 
