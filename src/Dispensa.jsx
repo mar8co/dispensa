@@ -584,6 +584,8 @@ export default function Dispensa({ session }) {
     if (!step) return;
     if (step.id !== "add-manual") setManualOpen(false);
     if (step.id !== "add-modes" && step.id !== "add-manual") setAddMenuOpen(false);
+    // Il Profilo resta aperto solo nel passo in cui si tocca "Svuota dispensa".
+    if (step.id !== "empty-clear") setProfileOpen(false);
     if (step.view && view !== step.view) setView(step.view);
     if (step.id === "open-recipe") {
       setMode(TOUR_MODE); setRecipe(null); setIdeas([TOUR_IDEA]);
@@ -1510,7 +1512,7 @@ export default function Dispensa({ session }) {
       <BottomNav
         view={view}
         setView={changeView}
-        onProfile={() => setProfileOpen(true)}
+        onProfile={() => { setProfileOpen(true); tourSignal("profile-opened"); }}
         shoppingCount={shopping.filter((s) => !s.checked).length}
         addSlot={
           <AddFab
@@ -1569,7 +1571,12 @@ export default function Dispensa({ session }) {
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
           onClose={() => setProfileOpen(false)}
-          onClearPantry={() => setConfirmClear(true)}
+          onClearPantry={() => {
+            // Durante il tutorial lo svuotamento è guidato e immediato (niente
+            // conferma): cancella i dati demo e avanza al passo finale.
+            if (tour.active) { tourEmptyDemo(); tourSignal("pantry-cleared"); }
+            else setConfirmClear(true);
+          }}
           onLogout={logout}
           onReplayTour={replayTour}
         />

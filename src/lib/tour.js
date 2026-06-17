@@ -144,9 +144,14 @@ export const STEPS = [
     advance: "next",
   },
   {
-    id: "empty", view: "dispensa", overlay: "card",
-    title: "Svuotiamo la dispensa demo", text: "Hai visto tutto! Cancello i prodotti di esempio così parti da una dispensa tutta tua. (Potrai svuotarla anche da Profilo › Svuota dispensa.)",
-    advance: "empty", cta: "Svuota e inizia",
+    id: "empty-open-profile", view: "dispensa", overlay: "spotlight", target: '[data-tour="tab-profilo"]',
+    title: "Svuotiamo la dispensa demo", text: "Per ripartire da una dispensa tutta tua, apri il Profilo.",
+    advance: "profile-opened", hint: true,
+  },
+  {
+    id: "empty-clear", view: "dispensa", overlay: "spotlight", target: '[data-tour="clear-pantry"]',
+    title: "Svuota la dispensa", text: "Tocca “Svuota dispensa”: cancello i prodotti di esempio così parti da zero.",
+    advance: "pantry-cleared", hint: true,
   },
   {
     id: "done", view: "dispensa", overlay: "card",
@@ -158,7 +163,7 @@ export const STEPS = [
 // In replay (non primo accesso) non si tocca la dispensa reale: niente passo
 // "svuota demo".
 export function visibleSteps(firstRun) {
-  return firstRun ? STEPS : STEPS.filter((s) => s.id !== "empty");
+  return firstRun ? STEPS : STEPS.filter((s) => s.id !== "empty-open-profile" && s.id !== "empty-clear");
 }
 
 // --- Store ---

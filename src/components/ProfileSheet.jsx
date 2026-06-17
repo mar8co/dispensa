@@ -93,6 +93,7 @@ export default function ProfileSheet({
               <GraduationCap className="h-4 w-4 text-stone-400" /> Rivedi il tutorial
             </button>
             <button
+              data-tour="clear-pantry"
               onClick={() => { close(); onClearPantry(); }}
               className="flex w-full items-center gap-2.5 rounded-xl border border-hair px-4 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
             >
