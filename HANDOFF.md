@@ -4,7 +4,7 @@
 > Leggere anche `CLAUDE.md` (regole permanenti) e `ARCHITECTURE.md` (architettura completa).
 > **Rispondere SEMPRE in italiano. Unità metriche (g/kg/ml/l) — mai cups/oz.**
 
-Ultimo aggiornamento: 17 giugno 2026 (tutorial + fix scadenza, fix UX, scadenza a comparsa con calendario nativo a un tap, occhiello rosso sticky — tutto **committato e pushato**, ultimo commit `a1afe20`). **Da ora commit/push automatici (vedi CLAUDE.md §0.4).**
+Ultimo aggiornamento: 17 giugno 2026 (revisione testi tutorial schermata-per-schermata + app rinominata "Dispensa" — tutto **committato e pushato**, ultimo commit `5ed53dd`). **Commit/push automatici (vedi CLAUDE.md §0.4).** App rinominata da "La Mia Dispensa" a **"Dispensa"** (manifest, title, login; su iOS la PWA va re-installata per aggiornare nome/icona).
 
 ---
 
@@ -49,12 +49,14 @@ Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx`
 - Blocco **rigido guidato**: a ogni passo è toccabile **solo** l'elemento evidenziato; il resto è bloccato. Resta sempre "Esci dal tutorial" (+ un "salta" discreto, per non restare mai bloccati se un segnale non scatta).
 
 **Come funziona (architettura):**
-- `src/lib/tour.js` — store esterno (`useSyncExternalStore`) + array `STEPS` (19 passi) + contenuti demo (`TOUR_RECIPE`, `TOUR_IDEA`, `TOUR_SCAN`, `TOUR_MODE`). API: `useTourState()`, `startTour(firstRun)`, `stopTour()`, `tourGoNext()`, `tourSignal(name)`, `visibleSteps(firstRun)`.
+- `src/lib/tour.js` — store esterno (`useSyncExternalStore`) + array `STEPS` (**20 passi al primo accesso**) + contenuti demo (`TOUR_RECIPE`, `TOUR_IDEA`, `TOUR_SCAN` con emoji, `TOUR_MODE`). API: `useTourState()`, `startTour(firstRun)`, `stopTour()`, `tourGoNext()`, `tourSignal(name)`, `visibleSteps(firstRun)`.
+- **Revisione testi (17 giu 2026):** tutti i testi riscritti in tono informale e **in prima persona** (l'app "parla": *lo metto, ti segnalo, ti propongo, riconosco*); rimosso l'indicatore "Passo X di N"; nei passi d'azione hint e "salta" sono sulla stessa riga; **rimosso il passo timer**; aggiunto il passo **`recipe-search`** (enfasi sulla barra "Cosa ti va?", informativo, niente AI); il passo **scadenza** evidenzia l'icona calendario (`data-tour="expiry-field"` ora sul bottone calendario).
+- **Svuotamento demo guidato dall'utente:** il vecchio passo `empty` (svuotava in automatico) è ora due passi — `empty-open-profile` (spotlight su Profilo) e `empty-clear` (spotlight su "Svuota dispensa"). Il tap svuota subito i dati demo *senza* la conferma `ConfirmClearModal` (ramo `tour.active` in `onClearPantry`) e avanza. Entrambi esclusi nel replay (`visibleSteps`).
 - `src/components/TourCoach.jsx` — overlay: 3 rese → **card** (riquadro centrale: benvenuto/scontrino/svuota/fine), **banner** (striscia in alto sopra le modali), **spotlight** (4 pannelli scuri attorno a un buco luminoso + anello + tooltip). Misura il bersaglio in rAF (segue scroll/animazioni). Se il bersaglio non si trova, ripiega su banner (non si blocca mai).
-- I bersagli sono marcati con attributi **`data-tour="…"`** sparsi nei componenti (`add-fab`, `add-manual-option`, `pantry-first-item`, `qty-stepper`, `unit-chips`, `expiry-field`, `tab-spesa`, `tab-ricette`, `shopping-input`, `recipe-idea`, `recipe-heart`, `step-timer`, `manual-add`).
+- I bersagli sono marcati con attributi **`data-tour="…"`** sparsi nei componenti (`add-fab`, `add-manual-option`, `pantry-first-item`, `qty-stepper`, `unit-chips`, `expiry-field`, `tab-spesa`, `tab-ricette`, `tab-profilo`, `shopping-input`, `recipe-search`, `recipe-idea`, `recipe-heart`, `clear-pantry`, `manual-add`). NB: `step-timer`/`tourSignal("timer-started")` restano in `StepTimer.jsx` ma sono **inerti** (passo timer rimosso) — pulizia in sospeso.
 - L'app **emette segnali** con `tourSignal('nome')` quando l'utente compie l'azione reale (apre prodotto, cambia qty/unità, apre il "+", sceglie "A mano", aggiunge, cambia scheda, apre/salva ricetta, avvia timer). Il passo avanza solo se aspetta proprio quel segnale (altrimenti no-op).
 - `Dispensa.jsx` orchestra: `useTourState()`, un `useEffect` che a ogni passo imposta la vista giusta, chiude le modali non pertinenti e (nelle Ricette) precarica la proposta demo; handler `tourEmptyDemo` / `tourComplete` / `tourExit` / `replayTour`; `openRecipe` ha un ramo demo (no AI) quando `tour.active`.
-- **Primo accesso**: il caricamento iniziale popola `DEMO_DATA` e chiama `startTour(true)`; alla fine i dati demo vengono cancellati (dispensa reale vuota) e si segna `localStorage` `dispensa-onboarded-<uid>=1`.
+- **Primo accesso**: il caricamento iniziale popola `DEMO_DATA` e chiama `startTour(true)`; verso la fine **è l'utente** a svuotare i dati demo (Profilo › Svuota dispensa, guidato); si segna `localStorage` `dispensa-onboarded-<uid>=1`. (`tourExit`/"Esci" puliscono comunque i dati demo al primo accesso.)
 - **Replay**: Profilo → "Rivedi il tutorial" → `startTour(false)` (NON tocca la dispensa reale; il passo "svuota demo" è escluso).
 
 ## 6. Bug noti / limiti
