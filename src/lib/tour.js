@@ -115,7 +115,7 @@ export const STEPS = [
   },
   {
     id: "shopping-add", view: "spesa", overlay: "spotlight", target: '[data-tour="shopping-input"]',
-    title: "Aggiungi alla lista", text: "Scrivi cosa ti manca e tocca Aggiungi. Al supermercato spunti i prodotti man mano che li prendi.",
+    title: "Aggiungi alla lista", text: "Scrivi cosa ti manca e tocca Aggiungi: al supermercato li spunti man mano che li prendi.",
     advance: "shopping-added", hint: true,
   },
   {
