@@ -4,6 +4,37 @@
 // animata) da usare al posto di onClose nei pulsanti interni.
 import { useEffect, useRef, useState } from "react";
 
+// Blocco dello scroll di sfondo mentre un foglio è aperto (stile modale nativa).
+// Su iOS `overflow:hidden` sul body NON basta: l'unico modo affidabile è fissare
+// il body con position:fixed conservando lo scroll, e ripristinarlo alla chiusura.
+// Un contatore gestisce eventuali fogli sovrapposti (sblocca solo l'ultimo).
+let lockCount = 0;
+let savedScrollY = 0;
+function lockBodyScroll() {
+  if (lockCount === 0) {
+    savedScrollY = window.scrollY;
+    const b = document.body;
+    b.style.position = "fixed";
+    b.style.top = `-${savedScrollY}px`;
+    b.style.left = "0";
+    b.style.right = "0";
+    b.style.width = "100%";
+  }
+  lockCount += 1;
+}
+function unlockBodyScroll() {
+  lockCount = Math.max(0, lockCount - 1);
+  if (lockCount === 0) {
+    const b = document.body;
+    b.style.position = "";
+    b.style.top = "";
+    b.style.left = "";
+    b.style.right = "";
+    b.style.width = "";
+    window.scrollTo(0, savedScrollY);
+  }
+}
+
 export default function Sheet({ onClose, locked = false, children }) {
   const [shown, setShown] = useState(false);   // anima l'ingresso al mount
   const [closing, setClosing] = useState(false);
@@ -14,6 +45,12 @@ export default function Sheet({ onClose, locked = false, children }) {
   useEffect(() => {
     const raf = requestAnimationFrame(() => setShown(true));
     return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Blocca lo scroll della pagina sottostante finché il foglio è aperto.
+  useEffect(() => {
+    lockBodyScroll();
+    return unlockBodyScroll;
   }, []);
 
   function close() {
@@ -67,7 +104,11 @@ export default function Sheet({ onClose, locked = false, children }) {
         >
           <div className="h-1 w-10 rounded-full bg-stone-300" />
         </div>
-        {typeof children === "function" ? children(close) : children}
+        {/* Area scorrevole interna: se il contenuto supera l'altezza del foglio
+            scorre qui dentro, senza propagare lo scroll alla pagina sotto. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {typeof children === "function" ? children(close) : children}
+        </div>
       </div>
     </div>
   );

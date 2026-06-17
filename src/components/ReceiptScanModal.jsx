@@ -91,8 +91,13 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
         className="z-10 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 pb-6 text-[#fff]"
         style={{ paddingTop: "calc(0.85rem + env(safe-area-inset-top))" }}
       >
-        <div className="flex items-center gap-2 text-base font-bold drop-shadow">
-          <Camera className="h-5 w-5" /> Scatta lo scontrino
+        <div className="drop-shadow">
+          <div className="flex items-center gap-2 text-base font-bold">
+            <Camera className="h-5 w-5" /> Scatta scontrino o spesa
+          </div>
+          <div className="mt-0.5 text-xs font-medium text-[#fff]/80">
+            Scontrino, prodotti o sacchetti della spesa 🛒
+          </div>
         </div>
         <button
           onClick={onClose}
@@ -126,7 +131,7 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
                 sharp ? "bg-tomato text-[#fff]" : "bg-black/70 text-[#fff]"
               }`}
             >
-              {sharp ? "A fuoco — scatta" : "Inquadra lo scontrino nel riquadro"}
+              {sharp ? "A fuoco — scatta" : "Inquadra scontrino o spesa nel riquadro"}
             </span>
           </div>
         )}

@@ -85,24 +85,27 @@ export default function RecipesTab({
           <h1 className="mt-1 font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Cosa<br />cuciniamo?</h1>
           <p className="mt-2.5 text-sm text-stone-500">Idee con quello che hai in dispensa.</p>
 
-          {/* Richiesta libera: proposte su misura */}
-          <form
-            className="relative mt-4"
-            onSubmit={(e) => { e.preventDefault(); if (ask.trim()) { onCustomAsk(ask); setAsk(""); } }}
-          >
-            <Sparkles className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
-            <input
-              value={ask}
-              onChange={(e) => setAsk(e.target.value)}
-              placeholder="Cosa ti va? es. qualcosa coi funghi"
-              className={`w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 text-sm text-ink outline-none focus:border-ink ${ask.trim() ? "pr-14" : "pr-2"}`}
-            />
-            {ask.trim() && (
-              <button type="submit" className="absolute right-0 top-1/2 -translate-y-1/2 rounded-lg bg-tomato px-2.5 py-1 text-xs font-bold text-white">
-                Vai
-              </button>
-            )}
-          </form>
+          {/* Richiesta libera: proposte su misura. Resta SEMPRE visibile (sticky
+              in alto) mentre si scorrono occasioni e ricettario. */}
+          <div className="sticky top-0 z-20 -mx-5 mt-4 bg-cream/95 px-5 py-3 backdrop-blur">
+            <form
+              className="relative"
+              onSubmit={(e) => { e.preventDefault(); if (ask.trim()) { onCustomAsk(ask); setAsk(""); } }}
+            >
+              <Sparkles className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
+              <input
+                value={ask}
+                onChange={(e) => setAsk(e.target.value)}
+                placeholder="Cosa ti va? es. qualcosa coi funghi"
+                className={`w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 text-sm text-ink outline-none focus:border-ink ${ask.trim() ? "pr-14" : "pr-2"}`}
+              />
+              {ask.trim() && (
+                <button type="submit" className="absolute right-0 top-1/2 -translate-y-1/2 rounded-lg bg-tomato px-2.5 py-1 text-xs font-bold text-white">
+                  Vai
+                </button>
+              )}
+            </form>
+          </div>
 
           <div className="mt-5 grid grid-cols-2 gap-3">
             {orderedModes.map((m) => (

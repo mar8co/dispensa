@@ -114,13 +114,24 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
 
           {step.demo === "scan" && (
             <div className="mt-4 rounded-2xl border border-hair bg-paper p-3">
-              <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-stone-400">
-                <ScanLine className="h-3.5 w-3.5 text-tomato" /> Prodotti riconosciuti
+              {/* Da una foto dello scontrino O della spesa → ai prodotti */}
+              <div className="mb-2.5 flex items-center justify-center gap-2 text-xl">
+                <span title="Scontrino">🧾</span>
+                <span className="text-sm font-bold text-stone-300">o</span>
+                <span title="Sacchetto della spesa">🛍️</span>
+                <span title="Carrello">🛒</span>
+                <ArrowRight className="h-4 w-4 text-stone-400" />
+                <ScanLine className="h-4 w-4 text-tomato" />
+              </div>
+              <div className="mb-2 text-center text-[11px] font-bold uppercase tracking-wide text-stone-400">
+                Alimenti riconosciuti
               </div>
               <ul className="divide-y divide-hair">
                 {TOUR_SCAN.map((p) => (
                   <li key={p.name} className="flex items-center justify-between py-1.5 text-sm">
-                    <span className="font-semibold text-ink">{p.name}</span>
+                    <span className="flex items-center gap-2 font-semibold text-ink">
+                      <span>{p.emoji}</span> {p.name}
+                    </span>
                     <span className="text-xs font-medium text-stone-400">{p.qty}</span>
                   </li>
                 ))}

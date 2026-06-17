@@ -44,12 +44,14 @@ export const TOUR_IDEA = {
   difficulty: "Facile",
 };
 
-// Esempio di prodotti "riconosciuti" da uno scontrino (passo dimostrativo).
+// Esempio di prodotti "riconosciuti" da una foto (passo dimostrativo): possono
+// venire da uno scontrino oppure dagli alimenti/sacchetti della spesa.
 export const TOUR_SCAN = [
-  { name: "Latte", qty: "1 l" },
-  { name: "Uova", qty: "6" },
-  { name: "Banane", qty: "4" },
-  { name: "Pane", qty: "1" },
+  { name: "Latte", qty: "1 l", emoji: "🥛" },
+  { name: "Pasta", qty: "500 g", emoji: "🍝" },
+  { name: "Pomodori", qty: "6", emoji: "🍅" },
+  { name: "Banane", qty: "4", emoji: "🍌" },
+  { name: "Uova", qty: "6", emoji: "🥚" },
 ];
 
 // --- Definizione dei passi ---
@@ -98,7 +100,7 @@ export const STEPS = [
   },
   {
     id: "add-modes", view: "dispensa", overlay: "spotlight", target: '[data-tour="add-manual-option"]',
-    title: "Quattro modi per aggiungere", text: "A mano, a voce, col codice a barre o fotografando la spesa. Proviamo “A mano”.",
+    title: "Quattro modi per aggiungere", text: "A mano, a voce, col codice a barre o fotografando scontrino e spesa. Proviamo “A mano”.",
     advance: "add-manual-chosen", hint: true,
   },
   {
@@ -138,7 +140,7 @@ export const STEPS = [
   },
   {
     id: "receipt", view: "ricette", overlay: "card",
-    title: "Scansiona lo scontrino", text: "Dopo la spesa puoi fotografare lo scontrino: l'app riconosce i prodotti e li aggiunge per te. Ecco un esempio:",
+    title: "Fotografa scontrino o spesa", text: "Dopo la spesa fotografa lo scontrino oppure direttamente i prodotti o i sacchetti: l'app riconosce gli alimenti e li aggiunge per te. Ecco un esempio:",
     advance: "next", demo: "scan",
   },
   {
