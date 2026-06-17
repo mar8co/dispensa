@@ -568,7 +568,7 @@ export default function PantryTab({
                         onClick={() => onCookWith(it.name)}
                         className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-tomato/50 px-3 py-2.5 text-sm font-semibold text-tomato transition hover:bg-tomato/5"
                       >
-                        <Sparkles className="h-4 w-4" /> Cosa ci cucino?
+                        <Sparkles className="h-4 w-4" /> Cucina con questo
                       </button>
                     </li>
                   );
