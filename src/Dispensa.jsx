@@ -1272,6 +1272,14 @@ export default function Dispensa({ session }) {
     changeView("ricette");
     askCustom(`qualcosa per usare subito: ${names.join(", ")}`);
   }
+  // Dal pannello prodotto: apre le Ricette con proposte basate su quel prodotto
+  // (come scrivere il suo nome nel box "Cosa ti va?").
+  function cookWithProduct(name) {
+    const n = String(name || "").trim();
+    if (!n) return;
+    changeView("ricette");
+    askCustom(n);
+  }
 
   // --- Derivati ---
   const q = norm(search);
@@ -1442,6 +1450,7 @@ export default function Dispensa({ session }) {
             onAutoSave={autoSaveItem} onSetExpiry={setItemExpiry} removeItem={removeItem}
             expiringCount={expiringItems.length} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
+            onCookWith={cookWithProduct}
           />
         )}
 

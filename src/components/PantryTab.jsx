@@ -5,7 +5,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Trash2, X, Search, ShoppingCart, AlertTriangle, ChefHat,
-  Calendar, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown,
+  Calendar, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, atMinQty } from "../lib/pantry.js";
@@ -63,7 +63,7 @@ export default function PantryTab({
   search, setSearch, sort, setSort,
   grouped, cardRefs,
   onMoveCat, onAutoSave, onSetExpiry, removeItem,
-  expiringCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping,
+  expiringCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
 }) {
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
@@ -561,6 +561,15 @@ export default function PantryTab({
                           })}
                         </div>
                       </div>
+
+                      {/* "Cosa ci cucino?": apre le Ricette con proposte basate su
+                          questo prodotto (come scriverlo nel box "Cosa ti va?"). */}
+                      <button
+                        onClick={() => onCookWith(it.name)}
+                        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-tomato/50 px-3 py-2.5 text-sm font-semibold text-tomato transition hover:bg-tomato/5"
+                      >
+                        <Sparkles className="h-4 w-4" /> Cosa ci cucino?
+                      </button>
                     </li>
                   );
                 }
