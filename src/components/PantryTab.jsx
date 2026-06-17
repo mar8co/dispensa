@@ -86,6 +86,7 @@ export default function PantryTab({
   const lastRef = useRef({});       // ultimi valori salvati (rileva i cambi)
   const qtyTimer = useRef(null);
   const expTimer = useRef(null);
+  const expInputRef = useRef(null); // input date: per aprire il calendario nativo
 
   function commitQtyNow(v) {
     const it = openItemRef.current;
@@ -154,6 +155,18 @@ export default function PantryTab({
     setExpDraft("");
     commitExpiryNow("");
     setExpOpen(false);
+  }
+  // Tocco sull'icona calendario: apre il box E fa comparire subito il selettore
+  // data nativo (un solo tap). Se il box è già aperto, lo richiude.
+  function toggleExpiry() {
+    if (expOpen) { setExpOpen(false); return; }
+    setExpOpen(true);
+    // Atteso il frame in cui il box si apre, così l'input è visibile per il picker.
+    requestAnimationFrame(() => {
+      const el = expInputRef.current;
+      if (!el) return;
+      try { el.showPicker(); } catch { el.focus(); } // fallback se showPicker non c'è
+    });
   }
   function closePanel(flush = true) {
     if (flush) flushPending();
@@ -423,7 +436,7 @@ export default function PantryTab({
                         </button>
                         <button
                           data-tour="expiry-field"
-                          onClick={() => setExpOpen((v) => !v)}
+                          onClick={toggleExpiry}
                           aria-label="Data di scadenza"
                           aria-expanded={expOpen}
                           title="Scadenza"
@@ -476,6 +489,7 @@ export default function PantryTab({
                           </div>
                           <div className="flex items-center gap-2">
                             <input
+                              ref={expInputRef}
                               type="date"
                               value={expDraft}
                               onChange={(e) => scheduleExpiry(e.target.value)}
