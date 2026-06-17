@@ -19,27 +19,27 @@ export const TOUR_MODE = { id: "Su misura per te", icon: "✨", desc: "" };
 // Ricetta d'esempio: usa i prodotti di DEMO_DATA (così risultano "ce l'hai")
 // e ha un passaggio con timer, per mostrare il timer di cottura.
 export const TOUR_RECIPE = {
-  title: "Pasta zucchine e pomodorini",
+  title: "Pasta zucchine, pomodorini e feta",
   servings: 2,
   time: "20 min",
   ingredients: [
     { name: "Spaghetti", qty: "160 g" },
     { name: "Zucchine", qty: "2" },
     { name: "Pomodorini", qty: "200 g" },
-    { name: "Parmigiano", qty: "40 g" },
+    { name: "Feta", qty: "100 g" },
     { name: "Olio EVO", qty: "20 ml" },
   ],
   steps: [
-    { text: "Porta a bollore l'acqua e salala. Intanto taglia le zucchine a rondelle e i pomodorini a metà.", timer: null },
+    { text: "Porta a bollore l'acqua e salala. Intanto taglia le zucchine a rondelle e i pomodorini a metà, e sbriciola la feta.", timer: null },
     { text: "Scotta le verdure in padella con un filo d'olio, a fuoco vivace.", timer: 1 },
-    { text: "Cuoci la pasta al dente, scolala e saltala in padella con le verdure e una spolverata di parmigiano.", timer: null },
+    { text: "Cuoci la pasta al dente, scolala e saltala con le verdure; aggiungi la feta sbriciolata a fine cottura.", timer: null },
   ],
 };
 
 // Card "proposta" mostrata nella scheda Ricette durante il tutorial.
 export const TOUR_IDEA = {
   title: TOUR_RECIPE.title,
-  description: "Veloce e fresca, con quello che hai già in dispensa.",
+  description: "Veloce e fresca, con zucchine, pomodorini e feta.",
   time: "20 min",
   difficulty: "Facile",
 };
@@ -125,7 +125,7 @@ export const STEPS = [
   },
   {
     id: "recipe-search", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-search"]',
-    title: "Ricette su misura", text: "Scrivi cosa ti va di cucinare e ti preparo le ricette apposta, es. “qualcosa con zucchine e pomodori”.",
+    title: "Ricette su misura", text: "Scrivi cosa ti va di cucinare e ti preparo le ricette apposta, es. “zucchine pomodori e feta”.",
     advance: "next",
   },
   {

@@ -86,6 +86,7 @@ export const DEMO_DATA = [
   ["Prosciutto crudo", "100 g", "Salumi"],
   ["Tonno fresco", "300 g", "Pesce"],
   ["Parmigiano", "200 g", "Latticini"],
+  ["Feta", "200 g", "Latticini"],
   ["Yogurt greco", "4", "Latticini"],
   ["Pane", "1", "Pane e Forno"],
   ["Spaghetti", "500 g", "Pasta, Riso e Cereali"],
