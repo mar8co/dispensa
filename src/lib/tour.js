@@ -90,8 +90,13 @@ export const STEPS = [
     advance: "unit-changed", hint: true,
   },
   {
-    id: "expiry", view: "dispensa", overlay: "spotlight", target: '[data-tour="expiry-field"]',
-    title: "Imposta la scadenza", text: "Tocca l'icona calendario per aggiungere una data di scadenza: ti segnalo i prodotti che stanno per scadere.",
+    id: "expiry-open", view: "dispensa", overlay: "spotlight", target: '[data-tour="expiry-field"]',
+    title: "Imposta la scadenza", text: "Tocca l'icona calendario per aggiungere una data di scadenza.",
+    advance: "expiry-opened", hint: true,
+  },
+  {
+    id: "expiry-pick", view: "dispensa", overlay: "spotlight", target: '[data-tour="expiry-box"]',
+    title: "Scegli la data", text: "Tocca qui e scegli la data dal calendario: ti segnalo i prodotti che stanno per scadere.",
     advance: "next",
   },
   {

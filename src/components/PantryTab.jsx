@@ -161,6 +161,7 @@ export default function PantryTab({
   function toggleExpiry() {
     if (expOpen) { setExpOpen(false); return; }
     setExpOpen(true);
+    tourSignal("expiry-opened"); // fa avanzare il tutorial al passo "scegli la data"
     // showPicker DEVE essere chiamato in modo SINCRONO nel gestore del tocco:
     // iOS Safari richiede la user-activation immediata (un rAF/timeout la perde
     // e il calendario non si apre). L'input è già nel DOM (clippato dal box),
@@ -490,6 +491,7 @@ export default function PantryTab({
                           <div className="flex items-center gap-2">
                             <input
                               ref={expInputRef}
+                              data-tour="expiry-box"
                               type="date"
                               value={expDraft}
                               onChange={(e) => scheduleExpiry(e.target.value)}
