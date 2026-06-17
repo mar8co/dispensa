@@ -140,7 +140,7 @@ export const STEPS = [
   },
   {
     id: "delete", view: "dispensa", overlay: "spotlight", target: '[data-tour="pantry-first-item"]',
-    title: "Eliminare un prodotto", text: "Per eliminare un prodotto, aprilo e tocca il cestino 🗑️. Ci siamo quasi.",
+    title: "Eliminare un prodotto", text: "Per eliminare un prodotto, aprilo e tocca il cestino 🗑️.",
     advance: "next",
   },
   {
