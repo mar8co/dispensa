@@ -110,7 +110,7 @@ export const STEPS = [
   },
   {
     id: "go-spesa", view: "dispensa", overlay: "spotlight", target: '[data-tour="tab-spesa"]',
-    title: "La lista della spesa", text: "Ora la spesa: tocca la scheda Spesa.",
+    title: "La lista della spesa", text: "Tocca la scheda Spesa: qui tieni la lista di tutto quello che ti manca.",
     advance: "view-spesa", hint: true,
   },
   {
