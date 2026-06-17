@@ -95,7 +95,7 @@ export const STEPS = [
   },
   {
     id: "add-open", view: "dispensa", overlay: "spotlight", target: '[data-tour="add-fab"]',
-    title: "Aggiungi un prodotto", text: "Tocca il “+” per aggiungere qualcosa di nuovo.",
+    title: "Aggiungi un prodotto", text: "Tocca il “+” per aggiungere la tua spesa.",
     advance: "add-menu-opened", hint: true,
   },
   {
