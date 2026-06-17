@@ -42,7 +42,7 @@ export const MODES = [
   { id: "Cucina etnica", icon: "🌍", desc: "Sapori dal mondo" },
   { id: "Leggero & sano", icon: "🥗", desc: "Equilibrato e nutriente" },
   { id: "Comfort food", icon: "🍲", desc: "Avvolgente e goloso" },
-  { id: "Svuota dispensa", icon: "♻️", desc: "Usa ciò che già hai" },
+  { id: "Schiscetta a lavoro", icon: "🍱", desc: "Veloce, facile, da portare nel tupperware" },
   { id: "Colazione & brunch", icon: "🥐", desc: "Per iniziare la giornata" },
   { id: "Pesce e mare", icon: "🐟", desc: "Sapore di mare" },
   { id: "Vegetariano", icon: "🥦", desc: "Senza carne né pesce" },
