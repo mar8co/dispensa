@@ -4,7 +4,7 @@
 > Leggere anche `CLAUDE.md` (regole permanenti) e `ARCHITECTURE.md` (architettura completa).
 > **Rispondere SEMPRE in italiano. Unità metriche (g/kg/ml/l) — mai cups/oz.**
 
-Ultimo aggiornamento: 17 giugno 2026 (tutorial + fix scadenza, fix UX, scadenza a comparsa — tutto **committato e pushato**, ultimo commit `9ab9734`).
+Ultimo aggiornamento: 17 giugno 2026 (tutorial + fix scadenza, fix UX, scadenza a comparsa, occhiello rosso sticky — tutto **committato e pushato**, ultimo commit `f2dd977`).
 
 ---
 
@@ -30,6 +30,7 @@ registri la spesa (a mano / voce / barcode / foto scontrino) → la dispensa sa 
 - **Ricette** (`RecipesTab.jsx`): 12 occasioni riordinabili (drag) + campo libero "Cosa ti va?" reso **sticky** in alto nella vista occasioni; 4 proposte (cache 24h per occasione + "Altre idee"; header categoria **sticky**); foto Pexels (fade-in); dettaglio con grammature scalabili (**default 1 porzione**, preferenza ricordata), "cosa mi manca" → spesa, **timer per passaggio**, **Modalità cucina** fullscreen; **ricettario** (cuore/preferiti + storico cucinate) **local-first**.
 - **Input multimodali**: **Foto** (fotocamera integrata) per **scontrino *o* spesa/prodotti/sacchetti** — titolo/hint e badge guida lo comunicano esplicitamente; overlay "Sto analizzando…" + deduplica AI/client; barcode (lazy), voce (Web Speech API), manuale.
 - **Bottom-sheet** (`Sheet.jsx`): **scroll di sfondo bloccato** mentre un foglio è aperto (body `position:fixed`+restore, contatore per fogli annidati) e contenuto scrollabile internamente (`overscroll-contain`) — niente scroll-bleed col menu profilo.
+- **Occhiello rosso sticky** (tutte e 3 le schede): l'eyebrow ("La tua dispensa" / "La tua lista" / "Ricette") è dentro il blocco sticky, sopra la barra di scrittura, e resta visibile durante lo scroll (il titolone grande scorre via). ⚠️ In Dispensa gli offset degli sticky a valle sono tarati a mano: barra reparti `top-[4.5rem]`, `scrollMarginTop` salto-reparto 124px (verificare sul telefono che non ci sia gap/overlap tra ricerca e reparti).
 - **Quantità/unità** (`lib/pantry.js`): parser per famiglie (peso/volume/conteggio), passi per unità (pz±1, g±50, kg/l±0,25), cambio unità = reset al default dell'unità; stima AI nel "Ho cucinato" per pacchi↔grammi.
 - **Timer globali** (`lib/timers.js`): continuano cambiando scheda; allarme a raffiche ripetute (~30 s o fino a "Stop") + vibrazione + notifica; barretta flottante (`TimerBar.jsx`).
 - **Tutorial interattivo primo accesso** (`lib/tour.js` + `TourCoach.jsx`) — **NUOVO, vedi §5/§6**: spotlight che guida azioni reali; ripetibile da Profilo.
@@ -93,6 +94,7 @@ Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx`
 - Il **tutorial interattivo** (nuovi `lib/tour.js`, `components/TourCoach.jsx`; `Onboarding.jsx` eliminato; `data-tour`/`tourSignal` in BottomNav/AddFab/PantryTab/ShoppingTab/RecipesTab/StepTimer/ManualAddModal; orchestrazione in `Dispensa.jsx`; "Rivedi il tutorial" in `ProfileSheet.jsx`) e il **fix scadenza** sono **committati e pushati** su `main` (commit `08607b9`, 17 giu 2026). Vercel ha fatto auto-deploy. Nel commit sono inclusi anche `CLAUDE.md`, `ARCHITECTURE.md`, `HANDOFF.md`.
 - **Fix UX** (commit `606f2f1`): blocco scroll di sfondo nei bottom-sheet (`Sheet.jsx`), barra "Cosa ti va?" sticky in Ricette, funzione Foto chiarita per scontrino *e* spesa (`ReceiptScanModal.jsx`, `lib/tour.js`, `TourCoach.jsx`). **Committato e pushato.**
 - **Scadenza a comparsa** nel pannello prodotto (commit `9ab9734`): box nascosto di default, apertura su tocco calendario con transizione, riga principale in stile mockup; quantità/unità mantenute. **Committato e pushato.**
+- **Occhiello rosso sticky** nelle 3 schede (commit `f2dd977`): eyebrow dentro il blocco sticky sopra la barra; offset sticky Dispensa ritarati. **Committato e pushato.**
 - ⚠️ Tutte le novità UI vivono **dietro il login Supabase**: build OK ma runtime non ancora percorso da Claude → **da provare sul telefono**.
 - L'**icona** è ancora in fase di scelta (§4): non modificarla finché l'utente non sceglie il mockup. (Rinviata: "la vediamo più avanti".)
 
