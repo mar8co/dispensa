@@ -80,6 +80,7 @@ NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Altr
 export const DEMO_DATA = [
   ["Zucchine", "3", "Verdura"],
   ["Pomodorini", "500 g", "Verdura"],
+  ["Menta", "1 vaso", "Verdura"],
   ["Mele", "4", "Frutta"],
   ["Limoni", "2", "Frutta"],
   ["Petto di pollo", "500 g", "Carne"],
@@ -90,6 +91,7 @@ export const DEMO_DATA = [
   ["Yogurt greco", "4", "Latticini"],
   ["Pane", "1", "Pane e Forno"],
   ["Spaghetti", "500 g", "Pasta, Riso e Cereali"],
+  ["Cous cous", "1 conf.", "Pasta, Riso e Cereali"],
   ["Riso", "1 kg", "Pasta, Riso e Cereali"],
   ["Ceci", "1 barattolo", "Legumi"],
   ["Pomodori pelati", "1 barattolo", "Conserve"],

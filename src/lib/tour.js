@@ -19,27 +19,28 @@ export const TOUR_MODE = { id: "Su misura per te", icon: "✨", desc: "" };
 // Ricetta d'esempio: usa i prodotti di DEMO_DATA (così risultano "ce l'hai")
 // e ha un passaggio con timer, per mostrare il timer di cottura.
 export const TOUR_RECIPE = {
-  title: "Pasta zucchine, pomodorini e feta",
+  title: "Cous cous con tonno, zucchine e feta",
   servings: 2,
-  time: "20 min",
+  time: "15 min",
   ingredients: [
-    { name: "Spaghetti", qty: "160 g" },
+    { name: "Cous cous", qty: "160 g" },
+    { name: "Tonno", qty: "160 g" },
     { name: "Zucchine", qty: "2" },
     { name: "Pomodorini", qty: "200 g" },
     { name: "Feta", qty: "100 g" },
-    { name: "Olio EVO", qty: "20 ml" },
+    { name: "Menta", qty: "1 ciuffo" },
   ],
   steps: [
-    { text: "Porta a bollore l'acqua e salala. Intanto taglia le zucchine a rondelle e i pomodorini a metà, e sbriciola la feta.", timer: null },
-    { text: "Scotta le verdure in padella con un filo d'olio, a fuoco vivace.", timer: 1 },
-    { text: "Cuoci la pasta al dente, scolala e saltala con le verdure; aggiungi la feta sbriciolata a fine cottura.", timer: null },
+    { text: "Versa il cous cous in una ciotola, coprilo con acqua bollente salata e un filo d'olio, poi lascialo gonfiare e sgranalo con una forchetta.", timer: 5 },
+    { text: "Intanto taglia le zucchine a cubetti e saltale in padella; taglia i pomodorini a metà e sbriciola la feta.", timer: null },
+    { text: "Unisci al cous cous le zucchine, i pomodorini, il tonno sgocciolato e la feta. Profuma con la menta fresca e servi.", timer: null },
   ],
 };
 
 // Card "proposta" mostrata nella scheda Ricette durante il tutorial.
 export const TOUR_IDEA = {
   title: TOUR_RECIPE.title,
-  description: "Veloce e fresca, con zucchine, pomodorini e feta.",
+  description: "Fresca e veloce, con tonno, zucchine, feta e menta.",
   time: "20 min",
   difficulty: "Facile",
 };
