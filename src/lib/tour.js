@@ -90,7 +90,7 @@ export const STEPS = [
   },
   {
     id: "expiry", view: "dispensa", overlay: "spotlight", target: '[data-tour="expiry-field"]',
-    title: "Imposta la scadenza", text: "Tocca l'icona calendario per aggiungere una data di scadenza: i prodotti vicini alla scadenza vengono segnalati.",
+    title: "Imposta la scadenza", text: "Tocca l'icona calendario per aggiungere una data di scadenza: i prodotti vicini alla scadenza verranno segnalati.",
     advance: "next",
   },
   {
