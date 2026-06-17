@@ -38,8 +38,9 @@ registri la spesa (a mano / voce / barcode / foto scontrino) → la dispensa sa 
 - **Profilo** (`ProfileSheet.jsx`): tema, preferenze alimentari (iniettate nei prompt ricetta), **"Rivedi il tutorial"**, svuota dispensa, logout con conferma.
 
 ## 4. Funzionalità in sviluppo / non finite
-- **Icona dell'app — NON finalizzata.** L'attuale `public/icon.svg` è la "dispensa a scaffali" (stile clay) che **all'utente NON piace più**. Si stava cercando una nuova direzione: l'ultima proposta accettata era **piatto + posate + scintilla AI**, in **stile flat moderno**, su sfondo rosso pomodoro (brand). Sono stati mostrati 6 mockup (coperto/posate, piatto con ingredienti, silhouette bianca, outline, ciotola, minimale); **manca la scelta finale dell'utente**. Dopo la scelta: scrivere il nuovo `public/icon.svg`, poi `node scripts/generate-icons.mjs`, verificare i PNG, build + commit + push.
-- TODO prioritari: vedi §8.
+- **Icona dell'app — FINALIZZATA** (commit `1b6e710`): **frigo aperto con prodotti**, stile geometrico piatto, forme cream su **fondo nero**, **dettaglio rosso** (un pomodoro). `public/icon.svg` (512, full-bleed, contenuto nella zona sicura per maskable) + PNG da `node scripts/generate-icons.mjs`. iOS cache l'icona PWA: per vederla va rimossa e re-installata.
+- **"Scegli icona" in Profilo — NON si fa** (scelta utente): una PWA non può cambiare l'icona sulla Home a runtime (nessuna alternate-icon API), quindi un selettore sarebbe inutile. Resta un'unica icona.
+- TODO prioritari: vedi §10.
 
 ## 5. Tutorial interattivo (la novità principale di questa sessione)
 Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx` **eliminato**).
@@ -99,11 +100,10 @@ Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx`
 - **Occhiello rosso sticky** nelle 3 schede (commit `f2dd977`): eyebrow dentro il blocco sticky sopra la barra; offset sticky Dispensa ritarati. **Committato e pushato.**
 - **Calendario nativo a un tap** (commit `a1afe20`): l'icona calendario nel pannello prodotto apre subito il selettore data (`input.showPicker()`, fallback `focus()`). **Committato e pushato.**
 - ⚠️ Tutte le novità UI vivono **dietro il login Supabase**: build OK ma runtime non ancora percorso da Claude → **da provare sul telefono**.
-- L'**icona** è ancora in fase di scelta (§4): non modificarla finché l'utente non sceglie il mockup. (Rinviata: "la vediamo più avanti".)
+- **Icona app finalizzata** (commit `1b6e710`, §4): frigo aperto su fondo nero, dettaglio rosso. **Committato e pushato.**
 
 ## 10. TODO prioritari
-1. **Finalizzare l'icona app** (scelta utente in sospeso, rinviata) → scrivere `public/icon.svg` → `node scripts/generate-icons.mjs` → verifica → deploy.
-2. **Provare il tutorial end-to-end** sul telefono dopo il login (build OK ma runtime non ancora percorso).
+1. **Provare il tutorial end-to-end** sul telefono dopo il login (build OK ma runtime non ancora percorso).
 3. **Refactor `Dispensa.jsx`**: spezzare in custom hooks (`usePantry`, `useShopping`, `useRecipes`) o store leggero. Debito principale.
 4. **Notifiche scadenze** (push/local) — alto valore (i dati ci sono già).
 5. **Coda sync offline-write** (oggi offline è sola lettura).
