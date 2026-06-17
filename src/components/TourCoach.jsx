@@ -153,7 +153,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   // --- Resa a striscia in alto (passi su modale o bersaglio non trovato) ---
   if (asBanner) {
     return (
-      <div className="fixed inset-x-0 top-0 z-[95] flex justify-center px-3" style={{ paddingTop: "calc(env(safe-area-inset-top) + 8px)" }}>
+      <div className="fixed inset-x-0 top-0 z-[95] flex justify-center px-3" style={{ paddingTop: "calc(env(safe-area-inset-top) + 18px)" }}>
         <div className="w-full max-w-md rounded-2xl border border-hair bg-cream/95 p-4 shadow-2xl backdrop-blur">
           <div className="mb-1.5 flex items-center justify-between">
             <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>

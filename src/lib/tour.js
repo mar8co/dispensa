@@ -70,7 +70,7 @@ export const STEPS = [
   {
     id: "pantry", view: "dispensa", overlay: "banner",
     title: "Questa è la tua dispensa",
-    text: "L'ho riempita con qualche prodotto di esempio, raggruppato per reparto. Alla fine la svuotiamo, così parti pulito.",
+    text: "Qui puoi aggiungere e trovare tutti i prodotti che hai a casa. Ora l'ho riempita con qualche prodotto di esempio, raggruppato per reparto. Alla fine la svuotiamo, così parti da zero.",
     advance: "next",
   },
   {
