@@ -38,11 +38,11 @@ export const CAT_ICON = {
 
 export const MODES = [
   { id: "Pranzo veloce", icon: "⚡", desc: "Pronto in massimo 20 minuti" },
+  { id: "Schiscetta a lavoro", icon: "🍱", desc: "Veloce, facile, da portare nel tupperware" },
   { id: "Cucina italiana", icon: "🍝", desc: "Tradizione e sapore di casa" },
   { id: "Cucina etnica", icon: "🌍", desc: "Sapori dal mondo" },
   { id: "Leggero & sano", icon: "🥗", desc: "Equilibrato e nutriente" },
   { id: "Comfort food", icon: "🍲", desc: "Avvolgente e goloso" },
-  { id: "Schiscetta a lavoro", icon: "🍱", desc: "Veloce, facile, da portare nel tupperware" },
   { id: "Colazione & brunch", icon: "🥐", desc: "Per iniziare la giornata" },
   { id: "Pesce e mare", icon: "🐟", desc: "Sapore di mare" },
   { id: "Vegetariano", icon: "🥦", desc: "Senza carne né pesce" },
