@@ -5,7 +5,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Trash2, X, Search, ShoppingCart, AlertTriangle, ChefHat,
-  CalendarPlus, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown,
+  Calendar, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown,
 } from "lucide-react";
 import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, atMinQty } from "../lib/pantry.js";
@@ -68,7 +68,8 @@ export default function PantryTab({
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
   const [sortOpen, setSortOpen] = useState(false); // chips ordinamento a comparsa
-  const [expDraft, setExpDraft] = useState(""); // scadenza nel pannello (sempre visibile)
+  const [expDraft, setExpDraft] = useState(""); // valore della scadenza nel pannello
+  const [expOpen, setExpOpen] = useState(false); // box scadenza a comparsa (chiuso di default)
   const [catPickerOpen, setCatPickerOpen] = useState(false);
   // Barra sticky: espansione verticale di tutti i reparti (niente swipe).
   const [catsExpanded, setCatsExpanded] = useState(false);
@@ -144,7 +145,15 @@ export default function PantryTab({
     setDraftName(it.name);
     setQtyDraft(it.qty);
     setExpDraft(it.expiry || "");
+    setExpOpen(false); // box scadenza chiuso all'apertura (compare al tocco del calendario)
     setCatPickerOpen(false);
+  }
+  // Rimuove la scadenza e richiude il box (deve sparire del tutto, senza occupare spazio).
+  function clearExpiry() {
+    clearTimeout(expTimer.current);
+    setExpDraft("");
+    commitExpiryNow("");
+    setExpOpen(false);
   }
   function closePanel(flush = true) {
     if (flush) flushPending();
@@ -386,8 +395,10 @@ export default function PantryTab({
                 if (openId === it.id) {
                   const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
                   return (
-                    <li key={it.id} ref={panelRef} className="-mx-2 my-1 space-y-2.5 rounded-xl bg-stone-50 p-3">
-                      {/* Riga 1: nome editabile + categoria · calendario · elimina */}
+                    <li key={it.id} ref={panelRef} className="-mx-2 my-1 rounded-xl bg-stone-50 p-3">
+                      {/* Riga 1: nome editabile · categoria · calendario · elimina.
+                          Sempre visibile; il box scadenza compare solo al tocco
+                          dell'icona calendario (vedi sotto). */}
                       <div className="flex items-center gap-1.5">
                         <input
                           className={`${editCls} min-w-0 flex-1`}
@@ -401,11 +412,25 @@ export default function PantryTab({
                           onClick={() => setCatPickerOpen((v) => !v)}
                           aria-label="Categoria"
                           title="Categoria"
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-base transition ${
+                          className={`flex h-9 max-w-[42%] shrink-0 items-center gap-1 rounded-lg border px-2 transition ${
                             catPickerOpen ? "border-tomato bg-tomato/5" : "border-hair bg-paper"
                           }`}
                         >
-                          {CAT_ICON[it.category]}
+                          <span className="text-base">{CAT_ICON[it.category]}</span>
+                          <span className="truncate text-sm font-medium text-ink">{it.category}</span>
+                          <ChevronDown className={`h-4 w-4 shrink-0 text-stone-400 transition-transform ${catPickerOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        <button
+                          data-tour="expiry-field"
+                          onClick={() => setExpOpen((v) => !v)}
+                          aria-label="Data di scadenza"
+                          aria-expanded={expOpen}
+                          title="Scadenza"
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition ${
+                            expOpen || expDraft ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-500"
+                          }`}
+                        >
+                          <Calendar className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => { closePanel(false); removeItem(it); }}
@@ -418,7 +443,7 @@ export default function PantryTab({
 
                       {/* Categorie come chips: un solo tap per scegliere */}
                       {catPickerOpen && (
-                        <div className="animate-fade-in flex flex-wrap gap-1.5">
+                        <div className="animate-fade-in mt-2.5 flex flex-wrap gap-1.5">
                           {PICKER_CATS.map((c) => (
                             <button
                               key={c}
@@ -435,38 +460,51 @@ export default function PantryTab({
                         </div>
                       )}
 
-                      {/* Scadenza: campo SEMPRE visibile, modifica immediata
-                          dal calendario nativo (si salva da sola). */}
-                      <div data-tour="expiry-field" className="flex items-center gap-2">
-                        <CalendarPlus className="h-4 w-4 shrink-0 text-stone-400" />
-                        <input
-                          type="date"
-                          value={expDraft}
-                          onChange={(e) => scheduleExpiry(e.target.value)}
-                          className="min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                          aria-label="Data di scadenza"
-                        />
-                        {expDraft && (
-                          <button
-                            onClick={() => { clearTimeout(expTimer.current); setExpDraft(""); commitExpiryNow(""); }}
-                            className="shrink-0 rounded-lg border border-tomato/30 px-2.5 py-2 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
-                          >
-                            Rimuovi
-                          </button>
-                        )}
+                      {/* Box scadenza a comparsa: nascosto di default, si apre con
+                          una transizione fluida (slide verticale + fade) al tocco
+                          del calendario. Il padding sta DENTRO l'area clippata, così
+                          a box chiuso non occupa spazio. */}
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-out ${
+                          expOpen ? "max-h-48 opacity-100" : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        <div className="pt-3">
+                          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+                            <Calendar className="h-3.5 w-3.5" /> Data di scadenza
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={expDraft}
+                              onChange={(e) => scheduleExpiry(e.target.value)}
+                              className="min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+                              aria-label="Data di scadenza"
+                            />
+                            {expDraft && (
+                              <button
+                                onClick={clearExpiry}
+                                aria-label="Rimuovi scadenza"
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-tomato/30 text-tomato transition hover:bg-tomato/5"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                       {out && (
                         <button
                           onClick={() => onToShopping(it)}
-                          className="inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-bold text-tomato transition hover:bg-tomato/20"
+                          className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-bold text-tomato transition hover:bg-tomato/20"
                         >
                           <ShoppingCart className="h-3 w-3" /> finito · metti in lista
                         </button>
                       )}
 
                       {/* Riga 2: stepper nudo a sinistra, unità a destra */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
                         <div data-tour="qty-stepper" className="flex items-center gap-3 px-1">
                           <button
                             onClick={() => scheduleQty(adjustQty(qtyDraft, -1))}
