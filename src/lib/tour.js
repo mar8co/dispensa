@@ -135,7 +135,7 @@ export const STEPS = [
   },
   {
     id: "receipt", view: "ricette", overlay: "card",
-    title: "Fotografa scontrino o spesa", text: "Dopo la spesa fotografa lo scontrino oppure direttamente i prodotti o i sacchetti: l'app riconosce gli alimenti e li aggiunge per te. Ecco un esempio:",
+    title: "Fotografa scontrino o spesa", text: "Dopo la spesa fotografa lo scontrino oppure direttamente i prodotti: riconosco gli alimenti e li aggiungo per te. Ecco un esempio:",
     advance: "next", demo: "scan",
   },
   {
