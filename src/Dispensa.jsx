@@ -1029,7 +1029,7 @@ export default function Dispensa({ session }) {
     });
     const fast =
       m.id === "Pranzo veloce" ? "Ogni ricetta deve essere pronta entro 20 minuti. "
-      : m.id === "Schiscetta a lavoro" ? "Ricette veloci e facili, comode da preparare in anticipo, trasportare nel tupperware e mangiare a pranzo al lavoro (buone anche fredde/a temperatura ambiente o semplici da riscaldare). "
+      : m.id === "Schiscetta" ? "Ricette veloci e facili, comode da preparare in anticipo, trasportare nel tupperware e mangiare il giorno dopo (al lavoro, a scuola, fuori): buone anche fredde/a temperatura ambiente o semplici da riscaldare. "
       : "";
     const ask = m.custom
       ? `L'utente chiede: "${m.id}". Proponi esattamente 4 ricette diverse che soddisfino questa richiesta usando principalmente `

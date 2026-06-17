@@ -38,7 +38,7 @@ export const CAT_ICON = {
 
 export const MODES = [
   { id: "Pranzo veloce", icon: "⚡", desc: "Pronto in massimo 20 minuti" },
-  { id: "Schiscetta a lavoro", icon: "🍱", desc: "Veloce, facile, da portare nel tupperware" },
+  { id: "Schiscetta", icon: "🍱", desc: "Da preparare e portare via" },
   { id: "Cucina italiana", icon: "🍝", desc: "Tradizione e sapore di casa" },
   { id: "Cucina etnica", icon: "🌍", desc: "Sapori dal mondo" },
   { id: "Leggero & sano", icon: "🥗", desc: "Equilibrato e nutriente" },
