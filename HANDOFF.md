@@ -4,7 +4,7 @@
 > Leggere anche `CLAUDE.md` (regole permanenti) e `ARCHITECTURE.md` (architettura completa).
 > **Rispondere SEMPRE in italiano. Unità metriche (g/kg/ml/l) — mai cups/oz.**
 
-Ultimo aggiornamento: giugno 2026 (sessione: tutorial interattivo + fix scadenza).
+Ultimo aggiornamento: 17 giugno 2026 (tutorial interattivo + fix scadenza — **committato e pushato**, commit `08607b9`).
 
 ---
 
@@ -89,13 +89,13 @@ Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx`
 - **Tutorial: passi AI/fotocamera simulati + blocco rigido** (vedi §5).
 
 ## 9. Stato git / cosa NON è ancora deployato
-> ⚠️ **Importante per la nuova chat.**
-- Le modifiche di questa sessione — **tutorial interattivo** (nuovi `lib/tour.js`, `components/TourCoach.jsx`; `Onboarding.jsx` eliminato; `data-tour`/`tourSignal` in BottomNav/AddFab/PantryTab/ShoppingTab/RecipesTab/StepTimer/ManualAddModal; orchestrazione in `Dispensa.jsx`; "Rivedi il tutorial" in `ProfileSheet.jsx`) e il **fix scadenza** — sono **state implementate e il build passa**, ma **NON sono ancora state committate/pushate** (l'utente ha chiesto prima questi documenti di handoff). Da fare: `npm run build` → `git commit` → `git push origin main`.
-- L'**icona** è ancora in fase di scelta (§4): non modificarla finché l'utente non sceglie il mockup.
+- Il **tutorial interattivo** (nuovi `lib/tour.js`, `components/TourCoach.jsx`; `Onboarding.jsx` eliminato; `data-tour`/`tourSignal` in BottomNav/AddFab/PantryTab/ShoppingTab/RecipesTab/StepTimer/ManualAddModal; orchestrazione in `Dispensa.jsx`; "Rivedi il tutorial" in `ProfileSheet.jsx`) e il **fix scadenza** sono **committati e pushati** su `main` (commit `08607b9`, 17 giu 2026). Vercel ha fatto auto-deploy. Nel commit sono inclusi anche `CLAUDE.md`, `ARCHITECTURE.md`, `HANDOFF.md`.
+  - ⚠️ Il flusso runtime del tutorial **non** è ancora stato percorso end-to-end (parte solo dopo il login Supabase): da provare sul telefono.
+- L'**icona** è ancora in fase di scelta (§4): non modificarla finché l'utente non sceglie il mockup. (Rinviata: "la vediamo più avanti".)
 
 ## 10. TODO prioritari
-1. **Finalizzare l'icona app** (scelta utente in sospeso) → scrivere `public/icon.svg` → `node scripts/generate-icons.mjs` → verifica → deploy.
-2. **Committare + pushare** il lavoro di questa sessione (tutorial + fix scadenza) dopo eventuale verifica dell'utente.
+1. **Finalizzare l'icona app** (scelta utente in sospeso, rinviata) → scrivere `public/icon.svg` → `node scripts/generate-icons.mjs` → verifica → deploy.
+2. **Provare il tutorial end-to-end** sul telefono dopo il login (build OK ma runtime non ancora percorso).
 3. **Refactor `Dispensa.jsx`**: spezzare in custom hooks (`usePantry`, `useShopping`, `useRecipes`) o store leggero. Debito principale.
 4. **Notifiche scadenze** (push/local) — alto valore (i dati ci sono già).
 5. **Coda sync offline-write** (oggi offline è sola lettura).
