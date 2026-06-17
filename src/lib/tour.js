@@ -130,13 +130,8 @@ export const STEPS = [
   },
   {
     id: "save-recipe", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-heart"]',
-    title: "Salva nei preferiti", text: "Tocca il cuore per salvarla nel tuo ricettario e ritrovarla quando vuoi.",
+    title: "Salva nei preferiti", text: "Tocca il cuore per salvarla nel tuo ricettario personale e ritrovarla quando vuoi.",
     advance: "recipe-saved", hint: true,
-  },
-  {
-    id: "timer", view: "ricette", overlay: "spotlight", target: '[data-tour="step-timer"]',
-    title: "Avvia un timer", text: "Ogni passaggio con un tempo ha un timer integrato: avvialo. Suona anche se cambi scheda.",
-    advance: "timer-started", hint: true,
   },
   {
     id: "receipt", view: "ricette", overlay: "card",
