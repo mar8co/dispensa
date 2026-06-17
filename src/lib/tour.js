@@ -90,7 +90,7 @@ export const STEPS = [
   },
   {
     id: "expiry", view: "dispensa", overlay: "spotlight", target: '[data-tour="expiry-field"]',
-    title: "Imposta la scadenza", text: "Tocca l'icona calendario per aggiungere una data di scadenza: i prodotti vicini alla scadenza verranno segnalati.",
+    title: "Imposta la scadenza", text: "Tocca l'icona calendario per aggiungere una data di scadenza: ti segnalo i prodotti che stanno per scadere.",
     advance: "next",
   },
   {
@@ -105,7 +105,7 @@ export const STEPS = [
   },
   {
     id: "add-manual", view: "dispensa", overlay: "banner", target: '[data-tour="manual-add"]',
-    title: "Scrivi e aggiungi", text: "Scrivi il nome di un prodotto e tocca Aggiungi: finisce nel reparto giusto in automatico.",
+    title: "Scrivi e aggiungi", text: "Scrivi il nome di un prodotto e tocca Aggiungi: lo metto nel reparto giusto in automatico.",
     advance: "product-added", hint: true,
   },
   {
@@ -115,7 +115,7 @@ export const STEPS = [
   },
   {
     id: "shopping-add", view: "spesa", overlay: "spotlight", target: '[data-tour="shopping-input"]',
-    title: "Aggiungi alla lista", text: "Scrivi cosa ti manca e tocca Aggiungi: al supermercato li spunti man mano che li prendi.",
+    title: "Aggiungi alla lista", text: "Scrivi o dì cosa ti manca, al supermercato spunti i prodotti man mano che li prendi.",
     advance: "shopping-added", hint: true,
   },
   {
@@ -124,13 +124,18 @@ export const STEPS = [
     advance: "view-ricette", hint: true,
   },
   {
+    id: "recipe-search", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-search"]',
+    title: "Ricette su misura", text: "Scrivi cosa ti va di cucinare e ti preparo le ricette apposta, es. “qualcosa con zucchine e pomodori”.",
+    advance: "next",
+  },
+  {
     id: "open-recipe", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-idea"]',
     title: "Apri una ricetta", text: "Ti propongo piatti solo con quello che hai in dispensa. Apri questa ricetta.",
     advance: "recipe-opened", hint: true,
   },
   {
     id: "save-recipe", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-heart"]',
-    title: "Salva nei preferiti", text: "Tocca il cuore per salvarla nel tuo ricettario personale e ritrovarla quando vuoi.",
+    title: "Salva nei preferiti", text: "Tocca il cuore ❤️ per salvarla nel tuo ricettario personale e ritrovarla quando vuoi.",
     advance: "recipe-saved", hint: true,
   },
   {

@@ -86,7 +86,7 @@ export default function RecipesTab({
 
           {/* Occhiello rosso + ricerca ingredienti: bloccati insieme in alto
               mentre si scorrono occasioni e ricettario. */}
-          <div className="sticky top-0 z-20 -mx-5 mt-4 bg-cream/95 px-5 pb-3 pt-2 backdrop-blur">
+          <div data-tour="recipe-search" className="sticky top-0 z-20 -mx-5 mt-4 bg-cream/95 px-5 pb-3 pt-2 backdrop-blur">
             <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Ricette</div>
             <form
               className="relative"
