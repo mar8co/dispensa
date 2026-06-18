@@ -20,6 +20,7 @@ registri la spesa (a mano / voce / barcode / foto scontrino) → la dispensa sa 
 - **Foto ricette**: **Pexels** (free) dietro proxy.
 - **Barcode**: `@zxing/browser` + `@zxing/library` + Open Food Facts.
 - **Icone UI**: `lucide-react`. **Icona app**: `sharp` genera i PNG da `public/icon.svg`.
+- **Test/CI**: **Vitest** (`npm test` → suite su `src/lib/pantry.js`, 29 test) + **GitHub Actions** (`.github/workflows/ci.yml`: `npm ci` → test → build su push/PR).
 - **Hosting**: Vercel (auto-deploy a ogni push su `main`). Repo GitHub **PUBBLICO** `mar8co/dispensa`.
 - **Produzione**: https://la-dispensa-omega.vercel.app
 - **Dir locale**: `C:\Users\pasqu\Downloads\dispensa` (Windows, PowerShell).
@@ -104,11 +105,12 @@ Sostituisce il vecchio onboarding a 11 schede informative (file `Onboarding.jsx`
 
 ## 10. TODO prioritari
 1. **Provare il tutorial end-to-end** sul telefono dopo il login (build OK ma runtime non ancora percorso).
-3. **Refactor `Dispensa.jsx`**: spezzare in custom hooks (`usePantry`, `useShopping`, `useRecipes`) o store leggero. Debito principale.
+2. **Refactor `Dispensa.jsx`**: spezzare in custom hooks (`usePantry`, `useShopping`, `useRecipes`) o store leggero. Debito principale (da fare **incrementale**, ora c'è la CI; i test coprono `pantry.js` ma non lo stato di `Dispensa.jsx`).
+3. **Wrapper iOS (Capacitor) + Sign in with Apple**: bloccato finché non c'è un Mac o un servizio di build cloud (utente su Windows).
 4. **Notifiche scadenze** (push/local) — alto valore (i dati ci sono già).
 5. **Coda sync offline-write** (oggi offline è sola lettura).
 6. **Dispensa condivisa** col partner (Realtime già presente).
-7. Test sulle funzioni pure di `lib/pantry.js`; valutare TypeScript.
+7. **FATTO**: test su `lib/pantry.js` (Vitest, 29) + CI. Prossimi: ESLint (`eslint-plugin-react-hooks` avrebbe colto il bug stale-closure), valutare TypeScript.
 8. Aggiornare dipendenze (React 19 / Tailwind 4 / Vite 7) — nessuna urgenza.
 
 ## 11. Cose da NON modificare (o con molta cautela)
