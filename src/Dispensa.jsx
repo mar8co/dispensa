@@ -37,6 +37,7 @@ import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
+import PrivacySheet from "./components/PrivacySheet.jsx";
 import TimerBar from "./components/TimerBar.jsx";
 import TourCoach from "./components/TourCoach.jsx";
 import Toast from "./components/Toast.jsx";
@@ -146,6 +147,7 @@ export default function Dispensa({ session }) {
 
   // foglio profilo (tema, svuota dispensa, logout)
   const [profileOpen, setProfileOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
 
   // tutorial interattivo (primo accesso + ripetibile dal Profilo)
   const tour = useTourState();
@@ -1605,8 +1607,11 @@ export default function Dispensa({ session }) {
           onLogout={logout}
           onReplayTour={replayTour}
           onDeleteAccount={deleteAccount}
+          onOpenPrivacy={() => setPrivacyOpen(true)}
         />
       )}
+
+      {privacyOpen && <PrivacySheet onClose={() => setPrivacyOpen(false)} />}
 
       {confirmClear && (
         <ConfirmClearModal onCancel={() => setConfirmClear(false)} onConfirm={clearPantry} />
