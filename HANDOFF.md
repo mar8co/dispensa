@@ -137,6 +137,9 @@ Committare/pushare **sempre in automatico** dopo ogni modifica con build verde (
 - Supabase project ref: `tikcnxwqynpytysrrtaz`. Tabelle: `pantry_items`, `shopping_items`, `user_settings`, `saved_recipes`.
 - `.env.local` (gitignored, già presente): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `GEMINI_API_KEY`, `PEXELS_API_KEY`.
 - Env Vercel (già impostate): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `PEXELS_API_KEY`.
-- `migration-4.sql` (saved_recipes): da eseguire nel SQL Editor di Supabase per la sync preferiti tra dispositivi (l'app funziona anche senza).
+- ⚠️ **DA AGGIUNGERE** (Vercel + `.env.local`): **`SUPABASE_SERVICE_ROLE_KEY`** (segreta, solo server) — necessaria per **cancellazione account** (`api/account`) e per il **rate-limit AI** (`server/claude`). Opzionale `AI_DAILY_LIMIT` (default 80). Finché manca: "Elimina account" dà 500; il rate-limit è semplicemente saltato.
+- `migration-4.sql` (saved_recipes) e **`migration-5.sql`** (tabella `ai_usage` + funzione `bump_ai_usage` per il rate-limit AI): da eseguire nel SQL Editor di Supabase. L'app funziona anche senza (la mig-5 attiva solo il limite, best-effort).
+
+**Sicurezza/conformità (Fase 1 store — 17 giu 2026):** proxy AI con cap payload + clamp max_tokens + rate-limit per utente/giorno (`server/claude.js`, `migration-5`); **cancellazione account** in `Profilo › Elimina account` (`server/account.js` + `api/account.js`, service role, dati via cascade); **informativa privacy** in-app (`PrivacySheet.jsx`, link discreto nel Profilo). **Sign in with Apple rimandato** a quando si farà il wrapper nativo (richiede account Apple Developer + config Supabase).
 
 **Note sull'utente**: risponde in italiano, usa iPhone Safari/PWA, è molto attento ai dettagli UX/UI; spesso chiede **mockup** prima di applicare modifiche visive (offrirli via widget). iOS cache-a l'icona PWA: per aggiornarla va rimossa e re-installata.
