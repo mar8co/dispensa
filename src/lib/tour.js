@@ -85,19 +85,9 @@ export const STEPS = [
     advance: "qty-changed", hint: true,
   },
   {
-    id: "unit", view: "dispensa", overlay: "spotlight", target: '[data-tour="unit-chips"]',
-    title: "Scegli l'unità", text: "Pezzi, grammi, chili o litri: scegli l'unità di misura.",
-    advance: "unit-changed", hint: true,
-  },
-  {
     id: "expiry-open", view: "dispensa", overlay: "spotlight", target: '[data-tour="expiry-field"]',
     title: "Imposta la scadenza", text: "Tocca l'icona calendario per aggiungere una data di scadenza.",
     advance: "expiry-opened", hint: true,
-  },
-  {
-    id: "expiry-pick", view: "dispensa", overlay: "spotlight", target: '[data-tour="expiry-box"]',
-    title: "Scegli la data", text: "Tocca qui e scegli la data dal calendario: ti segnalerò i prodotti che stanno per scadere.",
-    advance: "expiry-set", hint: true,
   },
   {
     id: "cook-with", view: "dispensa", overlay: "spotlight", target: '[data-tour="cook-with"]',
@@ -110,15 +100,9 @@ export const STEPS = [
     advance: "add-menu-opened", hint: true,
   },
   {
-    id: "add-modes", view: "dispensa", overlay: "spotlight", target: '[data-tour="add-manual-option"]',
-    tip: "top",
-    title: "4 modi per aggiungere la spesa", text: "A mano, fotografando lo scontrino o la spesa, col codice a barre e a voce. Proviamo “A mano”.",
-    advance: "add-manual-chosen", hint: true,
-  },
-  {
-    id: "add-manual", view: "dispensa", overlay: "banner", target: '[data-tour="manual-add"]',
-    title: "Scrivi e aggiungi", text: "Scrivi il nome di un prodotto e tocca Aggiungi: lo metto nel reparto giusto in automatico.",
-    advance: "product-added", hint: true,
+    id: "add-modes", view: "dispensa", overlay: "banner",
+    title: "4 modi per aggiungere la spesa", text: "A mano, fotografando lo scontrino o la spesa, col codice a barre o a voce: scegli come preferisci.",
+    advance: "next",
   },
   {
     id: "go-spesa", view: "dispensa", overlay: "spotlight", target: '[data-tour="tab-spesa"]',
@@ -126,49 +110,9 @@ export const STEPS = [
     advance: "view-spesa", hint: true,
   },
   {
-    id: "shopping-add", view: "spesa", overlay: "spotlight", target: '[data-tour="shopping-input"]',
-    title: "Aggiungi alla lista", text: "Scrivi o dì cosa ti manca, al supermercato spunti i prodotti man mano che li prendi.",
-    advance: "shopping-added", hint: true,
-  },
-  {
     id: "go-ricette", view: "spesa", overlay: "spotlight", target: '[data-tour="tab-ricette"]',
     title: "Le ricette", text: "Tocca la scheda Ricette: ti propongo piatti con quello che hai in casa.",
     advance: "view-ricette", hint: true,
-  },
-  {
-    id: "recipe-search", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-search"]',
-    title: "Ricette su misura", text: "Scrivi cosa ti va di cucinare e ti preparo le ricette apposta, es. “zucchine pomodori e feta”.",
-    advance: "next",
-  },
-  {
-    id: "open-recipe", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-idea"]',
-    title: "Apri una ricetta", text: "Ti propongo piatti solo con quello che hai in dispensa. Apri questa ricetta.",
-    advance: "recipe-opened", hint: true,
-  },
-  {
-    id: "save-recipe", view: "ricette", overlay: "spotlight", target: '[data-tour="recipe-heart"]',
-    title: "Salva nei preferiti", text: "Tocca il cuore ❤️ per salvarla nel tuo ricettario personale e ritrovarla quando vuoi.",
-    advance: "recipe-saved", hint: true,
-  },
-  {
-    id: "receipt", view: "ricette", overlay: "card",
-    title: "Fotografa scontrino o spesa", text: "Dopo la spesa fotografa lo scontrino oppure direttamente i prodotti: riconosco gli alimenti e li aggiungo per te. Ecco un esempio:",
-    advance: "next", demo: "scan",
-  },
-  {
-    id: "delete", view: "dispensa", overlay: "spotlight", target: '[data-tour="pantry-first-item"]',
-    title: "Eliminare un prodotto", text: "Per eliminare un prodotto, aprilo e tocca il cestino 🗑️.",
-    advance: "next",
-  },
-  {
-    id: "empty-open-profile", view: "dispensa", overlay: "spotlight", target: '[data-tour="tab-profilo"]',
-    title: "Svuotiamo la dispensa demo", text: "Per ripartire da una dispensa tutta tua, apri il Profilo.",
-    advance: "profile-opened", hint: true,
-  },
-  {
-    id: "empty-clear", view: "dispensa", overlay: "spotlight", target: '[data-tour="clear-pantry"]',
-    title: "Svuota la dispensa", text: "Tocca “Svuota dispensa”: cancello i prodotti di esempio così parti da zero.",
-    advance: "pantry-cleared", hint: true,
   },
   {
     id: "done", view: "dispensa", overlay: "card",
@@ -177,10 +121,10 @@ export const STEPS = [
   },
 ];
 
-// In replay (non primo accesso) non si tocca la dispensa reale: niente passo
-// "svuota demo".
-export function visibleSteps(firstRun) {
-  return firstRun ? STEPS : STEPS.filter((s) => s.id !== "empty-open-profile" && s.id !== "empty-clear");
+// Stessi passi al primo accesso e in replay. La pulizia dei dati demo (solo al
+// primo accesso) avviene a fine tutorial in Dispensa.jsx (tourComplete).
+export function visibleSteps() {
+  return STEPS;
 }
 
 // --- Store ---

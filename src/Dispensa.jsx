@@ -575,22 +575,21 @@ export default function Dispensa({ session }) {
       catch (e) { console.error("Errore pulizia lista demo:", e); }
     }
   }
-  // Chiusura del tutorial: torna alle occasioni e, al primo accesso, dimentica
-  // la ricetta demo salutata col cuore, poi segna l'onboarding come fatto.
+  // Chiusura del tutorial: al PRIMO accesso svuota i dati demo (dispensa, lista
+  // ed eventuale ricetta salvata) così parti da una dispensa vuota e tua; poi
+  // torna alle occasioni e segna l'onboarding come fatto.
   function tourComplete() {
     markOnboarded();
-    animateUI(() => { setMode(null); setIdeas([]); setRecipe(null); setRecipeErr(""); });
     if (tour.firstRun) {
+      tourEmptyDemo();
       const demo = savedRecipes.find((r) => norm(r.title) === norm(TOUR_RECIPE.title));
       if (demo) { commitRecipes(savedRecipes.filter((r) => r.id !== demo.id)); deleteSavedRecipe(demo.id).catch(() => {}); }
     }
+    animateUI(() => { setMode(null); setIdeas([]); setRecipe(null); setRecipeErr(""); });
     stopTour();
   }
-  // "Esci dal tutorial": al primo accesso pulisce comunque i dati demo.
-  async function tourExit() {
-    if (tour.firstRun) await tourEmptyDemo();
-    tourComplete();
-  }
+  // "Esci dal tutorial": stessa chiusura (pulisce i dati demo al primo accesso).
+  function tourExit() { tourComplete(); }
   // Ripeti il tutorial dal Profilo (non tocca la dispensa reale).
   function replayTour() { startTour(false); }
 
