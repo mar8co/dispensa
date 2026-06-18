@@ -127,7 +127,7 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
               }`}
             />
             <span
-              className={`absolute top-[10%] max-w-[88%] rounded-full px-3.5 py-1.5 text-center text-xs font-bold shadow-lg backdrop-blur transition ${
+              className={`absolute left-1/2 top-[10%] max-w-[88%] -translate-x-1/2 rounded-full px-3.5 py-1.5 text-center text-xs font-bold shadow-lg backdrop-blur transition ${
                 sharp ? "bg-tomato text-[#fff]" : "bg-black/70 text-[#fff]"
               }`}
             >
