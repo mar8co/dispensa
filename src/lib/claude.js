@@ -67,7 +67,7 @@ export async function callClaude(content, maxTokens = 1000, retries = 2) {
       return JSON.parse(clean);
     } catch {
       // Fallback: estrae il primo blocco JSON se la risposta è un po' sporca.
-      const m = clean.match(/[\{\[][\s\S]*[\}\]]/);
+      const m = clean.match(/[{[][\s\S]*[}\]]/);
       if (m) {
         try { return JSON.parse(m[0]); } catch { /* niente */ }
       }
