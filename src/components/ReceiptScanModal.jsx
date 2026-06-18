@@ -91,17 +91,17 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
         className="z-10 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 pb-6 text-[#fff]"
         style={{ paddingTop: "calc(0.85rem + env(safe-area-inset-top))" }}
       >
-        <div className="drop-shadow">
+        <div className="min-w-0 pr-3 drop-shadow">
           <div className="flex items-center gap-2 text-base font-bold">
-            <Camera className="h-5 w-5" /> Scatta scontrino o spesa
+            <Camera className="h-5 w-5 shrink-0" /> Aggiungi alla dispensa
           </div>
           <div className="mt-0.5 text-xs font-medium text-[#fff]/80">
-            Scontrino, prodotti o sacchetti della spesa 🛒
+            Scatta o carica dalla galleria scontrino, prodotti o screenshot dell'app della spesa 🛒
           </div>
         </div>
         <button
           onClick={onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-[#fff] backdrop-blur transition hover:bg-black/60"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/45 text-[#fff] backdrop-blur transition hover:bg-black/60"
           aria-label="Chiudi"
         >
           <X className="h-5 w-5" />
@@ -122,16 +122,16 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             {/* Rettangolo stretto e alto, a forma di scontrino */}
             <div
-              className={`h-[74%] w-[58%] rounded-2xl border-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
+              className={`h-[74%] w-[66%] rounded-2xl border-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
                 sharp ? "border-tomato" : "border-[#fff]/85"
               }`}
             />
             <span
-              className={`absolute top-[10%] rounded-full px-3.5 py-1.5 text-xs font-bold shadow-lg backdrop-blur transition ${
+              className={`absolute top-[10%] max-w-[88%] rounded-full px-3.5 py-1.5 text-center text-xs font-bold shadow-lg backdrop-blur transition ${
                 sharp ? "bg-tomato text-[#fff]" : "bg-black/70 text-[#fff]"
               }`}
             >
-              {sharp ? "A fuoco — scatta" : "Inquadra scontrino o spesa nel riquadro"}
+              {sharp ? "A fuoco — scatta" : "Posiziona lo scontrino o la spesa nel riquadro e scatta"}
             </span>
           </div>
         )}

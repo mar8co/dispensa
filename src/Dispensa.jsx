@@ -1551,15 +1551,12 @@ export default function Dispensa({ session }) {
       {/* Overlay di analisi: copre il momento di attesa dell'AI */}
       {processing && (
         <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-5 bg-cream/95 px-10 text-center backdrop-blur">
-          <div className="relative flex h-24 w-24 items-center justify-center">
-            <span className="absolute inset-0 animate-ping rounded-2xl bg-tomato/15" />
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-tomato/10 text-5xl">🧾</div>
-          </div>
+          <img src="/analisi-spesa.png" alt="" className="h-auto w-[140px]" />
           <Loader2 className="h-5 w-5 animate-spin text-tomato" />
           <div>
-            <p className="font-display text-xl font-extrabold tracking-tight text-ink">Sto analizzando lo scontrino…</p>
+            <p className="font-display text-xl font-extrabold tracking-tight text-ink">Sto analizzando la spesa…</p>
             <p className="mx-auto mt-1.5 max-w-xs text-sm text-stone-500">
-              Identifico i prodotti e li aggiungo automaticamente alla tua lista.
+              Identifico i prodotti e li aggiungo alla dispensa.
             </p>
           </div>
         </div>
