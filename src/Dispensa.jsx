@@ -543,6 +543,22 @@ export default function Dispensa({ session }) {
   async function logout() {
     await supabase.auth.signOut();
   }
+  // Cancellazione account + tutti i dati (endpoint server con service role).
+  // Al termine fa il logout: App.jsx torna alla schermata di accesso.
+  async function deleteAccount() {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
+    const res = await fetch("/api/account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      throw new Error(j?.error || "Eliminazione non riuscita.");
+    }
+    try { localStorage.removeItem(`dispensa-onboarded-${session.user.id}`); } catch { /* */ }
+    await supabase.auth.signOut();
+  }
 
   // --- Tutorial interattivo ---
   const markOnboarded = () => {
@@ -1588,6 +1604,7 @@ export default function Dispensa({ session }) {
           }}
           onLogout={logout}
           onReplayTour={replayTour}
+          onDeleteAccount={deleteAccount}
         />
       )}
 

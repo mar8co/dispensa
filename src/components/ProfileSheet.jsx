@@ -2,7 +2,7 @@
 // scelta del tema (auto/chiaro/scuro, salvata sul dispositivo), svuota
 // dispensa e uscita con conferma.
 import { useState } from "react";
-import { X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap } from "lucide-react";
+import { X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap, Loader2 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import { getTheme, setTheme } from "../lib/theme.js";
 
@@ -14,13 +14,29 @@ const THEMES = [
 
 export default function ProfileSheet({
   email, itemCount, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout, onReplayTour,
+  onDeleteAccount, onOpenPrivacy,
 }) {
   const [theme, setThemeState] = useState(getTheme());
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [delErr, setDelErr] = useState("");
 
   function chooseTheme(id) {
     setTheme(id);
     setThemeState(id);
+  }
+
+  async function runDelete() {
+    setDeleting(true);
+    setDelErr("");
+    try {
+      await onDeleteAccount?.();
+      // In caso di successo l'app fa il logout e smonta questo foglio.
+    } catch {
+      setDeleting(false);
+      setDelErr("Eliminazione non riuscita. Riprova.");
+    }
   }
 
   return (
@@ -124,6 +140,44 @@ export default function ProfileSheet({
               </button>
             )}
           </div>
+
+          {/* Footer discreto: privacy e cancellazione account (poco invasivi) */}
+          {!confirmDelete ? (
+            <div className="mt-6 flex items-center justify-center gap-2.5 text-[11px] text-stone-400">
+              {onOpenPrivacy && (
+                <>
+                  <button onClick={() => { close(); onOpenPrivacy(); }} className="transition hover:text-stone-600 hover:underline">
+                    Privacy
+                  </button>
+                  <span aria-hidden="true">·</span>
+                </>
+              )}
+              <button onClick={() => { setDelErr(""); setConfirmDelete(true); }} className="transition hover:text-tomato hover:underline">
+                Elimina account
+              </button>
+            </div>
+          ) : (
+            <div className="mt-5 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
+              <p className="text-xs text-stone-600">Eliminare account e tutti i dati? L'azione è definitiva e non recuperabile.</p>
+              {delErr && <p className="mt-1.5 text-xs font-semibold text-tomato">{delErr}</p>}
+              <div className="mt-2.5 flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleting}
+                  className="flex-1 rounded-lg border border-hair px-3 py-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-50 disabled:opacity-60"
+                >
+                  Annulla
+                </button>
+                <button
+                  onClick={runDelete}
+                  disabled={deleting}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-tomato px-3 py-2 text-xs font-semibold text-[#fff] transition hover:bg-tomato-700 disabled:opacity-60"
+                >
+                  {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Elimina tutto"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </Sheet>

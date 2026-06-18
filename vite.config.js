@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { handleClaudeRequest } from "./server/claude.js";
 import { handlePhotoRequest } from "./server/photo.js";
+import { handleDeleteAccount } from "./server/account.js";
 
 // Middleware di sviluppo: in `npm run dev` espone gli endpoint /api/* usando lo
 // stesso core delle serverless function Vercel, così sono testabili in locale.
@@ -49,6 +50,7 @@ export default defineConfig(({ mode }) => {
       react(),
       devApi("/api/claude", handleClaudeRequest, apiEnv),
       devApi("/api/photo", handlePhotoRequest, apiEnv),
+      devApi("/api/account", handleDeleteAccount, apiEnv),
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: ["favicon-32x32.png", "apple-touch-icon.png", "icon.svg"],
