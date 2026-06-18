@@ -32,6 +32,18 @@ function toGeminiParts(content) {
   return parts;
 }
 
+// Stima approssimativa della dimensione del contenuto (caratteri di testo +
+// base64 delle immagini), per rifiutare payload abnormi.
+function approxContentChars(content) {
+  const blocks = Array.isArray(content) ? content : [{ type: "text", text: String(content) }];
+  let n = 0;
+  for (const b of blocks) {
+    if (b?.type === "text") n += (b.text || "").length;
+    else if (b?.type === "image" && b.source?.data) n += String(b.source.data).length;
+  }
+  return n;
+}
+
 export async function handleClaudeRequest({ authHeader, body, env }) {
   // 1) Configurazione server presente?
   if (!env.GEMINI_API_KEY) {
@@ -51,10 +63,28 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
     return { status: 401, json: { error: "Sessione non valida o scaduta." } };
   }
 
-  // 3) Validazione minima del payload.
+  // 2b) Rate-limit per utente/giorno (anti-abuso, protegge la quota AI).
+  // Best-effort: richiede SUPABASE_SERVICE_ROLE_KEY + la funzione SQL
+  // bump_ai_usage (migration-5). Se manca o va in errore, NON blocca.
+  if (env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+      const limit = Number(env.AI_DAILY_LIMIT) || 80;
+      const { data: count, error } = await admin.rpc("bump_ai_usage", { p_uid: userData.user.id });
+      if (!error && typeof count === "number" && count > limit) {
+        return { status: 429, json: { error: "Hai raggiunto il limite di richieste AI per oggi. Riprova domani." } };
+      }
+    } catch { /* best-effort: non blocca la richiesta */ }
+  }
+
+  // 3) Validazione del payload + tetto alla dimensione (anti-abuso).
   const content = body?.content;
-  const maxTokens = Number(body?.max_tokens) || 1000;
   if (!content) return { status: 400, json: { error: "Richiesta non valida: 'content' mancante." } };
+  if (approxContentChars(content) > 12_000_000) {
+    return { status: 413, json: { error: "Richiesta troppo grande." } };
+  }
+  // max_tokens confinato a un intervallo ragionevole.
+  const maxTokens = Math.min(Math.max(Number(body?.max_tokens) || 1000, 1), 2048);
 
   // 4) Chiamata all'API Gemini con la chiave server.
   const model = env.GEMINI_MODEL || DEFAULT_MODEL;
