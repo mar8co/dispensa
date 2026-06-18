@@ -42,7 +42,7 @@ export default function ProfileSheet({
   return (
     <Sheet onClose={onClose}>
       {(close) => (
-        <div className="px-5 pb-7 pt-1">
+        <div className="px-5 pb-3 pt-1">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Profilo</h3>
             <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
