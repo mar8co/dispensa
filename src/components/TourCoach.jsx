@@ -156,7 +156,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
             <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>
             {ExitBtn}
           </div>
-          <p className="text-sm leading-relaxed text-stone-500">{step.text}</p>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-stone-500">{step.text}</p>
           {Controls}
         </div>
       </div>
