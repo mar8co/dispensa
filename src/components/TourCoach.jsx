@@ -108,7 +108,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
             {ExitBtn}
           </div>
           <h2 className="font-display text-2xl font-extrabold leading-tight tracking-tight text-ink">{step.title}</h2>
-          <p className="mt-2.5 text-[15px] leading-relaxed text-stone-500">{step.text}</p>
+          <p className="mt-2.5 whitespace-pre-line text-[15px] leading-relaxed text-stone-500">{step.text}</p>
 
           {step.demo === "scan" && (
             <div className="mt-4 rounded-2xl border border-hair bg-paper p-3">

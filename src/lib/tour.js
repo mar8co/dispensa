@@ -121,7 +121,7 @@ export const STEPS = [
   },
   {
     id: "done", view: "dispensa", overlay: "card",
-    title: "Tutto pronto! 🎉", text: "Ci siamo, sai già tutto! Ora la dispensa è tutta tua: inizia ad aggiungere quello che hai in casa. Vuoi rifare il giro? Lo ritrovi in Profilo › Rivedi il tutorial.",
+    title: "Tutto pronto! 🎉", text: "Hai tutto quello che serve per iniziare. Aggiungi gli ingredienti che hai in casa e ti aiuterò a trovare ricette e idee per sfruttarli al meglio.\n\nVuoi rivedere il tutorial? Lo trovi sempre in Profilo → Rivedi tutorial.",
     advance: "finish", cta: "Inizia a usare l'app",
   },
 ];
