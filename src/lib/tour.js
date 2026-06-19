@@ -100,7 +100,7 @@ export const STEPS = [
     advance: "add-menu-opened", hint: true,
   },
   {
-    id: "add-modes", view: "dispensa", overlay: "banner",
+    id: "add-modes", view: "dispensa", overlay: "banner", pos: "bottom",
     title: "4 modi per aggiungere la spesa", text: "A mano, fotografando lo scontrino o la spesa, col codice a barre o a voce: scegli come preferisci.",
     advance: "next",
   },
@@ -113,6 +113,11 @@ export const STEPS = [
     id: "go-ricette", view: "spesa", overlay: "spotlight", target: '[data-tour="tab-ricette"]',
     title: "Le ricette", text: "Tocca la scheda Ricette: ti propongo piatti con quello che hai in casa.",
     advance: "view-ricette", hint: true,
+  },
+  {
+    id: "ricette-info", view: "ricette", overlay: "banner",
+    title: "Le tue ricette", text: "Qui ti propongo piatti con quello che hai. Scegli un'occasione o scrivi un'idea; apri una ricetta per ingredienti, passaggi e timer, e salva le preferite con il cuore.",
+    advance: "next",
   },
   {
     id: "done", view: "dispensa", overlay: "card",
