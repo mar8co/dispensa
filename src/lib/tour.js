@@ -95,13 +95,8 @@ export const STEPS = [
     advance: "next",
   },
   {
-    id: "add-open", view: "dispensa", overlay: "spotlight", target: '[data-tour="add-fab"]',
-    title: "Aggiungi un prodotto", text: "Tocca il “+” per aggiungere la tua spesa.",
-    advance: "add-menu-opened", hint: true,
-  },
-  {
-    id: "add-modes", view: "dispensa", overlay: "banner", pos: "bottom",
-    title: "4 modi per aggiungere la spesa", text: "A mano, fotografando lo scontrino o la spesa, col codice a barre o a voce: scegli come preferisci.",
+    id: "add", view: "dispensa", overlay: "spotlight", target: '[data-tour="add-fab"]',
+    title: "Aggiungi un prodotto", text: "Tocca il “+” e scegli come aggiungere la spesa: a mano, fotografando scontrino o spesa, col codice a barre o a voce.",
     advance: "next",
   },
   {
