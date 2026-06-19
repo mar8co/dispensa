@@ -141,7 +141,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
             onClick={primary}
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-tomato px-4 py-3.5 text-sm font-bold text-[#fff] shadow-lg shadow-tomato/30 transition hover:bg-tomato-700 active:scale-[0.99]"
           >
-            {step.cta || "Avanti"} <ArrowRight className="h-4 w-4" />
+            {step.cta || "Avanti"} {step.advance !== "finish" && <ArrowRight className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -153,12 +153,16 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
     // step.pos === "bottom": striscia in basso (vicino al menù "+" a semicerchio).
     const atBottom = step.overlay === "banner" && step.pos === "bottom";
     return (
-      <div
-        className="fixed inset-x-0 z-[95] flex justify-center px-3"
-        style={atBottom
-          ? { bottom: "calc(env(safe-area-inset-bottom) + 224px)" }
-          : { top: 0, paddingTop: "calc(env(safe-area-inset-top) + 18px)" }}
-      >
+      <>
+        {/* Cattura i tocchi sulla pagina dietro: tappare vicino ad "Avanti" non
+            deve attivare gli elementi sotto (es. aprire la tastiera del box). */}
+        <div className="fixed inset-0 z-[94]" onPointerDown={(e) => e.stopPropagation()} />
+        <div
+          className="fixed inset-x-0 z-[95] flex justify-center px-3"
+          style={atBottom
+            ? { bottom: "calc(env(safe-area-inset-bottom) + 224px)" }
+            : { top: 0, paddingTop: "calc(env(safe-area-inset-top) + 18px)" }}
+        >
         <div onPointerDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl border border-hair bg-cream/95 p-4 shadow-2xl backdrop-blur">
           <div className="mb-1.5 flex items-center justify-between">
             <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>
@@ -167,7 +171,8 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
           <p className="whitespace-pre-line text-sm leading-relaxed text-stone-500">{step.text}</p>
           {Controls}
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 

@@ -91,13 +91,13 @@ export const STEPS = [
   },
   {
     id: "cook-with", view: "dispensa", overlay: "spotlight", target: '[data-tour="cook-with"]',
-    title: "Cucina con questo", text: "Da ogni prodotto puoi selezionare\n“Cucina con questo” e ti propongo una ricetta con questo prodotto.",
+    title: "Cucina con questo", text: "Da ogni prodotto puoi selezionare\n“Cucina con questo” e ti propongo una ricetta con ogni ingrediente che vuoi.",
     advance: "next",
   },
   {
     id: "add", view: "dispensa", overlay: "spotlight", target: '[data-tour="add-fab"]',
     title: "Aggiungi un prodotto", text: "Tocca il “+” e scegli come aggiungere la spesa: a mano, fotografando scontrino o spesa, col codice a barre o a voce.",
-    advance: "next",
+    advance: "add-menu-opened", hint: true,
   },
   {
     id: "go-spesa", view: "dispensa", overlay: "spotlight", target: '[data-tour="tab-spesa"]',
@@ -106,7 +106,7 @@ export const STEPS = [
   },
   {
     id: "spesa-info", view: "spesa", overlay: "banner",
-    title: "La tua spesa", text: "Qui tieni la lista di cosa ti manca: scrivila o dettala a voce. Al supermercato spunta i prodotti man mano che li prendi, poi tocca “Sposta in dispensa” per averli in casa.",
+    title: "La tua spesa", text: "Qui hai la lista di cosa ti manca: scrivila o dettala a voce. Quando fai la spesa spunta i prodotti che prendi, poi tocca “Sposta in dispensa” per salvarli.",
     advance: "next",
   },
   {
@@ -121,8 +121,8 @@ export const STEPS = [
   },
   {
     id: "done", view: "dispensa", overlay: "card",
-    title: "Tutto pronto! 🎉", text: "Hai tutto quello che serve per iniziare. Aggiungi gli ingredienti che hai in casa e ti aiuterò a trovare ricette e idee per sfruttarli al meglio.\n\nVuoi rivedere il tutorial? Lo trovi sempre in Profilo → Rivedi tutorial.",
-    advance: "finish", cta: "Inizia a usare l'app",
+    title: "Tutto pronto! 🎉", text: "Aggiungi gli ingredienti che hai in casa e ti aiuterò a trovare ricette e idee per sfruttarli al meglio.\n\nVuoi rivedere il tutorial? Lo trovi sempre in Profilo → Rivedi tutorial.",
+    advance: "finish", cta: "Inizia ora",
   },
 ];
 
