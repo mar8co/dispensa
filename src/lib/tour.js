@@ -116,7 +116,7 @@ export const STEPS = [
   },
   {
     id: "ricette-info", view: "ricette", overlay: "banner",
-    title: "Le tue ricette", text: "Qui ti propongo piatti con quello che hai. Scegli un'occasione o scrivi un'idea. Apri una ricetta per vedere ingredienti, passaggi, timer, e salva le tue preferite.",
+    title: "Le tue ricette", text: "Qui ti propongo piatti con quello che hai. Scegli un'occasione o scrivi un'idea. Apri una ricetta per vedere ingredienti, passaggi e salva le tue preferite.",
     advance: "next",
   },
   {

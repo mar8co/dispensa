@@ -103,7 +103,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   if (isCard) {
     return (
       <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        <div className="w-full max-w-sm rounded-3xl bg-cream p-6 shadow-2xl">
+        <div onPointerDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-cream p-6 shadow-2xl">
           <div className="mb-3 flex items-center justify-end">
             {ExitBtn}
           </div>
@@ -159,7 +159,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
           ? { bottom: "calc(env(safe-area-inset-bottom) + 224px)" }
           : { top: 0, paddingTop: "calc(env(safe-area-inset-top) + 18px)" }}
       >
-        <div className="w-full max-w-md rounded-2xl border border-hair bg-cream/95 p-4 shadow-2xl backdrop-blur">
+        <div onPointerDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl border border-hair bg-cream/95 p-4 shadow-2xl backdrop-blur">
           <div className="mb-1.5 flex items-center justify-between">
             <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>
             {ExitBtn}
@@ -213,7 +213,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
       />
 
       {/* Tooltip contestuale */}
-      <div className="fixed z-[92] rounded-2xl border border-hair bg-cream p-4 shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]" style={tipStyle}>
+      <div onPointerDown={stop} className="fixed z-[92] rounded-2xl border border-hair bg-cream p-4 shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]" style={tipStyle}>
         <div className="mb-1 flex items-center justify-between gap-2">
           <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>
           {ExitBtn}
