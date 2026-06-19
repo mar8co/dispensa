@@ -90,11 +90,6 @@ export const STEPS = [
     advance: "expiry-opened", hint: true,
   },
   {
-    id: "cook-with", view: "dispensa", overlay: "spotlight", target: '[data-tour="cook-with"]',
-    title: "Cucina con questo", text: "Da ogni prodotto puoi toccare “Cucina con questo”: ti propongo subito delle ricette per usarlo.",
-    advance: "next",
-  },
-  {
     id: "add-open", view: "dispensa", overlay: "spotlight", target: '[data-tour="add-fab"]',
     title: "Aggiungi un prodotto", text: "Tocca il “+” per aggiungere la tua spesa.",
     advance: "add-menu-opened", hint: true,

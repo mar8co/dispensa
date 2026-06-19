@@ -174,7 +174,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   };
   const holeBottom = hole.top + hole.height;
   const holeRight = hole.left + hole.width;
-  const dim = "fixed z-[90] bg-black/55";
+  const dim = "fixed z-[90] bg-black/55 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
   const stop = (e) => e.stopPropagation(); // non far chiudere i pannelli aperti
 
   // Tooltip: sotto il bersaglio se c'è spazio, altrimenti sopra.
@@ -200,12 +200,12 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
 
       {/* Anello luminoso attorno al bersaglio */}
       <div
-        className="pointer-events-none fixed z-[91] rounded-xl border-2 border-tomato"
+        className="pointer-events-none fixed z-[91] rounded-xl border-2 border-tomato transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
         style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height, boxShadow: "0 0 0 3px rgba(226,73,47,0.25)" }}
       />
 
       {/* Tooltip contestuale */}
-      <div className="fixed z-[92] rounded-2xl border border-hair bg-cream p-4 shadow-2xl" style={tipStyle}>
+      <div className="fixed z-[92] rounded-2xl border border-hair bg-cream p-4 shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]" style={tipStyle}>
         <div className="mb-1 flex items-center justify-between gap-2">
           <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>
           {ExitBtn}
