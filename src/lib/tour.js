@@ -105,6 +105,11 @@ export const STEPS = [
     advance: "view-spesa", hint: true,
   },
   {
+    id: "spesa-info", view: "spesa", overlay: "banner",
+    title: "La tua spesa", text: "Qui tieni la lista di cosa ti manca: scrivila o dettala a voce. Al supermercato spunta i prodotti man mano che li prendi, poi tocca “Sposta in dispensa” per averli in casa.",
+    advance: "next",
+  },
+  {
     id: "go-ricette", view: "spesa", overlay: "spotlight", target: '[data-tour="tab-ricette"]',
     title: "Le ricette", text: "Tocca la scheda Ricette: ti propongo piatti con quello che hai in casa.",
     advance: "view-ricette", hint: true,
