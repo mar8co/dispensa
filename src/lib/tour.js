@@ -90,7 +90,7 @@ export const STEPS = [
     advance: "expiry-opened", hint: true,
   },
   {
-    id: "cook-with", view: "dispensa", overlay: "banner",
+    id: "cook-with", view: "dispensa", overlay: "spotlight", target: '[data-tour="cook-with"]',
     title: "Cucina con questo", text: "Da ogni prodotto puoi selezionare\n“Cucina con questo” e ti propongo una ricetta con questo prodotto.",
     advance: "next",
   },
@@ -116,7 +116,7 @@ export const STEPS = [
   },
   {
     id: "ricette-info", view: "ricette", overlay: "banner",
-    title: "Le tue ricette", text: "Qui ti propongo piatti con quello che hai. Scegli un'occasione o scrivi un'idea; apri una ricetta per ingredienti, passaggi e timer, e salva le preferite con il cuore.",
+    title: "Le tue ricette", text: "Qui ti propongo piatti con quello che hai. Scegli un'occasione o scrivi un'idea. Apri una ricetta per vedere ingredienti, passaggi, timer, e salva le tue preferite.",
     advance: "next",
   },
   {

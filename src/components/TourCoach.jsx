@@ -27,6 +27,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   // Misura il bersaglio in continuo (segue scroll, animazioni e layout).
   useEffect(() => {
     if (!step || step.overlay !== "spotlight") { setRect(null); return; }
+    setRect(null); // riparti pulito a ogni passo
     let raf;
     const tick = () => {
       const el = document.querySelector(step.target);
@@ -38,9 +39,9 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
             return { top: r.top, left: r.left, width: r.width, height: r.height };
           });
         }
-      } else {
-        setRect(null);
       }
+      // Se il bersaglio sparisce per un istante (es. il pannello prodotto che si
+      // chiude), MANTIENI l'ultima posizione: niente flicker verso il banner.
       raf = requestAnimationFrame(tick);
     };
     tick();
@@ -217,7 +218,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
           <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>
           {ExitBtn}
         </div>
-        <p className="text-sm leading-relaxed text-stone-500">{step.text}</p>
+        <p className="whitespace-pre-line text-sm leading-relaxed text-stone-500">{step.text}</p>
         {Controls}
       </div>
     </>
