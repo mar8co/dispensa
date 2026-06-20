@@ -8,7 +8,7 @@ import {
 import {
   guessCategory, correctName,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  adjustQty, norm, daysUntilExpiry,
+  norm, daysUntilExpiry,
 } from "./lib/pantry.js";
 import { callClaude } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
@@ -16,14 +16,13 @@ import {
   fetchPantry, insertItem, insertMany, updateItem,
   deleteItem, deleteItems, deleteAllPantry,
   fetchSettings, saveSettings,
-  fetchShopping, insertShopping, insertManyShopping,
-  updateShopping, deleteShopping, deleteShoppingItems,
+  fetchShopping, deleteShoppingItems,
   fetchSavedRecipes, deleteSavedRecipe,
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
-import { loadHistory, saveHistory, bumpedHistory, sortedNames } from "./lib/history.js";
+import { sortedNames } from "./lib/history.js";
 
 import PantryTab from "./components/PantryTab.jsx";
 import RecipesTab from "./components/RecipesTab.jsx";
@@ -47,6 +46,7 @@ import {
 import { useOnline } from "./hooks/useOnline.js";
 import { useTimersTicker } from "./hooks/useTimersTicker.js";
 import { useRecipes } from "./hooks/useRecipes.jsx";
+import { useShopping } from "./hooks/useShopping.jsx";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
 // solo quando si apre la scansione del codice a barre.
@@ -93,14 +93,10 @@ export default function Dispensa({ session }) {
 
   // modifica
 
-  // lista della spesa
-  const [shopping, setShopping] = useState([]);
-  const [movingChecked, setMovingChecked] = useState(false);
+  // lista della spesa: impostazioni persistite (la collezione e la logica
+  // vivono in useShopping)
   const [byAisle, setByAisle] = useState(true); // vista "per reparto" (persistita)
   const [shopCats, setShopCats] = useState({}); // reparti corretti a mano (per nome, persistiti)
-  const [shopHist, setShopHist] = useState(() => loadHistory(session.user.id)); // storico per suggerimenti
-  const [shopVoiceOpen, setShopVoiceOpen] = useState(false);
-  const [shopVoiceProcessing, setShopVoiceProcessing] = useState(false);
 
   // toast / undo
   const [toast, setToast] = useState(null); // { message, onUndo? }
@@ -138,6 +134,20 @@ export default function Dispensa({ session }) {
 
   // tutorial interattivo (primo accesso + ripetibile dal Profilo)
   const tour = useTourState();
+
+  // Lista della spesa: stato (articoli, storico, voce) e logica (aggiunta con
+  // merge, modifica, spunta, per reparto). I reparti corretti a mano (shopCats)
+  // restano impostazioni qui in Dispensa e sono passati all'hook.
+  // showToast/dismissToast sono dichiarazioni di funzione (hoisted), quindi
+  // disponibili anche se definite più sotto.
+  const {
+    shopping, setShopping, movingChecked, setMovingChecked,
+    shopHist, shopVoiceOpen, setShopVoiceOpen, shopVoiceProcessing,
+    bumpShopHistory, catForShopping, addToShoppingMerged, addShoppingItem,
+    autoSaveShopping, handleShoppingVoice, toggleShoppingItem, removeShoppingItem,
+    toggleAllShopping, adjustShoppingQty, clearCheckedShopping,
+    addMissingToShopping, finishedToShopping,
+  } = useShopping({ session, showToast, dismissToast, shopCats, setShopCats });
 
   // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
   // NB: lo stato "collassato" NON viene ripristinato: le categorie partono
@@ -552,170 +562,8 @@ export default function Dispensa({ session }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tour.active, tour.index, tour.firstRun]);
 
-  // --- Lista della spesa ---
-
-  // Aggiorna lo storico acquisti (per i suggerimenti e i "frequenti").
-  function bumpShopHistory(names) {
-    setShopHist((prev) => {
-      const next = bumpedHistory(prev, names);
-      saveHistory(session.user.id, next);
-      return next;
-    });
-  }
-
-  // Reparto di un articolo: correzione manuale (per nome) o stima automatica.
-  // Le correzioni che puntano a categorie non più esistenti vengono ignorate.
-  const catForShopping = (name) => {
-    const manual = shopCats[norm(name)];
-    return CATEGORIES.includes(manual) ? manual : (guessCategory(name) || "Altro");
-  };
-
-  // Aggiunge alla lista fondendo i duplicati per nome (le quantità si
-  // sommano) e registrando lo storico. entries: [{ name, qty }]
-  async function addToShoppingMerged(entries) {
-    const byNorm = new Map(shopping.map((x) => [norm(x.name), x]));
-    const updates = new Map(); // id esistente -> nuova qty
-    const inserts = new Map(); // nome normalizzato -> { name, qty }
-    for (const e of entries || []) {
-      const name = String(e.name || "").trim();
-      if (!name) continue;
-      const qty = normalizeWeight(String(e.qty || "1").trim() || "1");
-      const k = norm(name);
-      const ex = byNorm.get(k);
-      if (ex) updates.set(ex.id, normalizeWeight(mergeQty(updates.get(ex.id) ?? ex.qty, qty)));
-      else if (inserts.has(k)) inserts.get(k).qty = normalizeWeight(mergeQty(inserts.get(k).qty, qty));
-      else inserts.set(k, { name, qty });
-    }
-    let newRows = [];
-    try {
-      for (const [id, qty] of updates) await updateShopping(id, { qty });
-      if (inserts.size) newRows = await insertManyShopping([...inserts.values()]);
-    } catch (e) { console.error("Errore aggiunta spesa:", e); }
-    // I nuovi inserimenti vanno in cima; i duplicati restano dove sono
-    // (si aggiorna solo la quantità).
-    setShopping((prev) => [
-      ...newRows,
-      ...prev.map((x) => (updates.has(x.id) ? { ...x, qty: updates.get(x.id) } : x)),
-    ]);
-    bumpShopHistory((entries || []).map((e) => e.name));
-    return { added: newRows.length, merged: updates.size };
-  }
-
-  // Aggiunta manuale alla spesa: correzione ortografica locale (stesso
-  // dizionario della dispensa, zero AI) + prima lettera maiuscola.
-  async function addShoppingItem(name, qty) {
-    const res = await addToShoppingMerged([{ name: correctName(String(name)), qty }]);
-    tourSignal("shopping-added");
-    return { merged: res.merged > 0 };
-  }
-
-  // Salvataggio automatico dal pannello di modifica della spesa (come quello
-  // della dispensa) ma SILENZIOSO: nessun toast "Modifica salvata".
-  // Nome/quantità sul DB, reparto nelle impostazioni.
-  async function autoSaveShopping(it, fields) {
-    const { category, ...rowFields } = fields;
-    if (Object.keys(rowFields).length) {
-      setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...rowFields } : x)));
-      try { await updateShopping(it.id, rowFields); } catch (e) { console.error("Errore salvataggio spesa:", e); }
-    }
-    if (CATEGORIES.includes(category)) {
-      setShopCats((prev) => ({ ...prev, [norm(rowFields.name ?? it.name)]: category }));
-    }
-  }
-
-  // Aggiunta a voce per la spesa: estrae i prodotti dalla frase e li
-  // aggiunge alla lista (con merge dei duplicati).
-  async function handleShoppingVoice(transcript) {
-    if (!transcript) { setShopVoiceOpen(false); return; }
-    setShopVoiceProcessing(true);
-    try {
-      const prompt =
-        `Questa è una frase detta a voce che elenca cose da comprare: "${transcript}". ` +
-        `Estrai TUTTI i prodotti citati. ${NAME_RULES} ` +
-        `Per la quantità: se indicata ("6 uova", "due litri di latte") mettila nel campo "qty" ` +
-        `(numero oppure unità metriche come "500 g"/"1 l"), MAI nel nome; altrimenti "1". ` +
-        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"..."}]}`;
-      const parsed = await callClaude([{ type: "text", text: prompt }], 600);
-      const list = Array.isArray(parsed?.items) ? parsed.items : [];
-      setShopVoiceProcessing(false);
-      setShopVoiceOpen(false);
-      if (!list.length) { showToast("Non ho riconosciuto prodotti. Riprova."); return; }
-      const res = await addToShoppingMerged(list);
-      const tot = res.added + res.merged;
-      showToast(`${tot} ${tot === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista`);
-    } catch (e) {
-      console.error(e);
-      setShopVoiceProcessing(false);
-      setShopVoiceOpen(false);
-      showToast("Errore nell'elaborare la voce. Riprova.");
-    }
-  }
-  async function toggleShoppingItem(id, checked) {
-    if (checked) {
-      const it = shopping.find((x) => x.id === id);
-      if (it) showToast(<><strong>{it.name}</strong> spostato nel carrello</>, undefined, undefined, undefined, 3500);
-    }
-    setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
-    try { await updateShopping(id, { checked }); }
-    catch (e) { console.error("Errore aggiornamento spesa:", e); }
-  }
-  async function removeShoppingItem(id) {
-    const it = shopping.find((x) => x.id === id);
-    try {
-      await deleteShopping(id);
-      setShopping((prev) => prev.filter((x) => x.id !== id));
-      if (it) {
-        showToast(<><strong>{it.name}</strong> rimosso dalla lista</>, async () => {
-          try {
-            const row = await insertShopping({ name: it.name, qty: it.qty });
-            setShopping((prev) => [row, ...prev]);
-            dismissToast();
-          } catch (e) { console.error("Errore ripristino spesa:", e); }
-        });
-      }
-    } catch (e) { console.error("Errore rimozione spesa:", e); }
-  }
-  // Seleziona/deseleziona tutti gli articoli della spesa.
-  async function toggleAllShopping() {
-    if (!shopping.length) return;
-    const target = !shopping.every((x) => x.checked);
-    const toChange = shopping.filter((x) => x.checked !== target);
-    setShopping((prev) => prev.map((x) => ({ ...x, checked: target })));
-    try {
-      await Promise.all(toChange.map((x) => updateShopping(x.id, { checked: target })));
-    } catch (e) { console.error("Errore selezione totale spesa:", e); }
-  }
-  async function adjustShoppingQty(it, delta) {
-    const next = adjustQty(it.qty, delta);
-    if (next === it.qty) return;
-    // In lista non si scende sotto un passo (1 pz, 50 g, 0,25 kg/l).
-    const m = String(next).replace(",", ".").match(/-?\d+(\.\d+)?/);
-    if (delta < 0 && m && parseFloat(m[0]) <= 0) return;
-    setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: next } : x)));
-    try { await updateShopping(it.id, { qty: next }); }
-    catch (e) { console.error("Errore aggiornamento quantità spesa:", e); }
-  }
-  // Rimuove i barrati, con possibilità di Annulla (li re-inserisce barrati).
-  async function clearCheckedShopping() {
-    const checked = shopping.filter((x) => x.checked);
-    if (!checked.length) return;
-    try {
-      await deleteShoppingItems(checked.map((x) => x.id));
-      setShopping((prev) => prev.filter((x) => !x.checked));
-      showToast(
-        `${checked.length} ${checked.length === 1 ? "articolo rimosso" : "articoli rimossi"} dalla lista`,
-        async () => {
-          try {
-            const rows = await insertManyShopping(
-              checked.map(({ name, qty }) => ({ name, qty, checked: true }))
-            );
-            setShopping((prev) => [...rows, ...prev]);
-            dismissToast();
-          } catch (e) { console.error("Errore ripristino lista:", e); }
-        }
-      );
-    } catch (e) { console.error("Errore rimozione barrati:", e); }
-  }
+  // --- Lista della spesa: stato e logica estratti in hooks/useShopping.jsx ---
+  // Resta qui solo il bridge verso la dispensa (scrive pantry_items).
   async function moveCheckedToPantry() {
     const checked = shopping.filter((x) => x.checked);
     if (!checked.length) return;
@@ -729,15 +577,6 @@ export default function Dispensa({ session }) {
     } catch (e) { console.error("Errore spostamento in dispensa:", e); }
     setMovingChecked(false);
   }
-  // Aggiunge alla lista spesa gli ingredienti mancanti (chi è già in lista
-  // viene saltato, senza toccarne la quantità).
-  async function addMissingToShopping(names) {
-    const existing = new Set(shopping.map((s) => norm(s.name)));
-    const toAdd = (names || []).filter(Boolean).filter((n) => !existing.has(norm(n)));
-    if (!toAdd.length) return;
-    await addToShoppingMerged(toAdd.map((name) => ({ name, qty: "1" })));
-  }
-
   // "Cosa mi manca": true se l'ingrediente trova corrispondenza in dispensa.
   function hasIngredient(name) {
     return !!findMatch(name, items);
@@ -943,12 +782,6 @@ export default function Dispensa({ session }) {
     const m = String(x.qty).replace(",", ".").match(/-?\d+(\.\d+)?/);
     return !!m && parseFloat(m[0]) === 0;
   };
-
-  // "Finito → in lista": dalla riga del prodotto esaurito.
-  async function finishedToShopping(it) {
-    await addToShoppingMerged([{ name: it.name, qty: "1" }]);
-    showToast(<><strong>{it.name}</strong> aggiunto alla lista della spesa</>);
-  }
 
   // "Cucina con questi": manda i prodotti in scadenza alle Ricette.
   function cookWithExpiring() {
