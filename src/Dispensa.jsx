@@ -45,6 +45,7 @@ import {
   useTourState, startTour, stopTour, tourSignal, visibleSteps,
   TOUR_MODE, TOUR_IDEA, TOUR_RECIPE,
 } from "./lib/tour.js";
+import { useOnline } from "./hooks/useOnline.js";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
 // solo quando si apre la scansione del codice a barre.
@@ -105,7 +106,7 @@ export default function Dispensa({ session }) {
   const toastTimer = useRef(null);
 
   // stato connessione (per indicatore offline)
-  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const online = useOnline();
 
   // scontrino
   const [processing, setProcessing] = useState(false);
@@ -244,18 +245,6 @@ export default function Dispensa({ session }) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
-
-  // --- Indicatore stato connessione ---
-  useEffect(() => {
-    const goOnline = () => setOnline(true);
-    const goOffline = () => setOnline(false);
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
-    return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
-    };
-  }, []);
 
   // --- Realtime: sincronizza dispensa e lista spesa tra dispositivi ---
   useEffect(() => {
