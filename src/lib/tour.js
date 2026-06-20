@@ -65,7 +65,7 @@ export const STEPS = [
   {
     id: "welcome", view: "dispensa", overlay: "card",
     title: "Benvenuto! 👋",
-    text: "Facciamo un giro insieme: ti mostro come utilizzare le funzioni principali. Bastano un paio di minuti.",
+    text: "Facciamo un giro insieme: ti mostro come utilizzare le funzioni principali.",
     advance: "next", cta: "Iniziamo",
   },
   {
