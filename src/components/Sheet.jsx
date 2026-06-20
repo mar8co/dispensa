@@ -35,7 +35,7 @@ function unlockBodyScroll() {
   }
 }
 
-export default function Sheet({ onClose, locked = false, children }) {
+export default function Sheet({ onClose, locked = false, panelClass = "bg-cream", handleClass = "bg-stone-300", children }) {
   const [shown, setShown] = useState(false);   // anima l'ingresso al mount
   const [closing, setClosing] = useState(false);
   const [dragY, setDragY] = useState(0);
@@ -86,7 +86,7 @@ export default function Sheet({ onClose, locked = false, children }) {
         className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
       />
       <div
-        className="relative flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-3xl bg-cream shadow-2xl"
+        className={`relative flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-3xl shadow-2xl ${panelClass}`}
         style={{
           transform: open ? `translateY(${dragY}px)` : "translateY(105%)",
           transition: dragging ? "none" : "transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
@@ -102,7 +102,7 @@ export default function Sheet({ onClose, locked = false, children }) {
           className="flex shrink-0 cursor-grab justify-center pb-1.5 pt-2.5 active:cursor-grabbing"
           aria-hidden="true"
         >
-          <div className="h-1 w-10 rounded-full bg-stone-300" />
+          <div className={`h-1 w-10 rounded-full ${handleClass}`} />
         </div>
         {/* Area scorrevole interna: se il contenuto supera l'altezza del foglio
             scorre qui dentro, senza propagare lo scroll alla pagina sotto. */}

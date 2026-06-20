@@ -99,6 +99,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
       title="Codice a barre"
       subtitle="Inquadra il codice a barre del prodotto da aggiungere"
       onClose={onClose}
+      previewClass="h-[38vh]"
       footer={
         <div className="w-full">
           {manualMode && (

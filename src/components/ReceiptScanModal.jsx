@@ -91,6 +91,7 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
       title="Aggiungi alla dispensa"
       subtitle="Scatta o carica dalla galleria scontrino, prodotti o screenshot dell'app della spesa 🛒"
       onClose={onClose}
+      previewClass="h-[52vh]"
       footer={
         <>
           {!error && (
@@ -108,8 +109,8 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
             onClick={() => fileRef.current?.click()}
             aria-label="Scegli dalla galleria"
             title="Dalla galleria"
-            className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-[#fff]/50 bg-black/45 text-[#fff] backdrop-blur transition hover:bg-black/60 ${
-              error ? "" : "absolute right-6"
+            className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-[#fff]/50 bg-[#fff]/10 text-[#fff] transition hover:bg-[#fff]/20 ${
+              error ? "" : "absolute right-0"
             }`}
           >
             <Image className="h-6 w-6" />
