@@ -6,7 +6,7 @@ import {
   CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES,
 } from "./constants.js";
 import {
-  guessCategory,
+  guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
   norm,
 } from "./lib/pantry.js";
@@ -496,7 +496,9 @@ export default function Dispensa({ session }) {
           const ex = byName.get(k);
           ex.qty = normalizeWeight(mergeQty(ex.qty, qty));
         } else {
-          byName.set(k, { name, qty, category: it?.category });
+          // Categoria: il dizionario locale vince sulle varianti note (es. i
+          // formati di pasta), l'AI resta fallback per i prodotti non in lista.
+          byName.set(k, { name, qty, category: categorize(name, it?.category) });
         }
       }
       const list = [...byName.values()];
@@ -519,17 +521,20 @@ export default function Dispensa({ session }) {
     setBarcodeOpen(false);
     const raw = String(item?.name || "").trim();
     let name = raw;
-    let category = guessCategory(raw) || "Altro";
+    let aiCategory = null;
     if (raw) {
       try {
         const parsed = await aiCleanName(raw);
         if (parsed && parsed.name) {
           name = String(parsed.name).trim();
-          category = CATEGORIES.includes(parsed.category) ? parsed.category : (guessCategory(name) || "Altro");
+          aiCategory = parsed.category;
         }
       } catch (e) { console.error(e); }
     }
     name = name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
+    // Dizionario-first: le varianti note finiscono nella categoria giusta;
+    // l'AI è fallback per i prodotti che il dizionario non riconosce.
+    const category = categorize(name, aiCategory);
     const qty = normalizeWeight(String(item?.qty || "1"));
     setScanItems([{ name, qty, category }]);
     setScanOpen(true);
@@ -552,7 +557,14 @@ export default function Dispensa({ session }) {
         `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"...","category":"..."}]} ` +
         `Categorie possibili: ${CATEGORIES.join(", ")}.`;
       const parsed = await callClaude([{ type: "text", text: prompt }], 800);
-      const list = Array.isArray(parsed?.items) ? parsed.items : [];
+      const raw = Array.isArray(parsed?.items) ? parsed.items : [];
+      // Dizionario-first sulla categoria: le varianti note (es. formati di
+      // pasta) vengono corrette anche se l'AI le sbaglia; l'utente può poi
+      // modificarle nella revisione.
+      const list = raw.map((it) => ({
+        ...it,
+        category: categorize(String(it?.name || ""), it?.category),
+      }));
       setVoiceProcessing(false);
       setVoiceOpen(false);
       if (!list.length) { showToast("Non ho riconosciuto alimenti. Riprova."); return; }

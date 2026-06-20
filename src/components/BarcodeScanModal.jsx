@@ -7,7 +7,8 @@
 import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { DecodeHintType, BarcodeFormat } from "@zxing/library";
-import { X, ScanBarcode, Loader2, Keyboard, Search } from "lucide-react";
+import { ScanBarcode, Loader2, Keyboard, Search } from "lucide-react";
+import CameraScanShell from "./CameraScanShell.jsx";
 
 function buildHints() {
   const hints = new Map();
@@ -93,65 +94,63 @@ export default function BarcodeScanModal({ onClose, onResult }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4" onClick={onClose}>
-      <div
-        className="flex w-full max-w-md flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-stone-100 px-4 py-3">
-          <h3 className="flex items-center gap-2 text-base font-semibold">
-            <ScanBarcode className="h-5 w-5" /> Codice a barre
-          </h3>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {!manualMode && (
-          <div className="relative aspect-[4/3] w-full bg-black">
-            <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="h-24 w-4/5 rounded-lg border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.25)]" />
-            </div>
-          </div>
-        )}
-
-        <div className="px-4 py-3 text-center">
-          {error ? (
-            <p className="text-sm font-medium text-tomato">{error}</p>
-          ) : (
-            <p className="flex items-center justify-center gap-2 text-sm text-stone-600">
-              {status === "Cerco il prodotto…" && <Loader2 className="h-4 w-4 animate-spin" />}
-              {manualMode ? "Digita il codice sotto la barra del prodotto" : status}
-            </p>
-          )}
-
+    <CameraScanShell
+      icon={ScanBarcode}
+      title="Codice a barre"
+      subtitle="Inquadra il codice a barre del prodotto da aggiungere"
+      onClose={onClose}
+      footer={
+        <div className="w-full">
           {manualMode && (
-            <form onSubmit={submitManual} className="mt-3 flex items-center gap-2">
+            <form onSubmit={submitManual} className="mb-3 flex items-center gap-2">
               <input
                 type="text"
                 inputMode="numeric"
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value.replace(/[^0-9]/g, ""))}
                 placeholder="Es. 8001234567890"
-                className="flex-1 rounded-lg border border-stone-300 px-3 py-2.5 text-sm outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
+                className="flex-1 rounded-xl border border-[#fff]/30 bg-black/40 px-3 py-2.5 text-sm text-[#fff] placeholder-[#fff]/50 outline-none backdrop-blur focus:border-[#fff]/70"
               />
-              <button type="submit" className="flex items-center justify-center rounded-lg bg-stone-800 px-4 py-2.5 text-white hover:bg-stone-900">
+              <button type="submit" aria-label="Cerca" className="flex items-center justify-center rounded-xl bg-[#fff] px-4 py-2.5 text-black transition active:scale-95">
                 <Search className="h-4 w-4" />
               </button>
             </form>
           )}
-
           <button
             onClick={() => { setManualMode((m) => !m); setError(""); }}
-            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-stone-300 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#fff]/50 bg-black/45 py-3 text-sm font-semibold text-[#fff] backdrop-blur transition hover:bg-black/60"
           >
             {manualMode
               ? (<><ScanBarcode className="h-4 w-4" /> Usa la fotocamera</>)
               : (<><Keyboard className="h-4 w-4" /> Inserisci il codice a mano</>)}
           </button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {manualMode ? (
+        <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+          <Keyboard className="h-10 w-10 text-[#fff]/60" />
+          <p className="text-sm font-medium text-[#fff]/80">Digita il codice sotto la barra del prodotto</p>
+        </div>
+      ) : error ? (
+        <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+          <ScanBarcode className="h-10 w-10 text-[#fff]/60" />
+          <p className="text-sm font-medium text-[#fff]/80">{error}</p>
+        </div>
+      ) : (
+        <>
+          <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            {/* Rettangolo guida basso e largo, a forma di codice a barre.
+                Stesso bordo/opacità/scrim della schermata scontrino. */}
+            <div className="h-28 w-[78%] rounded-2xl border-2 border-[#fff]/85 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
+            <span className="absolute left-1/2 top-[10%] flex max-w-[88%] -translate-x-1/2 items-center gap-2 rounded-full bg-black/70 px-3.5 py-1.5 text-center text-xs font-bold text-[#fff] shadow-lg backdrop-blur">
+              {status === "Cerco il prodotto…" && <Loader2 className="h-4 w-4 animate-spin" />}
+              {status}
+            </span>
+          </div>
+        </>
+      )}
+    </CameraScanShell>
   );
 }

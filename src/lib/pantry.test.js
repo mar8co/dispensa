@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  guessCategory, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
+  guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
   subtractQty, qtyStep, adjustQty, atMinQty, norm, findMatch,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
@@ -27,6 +27,30 @@ describe("guessCategory", () => {
   it("null se vuoto o sconosciuto", () => {
     expect(guessCategory("")).toBeNull();
     expect(guessCategory("oggetto misterioso xyz")).toBeNull();
+  });
+  it("riconosce i formati di pasta come Pasta, Riso e Cereali", () => {
+    for (const p of ["Rigatoni", "Penne", "Fusilli", "Spaghetti", "Farfalle",
+      "Orecchiette", "Tagliatelle", "Tortellini", "Linguine", "Paccheri"]) {
+      expect(guessCategory(p)).toBe("Pasta, Riso e Cereali");
+    }
+  });
+  it("la pasta vince anche con marca/formato nel nome", () => {
+    expect(guessCategory("Farfalle Barilla 500g")).toBe("Pasta, Riso e Cereali");
+  });
+});
+
+describe("categorize", () => {
+  it("il dizionario locale vince sulla categoria proposta dall'AI", () => {
+    // L'AI mette le farfalle in "Altro": il dizionario corregge.
+    expect(categorize("Farfalle", "Altro")).toBe("Pasta, Riso e Cereali");
+    expect(categorize("Rigatoni", "Surgelati")).toBe("Pasta, Riso e Cereali");
+  });
+  it("usa la categoria AI se valida quando il dizionario non sa nulla", () => {
+    expect(categorize("Oggetto misterioso xyz", "Dolci")).toBe("Dolci");
+  });
+  it("ripiega su Altro se né dizionario né AI danno una categoria valida", () => {
+    expect(categorize("Oggetto misterioso xyz", "CategoriaInesistente")).toBe("Altro");
+    expect(categorize("Oggetto misterioso xyz", null)).toBe("Altro");
   });
 });
 

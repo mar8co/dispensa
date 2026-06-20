@@ -52,7 +52,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
                 o.action();
               }}
               aria-label={o.label}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-tomato text-[#fff] shadow-lg shadow-tomato/30 active:scale-95"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-tomato text-[#fff] shadow-lg shadow-black/15 active:scale-95"
             >
               <Icon className="h-[21px] w-[21px]" />
             </button>
@@ -67,7 +67,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
         data-tour="add-fab"
         onClick={() => setMenuOpen((v) => { const next = !v; if (next) tourSignal("add-menu-opened"); return next; })}
         aria-label={menuOpen ? "Chiudi" : "Aggiungi"}
-        className="relative z-40 flex h-[58px] w-[58px] items-center justify-center rounded-full border-4 border-cream bg-tomato text-[#fff] shadow-xl shadow-tomato/40 transition active:scale-95"
+        className="relative z-40 flex h-[58px] w-[58px] items-center justify-center rounded-full border-4 border-cream bg-tomato text-[#fff] shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition active:scale-95"
       >
         <Plus className={`h-7 w-7 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} strokeWidth={2.5} />
       </button>

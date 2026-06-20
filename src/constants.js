@@ -73,7 +73,7 @@ Rispondi SOLO con JSON valido senza markdown:
 Categorie possibili: Verdura, Frutta, Carne, Salumi, Pesce, Latticini,
 Pane e Forno, Pasta, Riso e Cereali (unica categoria), Legumi, Conserve, Surgelati,
 Bevande, Dolci, Frutta Secca, Condimenti e Salse, Spezie ed Erbe, Altro.
-NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Altro".`;
+NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Altro"; TUTTI i formati di pasta (spaghetti, penne, rigatoni, fusilli, farfalle, tagliatelle, tortellini, ecc.) vanno in "Pasta, Riso e Cereali".`;
 
 // Prodotti demo per l'onboarding (1-2 per categoria): popolano la dispensa
 // durante il tutorial e vengono eliminati alla fine, per un avvio pulito.

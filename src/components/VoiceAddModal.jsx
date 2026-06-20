@@ -130,7 +130,7 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
           <p className="min-h-[5rem] px-1 py-1 font-display text-[22px] font-bold leading-snug tracking-tight text-ink">
             {transcript
               ? <>«{transcript}»</>
-              : <span className="font-sans text-sm font-normal italic text-stone-400">Es: «un pane, un pacco di pasta, il latte e sei uova»</span>}
+              : <span className="font-sans text-sm font-normal italic text-stone-400">Es: «pane, un pacco di pasta, il latte e sei uova»</span>}
           </p>
         )}
         <p className="mt-0.5 h-4 text-xs text-stone-400">
