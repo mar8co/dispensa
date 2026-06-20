@@ -20,7 +20,7 @@ import {
   updateShopping, deleteShopping, deleteShoppingItems,
   fetchSavedRecipes, upsertSavedRecipe, updateSavedRecipe, deleteSavedRecipe,
 } from "./lib/db.js";
-import { checkTimers, stopAlarm } from "./lib/timers.js";
+import { stopAlarm } from "./lib/timers.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
 import { loadHistory, saveHistory, bumpedHistory, sortedNames } from "./lib/history.js";
@@ -46,6 +46,7 @@ import {
   TOUR_MODE, TOUR_IDEA, TOUR_RECIPE,
 } from "./lib/tour.js";
 import { useOnline } from "./hooks/useOnline.js";
+import { useTimersTicker } from "./hooks/useTimersTicker.js";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
 // solo quando si apre la scansione del codice a barre.
@@ -299,31 +300,16 @@ export default function Dispensa({ session }) {
   }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
 
   // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
-  useEffect(() => {
-    const tick = () => {
-      const expired = checkTimers();
-      if (expired.length) {
-        const t = expired[0];
-        // Il toast resta finché non tocchi "Stop", che zittisce l'allarme.
-        showToast(
-          <>⏱️ {t.label ? <><strong>{t.label}</strong> è pronto!</> : "Tempo scaduto!"}</>,
-          () => { stopAlarm(); dismissToast(); },
-          "Stop",
-          "ink",
-          30000
-        );
-      }
-    };
-    const int = setInterval(tick, 500);
-    const onVis = () => { if (document.visibilityState === "visible") tick(); };
-    document.addEventListener("visibilitychange", onVis);
-    window.addEventListener("focus", onVis);
-    return () => {
-      clearInterval(int);
-      document.removeEventListener("visibilitychange", onVis);
-      window.removeEventListener("focus", onVis);
-    };
-  }, []);
+  useTimersTicker((t) => {
+    // Il toast resta finché non tocchi "Stop", che zittisce l'allarme.
+    showToast(
+      <>⏱️ {t.label ? <><strong>{t.label}</strong> è pronto!</> : "Tempo scaduto!"}</>,
+      () => { stopAlarm(); dismissToast(); },
+      "Stop",
+      "ink",
+      30000
+    );
+  });
 
   const pantryStr = items.map((i) => `${i.name} (${i.qty})`).join(", ");
 
