@@ -8,7 +8,7 @@ import {
   Calendar, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
-import { expiryStatus, formatExpiry, adjustQty, atMinQty } from "../lib/pantry.js";
+import { expiryStatus, formatExpiry, adjustQty } from "../lib/pantry.js";
 import { tourSignal } from "../lib/tour.js";
 
 const EXP_STYLE = {
@@ -51,12 +51,6 @@ function nameTone(it, out) {
 
 // Quantità a riposo: i numeri puri diventano "×3", il resto resta com'è.
 const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}` : q);
-
-const pad2 = (n) => String(n).padStart(2, "0");
-function todayIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-}
 
 
 export default function PantryTab({

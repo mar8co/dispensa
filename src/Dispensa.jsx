@@ -10,7 +10,7 @@ import {
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
   adjustQty, norm, daysUntilExpiry,
 } from "./lib/pantry.js";
-import { callClaude, fileToBase64, fetchPhotos } from "./lib/claude.js";
+import { callClaude, fetchPhotos } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
 import {
   fetchPantry, insertItem, insertMany, updateItem,
@@ -69,8 +69,6 @@ export default function Dispensa({ session }) {
     Object.fromEntries(CATEGORIES.map((c) => [c, true]))
   );
   const [catOrder, setCatOrder] = useState(CATEGORIES);
-  const [dragCat, setDragCat] = useState(null);
-  const dragCatRef = useRef(null);
   const cardRefs = useRef({});
 
   const [modeOrder, setModeOrder] = useState(MODES.map((m) => m.id));
@@ -92,11 +90,6 @@ export default function Dispensa({ session }) {
   const [expFilter, setExpFilter] = useState(false); // mostra solo in scadenza
 
   // modifica
-  const [editId, setEditId] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [editQty, setEditQty] = useState("");
-  const [editCat, setEditCat] = useState(CATEGORIES[0]);
-  const [editExpiry, setEditExpiry] = useState("");
 
   // lista della spesa
   const [shopping, setShopping] = useState([]);
@@ -124,7 +117,6 @@ export default function Dispensa({ session }) {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
-  const fileInputRef = useRef(null);
 
   // ricette
   const [mode, setMode] = useState(null);
@@ -239,6 +231,7 @@ export default function Dispensa({ session }) {
         setLoaded(true);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --- Specchio dei dati in cache locale (per consultazione offline) ---
@@ -249,6 +242,7 @@ export default function Dispensa({ session }) {
       shopping,
       settings: { collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
 
   // --- Indicatore stato connessione ---
@@ -289,6 +283,7 @@ export default function Dispensa({ session }) {
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "shopping_items", filter: `user_id=eq.${uid}` }, remove(setShopping))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Pulisce il timer del toast allo smontaggio.
@@ -339,7 +334,6 @@ export default function Dispensa({ session }) {
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("focus", onVis);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pantryStr = items.map((i) => `${i.name} (${i.qty})`).join(", ");
@@ -443,31 +437,6 @@ export default function Dispensa({ session }) {
     }
   }
 
-  // +/- rapido sulla quantità (senza entrare in modifica). Se si arriva a
-  // zero, propone di mettere il prodotto in lista della spesa.
-  async function adjustItemQty(it, delta) {
-    const next = adjustQty(it.qty, delta);
-    if (next === it.qty) return;
-    setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: next } : x)));
-    try {
-      await updateItem(it.id, { qty: next });
-    } catch (e) {
-      console.error("Errore aggiornamento quantità:", e);
-    }
-    const m = String(next).replace(",", ".").match(/-?\d+(\.\d+)?/);
-    if (delta < 0 && m && parseFloat(m[0]) === 0) {
-      showToast(<>Hai finito <strong>{it.name}</strong></>, async () => {
-        await addToShoppingMerged([{ name: it.name, qty: "1" }]);
-        dismissToast();
-      }, "metti nella lista");
-    }
-  }
-
-  function startEdit(it) {
-    setEditId(it.id); setEditName(it.name); setEditQty(it.qty);
-    setEditCat(it.category); setEditExpiry(it.expiry || "");
-  }
-
   // Salvataggio automatico dal pannello prodotto: aggiorna subito e mostra
   // il toast "Modifica salvata" con Annulla (ripristina i valori di apertura).
   async function autoSaveItem(it, fields, restore) {
@@ -496,19 +465,6 @@ export default function Dispensa({ session }) {
   // Imposta/cambia la scadenza dal pannello (stesso flusso con Annulla).
   async function setItemExpiry(it, expiry) {
     await autoSaveItem(it, { expiry: expiry || null }, { expiry: it.expiry || null });
-  }
-
-  async function saveEdit() {
-    const orig = items.find((x) => x.id === editId);
-    const name = editName.trim() || (orig ? orig.name : "");
-    const fields = { name, qty: normalizeWeight(editQty.trim()), category: editCat, expiry: editExpiry || null };
-    try {
-      await updateItem(editId, fields);
-      setItems((prev) => prev.map((x) => (x.id === editId ? { ...x, ...fields } : x)));
-    } catch (e) {
-      console.error("Errore modifica:", e);
-    }
-    setEditId(null);
   }
 
   // Unisce prodotti in arrivo (scontrino) gestendo il merge per nome, poi
@@ -830,31 +786,6 @@ export default function Dispensa({ session }) {
       arr.splice(insertAt, 0, dragged);
       return arr;
     });
-  }
-
-  // --- Trascinamento categorie ---
-  function onDragStart(e, cat) {
-    e.preventDefault();
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
-    dragCatRef.current = cat;
-    setDragCat(cat);
-  }
-  function onDragMove(e) {
-    if (!dragCatRef.current) return;
-    const y = e.clientY;
-    for (const cat in cardRefs.current) {
-      const el = cardRefs.current[cat];
-      if (!el) continue;
-      const r = el.getBoundingClientRect();
-      if (y >= r.top && y <= r.bottom) {
-        if (cat !== dragCatRef.current) moveInOrder(setCatOrder, dragCatRef.current, cat);
-        break;
-      }
-    }
-  }
-  function onDragEnd() {
-    dragCatRef.current = null;
-    setDragCat(null);
   }
 
   // --- Trascinamento occasioni di ricetta ---
@@ -1324,19 +1255,6 @@ export default function Dispensa({ session }) {
       return { cat: c, list: sortList(list) };
     })
     .filter((g) => g.list.length > 0);
-  const total = items.length;
-  const allCollapsed = grouped.length > 0 && grouped.every((g) => collapsed[g.cat]);
-
-  // Apri/chiudi tutte le categorie visibili: se almeno una è aperta le chiude
-  // tutte, altrimenti le apre tutte.
-  function toggleAllCategories() {
-    const anyOpen = grouped.some((g) => !collapsed[g.cat]);
-    setCollapsed((prev) => {
-      const next = { ...prev };
-      for (const g of grouped) next[g.cat] = anyOpen;
-      return next;
-    });
-  }
   const orderedModes = modeOrder.map((id) => MODES.find((m) => m.id === id)).filter(Boolean);
 
   const baseServings = recipe ? (Number(recipe.servings) || 2) : 1;
@@ -1439,8 +1357,6 @@ export default function Dispensa({ session }) {
     }
   }
 
-  const inputCls =
-    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200";
 
   if (!loaded) {
     return (
