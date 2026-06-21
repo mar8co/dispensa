@@ -212,24 +212,41 @@ export function qtyStep(qty) {
   return 1;
 }
 
-// Incrementa/decrementa il primo numero in una quantità mantenendo l'unità,
-// di un passo adeguato all'unità (vedi qtyStep), agganciandosi ai multipli
-// del passo (es. "0,3 kg" + 1 passo -> "0,5 kg"). delta = ±1 passi.
-// Se non c'è un numero (es. "poca quantità") restituisce la stringa invariata.
+// Passo per i pezzi/confezioni (famiglia "count"): interi sopra l'unità, ma
+// sotto si può avere il MEZZO pezzo (½) — utile per "mezza cipolla". Sequenza
+// scendendo: … 3, 2, 1, 0,5, 0 (finito). Salendo si torna a interi: 0,5 → 1 → 2.
+function adjustCount(n, delta) {
+  if (delta > 0) return n < 1 ? 1 : Math.floor(n) + 1; // 0/0,5 -> 1, 1 -> 2, 1,5 -> 2
+  if (n > 1) return Math.ceil(n) - 1;                  // 3 -> 2, 2 -> 1, 1,5 -> 1
+  if (n > 0.5) return 0.5;                             // 1 -> 0,5
+  return 0;                                            // 0,5 -> 0 (finito)
+}
+
+// Incrementa/decrementa il primo numero in una quantità mantenendo l'unità.
+// Pesi/volumi: passo da qtyStep, agganciato ai multipli (es. "0,3 kg" +1 -> "0,5 kg").
+// Pezzi/confezioni: passo intero con il mezzo (½) come quantità minima (vedi
+// adjustCount). delta = ±1 passi. Senza numero (es. "poca quantità") invariato.
 export function adjustQty(qty, delta) {
   const s = String(qty);
   const m = s.match(/-?\d+(?:[.,]\d+)?/);
   if (!m) return qty;
-  const step = qtyStep(qty);
-  let next = parseFloat(m[0].replace(",", ".")) + delta * step;
-  next = Math.round(next / step) * step;
-  if (next < 0) next = 0;
-  next = Math.round(next * 1000) / 1000;
+  const cur = parseFloat(m[0].replace(",", "."));
+  const p = parseQty(qty);
+  let next;
+  if (p && p.family === "count") {
+    next = adjustCount(cur, delta);
+  } else {
+    const step = qtyStep(qty);
+    next = cur + delta * step;
+    next = Math.round(next / step) * step;
+    if (next < 0) next = 0;
+    next = Math.round(next * 1000) / 1000;
+  }
   return s.replace(m[0], String(next).replace(".", ","));
 }
 
-// True se un ulteriore "−" porterebbe a zero o sotto: il minimo è un passo
-// (1 pz, 50 g, 0,25 kg/l) — il "−" parte quindi dal secondo passo.
+// True se un ulteriore "−" porterebbe a zero o sotto: dove c'è il floor (spesa,
+// revisione) il "−" si ferma quindi al minimo — 0,5 pz, 50 g, 0,25 kg/l.
 export function atMinQty(qty) {
   const next = adjustQty(qty, -1);
   const m = String(next).replace(",", ".").match(/-?\d+(\.\d+)?/);

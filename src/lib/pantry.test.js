@@ -153,15 +153,23 @@ describe("adjustQty", () => {
     expect(adjustQty("1 kg", 1)).toBe("1,25 kg");
     expect(adjustQty("0,3 kg", 1)).toBe("0,5 kg");
   });
+  it("i pezzi/confezioni scendono al mezzo (½) come minimo, poi a 0", () => {
+    expect(adjustQty("1", -1)).toBe("0,5");   // 1 pezzo -> mezzo
+    expect(adjustQty("0,5", -1)).toBe("0");   // mezzo -> finito
+    expect(adjustQty("0,5", 1)).toBe("1");    // mezzo -> 1 (risale intero)
+    expect(adjustQty("3", -1)).toBe("2");
+    expect(adjustQty("1 barattolo", -1)).toBe("0,5 barattolo");
+  });
   it("non scende sotto zero e lascia invariato senza numero", () => {
-    expect(adjustQty("1", -1)).toBe("0");
+    expect(adjustQty("50 g", -1)).toBe("0 g");
     expect(adjustQty("poca quantità", 1)).toBe("poca quantità");
   });
 });
 
 describe("atMinQty", () => {
-  it("true se un altro − arriva a zero", () => {
-    expect(atMinQty("1")).toBe(true);
+  it("true se un altro − arriva a zero (floor: 0,5 pz / 50 g)", () => {
+    expect(atMinQty("0,5")).toBe(true);  // mezzo pezzo è il minimo
+    expect(atMinQty("1")).toBe(false);   // da 1 si può scendere a 0,5
     expect(atMinQty("50 g")).toBe(true);
     expect(atMinQty("2")).toBe(false);
     expect(atMinQty("100 g")).toBe(false);
