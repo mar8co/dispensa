@@ -57,7 +57,7 @@ export default function PantryTab({
   search, setSearch, sort, setSort,
   grouped, cardRefs,
   onMoveCat, onAutoSave, onSetExpiry, removeItem,
-  expiringCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
+  expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
 }) {
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
@@ -279,16 +279,27 @@ export default function PantryTab({
       )}
       </div>{/* fine barra ricerca sticky */}
 
-      {/* Striscia scadenze */}
-      {expiringCount > 0 && (
+      {/* Striscia scadenze: distingue i già scaduti (rosso) da quelli in
+          scadenza entro 7 giorni (ambra). Il filtro "mostra" li include entrambi. */}
+      {expiredCount + expiringSoonCount > 0 && (
         <div className="mt-3 overflow-hidden rounded-xl border border-amber-700/30 bg-amber-100/60">
           <button
             onClick={() => setExpFilter(!expFilter)}
             className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
           >
-            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700" />
-            <span className="flex-1 text-xs font-semibold text-amber-700">
-              {expiringCount} {expiringCount === 1 ? "prodotto" : "prodotti"} in scadenza entro 7 giorni
+            <AlertTriangle className={`h-4 w-4 shrink-0 ${expiredCount > 0 ? "text-tomato" : "text-amber-700"}`} />
+            <span className="flex-1 text-xs font-semibold">
+              {expiredCount > 0 && (
+                <span className="text-tomato">
+                  {expiredCount} {expiredCount === 1 ? "scaduto" : "scaduti"}
+                </span>
+              )}
+              {expiredCount > 0 && expiringSoonCount > 0 && <span className="text-amber-700/60"> · </span>}
+              {expiringSoonCount > 0 && (
+                <span className="text-amber-700">
+                  {expiringSoonCount} in scadenza {expiredCount > 0 ? "(entro 7 gg)" : "entro 7 giorni"}
+                </span>
+              )}
             </span>
             <span className="shrink-0 text-[11px] font-bold text-amber-700 underline">
               {expFilter ? "mostra tutto" : "mostra"}

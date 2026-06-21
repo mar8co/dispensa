@@ -142,7 +142,7 @@ export default function Dispensa({ session }) {
     newCat, setNewCat, newExpiry, setNewExpiry, adding,
     search, setSearch, sort, setSort, expFilter, setExpFilter,
     confirmClear, setConfirmClear,
-    grouped, expiringItems, isOut, hasIngredient,
+    grouped, expiringItems, expiredCount, expiringSoonCount, isOut, hasIngredient,
     mergeItems, addManual, submitManual, removeItem, clearPantry,
     autoSaveItem, setItemExpiry, moveCategory,
   } = usePantry({
@@ -731,7 +731,7 @@ export default function Dispensa({ session }) {
             grouped={grouped} cardRefs={cardRefs}
             onMoveCat={moveCategory}
             onAutoSave={autoSaveItem} onSetExpiry={setItemExpiry} removeItem={removeItem}
-            expiringCount={expiringItems.length} expFilter={expFilter} setExpFilter={setExpFilter}
+            expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
             onCookWith={cookWithProduct}
           />

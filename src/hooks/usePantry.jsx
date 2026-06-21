@@ -51,6 +51,10 @@ export function usePantry({
     return d !== null && d <= 7;
   };
   const expiringItems = items.filter(isExpiring);
+  // Conteggi separati per il banner: già scaduti (giorni < 0) e in scadenza
+  // (0–7 giorni). Insieme coprono esattamente expiringItems.
+  const expiredCount = items.filter((x) => { const d = daysUntilExpiry(x.expiry); return d !== null && d < 0; }).length;
+  const expiringSoonCount = items.filter((x) => { const d = daysUntilExpiry(x.expiry); return d !== null && d >= 0 && d <= 7; }).length;
 
   // Se il filtro scadenze resta attivo ma non c'è più nulla, si spegne da solo.
   useEffect(() => {
@@ -270,7 +274,7 @@ export function usePantry({
     search, setSearch, sort, setSort, expFilter, setExpFilter,
     confirmClear, setConfirmClear,
     // derivati
-    grouped, expiringItems, isOut, hasIngredient,
+    grouped, expiringItems, expiredCount, expiringSoonCount, isOut, hasIngredient,
     // funzioni
     mergeItems, addManual, submitManual, removeItem, clearPantry,
     autoSaveItem, setItemExpiry, moveCategory,
