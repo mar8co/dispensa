@@ -75,12 +75,25 @@ Pane e Forno, Pasta, Riso e Cereali (unica categoria), Legumi, Conserve, Surgela
 Bevande, Dolci, Frutta Secca, Condimenti e Salse, Spezie ed Erbe, Altro.
 NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Altro"; TUTTI i formati di pasta (spaghetti, penne, rigatoni, fusilli, farfalle, tagliatelle, tortellini, ecc.) vanno in "Pasta, Riso e Cereali".`;
 
+// Data ISO (YYYY-MM-DD) a +N giorni da oggi, per le scadenze demo (calcolata
+// all'avvio: i dati demo si inseriscono nella stessa sessione).
+const demoDate = (days) => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
+
 // Prodotti demo per l'onboarding (1-2 per categoria): popolano la dispensa
 // durante il tutorial e vengono eliminati alla fine, per un avvio pulito.
+// Alcuni hanno una scadenza (4° campo) per mostrare il banner scadenze:
+// uova in scadenza (3 gg), latte già scaduto, rucola ancora lontana (12 gg).
 export const DEMO_DATA = [
   ["Zucchine", "3", "Verdura"],
   ["Pomodorini", "500 g", "Verdura"],
   ["Menta", "1 vaso", "Verdura"],
+  ["Rucola", "1", "Verdura", demoDate(12)],
   ["Mele", "4", "Frutta"],
   ["Limoni", "2", "Frutta"],
   ["Petto di pollo", "500 g", "Carne"],
@@ -89,6 +102,7 @@ export const DEMO_DATA = [
   ["Parmigiano", "200 g", "Latticini"],
   ["Feta", "200 g", "Latticini"],
   ["Yogurt greco", "4", "Latticini"],
+  ["Latte", "1 l", "Latticini", demoDate(-2)],
   ["Pane", "1", "Pane e Forno"],
   ["Spaghetti", "500 g", "Pasta, Riso e Cereali"],
   ["Cous cous", "1 conf.", "Pasta, Riso e Cereali"],
@@ -103,6 +117,7 @@ export const DEMO_DATA = [
   ["Mandorle", "1 conf.", "Frutta Secca"],
   ["Olio EVO", "1 l", "Condimenti e Salse"],
   ["Sale", "1", "Spezie ed Erbe"],
+  ["Uova", "6", "Altro", demoDate(3)],
 ];
 
 export const STORAGE_KEY = "dispensa-v1";

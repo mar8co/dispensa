@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
-  subtractQty, qtyStep, adjustQty, atMinQty, formatQtyDisplay, isStapleQb, isQbQty, norm, findMatch,
+  subtractQty, qtyStep, adjustQty, atMinQty, formatQtyDisplay, isStapleQb, isQbQty, stripParens, norm, findMatch,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
 
@@ -220,6 +220,15 @@ describe("isQbQty", () => {
   it("le dosi numeriche non sono q.b.", () => {
     expect(isQbQty("120 g")).toBe(false);
     expect(isQbQty("2")).toBe(false);
+  });
+});
+
+describe("stripParens", () => {
+  it("toglie i chiarimenti tra parentesi dai nomi", () => {
+    expect(stripParens("Insalata (da lattuga)")).toBe("Insalata");
+    expect(stripParens("Pomodori (San Marzano, pelati)")).toBe("Pomodori");
+    expect(stripParens("Parmigiano")).toBe("Parmigiano");
+    expect(stripParens("Latte intero (fresco) di mucca")).toBe("Latte intero di mucca");
   });
 });
 

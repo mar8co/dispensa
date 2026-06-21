@@ -6,7 +6,7 @@ import {
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
   ChefHat, Trash2, Check,
 } from "lucide-react";
-import { scaleQty } from "../lib/pantry.js";
+import { scaleQty, stripParens } from "../lib/pantry.js";
 import StepTimer from "./StepTimer.jsx";
 import CookingMode from "./CookingMode.jsx";
 
@@ -373,7 +373,7 @@ export default function RecipesTab({
                       {have
                         ? <CheckCircle2 className="h-4 w-4 shrink-0 text-ink" />
                         : <Circle className="h-4 w-4 shrink-0 text-tomato" />}
-                      <span className={`truncate ${have ? "text-ink" : "text-tomato"} ${off ? "line-through" : ""}`}>{ing.name}</span>
+                      <span className={`truncate ${have ? "text-ink" : "text-tomato"} ${off ? "line-through" : ""}`}>{stripParens(ing.name)}</span>
                     </span>
                     <span className="shrink-0 font-semibold text-ink">{scaleQty(ing.qty, factor)}</span>
                   </li>

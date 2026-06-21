@@ -13,7 +13,7 @@
 // leggere/scrivere lo stato ricette.
 import { useState } from "react";
 import { callClaude, fetchPhotos } from "../lib/claude.js";
-import { norm } from "../lib/pantry.js";
+import { norm, stripParens } from "../lib/pantry.js";
 import { upsertSavedRecipe, updateSavedRecipe, deleteSavedRecipe } from "../lib/db.js";
 import { loadSavedRecipes, saveSavedRecipes, localRecipeId } from "../lib/recipes.js";
 import { tourSignal, TOUR_RECIPE } from "../lib/tour.js";
@@ -162,13 +162,19 @@ export function useRecipes({
       `Usa principalmente gli ingredienti della mia dispensa: ${pantryStr}. ${prefLine}` +
       `Indica le grammature per il numero di porzioni nel campo "servings". ` +
       `IMPORTANTISSIMO: usa SOLO unità di misura metriche (g, kg, ml, l) — mai cups, oz, tbsp, tsp. ` +
+      `Nel nome di ogni ingrediente NON usare MAI parentesi né chiarimenti tra parentesi (es. scrivi "Insalata", non "Insalata (da lattuga)"): solo il nome semplice del prodotto. ` +
       `Per ogni passaggio che richiede attesa o cottura indica i minuti nel campo "timer" (numero), altrimenti null. ` +
       `Rispondi SOLO con JSON valido senza markdown: ` +
       `{"title":"...","servings":2,"time":"...","imageQuery":"2-4 parole IN INGLESE per la foto del piatto","ingredients":[{"name":"...","qty":"120 g"}],"steps":[{"text":"...","timer":10}]}`;
     try {
       // Spazio abbondante: le ricette lunghe troncavano il JSON (errore 502).
       const parsed = await callClaude([{ type: "text", text: prompt }], 2500);
-      animateUI(() => { setRecipe(parsed); setServings(initialServings(parsed)); setLoadingRecipe(false); });
+      // Rete di sicurezza: se l'AI mette comunque parentesi nei nomi degli
+      // ingredienti, le togliamo (altrimenti vengono troncate e confondono).
+      const clean = Array.isArray(parsed?.ingredients)
+        ? { ...parsed, ingredients: parsed.ingredients.map((ing) => ({ ...ing, name: stripParens(ing?.name) })) }
+        : parsed;
+      animateUI(() => { setRecipe(clean); setServings(initialServings(clean)); setLoadingRecipe(false); });
       fetchPhotos([parsed.imageQuery || parsed.title]).then((urls) => {
         if (urls[0]) setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
       });

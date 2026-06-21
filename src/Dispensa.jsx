@@ -196,7 +196,7 @@ export default function Dispensa({ session }) {
         if (rows.length === 0 && !cached) {
           const onboarded = (() => { try { return localStorage.getItem(`dispensa-onboarded-${uid}`) === "1"; } catch { return false; } })();
           const src = onboarded ? SEED_DATA : DEMO_DATA;
-          rows = await insertMany(src.map(([name, qty, category]) => ({ name, qty, category })));
+          rows = await insertMany(src.map(([name, qty, category, expiry]) => ({ name, qty, category, expiry: expiry || null })));
           if (!onboarded) startTour(true);
         }
         // Migrazione categorie: i prodotti con etichette vecchie (es.

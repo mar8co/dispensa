@@ -194,6 +194,13 @@ export function subtractQty(stock, used) {
   return { ok: false, value: stock };
 }
 
+// Toglie i chiarimenti tra parentesi dai nomi (es. "Insalata (da lattuga)" ->
+// "Insalata"): nei nomi degli ingredienti delle ricette le parentesi vengono
+// troncate e confondono. Pulisce anche gli spazi doppi.
+export function stripParens(s) {
+  return String(s ?? "").replace(/\s*\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
+}
+
 export function norm(s) {
   return String(s)
     .toLowerCase()
