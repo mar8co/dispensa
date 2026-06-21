@@ -264,6 +264,30 @@ export function formatQtyDisplay(qty) {
   return String(qty);
 }
 
+// --- "q.b." (quanto basta): scorte che NON si scalano cucinando ---
+// Prodotti che usi "a piacere" e tieni finché finiscono: tutta la categoria
+// "Spezie ed Erbe" + una lista curata di condimenti/basi. NON includono
+// pesto/sugo/besciamella/maionese/ketchup/senape/farina/pangrattato, che si
+// usano in quantità vere e vanno aggiornati.
+const QB_KEYWORDS = [
+  "olio", "aceto", "sale", "pepe", "brodo", "dado",
+  "salsa di soia", "soia", "worcester", "tabasco",
+  "lievito", "bicarbonato", "zucchero", "vanillina", "burro",
+];
+
+// True se il prodotto è una "scorta q.b." (per categoria o per nome).
+export function isStapleQb(name, category) {
+  if (category === "Spezie ed Erbe") return true;
+  const n = norm(name);
+  // Confronto per parola intera: "pepe" non deve agganciare "peperoni".
+  return QB_KEYWORDS.some((k) => new RegExp(`(^|\\s)${k}(\\s|$)`).test(n));
+}
+
+// True se la RICETTA indica "q.b." (o "quanto basta"/"a piacere") per la dose.
+export function isQbQty(qty) {
+  return /\bq ?b\b|quanto basta|a piacere/.test(norm(qty));
+}
+
 // --- Scadenze (date in formato "YYYY-MM-DD") ---
 
 export function daysUntilExpiry(dateStr) {

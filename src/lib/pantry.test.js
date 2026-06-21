@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
-  subtractQty, qtyStep, adjustQty, atMinQty, formatQtyDisplay, norm, findMatch,
+  subtractQty, qtyStep, adjustQty, atMinQty, formatQtyDisplay, isStapleQb, isQbQty, norm, findMatch,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
 
@@ -184,6 +184,42 @@ describe("formatQtyDisplay", () => {
     expect(formatQtyDisplay("2 pz")).toBe("2 pz");
     expect(formatQtyDisplay("0,5 kg")).toBe("0,5 kg"); // i pesi restano numerici
     expect(formatQtyDisplay("500 g")).toBe("500 g");
+  });
+});
+
+describe("isStapleQb", () => {
+  it("scorte q.b.: tutta la categoria Spezie ed Erbe", () => {
+    expect(isStapleQb("Origano", "Spezie ed Erbe")).toBe(true);
+    expect(isStapleQb("Pepe nero", "Spezie ed Erbe")).toBe(true);
+  });
+  it("scorte q.b. per nome (olio, aceto, sale, zucchero, burro, ...)", () => {
+    expect(isStapleQb("Olio EVO", "Condimenti e Salse")).toBe(true);
+    expect(isStapleQb("Aceto balsamico", "Condimenti e Salse")).toBe(true);
+    expect(isStapleQb("Sale fino", "Altro")).toBe(true);
+    expect(isStapleQb("Zucchero", "Dolci")).toBe(true);
+    expect(isStapleQb("Burro", "Latticini")).toBe(true);
+    expect(isStapleQb("Salsa di soia", "Condimenti e Salse")).toBe(true);
+  });
+  it("NON sono q.b.: si scalano normalmente", () => {
+    expect(isStapleQb("Pesto", "Condimenti e Salse")).toBe(false);
+    expect(isStapleQb("Passata di pomodoro", "Conserve")).toBe(false);
+    expect(isStapleQb("Maionese", "Condimenti e Salse")).toBe(false);
+    expect(isStapleQb("Farina", "Pasta, Riso e Cereali")).toBe(false);
+    expect(isStapleQb("Peperoni", "Verdura")).toBe(false); // "pepe" non aggancia "peperoni"
+    expect(isStapleQb("Olive", "Conserve")).toBe(false);   // "olio" non aggancia "olive"
+  });
+});
+
+describe("isQbQty", () => {
+  it("riconosce la dose q.b. dalla ricetta", () => {
+    expect(isQbQty("q.b.")).toBe(true);
+    expect(isQbQty("qb")).toBe(true);
+    expect(isQbQty("a piacere")).toBe(true);
+    expect(isQbQty("quanto basta")).toBe(true);
+  });
+  it("le dosi numeriche non sono q.b.", () => {
+    expect(isQbQty("120 g")).toBe(false);
+    expect(isQbQty("2")).toBe(false);
   });
 });
 

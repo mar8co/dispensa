@@ -91,7 +91,7 @@ dispensa/
 ### 3.2 Ciclo "spesa → dispensa → ricetta → spesa"
 - **Aggiunta dispensa**: a mano (`correctName`+`guessCategory` locali, no AI) · voce/foto(scontrino o spesa)/barcode (AI estrae e categorizza → `ReviewScanModal` per conferma → `mergeItems`).
 - **Ricette**: scelta occasione (`MODES`, include "🍱 Schiscetta") o richiesta libera → `callClaude` genera 4 proposte (cache 24h) → apertura ricetta (`callClaude` ricetta completa con grammature, default 1 porzione) → foto Pexels (`fetchPhotos`). Scorciatoia **"Cucina con questo"** da un prodotto: `cookWithProduct(name)` → `changeView("ricette")` + `askCustom(name)`.
-- **Cottura**: timer per passaggio (`StepTimer`/`lib/timers.js`), Modalità cucina fullscreen, "Ho cucinato" (`CookModal`) scala la dispensa (matematica locale + stima AI per pacchi↔grammi).
+- **Cottura**: timer per passaggio (`StepTimer`/`lib/timers.js`), Modalità cucina fullscreen, "Ho cucinato" (`CookModal`) aggiorna la dispensa a **3 corsie**: q.b. (scorte non scalate — `isStapleQb`/`isQbQty`), a confezione (stepper con ½, niente stima), calcolo esatto (sottrazione tra stesse unità). Niente più chiamata AI di stima.
 - **Mancanti** → lista spesa (`addMissingToShopping`); a spesa fatta, "Sposta in dispensa".
 
 ### 3.3 Tutorial interattivo (store esterno + spotlight)
@@ -124,7 +124,7 @@ Tutte le tabelle applicative hanno `user_id uuid` con default `auth.uid()`, FK a
 | Servizio | Uso | Dove | Auth |
 |---|---|---|---|
 | **Supabase** | Postgres, Auth (magic-link/Google), Realtime | client `supabase-js` + verifica token nei proxy | anon key (client) / token utente (proxy) / service role (account+rate-limit, server) |
-| **Google Gemini** `gemini-2.5-flash` | proposte ricette, ricetta completa, estrazione foto scontrino/spesa/voce, pulizia nome barcode, stima "ho cucinato" | `server/claude.js` | `GEMINI_API_KEY` (server) |
+| **Google Gemini** `gemini-2.5-flash` | proposte ricette, ricetta completa, estrazione foto scontrino/spesa/voce, pulizia nome barcode | `server/claude.js` | `GEMINI_API_KEY` (server) |
 | **Pexels** | foto dei piatti | `server/photo.js` | `PEXELS_API_KEY` (server) |
 | **Open Food Facts** | lookup prodotto da barcode | client (`BarcodeScanModal`) | nessuna |
 | **Web APIs** | Web Speech (voce), getUserMedia (foto/barcode), Wake Lock (spesa), Notification/Vibrate (timer), Web Share (lista) | client | permessi browser |

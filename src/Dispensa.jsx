@@ -8,7 +8,7 @@ import {
 import {
   guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  norm,
+  norm, isStapleQb, isQbQty,
 } from "./lib/pantry.js";
 import { callClaude } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
@@ -110,7 +110,6 @@ export default function Dispensa({ session }) {
   // "Ho cucinato questo"
   const [cookOpen, setCookOpen] = useState(false);
   const [cookRows, setCookRows] = useState([]);
-  const [cookEstimating, setCookEstimating] = useState(false);
   const [cookDone, setCookDone] = useState("");
 
   // foglio profilo (tema, svuota dispensa, logout)
@@ -633,35 +632,12 @@ export default function Dispensa({ session }) {
 
   // --- "Ho cucinato questo" ---
 
-  // Per le righe che la matematica locale non risolve (es. "1 pacco" meno
-  // "320 g"), l'AI stima quanto rimane usando i formati tipici delle
-  // confezioni italiane; la stima arriva precompilata e si può correggere.
-  async function estimateCookRows(rows) {
-    const pending = rows.filter((r) => !r.auto);
-    if (!pending.length) return;
-    setCookEstimating(true);
-    try {
-      const prompt =
-        `Sei un assistente di cucina italiano. Per ogni prodotto ti do la quantità in dispensa ` +
-        `(a volte in pezzi/pacchi/confezioni) e quanto ne è stato usato in una ricetta. ` +
-        `Stima quanto rimane VEROSIMILMENTE, basandoti sui formati tipici delle confezioni italiane ` +
-        `(es. pasta 500 g, riso 1 kg, passata 700 g, tonno 80 g, latte 1 l). ` +
-        `Esprimi il rimanente in unità metriche (g, kg, ml, l) oppure in pezzi se più sensato; "0" se finito. ` +
-        `Prodotti: ${JSON.stringify(pending.map((p) => ({ nome: p.name, in_dispensa: p.before, usato: p.used })))} ` +
-        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"nome":"...","rimane":"..."}]}`;
-      const parsed = await callClaude([{ type: "text", text: prompt }], 400);
-      const map = new Map((parsed?.items || []).map((x) => [norm(x.nome), String(x.rimane ?? "").trim()]));
-      setCookRows((prev) => prev.map((r) => {
-        if (r.auto) return r;
-        const est = map.get(norm(r.name));
-        return est ? { ...r, after: est, estimated: true } : r;
-      }));
-    } catch (e) {
-      console.warn("Stima AI non disponibile:", e?.message || e);
-    }
-    setCookEstimating(false);
-  }
-
+  // Prepara le righe del CookModal classificando ogni ingrediente in 3 corsie:
+  //  - "qb"    → scorta a piacere (olio/sale/spezie… o la ricetta dice "q.b."):
+  //              NON si scala, si mostra soltanto.
+  //  - "exact" → stessa unità della ricetta: matematica esatta (es. 500 g − 200 g).
+  //  - "pack"  → unità non confrontabili (es. "1 barattolo" vs "200 g"): niente
+  //              stima, l'utente dice quanti ne restano con lo stepper (½ incluso).
   function openCookModal() {
     if (!recipe) return;
     const rows = [];
@@ -670,16 +646,18 @@ export default function Dispensa({ session }) {
       const match = findMatch(ing.name, items);
       if (!match || seen.has(match.id)) continue;
       seen.add(match.id);
+      if (isQbQty(ing.qty) || isStapleQb(match.name, match.category)) {
+        rows.push({ itemId: match.id, name: match.name, before: match.qty, kind: "qb" });
+        continue;
+      }
       const used = scaleQty(ing.qty, factor);
       const sub = subtractQty(match.qty, used);
-      rows.push({
-        itemId: match.id, name: match.name, used,
-        before: match.qty, after: sub.ok ? sub.value : match.qty, auto: sub.ok,
-      });
+      rows.push(sub.ok
+        ? { itemId: match.id, name: match.name, used, before: match.qty, after: sub.value, kind: "exact" }
+        : { itemId: match.id, name: match.name, used, before: match.qty, after: match.qty, kind: "pack" });
     }
     setCookRows(rows);
     setCookOpen(true);
-    estimateCookRows(rows); // parte in background, precompila le righe ambigue
   }
   function setRowAfter(idx, val) {
     setCookRows((rows) => rows.map((r, i) => (i === idx ? { ...r, after: val } : r)));
@@ -691,6 +669,7 @@ export default function Dispensa({ session }) {
     const updates = {};
     const removals = new Set();
     for (const r of cookRows) {
+      if (r.kind === "qb") continue; // le scorte "q.b." non si toccano
       const v = String(r.after).trim();
       const m = v.replace(",", ".").match(/-?\d+(\.\d+)?/);
       const isZero = m && parseFloat(m[0]) === 0;
@@ -906,11 +885,14 @@ export default function Dispensa({ session }) {
       {cookOpen && (
         <CookModal
           rows={cookRows}
-          estimating={cookEstimating}
           onClose={() => setCookOpen(false)}
           onSetAfter={setRowAfter}
           onRemoveRow={removeRow}
           onApply={applyCooked}
+          onStapleToShopping={(name) => {
+            addToShoppingMerged([{ name, qty: "1" }]);
+            showToast(<><strong>{name}</strong> aggiunto alla lista della spesa</>);
+          }}
         />
       )}
 
