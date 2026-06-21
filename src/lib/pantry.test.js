@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
-  subtractQty, qtyStep, adjustQty, atMinQty, norm, findMatch,
+  subtractQty, qtyStep, adjustQty, atMinQty, formatQtyDisplay, norm, findMatch,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
 
@@ -173,6 +173,17 @@ describe("atMinQty", () => {
     expect(atMinQty("50 g")).toBe(true);
     expect(atMinQty("2")).toBe(false);
     expect(atMinQty("100 g")).toBe(false);
+  });
+});
+
+describe("formatQtyDisplay", () => {
+  it("mostra ½ solo per il mezzo pezzo (non per pesi/volumi)", () => {
+    expect(formatQtyDisplay("0,5")).toBe("½");
+    expect(formatQtyDisplay("0,5 barattolo")).toBe("½ barattolo");
+    expect(formatQtyDisplay("1")).toBe("1");
+    expect(formatQtyDisplay("2 pz")).toBe("2 pz");
+    expect(formatQtyDisplay("0,5 kg")).toBe("0,5 kg"); // i pesi restano numerici
+    expect(formatQtyDisplay("500 g")).toBe("500 g");
   });
 });
 

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { X, Check, Plus, Minus } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import Sheet from "./Sheet.jsx";
-import { adjustQty, atMinQty } from "../lib/pantry.js";
+import { adjustQty, atMinQty, formatQtyDisplay } from "../lib/pantry.js";
 
 function tmpId() {
   return Math.random().toString(36).slice(2, 10);
@@ -104,8 +104,8 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
                             <input
                               inputMode="decimal"
                               className="w-12 border-0 bg-transparent text-center text-sm font-bold tabular-nums text-ink outline-none"
-                              value={it.qty}
-                              onChange={(e) => update(it.id, "qty", e.target.value)}
+                              value={formatQtyDisplay(it.qty)}
+                              onChange={(e) => update(it.id, "qty", e.target.value.replace("½", "0,5"))}
                               aria-label="Quantità"
                             />
                             <button

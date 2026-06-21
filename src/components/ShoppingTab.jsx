@@ -8,7 +8,7 @@ import {
   Share2, Lightbulb, Mic, X,
 } from "lucide-react";
 import { CATEGORIES, PICKER_CATS, CAT_ICON, AISLE_ORDER } from "../constants.js";
-import { norm, atMinQty, adjustQty } from "../lib/pantry.js";
+import { norm, atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 
 const editCls =
   "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -123,7 +123,7 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete, onStartEdit }) {
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
-              <span className="min-w-[1.75rem] px-0.5 text-center text-sm font-bold tabular-nums text-ink">{it.qty}</span>
+              <span className="min-w-[1.75rem] px-0.5 text-center text-sm font-bold tabular-nums text-ink">{formatQtyDisplay(it.qty)}</span>
               <button
                 onClick={() => onAdjustQty(it, 1)}
                 className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-tomato hover:bg-tomato/5 hover:text-tomato active:scale-95"
@@ -133,7 +133,7 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete, onStartEdit }) {
               </button>
             </div>
           ) : (
-            it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{it.qty}</span>
+            it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{formatQtyDisplay(it.qty)}</span>
           )}
         </div>
       </div>
@@ -340,8 +340,8 @@ export default function ShoppingTab({
             <input
               inputMode="decimal"
               className="w-16 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
-              value={qtyDraft}
-              onChange={(e) => scheduleQty(e.target.value)}
+              value={formatQtyDisplay(qtyDraft)}
+              onChange={(e) => scheduleQty(e.target.value.replace("½", "0,5"))}
               aria-label="Quantità"
             />
             <button

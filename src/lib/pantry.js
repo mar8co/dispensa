@@ -253,6 +253,17 @@ export function atMinQty(qty) {
   return !m || parseFloat(m[0]) <= 0;
 }
 
+// Resa per la UI del mezzo pezzo: mostra il glifo ½ al posto di "0,5".
+// SOLO display — il valore salvato resta "0,5" (così la matematica regge) — e
+// SOLO per pezzi/confezioni (famiglia count), non per pesi/volumi (es. "0,5 kg").
+export function formatQtyDisplay(qty) {
+  const p = parseQty(qty);
+  if (p && p.family === "count" && p.base === 0.5) {
+    return String(qty).replace("0,5", "½").replace("0.5", "½");
+  }
+  return String(qty);
+}
+
 // --- Scadenze (date in formato "YYYY-MM-DD") ---
 
 export function daysUntilExpiry(dateStr) {
