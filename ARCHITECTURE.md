@@ -67,10 +67,16 @@ dispensa/
 └─ src/
     ├─ main.jsx               # createRoot + applyTheme + scrollRestoration manual
     ├─ App.jsx                # auth gate (spinner / Auth / Dispensa)
-    ├─ Dispensa.jsx           # GOD COMPONENT: stato globale + tutta la logica
+    ├─ Dispensa.jsx           # COMPOSITION ROOT: compone gli hook + orchestrazione trasversale + effetti condivisi
     ├─ constants.js           # categorie, reparti, occasioni, prompt, seed/demo
     ├─ index.css              # design tokens (RGB), dark mode, keyframe, anti-zoom iOS
-    ├─ hooks/useAuth.js       # sessione Supabase (onAuthStateChange)
+    ├─ hooks/                 # stato e logica per dominio (vedi §6)
+    │   ├─ useAuth.js         #   sessione Supabase (onAuthStateChange)
+    │   ├─ useOnline.js       #   stato connessione (indicatore offline)
+    │   ├─ useTimersTicker.js #   ticker globale dei timer
+    │   ├─ useRecipes.jsx     #   ricette: proposte, ricetta, cache idee 24h, ricettario
+    │   ├─ useShopping.jsx    #   lista spesa: aggiunta/merge, modifica, voce, storico
+    │   └─ usePantry.jsx      #   dispensa: prodotti, form, ricerca/ordine, CRUD, derivati
     ├─ components/            # vedi §8
     └─ lib/                   # vedi §6 e §7 (incl. pantry.test.js)
 ```
@@ -126,7 +132,12 @@ Tutte le tabelle applicative hanno `user_id uuid` con default `auth.uid()`, FK a
 **Proxy AI** — il client parla "stile Anthropic", il server traduce in Gemini e ritraduce. Vantaggio: provider sostituibile senza toccare prompt/client; key mai esposta; endpoint protetti dal token Supabase. **Indurimento**: cap payload (~9 MB → 413), `max_tokens` clamp 1..2048, rate-limit per utente/giorno (`bump_ai_usage`/`ai_usage`, default 80 via `AI_DAILY_LIMIT`, best-effort). Dettagli in `CLAUDE.md` §5.
 
 ## 6. Gestione dello stato
-- **Sorgente di verità in-memory**: `Dispensa.jsx` (god component) con `useState`/`useRef` per items, shopping, settings, viste, ricette, modali, draft form, ticker timer, stato tutorial. Passa stato e callback ai figli via props.
+- **Sorgente di verità in-memory**: ripartita in **custom hook per dominio** (`src/hooks/`), composti da `Dispensa.jsx` (composition root) che passa stato e callback ai figli via props:
+  - `usePantry` → prodotti, form aggiunta, ricerca/ordine/filtro, derivati (`grouped`, `expiringItems`), CRUD con merge.
+  - `useShopping` → lista spesa, storico acquisti, aggiunta a voce.
+  - `useRecipes` → proposte/ricetta/porzioni, cache idee 24h, ricettario.
+  - `useTimersTicker`/`useOnline` → ticker timer e stato connessione.
+  - In `Dispensa.jsx` restano: viste/navigazione, modali (scan/voce/barcode, CookModal, profilo), stato tutorial, le impostazioni `user_settings` (`catOrder`/`collapsed`/`byAisle`/`shopCats`/`modeOrder`/`prefServings`/`foodPrefs`) e gli **effetti condivisi** (vedi sotto). Gli hook ricevono per parametro ciò che serve e restituiscono stato+setter, così gli effetti condivisi e l'orchestrazione del tutorial/CookModal possono leggerli/scriverli. **Ordine**: `useShopping` prima di `usePantry` (rompe il ciclo pantry↔shopping; il bridge `moveCheckedToPantry` resta in Dispensa).
 - **Persistenza remota**: Supabase via `lib/db.js` (CRUD) + Realtime (upsert/remove sugli eventi).
 - **Persistenza locale** (`localStorage`):
   - `lib/cache.js` — mirror di items/shopping/settings (avvio istantaneo, lettura offline).
@@ -143,19 +154,19 @@ Tutte le tabelle applicative hanno `user_id uuid` con default `auth.uid()`, FK a
 - `supabase.js` — client unico.
 - `db.js` — **tutte** le query Supabase (pantry/shopping/settings/saved_recipes).
 - `claude.js` — `callClaude` (proxy `/api/claude`, retry 2× su 429/500/502/503, parse JSON robusto), `fetchPhotos` (`/api/photo`), `fileToBase64`.
-- `pantry.js` — **funzioni pure**: `guessCategory`, `correctName` (Levenshtein), `parseQty`/`normalizeWeight`/`mergeQty`/`subtractQty`/`scaleQty`/`adjustQty`/`atMinQty` (passi per unità), `findMatch`, `norm`, scadenze (`expiryStatus`/`formatExpiry`/`daysUntilExpiry`). **Coperto da `pantry.test.js` (29 test Vitest).**
+- `pantry.js` — **funzioni pure**: `guessCategory` + `categorize(name, aiCategory)` (dizionario-first: il dizionario locale ampliato — formati di pasta e sinonimi/varianti — vince quando riconosce il prodotto, l'AI è fallback), `correctName` (Levenshtein), `parseQty`/`normalizeWeight`/`mergeQty`/`subtractQty`/`scaleQty`/`adjustQty`/`atMinQty` (passi per unità), `findMatch`, `norm`, scadenze (`expiryStatus`/`formatExpiry`/`daysUntilExpiry`). **Coperto da `pantry.test.js` (34 test Vitest).**
 - `cache.js`, `history.js`, `recipes.js`, `theme.js`, `timers.js`, `tour.js` — vedi §6.
 
 ## 8. Componenti principali
-- **`App.jsx`** — auth gate. **`Dispensa.jsx`** — god component (orchestrazione + stato).
+- **`App.jsx`** — auth gate. **`Dispensa.jsx`** — composition root (compone gli hook di `src/hooks/`, orchestrazione trasversale, effetti condivisi).
 - **Schede**: `PantryTab` (dispensa, pannello auto-save, "Cucina con questo"), `ShoppingTab` (lista, swipe, per reparto), `RecipesTab` (occasioni → proposte → dettaglio → ricettario).
 - **Navigazione/azione**: `BottomNav` (pillola + slot "+"), `AddFab` ("+" a semicerchio, 4 modalità), `TimerBar` (timer flottante globale).
-- **Modali** (quasi tutti su `Sheet.jsx`): `ManualAddModal`, `VoiceAddModal`, `ReceiptScanModal` (foto, lazy), `ReviewScanModal`, `BarcodeScanModal` (lazy), `CookModal`, `CookingMode` (fullscreen), `ConfirmClearModal`, `ProfileSheet`, `PrivacySheet`.
-- **Tutorial**: `TourCoach` (overlay card/banner/spotlight). **Utility UI**: `StepTimer`, `Toast`, `Sheet`.
+- **Modali** (quasi tutti su `Sheet.jsx`): `ManualAddModal`, `VoiceAddModal`, `ReceiptScanModal` (foto, lazy), `ReviewScanModal`, `BarcodeScanModal` (lazy), `CookModal`, `CookingMode` (fullscreen), `ConfirmClearModal`, `ProfileSheet`, `PrivacySheet`. **Scanner scontrino/barcode** condividono `CameraScanShell` (bottom-sheet **scuro** a metà pagina su `Sheet`, palette bianco-su-nero, riquadro guida con scrim; lo scontrino più alto del barcode) — non più a tutto schermo.
+- **Tutorial**: `TourCoach` (overlay card/banner/spotlight). **Utility UI**: `StepTimer`, `Toast`, `Sheet` (con `panelClass`/`handleClass` opzionali per il tema scuro), `CameraScanShell`.
 - **Orfani** (non importati): `AddMenu.jsx`, `ProfileTab.jsx`.
 
 ## 9. Scelte architetturali e motivazioni
-- **God component invece di store**: app personale partita come prototipo; concentrare lo stato ha tenuto basso l'attrito. È il **debito tecnico principale** (refactor pianificato in hooks, da fare **incrementale** — vedi HANDOFF §10).
+- **Da god component a hook per dominio**: l'app è partita come prototipo con tutto lo stato in `Dispensa.jsx` (basso attrito iniziale). Il debito è stato **ripagato con un refactor incrementale** (un hook per commit, rete test/CI a fare da sicurezza): lo stato vive ora in `usePantry`/`useShopping`/`useRecipes`/`useTimersTicker`/`useOnline`, e `Dispensa.jsx` è la composition root. Scelta di confine: effetti condivisi (load/cache/Realtime/impostazioni) e orchestrazione cross-dominio (tutorial, scan, CookModal) restano in Dispensa, per non spargere logica che tocca più domini.
 - **Cache-first + Realtime**: avvio istantaneo e lettura offline, con convergenza tra dispositivi senza polling.
 - **Proxy "stile Anthropic"**: disaccoppia il client dal provider AI; permette di cambiare modello/fornitore in un solo file; tiene le key fuori dal bundle; protegge gli endpoint col token utente. Indurito con cap/clamp/rate-limit per la pubblicazione.
 - **`qty` come testo**: gli alimenti reali hanno quantità eterogenee ("1 barattolo", "500 g", "3"); la matematica è gestita da parser dedicati in `pantry.js` (testati) invece di forzare uno schema numerico rigido.
@@ -166,7 +177,7 @@ Tutte le tabelle applicative hanno `user_id uuid` con default `auth.uid()`, FK a
 - **Test + CI + ESLint**: rete di sicurezza per consentire il refactor incrementale e tenere il bundle sano (lint a 0 warning).
 
 ## 10. Considerazioni sulla scalabilità futura
-- **Refactor stato (da pianificare)**: estrarre `useOnline`/`useTimersTicker`/`useRecipes`/`useShopping`/`usePantry` (in quest'ordine), un hook per volta, build+test+CI verdi, commit a ogni passo. Riduce god component e re-render.
+- **Refactor stato — fatto**: estratti `useOnline`/`useTimersTicker`/`useRecipes`/`useShopping`/`usePantry`. Prossimo passo opzionale: estrarre anche i flussi scan/voce/barcode e il CookModal (oggi in Dispensa come orchestrazione cross-dominio) in hook/componenti dedicati.
 - **Pubblicazione store**: serve Mac/servizio cloud + Apple Developer (99 €/anno); poi wrapper (Capacitor/PWABuilder) + Sign in with Apple + stringhe permessi + gestione Web Speech in WKWebView.
 - **Multi-utente reale / dispensa condivisa**: lo schema RLS è già per-utente; servirebbe un modello di "household" condiviso (tabella di membership + policy aggiornate). Realtime già pronto.
 - **Sync offline-write**: oggi offline è sola lettura; introdurre una coda di mutation con riconciliazione.

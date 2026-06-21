@@ -17,7 +17,7 @@
 
 ## 1. Verifica e qualità (test / CI / lint)
 - Dopo ogni modifica significativa: **`npm run build` deve passare** (è la verifica autorevole; il preview locale mostra solo il login).
-- Quando tocchi logica esegui anche **`npm test`** (Vitest, 29 test su `src/lib/pantry.js`) e **`npm run lint`** (ESLint flat config, regole `eslint-plugin-react-hooks`).
+- Quando tocchi logica esegui anche **`npm test`** (Vitest, 34 test su `src/lib/pantry.js`) e **`npm run lint`** (ESLint flat config, regole `eslint-plugin-react-hooks`).
 - La **CI** (`.github/workflows/ci.yml`) ripete `npm ci → lint → test → build` su ogni push/PR: tienila verde.
 - Mantieni **0 warning ESLint** (stato attuale). Se aggiungi un `// eslint-disable-…`, motivalo con un commento (es. i 3 effetti once-mount in `Dispensa.jsx`).
 - Se aggiungi logica di quantità/categorie/scadenze in `pantry.js`, **aggiungi i relativi test** in `pantry.test.js`.
@@ -64,7 +64,7 @@
 - **Conseguenza pratica**: per cambiare provider AI si tocca SOLO `server/claude.js`; prompt e client restano invariati. Non spostare la traduzione nel client.
 
 ## 6. Pattern architetturali da seguire (dettagli in ARCHITECTURE.md)
-- **God component `Dispensa.jsx`**: detiene lo stato globale e passa props/callback ai figli. Debito tecnico noto: il refactor in custom hooks va fatto **incrementale** (un hook per volta, build+test+CI verdi, commit a ogni passo) — mai big-bang. Finché non si fa, **nuova logica di stato condivisa va qui**, non duplicata nei figli.
+- **`Dispensa.jsx` è la composition root** (ex god component): lo stato è stato estratto in custom hook per dominio (`src/hooks/`: `usePantry`, `useShopping`, `useRecipes`, `useTimersTicker`, `useOnline`). Dispensa compone gli hook e tiene solo gli **effetti condivisi** (load cache-first, persistenza impostazioni, cache mirror, Realtime) e l'**orchestrazione cross-dominio** (tutorial, flussi scan/voce/barcode, CookModal, bridge `moveCheckedToPantry`/`cookWith*`). **Nuova logica di stato va nell'hook del dominio giusto**; se tocca più domini resta in Dispensa come bridge. Confini e ordine (`useShopping` prima di `usePantry`) in HANDOFF §7/§11. Eventuali nuove estrazioni: sempre **incrementali** (un pezzo per volta, build+test+CI verdi, commit) — mai big-bang.
 - **Dati cache-first**: leggere prima da `localStorage` (`lib/cache.js`), poi refresh da Supabase; **Realtime** sincronizza `pantry_items` e `shopping_items`; `user_settings` (jsonb) si applica dal DB **solo se più recente** della cache (confronto `updated_at`).
 - **Layer dati isolato**: tutte le query Supabase stanno in `src/lib/db.js`; i componenti non chiamano Supabase direttamente (eccetto auth/session in `lib/supabase.js`, `lib/claude.js`).
 - **AI dietro proxy**: il client usa `callClaude(content, maxTokens)` e `fetchPhotos(queries)` da `lib/claude.js`; mai chiamare Gemini/Pexels direttamente.
@@ -86,7 +86,7 @@
 
 ## 8. Modalità di lavoro nelle future conversazioni
 - **Leggi prima** `HANDOFF.md` (stato, cosa è/non è deployato) e questo file.
-- **Prossimo grande lavoro**: refactor incrementale di `Dispensa.jsx` (ordine: `useOnline` → `useTimersTicker` → `useRecipes` → `useShopping` → `usePantry`). Vedi HANDOFF §10.
+- **Refactor incrementale di `Dispensa.jsx` in custom hooks: COMPLETATO** (5 hook estratti). Possibile passo successivo: estrarre anche scan/voce/barcode e CookModal. Vedi HANDOFF §4/§7/§10.
 - **Pubblicazione store**: bloccata su Windows (serve Mac/servizio cloud + Apple Developer 99 €/anno). Quando si affronterà: wrapper (Capacitor/PWABuilder) + Sign in with Apple + stringhe permessi + gestione voce in WKWebView. Vedi HANDOFF §8/§10.
 - Per nuove feature AI restare nel **free tier Gemini** (preferenza utente: niente piani a pagamento per l'AI per ora); sfruttare/estendere le cache (idee 24h) per non bruciare quota.
 - Per richieste grandi/ambigue, **chiarisci 1–2 scelte chiave** prima di scrivere centinaia di righe. Lavora in modo **decisionale**: quando hai abbastanza per agire, agisci; dai una raccomandazione, non un sondaggio. Mantieni lo **stile dei file vicini**.
