@@ -295,17 +295,18 @@ export function isQbQty(qty) {
   return /\bq ?b\b|quanto basta|a piacere/.test(norm(qty));
 }
 
-// Condimenti/aromi "a piacere" da mostrare come "q.b." NELLA RICETTA (display):
-// insieme più ristretto del "non si scala". NON include zucchero/burro/farina/
-// brodo, che nella ricetta vanno con la grammatura (ti serve sapere quanto).
-const QB_RECIPE_NAMES = ["olio", "aceto", "limone", "lime"];
+// Agrumi "a piacere" (frutta, quindi non presi dalle categorie): mostrati q.b.
+const QB_RECIPE_NAMES = ["limone", "lime"];
 
-// True se l'ingrediente di una ricetta va mostrato come "q.b.": la ricetta lo
-// dice già, oppure è un'erba/spezia (categoria "Spezie ed Erbe") o un
-// condimento a piacere (olio, aceto, succo di limone…).
+// True se l'ingrediente di una ricetta va mostrato come "q.b." (DISPLAY): la
+// ricetta lo dice già, oppure appartiene a "Spezie ed Erbe" o "Condimenti e
+// Salse" (tutta la categoria), o è un agrume usato a piacere.
+// NB: è solo la resa nella ricetta — lo scaling in dispensa (CookModal) usa
+// isStapleQb, che resta più selettivo (pesto/sugo/maionese si scalano).
 export function isQbIngredient(name, qty) {
   if (isQbQty(qty)) return true;
-  if (guessCategory(name) === "Spezie ed Erbe") return true;
+  const cat = guessCategory(name);
+  if (cat === "Spezie ed Erbe" || cat === "Condimenti e Salse") return true;
   const n = norm(name);
   return QB_RECIPE_NAMES.some((k) => new RegExp(`(^|\\s)${k}(\\s|$)`).test(n));
 }

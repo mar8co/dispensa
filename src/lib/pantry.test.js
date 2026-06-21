@@ -224,12 +224,16 @@ describe("isQbQty", () => {
 });
 
 describe("isQbIngredient", () => {
-  it("condimenti e aromi a piacere -> q.b. nella ricetta", () => {
+  it("tutta la categoria Spezie ed Erbe e Condimenti e Salse -> q.b.", () => {
     expect(isQbIngredient("Olio EVO", "15 ml")).toBe(true);
     expect(isQbIngredient("Prezzemolo", "5 g")).toBe(true);
-    expect(isQbIngredient("Limone", "0,3")).toBe(true);
     expect(isQbIngredient("Sale fino", "q.b.")).toBe(true);
     expect(isQbIngredient("Pepe nero", "2 g")).toBe(true);
+    expect(isQbIngredient("Aceto balsamico", "20 ml")).toBe(true);
+    expect(isQbIngredient("Pesto", "30 g")).toBe(true);
+    expect(isQbIngredient("Maionese", "1 cucchiaio")).toBe(true);
+    expect(isQbIngredient("Salsa di soia", "10 ml")).toBe(true);
+    expect(isQbIngredient("Limone", "0,3")).toBe(true); // agrume a piacere
   });
   it("ingredienti con grammatura reale restano numerici", () => {
     expect(isQbIngredient("Brodo di pollo", "150 ml")).toBe(false);
