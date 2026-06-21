@@ -57,9 +57,24 @@ const ReceiptScanModal = lazy(() => import("./components/ReceiptScanModal.jsx"))
 
 // Applica un cambio di vista dentro una View Transition del browser
 // (dissolvenza nativa tra schermate); dove l'API manca, applica e basta.
+// IMPORTANTE: UNA sola transizione per volta. Avviarne una seconda mentre la
+// prima è ancora in corso (es. toccando le schede in fretta durante il
+// tutorial) su iOS Safari può lasciare lo snapshot della transizione
+// "congelato" sopra la pagina, che intercetta i tocchi e blocca tutto. Se una
+// transizione è già in corso, applichiamo subito lo stato senza animare.
+let viewTransitionPending = false;
 function animateUI(fn) {
-  if (document.startViewTransition) document.startViewTransition(() => flushSync(fn));
-  else fn();
+  if (!document.startViewTransition || viewTransitionPending) { fn(); return; }
+  viewTransitionPending = true;
+  let t;
+  try {
+    t = document.startViewTransition(() => flushSync(fn));
+  } catch {
+    viewTransitionPending = false;
+    fn();
+    return;
+  }
+  t.finished.catch(() => {}).finally(() => { viewTransitionPending = false; });
 }
 
 export default function Dispensa({ session }) {
