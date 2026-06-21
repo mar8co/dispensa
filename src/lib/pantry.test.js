@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
-  subtractQty, qtyStep, adjustQty, atMinQty, formatQtyDisplay, isStapleQb, isQbQty, stripParens, norm, findMatch,
+  subtractQty, qtyStep, adjustQty, atMinQty, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, findMatch,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
 
@@ -220,6 +220,23 @@ describe("isQbQty", () => {
   it("le dosi numeriche non sono q.b.", () => {
     expect(isQbQty("120 g")).toBe(false);
     expect(isQbQty("2")).toBe(false);
+  });
+});
+
+describe("isQbIngredient", () => {
+  it("condimenti e aromi a piacere -> q.b. nella ricetta", () => {
+    expect(isQbIngredient("Olio EVO", "15 ml")).toBe(true);
+    expect(isQbIngredient("Prezzemolo", "5 g")).toBe(true);
+    expect(isQbIngredient("Limone", "0,3")).toBe(true);
+    expect(isQbIngredient("Sale fino", "q.b.")).toBe(true);
+    expect(isQbIngredient("Pepe nero", "2 g")).toBe(true);
+  });
+  it("ingredienti con grammatura reale restano numerici", () => {
+    expect(isQbIngredient("Brodo di pollo", "150 ml")).toBe(false);
+    expect(isQbIngredient("Zucchero", "100 g")).toBe(false); // serve la dose nella ricetta
+    expect(isQbIngredient("Burro", "50 g")).toBe(false);
+    expect(isQbIngredient("Couscous", "150 g")).toBe(false);
+    expect(isQbIngredient("Ceci", "0,5 lattina")).toBe(false);
   });
 });
 

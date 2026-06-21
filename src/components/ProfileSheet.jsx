@@ -103,17 +103,17 @@ export default function ProfileSheet({
           {/* Azioni */}
           <div className="mt-6 space-y-2">
             <button
-              onClick={() => { close(); onReplayTour?.(); }}
-              className="flex w-full items-center gap-2.5 rounded-xl border border-hair px-4 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
-            >
-              <GraduationCap className="h-4 w-4 text-stone-400" /> Rivedi il tutorial
-            </button>
-            <button
               data-tour="clear-pantry"
               onClick={() => { close(); onClearPantry(); }}
               className="flex w-full items-center gap-2.5 rounded-xl border border-hair px-4 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
             >
               <Trash2 className="h-4 w-4 text-stone-400" /> Svuota dispensa
+            </button>
+            <button
+              onClick={() => { close(); onReplayTour?.(); }}
+              className="flex w-full items-center gap-2.5 rounded-xl border border-hair px-4 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
+            >
+              <GraduationCap className="h-4 w-4 text-stone-400" /> Rivedi il tutorial
             </button>
 
             {confirmLogout ? (

@@ -295,6 +295,21 @@ export function isQbQty(qty) {
   return /\bq ?b\b|quanto basta|a piacere/.test(norm(qty));
 }
 
+// Condimenti/aromi "a piacere" da mostrare come "q.b." NELLA RICETTA (display):
+// insieme più ristretto del "non si scala". NON include zucchero/burro/farina/
+// brodo, che nella ricetta vanno con la grammatura (ti serve sapere quanto).
+const QB_RECIPE_NAMES = ["olio", "aceto", "limone", "lime"];
+
+// True se l'ingrediente di una ricetta va mostrato come "q.b.": la ricetta lo
+// dice già, oppure è un'erba/spezia (categoria "Spezie ed Erbe") o un
+// condimento a piacere (olio, aceto, succo di limone…).
+export function isQbIngredient(name, qty) {
+  if (isQbQty(qty)) return true;
+  if (guessCategory(name) === "Spezie ed Erbe") return true;
+  const n = norm(name);
+  return QB_RECIPE_NAMES.some((k) => new RegExp(`(^|\\s)${k}(\\s|$)`).test(n));
+}
+
 // --- Scadenze (date in formato "YYYY-MM-DD") ---
 
 export function daysUntilExpiry(dateStr) {

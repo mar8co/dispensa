@@ -8,7 +8,7 @@ import {
 import {
   guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  norm, isStapleQb, isQbQty,
+  norm, isStapleQb, isQbIngredient,
 } from "./lib/pantry.js";
 import { callClaude } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
@@ -646,7 +646,7 @@ export default function Dispensa({ session }) {
       const match = findMatch(ing.name, items);
       if (!match || seen.has(match.id)) continue;
       seen.add(match.id);
-      if (isQbQty(ing.qty) || isStapleQb(match.name, match.category)) {
+      if (isQbIngredient(ing.name, ing.qty) || isStapleQb(match.name, match.category)) {
         rows.push({ itemId: match.id, name: match.name, before: match.qty, kind: "qb" });
         continue;
       }
