@@ -6,15 +6,15 @@
    bg-tomato/10). La modalità scura segue il sistema e ribalta i toni. */
 :root {
   color-scheme: light dark;
-  --cream: 247 246 241;   /* tela di fondo: avorio leggero (#F7F6F1) */
+  --cream: 244 241 233;   /* tela di fondo: avorio (#F4F1E9) */
   --paper: 255 255 255;   /* superfici/card in bianco puro, per lo stacco */
-  --ink: 26 26 26;        /* testo principale */
-  --hair: 236 236 236;    /* righe sottili */
+  --ink: 10 10 10;        /* testo principale (#0A0A0A) */
+  --hair: 230 226 216;    /* righe sottili (avorio un filo più scuro) */
   --white: 255 255 255;   /* superfici "bianche" e testo su ink/tomato */
-  --tomato: 214 68 47;
-  --tomato-700: 184 53 31;
-  --tomato-50: 253 243 241;
-  --tomato-100: 251 227 222;
+  --tomato: 255 67 6;     /* rosso principale (#FF4306) */
+  --tomato-700: 214 54 0; /* rosso scuro (hover) */
+  --tomato-50: 255 237 230;
+  --tomato-100: 255 216 204;
   --stone-50: 250 250 249;
   --stone-100: 245 245 244;
   --stone-200: 231 229 228;
@@ -39,10 +39,10 @@
     --ink: 242 240 236;
     --hair: 44 44 42;
     --white: 24 24 23;
-    --tomato: 232 91 68;     /* leggermente più luminoso sul fondo scuro */
-    --tomato-700: 240 122 102;
-    --tomato-50: 45 26 22;
-    --tomato-100: 58 30 25;
+    --tomato: 255 96 56;     /* rosso #FF4306 più luminoso sul fondo scuro */
+    --tomato-700: 255 128 96;
+    --tomato-50: 56 26 16;
+    --tomato-100: 74 34 22;
     --stone-50: 36 36 34;
     --stone-100: 44 44 42;
     --stone-200: 58 58 55;
@@ -63,10 +63,10 @@
   --ink: 242 240 236;
   --hair: 44 44 42;
   --white: 24 24 23;
-  --tomato: 232 91 68;
-  --tomato-700: 240 122 102;
-  --tomato-50: 45 26 22;
-  --tomato-100: 58 30 25;
+  --tomato: 255 96 56;
+  --tomato-700: 255 128 96;
+  --tomato-50: 56 26 16;
+  --tomato-100: 74 34 22;
   --stone-50: 36 36 34;
   --stone-100: 44 44 42;
   --stone-200: 58 58 55;

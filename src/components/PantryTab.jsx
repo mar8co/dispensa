@@ -8,7 +8,7 @@ import {
   Calendar, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
-import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
+import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, isLow } from "../lib/pantry.js";
 import { tourSignal } from "../lib/tour.js";
 
 const EXP_STYLE = {
@@ -410,6 +410,7 @@ export default function PantryTab({
             <ul>
               {list.map((it) => {
                 const out = isOut(it);
+                const low = !out && isLow(it.qty); // quasi finito (arancione)
 
                 // Modifica: nome + categoria, in linea
                 // Pannello prodotto: tutto modificabile, salvataggio automatico.
@@ -526,6 +527,17 @@ export default function PantryTab({
                         </button>
                       )}
 
+                      {/* Quasi finito: suggerimento discreto, stesso pattern del
+                          "finito" ma arancione e non invasivo. */}
+                      {low && (
+                        <button
+                          onClick={() => onToShopping(it)}
+                          className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 transition hover:bg-amber-100/70"
+                        >
+                          <ShoppingCart className="h-3 w-3" /> sta finendo · aggiungi alla lista
+                        </button>
+                      )}
+
                       {/* Riga 2: stepper nudo a sinistra, unità a destra */}
                       <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
                         <div data-tour="qty-stepper" className="flex items-center gap-3 px-1">
@@ -591,6 +603,7 @@ export default function PantryTab({
                       <span className={`min-w-0 truncate text-[15px] font-semibold ${nameTone(it, out)}`}>{it.name}</span>
                       <ExpiryBadge date={it.expiry} />
                       {out && <span className="shrink-0 text-[11px] font-bold text-tomato">finito</span>}
+                      {low && <span className="shrink-0 text-[11px] font-bold text-amber-700">sta finendo</span>}
                       <span aria-hidden="true" className="border-b border-dotted border-stone-300" style={{ flex: "1 0 12px" }} />
                       <span className="shrink-0 text-xs font-medium text-stone-400">{qtyLabel(it.qty)}</span>
                     </button>

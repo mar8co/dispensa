@@ -18,7 +18,7 @@ const targets = [
 ];
 
 for (const t of targets) {
-  await sharp(svg, { density: 384 })
+  await sharp(svg, { density: 96 })
     .resize(t.size, t.size)
     .png()
     .toFile(join(pub, t.file));

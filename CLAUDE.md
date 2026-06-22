@@ -34,7 +34,7 @@
 - Bersagli tutorial via attributo `data-tour="kebab-case"`.
 
 ## 3. Standard UX/UI ("stile editoriale")
-- **Palette**: sfondo avorio **#F7F6F1** (token `cream`), testo **ink**, accento **rosso pomodoro `tomato`** (700 più scuro), righe sottili `hair`. Font UNICO **Hanken Grotesk** (sans + `font-display` con tracking stretto; NON serif).
+- **Palette**: sfondo avorio **#F4F1E9** (token `cream`), testo nero **#0A0A0A** (token `ink`), accento **rosso `#FF4306`** (token `tomato`, 700 più scuro), righe sottili `hair`. Font UNICO **Hanken Grotesk** (sans + `font-display` con tracking stretto; NON serif). I colori vivono come terne RGB in `index.css` → cambiare lì aggiorna tutta l'app.
 - **Palette via CSS variables** in `index.css` (terne RGB), mappate da Tailwind con `rgb(var(--x) / <alpha-value>)`.
 - **Dark mode**: `prefers-color-scheme` + override manuale `:root[data-theme="…"]`. **I due blocchi scuri devono restare identici.**
 - ⚠️ **TRAPPOLA**: il token Tailwind `white`/`black` è **TEMATO** (si scurisce in dark). Su fondi scuri *letterali* (fotocamera, chip nere, scrim, overlay, testo su `bg-tomato`) usare **`text-[#fff]` / `bg-[#fff]` / `bg-[#111]`**, non `text-white`/`bg-white`.

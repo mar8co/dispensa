@@ -161,7 +161,7 @@ export default function Dispensa({ session }) {
     mergeItems, addManual, submitManual, removeItem, clearPantry,
     autoSaveItem, setItemExpiry, moveCategory,
   } = usePantry({
-    showToast, dismissToast, catOrder, setCatOrder,
+    session, showToast, dismissToast, catOrder, setCatOrder,
     bumpShopHistory, addToShoppingMerged,
   });
 

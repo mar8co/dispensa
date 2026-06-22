@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
-  subtractQty, qtyStep, adjustQty, atMinQty, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, findMatch,
+  subtractQty, qtyStep, adjustQty, atMinQty, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, findMatch,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
 
@@ -173,6 +173,26 @@ describe("atMinQty", () => {
     expect(atMinQty("50 g")).toBe(true);
     expect(atMinQty("2")).toBe(false);
     expect(atMinQty("100 g")).toBe(false);
+  });
+});
+
+describe("isLow", () => {
+  it("vero sotto la soglia per ogni unità", () => {
+    expect(isLow("1")).toBe(true);
+    expect(isLow("2 barattoli")).toBe(true);
+    expect(isLow("0,5")).toBe(true);
+    expect(isLow("50 g")).toBe(true);
+    expect(isLow("0,25 kg")).toBe(true);
+    expect(isLow("250 ml")).toBe(true);
+    expect(isLow("0,25 l")).toBe(true);
+  });
+  it("falso sopra la soglia o a zero", () => {
+    expect(isLow("3")).toBe(false);
+    expect(isLow("60 g")).toBe(false);
+    expect(isLow("0,3 kg")).toBe(false);
+    expect(isLow("0,5 l")).toBe(false);
+    expect(isLow("0")).toBe(false);
+    expect(isLow("0 g")).toBe(false);
   });
 });
 

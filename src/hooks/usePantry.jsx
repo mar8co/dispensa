@@ -21,6 +21,7 @@ import {
 import { tourSignal } from "../lib/tour.js";
 
 export function usePantry({
+  session,
   showToast,
   dismissToast,
   catOrder,
@@ -38,9 +39,17 @@ export function usePantry({
   const [newExpiry, setNewExpiry] = useState("");
   const [adding, setAdding] = useState(false);
 
-  // ricerca / ordinamento / filtro scadenze
+  // ricerca / ordinamento / filtro scadenze. L'ordinamento è ricordato in
+  // locale (per utente): alla riapertura riparte dall'ultima scelta.
+  const sortKey = `dispensa-sort-${session.user.id}`;
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("recenti");
+  const [sort, setSortState] = useState(() => {
+    try { return localStorage.getItem(sortKey) || "recenti"; } catch { return "recenti"; }
+  });
+  function setSort(v) {
+    setSortState(v);
+    if (typeof v === "string") { try { localStorage.setItem(sortKey, v); } catch { /* niente persistenza */ } }
+  }
   const [expFilter, setExpFilter] = useState(false); // mostra solo in scadenza
 
   const [confirmClear, setConfirmClear] = useState(false);
