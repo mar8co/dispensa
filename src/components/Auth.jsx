@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { Loader2, Mail, Check } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
+import PrivacySheet from "./PrivacySheet.jsx";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
+  const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
 
   async function sendMagicLink(e) {
     e.preventDefault();
@@ -114,7 +116,19 @@ export default function Auth() {
             </>
           )}
         </div>
+
+        {/* Link discreto all'informativa privacy, come nel Profilo */}
+        <div className="mt-5 text-center">
+          <button
+            onClick={() => setPrivacyOpen(true)}
+            className="text-[11px] text-stone-400 transition hover:text-stone-600 hover:underline"
+          >
+            Privacy
+          </button>
+        </div>
       </div>
+
+      {privacyOpen && <PrivacySheet onClose={() => setPrivacyOpen(false)} />}
     </div>
   );
 }
