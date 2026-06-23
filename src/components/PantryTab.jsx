@@ -603,7 +603,6 @@ export default function PantryTab({
                       <span className={`min-w-0 truncate text-[15px] font-semibold ${nameTone(it, out)}`}>{it.name}</span>
                       <ExpiryBadge date={it.expiry} />
                       {out && <span className="shrink-0 text-[11px] font-bold text-tomato">finito</span>}
-                      {low && <span className="shrink-0 text-[11px] font-bold text-amber-700">sta finendo</span>}
                       <span aria-hidden="true" className="border-b border-dotted border-stone-300" style={{ flex: "1 0 12px" }} />
                       <span className="shrink-0 text-xs font-medium text-stone-400">{qtyLabel(it.qty)}</span>
                     </button>

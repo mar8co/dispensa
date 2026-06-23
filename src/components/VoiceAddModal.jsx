@@ -134,7 +134,7 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
           </p>
         )}
         <p className="mt-0.5 h-4 text-xs text-stone-400">
-          {!error && listening ? `parla pure, poi tocca ${confirmLabel}` : ""}
+          {!error && listening ? `Quando hai finito, tocca “${confirmLabel}”` : ""}
         </p>
 
         {/* Unica azione: conferma (pausa/riprendi = tap sul microfono) */}

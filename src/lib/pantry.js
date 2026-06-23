@@ -260,9 +260,9 @@ export function atMinQty(qty) {
   return !m || parseFloat(m[0]) <= 0;
 }
 
-// "Quasi finito": quantità sotto la soglia (circa un passo dallo zero) ma non
-// ancora a zero. Soglie per unità: pezzi/confezioni ≤ 2, g ≤ 50, kg ≤ 0,25,
-// ml ≤ 250, l ≤ 0,25. Usata per il suggerimento arancione "sta finendo".
+// "Quasi finito": quantità al minimo (un passo dallo zero) ma non ancora a
+// zero. Soglie per unità: pezzi/confezioni ≤ ½, g ≤ 50, kg ≤ 0,25, ml ≤ 250,
+// l ≤ 0,25. Usata per il suggerimento arancione "sta finendo".
 export function isLow(qty) {
   const s = String(qty);
   const m = s.replace(",", ".").match(/-?\d+(\.\d+)?/);
@@ -276,7 +276,7 @@ export function isLow(qty) {
   if (unit in VOLUME_UNITS) {
     return VOLUME_UNITS[unit] >= 1000 ? n <= 0.25 : n * VOLUME_UNITS[unit] <= 250;
   }
-  if (COUNT_UNITS.has(unit)) return n <= 2;
+  if (COUNT_UNITS.has(unit)) return n <= 0.5; // solo mezzo pezzo
   return false;
 }
 

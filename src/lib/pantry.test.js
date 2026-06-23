@@ -177,16 +177,17 @@ describe("atMinQty", () => {
 });
 
 describe("isLow", () => {
-  it("vero sotto la soglia per ogni unità", () => {
-    expect(isLow("1")).toBe(true);
-    expect(isLow("2 barattoli")).toBe(true);
+  it("vero solo al minimo per ogni unità (½ pz, 50 g, 0,25 kg/l)", () => {
     expect(isLow("0,5")).toBe(true);
+    expect(isLow("0,5 barattolo")).toBe(true);
     expect(isLow("50 g")).toBe(true);
     expect(isLow("0,25 kg")).toBe(true);
     expect(isLow("250 ml")).toBe(true);
     expect(isLow("0,25 l")).toBe(true);
   });
-  it("falso sopra la soglia o a zero", () => {
+  it("falso sopra la soglia o a zero (1+ pezzi non è quasi finito)", () => {
+    expect(isLow("1")).toBe(false);
+    expect(isLow("2 barattoli")).toBe(false);
     expect(isLow("3")).toBe(false);
     expect(isLow("60 g")).toBe(false);
     expect(isLow("0,3 kg")).toBe(false);
