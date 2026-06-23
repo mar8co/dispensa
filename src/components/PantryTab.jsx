@@ -4,7 +4,7 @@
 // si aprono lì sotto i comandi: quantità, scadenza, modifica, elimina.
 import { useState, useRef, useEffect } from "react";
 import {
-  Trash2, X, Search, ShoppingCart, AlertTriangle, ChefHat,
+  Trash2, X, Search, ShoppingCart, AlertTriangle,
   Calendar, SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
@@ -230,7 +230,7 @@ export default function PantryTab({
       <div className="sticky top-0 z-30 -mx-5 mt-4 bg-cream/95 px-5 pb-1.5 pt-2 backdrop-blur">
       <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua dispensa</div>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+        <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
         <input
           className={`w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 text-sm text-ink outline-none focus:border-ink ${searchActive ? "pr-16" : "pr-9"}`}
           placeholder="Cerca un prodotto"
@@ -250,9 +250,7 @@ export default function PantryTab({
           <button
             onClick={() => setSortOpen((v) => !v)}
             aria-expanded={sortOpen}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 rounded-md p-1 transition hover:bg-stone-100 ${
-              sort !== "recenti" ? "text-tomato" : "text-stone-400"
-            }`}
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 transition hover:bg-stone-100"
             aria-label="Ordinamento"
             title="Ordinamento"
           >
@@ -291,13 +289,13 @@ export default function PantryTab({
             <span className="flex-1 text-xs font-semibold">
               {expiredCount > 0 && (
                 <span className="text-tomato">
-                  {expiredCount} {expiredCount === 1 ? "scaduto" : "scaduti"}
+                  {expiredCount} {expiredCount === 1 ? "prodotto scaduto" : "prodotti scaduti"}
                 </span>
               )}
               {expiredCount > 0 && expiringSoonCount > 0 && <span className="text-amber-700/60"> · </span>}
               {expiringSoonCount > 0 && (
                 <span className="text-amber-700">
-                  {expiringSoonCount} in scadenza {expiredCount > 0 ? "(entro 7 gg)" : "entro 7 giorni"}
+                  {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza {expiredCount > 0 ? "(entro 7 gg)" : "entro 7 giorni"}
                 </span>
               )}
             </span>
@@ -308,9 +306,9 @@ export default function PantryTab({
           {expFilter && (
             <button
               onClick={onCookExpiring}
-              className="flex w-full items-center justify-center gap-1.5 border-t border-amber-700/20 px-3 py-2.5 text-xs font-bold text-tomato transition hover:bg-tomato/5"
+              className="flex w-full items-center justify-center gap-1.5 border-t border-amber-700/20 bg-tomato px-3 py-2.5 text-xs font-bold text-[#fff] transition hover:bg-tomato-700"
             >
-              <ChefHat className="h-4 w-4" /> Cucina con questi
+              <Sparkles className="h-4 w-4" /> Cucina con {expiredCount + expiringSoonCount === 1 ? "questo prodotto" : "questi prodotti"}
             </button>
           )}
         </div>

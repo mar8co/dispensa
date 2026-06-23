@@ -237,12 +237,13 @@ export default function Dispensa({ session }) {
           }
         } catch (e) { console.error(e); }
         try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
-        // Ricettario: se la tabella esiste (migration-4) il DB è la fonte e
-        // si aggiorna la copia locale; altrimenti si tiene quella locale, così
-        // i preferiti funzionano comunque (per-dispositivo).
+        // Ricettario local-first: adottiamo le righe dal DB SOLO se ce ne sono.
+        // Se il DB è vuoto o non ancora sincronizzato NON sovrascriviamo la
+        // copia locale (altrimenti preferiti/cucinate sparirebbero alla
+        // riapertura quando il sync sul DB non è andato a buon fine).
         try {
           const rows = await fetchSavedRecipes();
-          commitRecipes(rows);
+          if (Array.isArray(rows) && rows.length) commitRecipes(rows);
         } catch (e) { console.warn("Ricettario dal DB non disponibile, uso la copia locale.", e?.message || e); }
       } catch (e) {
         console.warn("Rete non disponibile: uso i dati in cache.", e);
