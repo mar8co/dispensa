@@ -4,8 +4,8 @@
 // tap, condivisione della lista e blocco dello spegnimento schermo.
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
-  Plus, Trash2, Check, Minus, PackagePlus, Loader2, ListChecks, Store,
-  Share2, Lightbulb, Mic, X,
+  Pencil, Trash2, Check, PackagePlus, Loader2, ListChecks, Store,
+  Share2, Lightbulb, Mic,
 } from "lucide-react";
 import { CATEGORIES, PICKER_CATS, CAT_ICON, AISLE_ORDER } from "../constants.js";
 import { norm, atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
@@ -15,7 +15,7 @@ const editCls =
 
 // Riga con gesto di scorrimento orizzontale per eliminare; toccando il nome
 // si apre il pannello di modifica (gestito da ShoppingTab).
-function SwipeItem({ it, onToggle, onAdjustQty, onDelete, onStartEdit }) {
+function SwipeItem({ it, onToggle, onDelete, onStartEdit }) {
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [out, setOut] = useState(false);       // fase 1: scivola fuori dallo schermo
@@ -60,8 +60,6 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete, onStartEdit }) {
     axis.current = null;
   }
 
-  const atMin = atMinQty(it.qty);
-
   return (
     <li
       data-noswipe
@@ -93,16 +91,7 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete, onStartEdit }) {
         }}
         className="relative flex items-center gap-3 bg-cream py-3"
       >
-        <button
-          onClick={() => onToggle(it.id, !it.checked)}
-          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
-            it.checked ? "border-ink bg-ink text-white" : "border-stone-300 bg-white text-transparent hover:border-stone-500"
-          }`}
-          aria-label={it.checked ? "Segna da comprare" : "Segna come preso"}
-        >
-          <Check className="h-4 w-4" />
-        </button>
-        {/* Tap sul nome = modifica; la spunta si fa col quadratino a sinistra */}
+        {/* Nome a sinistra (testo primario); tap = modifica quantità/reparto */}
         <p
           onClick={() => onStartEdit(it)}
           title="Tocca per modificare"
@@ -110,32 +99,26 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete, onStartEdit }) {
         >
           {it.name}
         </p>
-        <div className="shrink-0">
-          {/\d/.test(it.qty) ? (
-            <div className="inline-flex items-center gap-1.5">
-              <button
-                onClick={() => onAdjustQty(it, -1)}
-                disabled={atMin}
-                className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
-                  atMin ? "border-hair text-stone-300" : "border-stone-300 text-stone-600 hover:border-ink hover:text-ink active:scale-95"
-                }`}
-                aria-label="Diminuisci"
-              >
-                <Minus className="h-3.5 w-3.5" />
-              </button>
-              <span className="min-w-[1.75rem] px-0.5 text-center text-sm font-bold tabular-nums text-ink">{formatQtyDisplay(it.qty)}</span>
-              <button
-                onClick={() => onAdjustQty(it, 1)}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-tomato hover:bg-tomato/5 hover:text-tomato active:scale-95"
-                aria-label="Aumenta"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ) : (
-            it.qty && it.qty !== "1" && <span className="text-xs text-stone-500">{formatQtyDisplay(it.qty)}</span>
-          )}
-        </div>
+        {/* Quantità: chip neutra, mostrata solo se significativa (≠ "1") */}
+        {it.qty && it.qty !== "1" && (
+          <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-stone-600">
+            {formatQtyDisplay(it.qty)}
+          </span>
+        )}
+        {/* Checkbox a DESTRA (zona pollice): area di tocco 44px, quadrato ~26px */}
+        <button
+          onClick={() => onToggle(it.id, !it.checked)}
+          className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center"
+          aria-label={it.checked ? "Segna da comprare" : "Segna come preso"}
+        >
+          <span
+            className={`flex h-[26px] w-[26px] items-center justify-center rounded-md border transition ${
+              it.checked ? "border-ink bg-ink text-white" : "border-stone-300 bg-white text-transparent"
+            }`}
+          >
+            <Check className="h-4 w-4" />
+          </span>
+        </button>
       </div>
     </li>
   );
@@ -143,7 +126,7 @@ function SwipeItem({ it, onToggle, onAdjustQty, onDelete, onStartEdit }) {
 
 export default function ShoppingTab({
   shopping,
-  onAdd, onToggle, onDelete, onAdjustQty, onToggleAll, onMoveChecked, onClearChecked,
+  onAdd, onToggle, onDelete, onToggleAll, onMoveChecked, onClearChecked,
   movingChecked, byAisle, setByAisle,
   catFor, onAutoSave, onOpenVoice, onNotify, historyNames, pantryNames,
 }) {
@@ -428,7 +411,7 @@ export default function ShoppingTab({
       ) : (
         <SwipeItem
           key={it.id} it={it}
-          onToggle={onToggle} onAdjustQty={onAdjustQty} onDelete={handleDelete} onStartEdit={openEdit}
+          onToggle={onToggle} onDelete={handleDelete} onStartEdit={openEdit}
         />
       )
     );
@@ -448,7 +431,7 @@ export default function ShoppingTab({
                   : "Lo schermo può spegnersi di nuovo");
               }}
               aria-pressed={awake}
-              className={`rounded-lg p-1.5 transition ${awake ? "bg-tomato/10 text-tomato" : "text-stone-300 hover:bg-stone-100 hover:text-stone-600"}`}
+              className={`rounded-lg p-1.5 transition ${awake ? "bg-tomato/10 text-tomato" : "text-stone-500 hover:bg-stone-100 hover:text-ink"}`}
               title="Tieni lo schermo acceso"
               aria-label="Tieni lo schermo acceso"
             >
@@ -458,7 +441,7 @@ export default function ShoppingTab({
           {toBuy.length > 0 && (
             <button
               onClick={shareList}
-              className="rounded-lg p-1.5 text-stone-300 transition hover:bg-stone-100 hover:text-stone-600"
+              className="rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-100 hover:text-ink"
               title="Condividi la lista"
               aria-label="Condividi la lista"
             >
@@ -475,7 +458,7 @@ export default function ShoppingTab({
         <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua lista</div>
         <div data-tour="shopping-input" className="flex items-center gap-2.5">
           <div className="relative flex-1">
-            <Plus className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
+            <Pencil className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
             <input
               ref={inputRef}
               value={name}
@@ -578,12 +561,14 @@ export default function ShoppingTab({
 
       <div className={checkedCount > 0 ? "h-52" : "h-32"} />
 
-      {/* Barra in basso (sopra la navigazione): l'azione di chiusura della
-          spesa appare qui, grande e sempre visibile, appena spunti qualcosa. */}
+      {/* Dock in basso: un unico contenitore fisso e OPACO che fonde la barra
+          azioni con lo spazio della tab bar flottante (che ci galleggia sopra,
+          su sfondo opaco invece che sulla lista). Bordo superiore sottile;
+          paddingBottom riservato all'altezza della navbar + safe-area. */}
       {shopping.length > 0 && (
         <div
-          className="fixed inset-x-0 z-20 border-t border-hair bg-cream/95 backdrop-blur"
-          style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}
+          className="fixed inset-x-0 bottom-0 z-20 border-t border-hair bg-cream"
+          style={{ paddingBottom: "calc(76px + env(safe-area-inset-bottom))" }}
         >
           <div className="mx-auto max-w-md px-5 py-2.5">
             {checkedCount > 0 && (
