@@ -123,7 +123,7 @@ export default function Auth() {
             onClick={() => setPrivacyOpen(true)}
             className="text-[11px] text-stone-400 transition hover:text-stone-600 hover:underline"
           >
-            Privacy
+            Privacy Policy
           </button>
         </div>
       </div>

@@ -147,7 +147,7 @@ export default function ProfileSheet({
               {onOpenPrivacy && (
                 <>
                   <button onClick={() => { close(); onOpenPrivacy(); }} className="transition hover:text-stone-600 hover:underline">
-                    Privacy
+                    Privacy Policy
                   </button>
                   <span aria-hidden="true">·</span>
                 </>
