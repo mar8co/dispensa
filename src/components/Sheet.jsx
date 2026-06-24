@@ -12,28 +12,24 @@
 // API invariata rispetto a prima: i figli ricevono `close` (chiusura animata)
 // da usare nei pulsanti interni; `locked` blocca ogni chiusura (es. durante
 // un'elaborazione); `panelClass`/`handleClass` per il tema (es. scuro).
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Drawer } from "vaul";
 
 export default function Sheet({ onClose, locked = false, panelClass = "bg-cream", handleClass = "bg-stone-300", children }) {
-  // Vaul controlla open/close per avere le animazioni di entrata/uscita; il
-  // componente resta montato finché la chiusura non è animata, poi avvisa il
-  // genitore (onClose) che lo smonta. Apertura ritardata di un frame così
-  // l'animazione di ingresso parte sempre.
-  const [open, setOpen] = useState(false);
-  const openedRef = useRef(false);
-  useEffect(() => {
-    const r = requestAnimationFrame(() => { openedRef.current = true; setOpen(true); });
-    return () => cancelAnimationFrame(r);
-  }, []);
-
+  // Montiamo GIÀ aperto (open=true): così il contenuto del foglio è subito nel
+  // DOM. È fondamentale per i fogli con fotocamera (barcode/scontrino): l'effetto
+  // che avvia la camera gira al mount e ha bisogno del <video> già presente —
+  // con un'apertura ritardata di un frame la camera non si agganciava.
+  // Vaul anima comunque l'ingresso. Lo smontaggio (onClose del genitore) avviene
+  // dopo l'animazione di chiusura (onAnimationEnd con open=false).
+  const [open, setOpen] = useState(true);
   const close = () => { if (!locked) setOpen(false); };
 
   return (
     <Drawer.Root
       open={open}
       onOpenChange={(o) => { if (!o) close(); }}
-      onAnimationEnd={(o) => { if (!o && openedRef.current) onClose(); }}
+      onAnimationEnd={(o) => { if (!o) onClose(); }}
       dismissible={!locked}
       repositionInputs={false}
     >

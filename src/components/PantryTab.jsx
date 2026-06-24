@@ -286,15 +286,14 @@ export default function PantryTab({
             className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
           >
             <AlertTriangle className={`h-4 w-4 shrink-0 ${expiredCount > 0 ? "text-tomato" : "text-amber-700"}`} />
-            <span className="flex-1 text-xs font-semibold">
+            <span className="flex-1 text-xs font-semibold leading-snug">
               {expiredCount > 0 && (
-                <span className="text-tomato">
+                <span className="block text-tomato">
                   {expiredCount} {expiredCount === 1 ? "prodotto scaduto" : "prodotti scaduti"}
                 </span>
               )}
-              {expiredCount > 0 && expiringSoonCount > 0 && <span className="text-amber-700/60"> · </span>}
               {expiringSoonCount > 0 && (
-                <span className="text-amber-700">
+                <span className="block text-amber-700">
                   {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza{expiredCount > 0 ? "" : " entro 7 giorni"}
                 </span>
               )}

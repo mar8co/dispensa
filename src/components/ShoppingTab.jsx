@@ -516,7 +516,7 @@ export default function ShoppingTab({
         </p>
       )}
 
-      <div className="mt-5">
+      <div className="mt-2">
         {toBuy.length > 0 && (
           byAisle ? (
             <div className="space-y-6">
@@ -570,7 +570,7 @@ export default function ShoppingTab({
           className="fixed inset-x-0 bottom-0 z-20 border-t border-hair bg-cream"
           style={{ paddingBottom: "calc(76px + env(safe-area-inset-bottom))" }}
         >
-          <div className="mx-auto max-w-md px-5 py-2.5">
+          <div className="mx-auto max-w-md px-5 py-1.5">
             {checkedCount > 0 && (
               <div className="animate-fade-in mb-2 flex gap-2">
                 <button
