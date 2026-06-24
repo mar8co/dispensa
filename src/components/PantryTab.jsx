@@ -295,7 +295,7 @@ export default function PantryTab({
               {expiredCount > 0 && expiringSoonCount > 0 && <span className="text-amber-700/60"> · </span>}
               {expiringSoonCount > 0 && (
                 <span className="text-amber-700">
-                  {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza {expiredCount > 0 ? "(entro 7 gg)" : "entro 7 giorni"}
+                  {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza{expiredCount > 0 ? "" : " entro 7 giorni"}
                 </span>
               )}
             </span>

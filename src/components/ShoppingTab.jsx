@@ -89,7 +89,7 @@ function SwipeItem({ it, onToggle, onDelete, onStartEdit }) {
               ? "transform 0.22s cubic-bezier(0.55, 0, 1, 0.45)"   // esce accelerando
               : "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)",  // rientro morbido
         }}
-        className="relative flex items-center gap-3 bg-cream py-3"
+        className="relative flex items-center gap-3 bg-cream py-2"
       >
         {/* Nome a sinistra (testo primario); tap = modifica quantità/reparto */}
         <p
@@ -532,7 +532,7 @@ export default function ShoppingTab({
               ))}
             </div>
           ) : (
-            <ul className="divide-y divide-hair border-t border-ink/15">{renderItems(toBuy)}</ul>
+            <ul className="divide-y divide-hair">{renderItems(toBuy)}</ul>
           )
         )}
 
