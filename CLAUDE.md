@@ -49,7 +49,7 @@
 
 ## 4. Librerie approvate (e cosa evitare)
 **Approvate / già in uso** — non aggiungerne altre senza necessità:
-- `react`, `react-dom` (18.3); `@supabase/supabase-js`; `lucide-react`; `@zxing/browser`+`@zxing/library` (barcode, lazy)
+- `react`, `react-dom` (18.3); `@supabase/supabase-js`; `lucide-react`; `@zxing/browser`+`@zxing/library` (barcode, lazy); `vaul` (bottom-sheet drag-to-dismiss, su `@radix-ui/react-dialog`; usata SOLO dentro `Sheet.jsx`)
 - dev/build: `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa`, `tailwindcss`, `postcss`, `autoprefixer`, `sharp`, `vitest`, `eslint` (+ `eslint-plugin-react-hooks`)
 - servizi esterni: Gemini, Pexels, Open Food Facts, Web APIs del browser
 

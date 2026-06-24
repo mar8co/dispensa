@@ -160,6 +160,15 @@ body {
   animation: drop-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Bottom sheet (Vaul): con prefers-reduced-motion azzeriamo quasi del tutto le
+   animazioni di apertura/chiusura. Durata minima ma > 0, così l'evento di fine
+   transizione scatta lo stesso e la chiusura si completa (la funzione resta). */
+@media (prefers-reduced-motion: reduce) {
+  [vaul-drawer], [vaul-overlay] {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Evita lo zoom automatico di iOS sui campi: font >= 16px su mobile.
    !important per battere le utility Tailwind (text-sm, ecc.). */
 @media (max-width: 640px) {

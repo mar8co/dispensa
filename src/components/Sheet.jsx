@@ -1,115 +1,63 @@
-// Bottom sheet riutilizzabile in stile iOS: sale dal basso con molla morbida,
-// maniglia di trascinamento in alto, si chiude toccando lo sfondo o
-// trascinando verso il basso. I figli ricevono la funzione `close` (chiusura
-// animata) da usare al posto di onClose nei pulsanti interni.
+// Bottom sheet condiviso, basato su Vaul (drag-to-dismiss collaudato, su Radix
+// Dialog). Usato da TUTTI i fogli dell'app (Profilo, scontrino, barcode, ecc.):
+// potenziando questo componente, il trascinamento funziona ovunque.
+//
+// Comportamento: sale dal basso; si trascina giù dall'handle/header (e dal
+// contenuto quando è già in cima — scroll-aware di Vaul); al rilascio chiude
+// se superi soglia o fai un flick veloce, altrimenti torna elastico; lo scrim
+// si schiarisce in proporzione; verso l'alto fa resistenza (rubber-band). Si
+// chiude anche col tap sullo scrim, con Esc e con la X interna. Accessibilità
+// (focus trap, role dialog, aria-modal) gestita da Radix sotto Vaul.
+//
+// API invariata rispetto a prima: i figli ricevono `close` (chiusura animata)
+// da usare nei pulsanti interni; `locked` blocca ogni chiusura (es. durante
+// un'elaborazione); `panelClass`/`handleClass` per il tema (es. scuro).
 import { useEffect, useRef, useState } from "react";
-
-// Blocco dello scroll di sfondo mentre un foglio è aperto (stile modale nativa).
-// Su iOS `overflow:hidden` sul body NON basta: l'unico modo affidabile è fissare
-// il body con position:fixed conservando lo scroll, e ripristinarlo alla chiusura.
-// Un contatore gestisce eventuali fogli sovrapposti (sblocca solo l'ultimo).
-let lockCount = 0;
-let savedScrollY = 0;
-function lockBodyScroll() {
-  if (lockCount === 0) {
-    savedScrollY = window.scrollY;
-    const b = document.body;
-    b.style.position = "fixed";
-    b.style.top = `-${savedScrollY}px`;
-    b.style.left = "0";
-    b.style.right = "0";
-    b.style.width = "100%";
-  }
-  lockCount += 1;
-}
-function unlockBodyScroll() {
-  lockCount = Math.max(0, lockCount - 1);
-  if (lockCount === 0) {
-    const b = document.body;
-    b.style.position = "";
-    b.style.top = "";
-    b.style.left = "";
-    b.style.right = "";
-    b.style.width = "";
-    window.scrollTo(0, savedScrollY);
-  }
-}
+import { Drawer } from "vaul";
 
 export default function Sheet({ onClose, locked = false, panelClass = "bg-cream", handleClass = "bg-stone-300", children }) {
-  const [shown, setShown] = useState(false);   // anima l'ingresso al mount
-  const [closing, setClosing] = useState(false);
-  const [dragY, setDragY] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const startY = useRef(null);
-
+  // Vaul controlla open/close per avere le animazioni di entrata/uscita; il
+  // componente resta montato finché la chiusura non è animata, poi avvisa il
+  // genitore (onClose) che lo smonta. Apertura ritardata di un frame così
+  // l'animazione di ingresso parte sempre.
+  const [open, setOpen] = useState(false);
+  const openedRef = useRef(false);
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setShown(true));
-    return () => cancelAnimationFrame(raf);
+    const r = requestAnimationFrame(() => { openedRef.current = true; setOpen(true); });
+    return () => cancelAnimationFrame(r);
   }, []);
 
-  // Blocca lo scroll della pagina sottostante finché il foglio è aperto.
-  useEffect(() => {
-    lockBodyScroll();
-    return unlockBodyScroll;
-  }, []);
-
-  function close() {
-    if (locked || closing) return;
-    setClosing(true);
-    setTimeout(onClose, 280);
-  }
-
-  // Trascinamento dalla maniglia: segue il dito, oltre la soglia chiude.
-  function onPointerDown(e) {
-    startY.current = e.clientY;
-    setDragging(true);
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
-  }
-  function onPointerMove(e) {
-    if (startY.current == null) return;
-    setDragY(Math.max(0, e.clientY - startY.current));
-  }
-  function onPointerEnd() {
-    if (startY.current == null) return;
-    startY.current = null;
-    setDragging(false);
-    if (dragY > 90) close();
-    else setDragY(0);
-  }
-
-  const open = shown && !closing;
+  const close = () => { if (!locked) setOpen(false); };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div
-        onClick={close}
-        className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
-      />
-      <div
-        className={`relative flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-3xl shadow-2xl ${panelClass}`}
-        style={{
-          transform: open ? `translateY(${dragY}px)` : "translateY(105%)",
-          transition: dragging ? "none" : "transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
-          paddingBottom: "env(safe-area-inset-bottom)",
-        }}
-      >
-        <div
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerEnd}
-          onPointerCancel={onPointerEnd}
-          style={{ touchAction: "none" }}
-          className="flex shrink-0 cursor-grab justify-center pb-1.5 pt-2.5 active:cursor-grabbing"
-          aria-hidden="true"
+    <Drawer.Root
+      open={open}
+      onOpenChange={(o) => { if (!o) close(); }}
+      onAnimationEnd={(o) => { if (!o && openedRef.current) onClose(); }}
+      dismissible={!locked}
+      repositionInputs={false}
+    >
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
+        <Drawer.Content
+          aria-describedby={undefined}
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          className={`fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-3xl shadow-2xl outline-none ${panelClass}`}
         >
-          <div className={`h-1 w-10 rounded-full ${handleClass}`} />
-        </div>
-        {/* Area scorrevole interna: se il contenuto supera l'altezza del foglio
-            scorre qui dentro, senza propagare lo scroll alla pagina sotto. */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          {typeof children === "function" ? children(close) : children}
-        </div>
-      </div>
-    </div>
+          {/* Titolo nascosto: soddisfa l'accessibilità di Radix (il titolo
+              visibile è dentro ogni foglio). */}
+          <Drawer.Title className="sr-only">Pannello</Drawer.Title>
+          <div className="flex shrink-0 cursor-grab justify-center pb-1.5 pt-2.5 active:cursor-grabbing" aria-hidden="true">
+            <div className={`h-1 w-10 rounded-full ${handleClass}`} />
+          </div>
+          {/* Area scorrevole interna: se il contenuto supera l'altezza del
+              foglio scorre qui dentro; Vaul evita di chiudere se non sei in
+              cima (così il drag non ruba lo scroll). */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {typeof children === "function" ? children(close) : children}
+          </div>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 }
