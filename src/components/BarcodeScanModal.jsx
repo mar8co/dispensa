@@ -40,7 +40,11 @@ async function lookupProduct(code) {
 }
 
 export default function BarcodeScanModal({ onClose, onResult }) {
-  const videoRef = useRef(null);
+  // Callback-ref: teniamo l'ELEMENTO video in stato, così la scansione parte
+  // quando il <video> è davvero montato (con i bottom-sheet Vaul può comparire
+  // un frame dopo il mount del componente: passarne il ref "subito" lasciava la
+  // camera nera).
+  const [videoEl, setVideoEl] = useState(null);
   const controlsRef = useRef(null);
   const handledRef = useRef(false);
   const onResultRef = useRef(onResult);
@@ -61,7 +65,9 @@ export default function BarcodeScanModal({ onClose, onResult }) {
   }
 
   useEffect(() => {
-    if (manualMode) return; // in modalità manuale la fotocamera resta spenta
+    // In modalità manuale la camera resta spenta; aspettiamo che il <video>
+    // sia montato (videoEl) prima di avviare la scansione.
+    if (manualMode || !videoEl) return;
     const reader = new BrowserMultiFormatReader(buildHints());
     let cancelled = false;
 
@@ -69,7 +75,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
       try {
         const controls = await reader.decodeFromConstraints(
           { video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } },
-          videoRef.current,
+          videoEl,
           (result) => {
             if (result && !cancelled) handleCode(result.getText());
           }
@@ -85,7 +91,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
       cancelled = true;
       try { controlsRef.current?.stop(); } catch { /* ignora */ }
     };
-  }, [manualMode]);
+  }, [manualMode, videoEl]);
 
   function submitManual(e) {
     e?.preventDefault();
@@ -140,7 +146,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
         </div>
       ) : (
         <>
-          <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+          <video ref={setVideoEl} className="h-full w-full object-cover" autoPlay muted playsInline />
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             {/* Rettangolo guida basso e largo, a forma di codice a barre.
                 Stesso bordo/opacità/scrim della schermata scontrino. */}
