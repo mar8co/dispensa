@@ -82,7 +82,6 @@ export default function RecipesTab({
       {!mode && (
         <>
           <h1 className="font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Cosa<br />cuciniamo?</h1>
-          <p className="mt-2.5 text-sm text-stone-500">Idee con quello che hai in dispensa.</p>
 
           {/* Occhiello rosso + ricerca ingredienti: bloccati insieme in alto
               mentre si scorrono occasioni e ricettario. */}

@@ -1,126 +1,183 @@
-// Scheda "Spesa" (stile editoriale): lista con spunta, contatore, swipe-to-delete,
-// raggruppamento per reparto (nell'ordine personalizzato della dispensa),
-// sezione "Nel carrello" per gli articoli presi, modifica nome/reparto con un
-// tap, condivisione della lista e blocco dello spegnimento schermo.
+// Scheda "Spesa": lista della spesa con SELEZIONE CONTESTUALE.
+// - Tocca una riga (intera) per selezionarla; quando c'è almeno un selezionato
+//   compare la barra azioni (Sposta in dispensa / Rimuovi); la X annulla.
+// - Pressione lunga sulla riga: apre l'editor (quantità/reparto/nome).
+// - Vista "Per reparto" (raggruppata, icone lineari) o lista piatta.
+// NB sul data layer: la "selezione" è il campo persistito `checked` degli item
+// (uso solo i prop esistenti: onToggle/onMoveChecked/onClearChecked). Nessuna
+// query/tabella/campo modificato.
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
-  Pencil, Trash2, Check, PackagePlus, Loader2, ListChecks, Store,
-  Share2, Lightbulb, Mic,
+  Pencil, Mic, Check, X, Trash2, PackagePlus, Loader2, ListChecks, Store,
+  Share2, Lightbulb,
+  Carrot, Apple, Beef, Ham, Fish, Milk, Croissant, Wheat, Bean, Soup,
+  Snowflake, CupSoda, Cookie, Grape, Droplet, Leaf, Package,
 } from "lucide-react";
-import { CATEGORIES, PICKER_CATS, CAT_ICON, AISLE_ORDER } from "../constants.js";
+import { PICKER_CATS, AISLE_ORDER } from "../constants.js";
 import { norm, atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 
 const editCls =
   "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
-// Riga con gesto di scorrimento orizzontale per eliminare; toccando il nome
-// si apre il pannello di modifica (gestito da ShoppingTab).
-function SwipeItem({ it, onToggle, onDelete, onStartEdit }) {
-  const [dx, setDx] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const [out, setOut] = useState(false);       // fase 1: scivola fuori dallo schermo
-  const [removing, setRemoving] = useState(false); // fase 2: la riga si richiude
-  const start = useRef(null);
-  const axis = useRef(null);
-  const THRESHOLD = 80;
+// Icone lineari per reparto (coerenti, una sola libreria), al posto delle emoji.
+const CAT_LUCIDE = {
+  "Verdura": Carrot,
+  "Frutta": Apple,
+  "Carne": Beef,
+  "Salumi": Ham,
+  "Pesce": Fish,
+  "Latticini": Milk,
+  "Pane e Forno": Croissant,
+  "Pasta, Riso e Cereali": Wheat,
+  "Legumi": Bean,
+  "Conserve": Soup,
+  "Surgelati": Snowflake,
+  "Bevande": CupSoda,
+  "Dolci": Cookie,
+  "Frutta Secca": Grape,
+  "Condimenti e Salse": Droplet,
+  "Spezie ed Erbe": Leaf,
+  "Altro": Package,
+};
+function CatIcon({ cat, className }) {
+  const I = CAT_LUCIDE[cat] || Package;
+  return <I className={className} aria-hidden="true" />;
+}
 
-  function onPointerDown(e) {
+// --- Riga prodotto: l'INTERA riga fa toggle della selezione (tap); pressione
+// lunga apre l'editor. Accessibile (role=button, tastiera). Niente swipe:
+// l'eliminazione passa dalla selezione (azione "Rimuovi"). ---
+function ShoppingRow({ it, onSelect, onLongEdit }) {
+  const selected = !!it.checked;
+  const start = useRef(null);
+  const moved = useRef(false);
+  const longFired = useRef(false);
+  const timer = useRef(null);
+
+  function down(e) {
     start.current = { x: e.clientX, y: e.clientY };
-    axis.current = null;
-    setDragging(true);
+    moved.current = false;
+    longFired.current = false;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => { longFired.current = true; onLongEdit(it); }, 450);
   }
-  function onPointerMove(e) {
+  function move(e) {
     if (!start.current) return;
-    const ddx = e.clientX - start.current.x;
-    const ddy = e.clientY - start.current.y;
-    if (axis.current == null) {
-      if (Math.abs(ddx) < 8 && Math.abs(ddy) < 8) return;
-      axis.current = Math.abs(ddx) > Math.abs(ddy) ? "h" : "v";
-      if (axis.current === "h") {
-        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
-      }
+    if (Math.abs(e.clientX - start.current.x) > 10 || Math.abs(e.clientY - start.current.y) > 10) {
+      moved.current = true;
+      clearTimeout(timer.current);
     }
-    if (axis.current === "h") setDx(ddx);
   }
-  function onPointerEnd(e) {
-    if (!start.current) return;
-    const ddx = e.clientX - start.current.x;
+  function up() {
+    clearTimeout(timer.current);
+    const wasTap = start.current && !moved.current && !longFired.current;
     start.current = null;
-    setDragging(false);
-    if (axis.current === "h" && Math.abs(ddx) > THRESHOLD) {
-      const w = typeof window !== "undefined" ? window.innerWidth : 400;
-      // Due tempi, come iOS: la riga esce di lato, poi lo spazio si richiude.
-      setOut(true);
-      setDx(ddx > 0 ? w : -w);
-      setTimeout(() => setRemoving(true), 200);
-      setTimeout(() => onDelete(it.id), 500);
-    } else {
-      setDx(0);
-    }
-    axis.current = null;
+    if (wasTap) onSelect(it);
+  }
+  function cancel() { clearTimeout(timer.current); start.current = null; }
+  function onKey(e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(it); }
   }
 
   return (
-    <li
-      data-noswipe
-      className="relative overflow-hidden"
-      style={{
-        maxHeight: removing ? 0 : "6rem",
-        opacity: removing ? 0 : 1,
-        transition: "max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease",
-      }}
-    >
+    <li>
       <div
-        className={`absolute inset-0 flex items-center bg-tomato px-5 text-white transition-opacity duration-200 ${dx > 0 ? "justify-start" : "justify-end"} ${out ? "opacity-0" : "opacity-100"}`}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={cancel}
+        onKeyDown={onKey}
+        style={{ touchAction: "pan-y" }}
+        className="flex min-h-[44px] cursor-pointer select-none items-center gap-3 py-2 outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-tomato/30"
       >
-        <Trash2 className="h-5 w-5" />
-      </div>
-      <div
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerEnd}
-        onPointerCancel={onPointerEnd}
-        style={{
-          transform: `translateX(${dx}px)`,
-          touchAction: "pan-y",
-          transition: dragging
-            ? "none"
-            : out
-              ? "transform 0.22s cubic-bezier(0.55, 0, 1, 0.45)"   // esce accelerando
-              : "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)",  // rientro morbido
-        }}
-        className="relative flex items-center gap-3 bg-cream py-2"
-      >
-        {/* Nome a sinistra (testo primario); tap = modifica quantità/reparto */}
-        <p
-          onClick={() => onStartEdit(it)}
-          title="Tocca per modificare"
-          className={`min-w-0 flex-1 cursor-pointer truncate text-[15px] font-semibold ${it.checked ? "text-stone-400 line-through" : "text-ink"}`}
-        >
+        <span className={`min-w-0 flex-1 truncate text-[15px] font-semibold ${selected ? "text-stone-400 line-through" : "text-ink"}`}>
           {it.name}
-        </p>
-        {/* Quantità: chip neutra, mostrata solo se significativa (≠ "1") */}
+        </span>
+        {/* Badge quantità in spazio dedicato (solo se impostata, ≠ "1") */}
         {it.qty && it.qty !== "1" && (
           <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-stone-600">
             {formatQtyDisplay(it.qty)}
           </span>
         )}
-        {/* Checkbox a DESTRA (zona pollice): area di tocco 44px, quadrato ~26px */}
-        <button
-          onClick={() => onToggle(it.id, !it.checked)}
-          className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center"
-          aria-label={it.checked ? "Segna da comprare" : "Segna come preso"}
+        {/* Checkbox: arancione pieno con spunta bianca quando selezionata */}
+        <span
+          aria-hidden="true"
+          className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md border transition ${
+            selected ? "border-tomato bg-tomato text-[#fff]" : "border-stone-300 bg-paper text-transparent"
+          }`}
         >
-          <span
-            className={`flex h-[26px] w-[26px] items-center justify-center rounded-md border transition ${
-              it.checked ? "border-ink bg-ink text-white" : "border-stone-300 bg-white text-transparent"
-            }`}
-          >
-            <Check className="h-4 w-4" />
-          </span>
-        </button>
+          <Check className="h-4 w-4" />
+        </span>
       </div>
     </li>
+  );
+}
+
+// --- Fascia di controlli unica sopra la tab bar, che si TRASFORMA in base alla
+// selezione. Dock fisso e opaco (la pillola nav ci galleggia sopra). ---
+function BottomControls({
+  byAisle, setByAisle, selectionCount, allSelected, moving,
+  onSelectAll, onClearSelection, onMove, onRemove,
+}) {
+  const selectionMode = selectionCount > 0;
+  return (
+    <div
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-hair bg-cream"
+      style={{ paddingBottom: "calc(76px + env(safe-area-inset-bottom))" }}
+    >
+      <div className="mx-auto max-w-md px-5 py-2">
+        {selectionMode ? (
+          <div className="animate-fade-in flex items-center gap-2">
+            <button
+              onClick={onClearSelection}
+              aria-label="Annulla selezione"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-hair text-stone-500 transition hover:bg-stone-50"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <button
+              onClick={onMove}
+              disabled={moving}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-tomato px-3 text-sm font-bold text-[#fff] transition hover:bg-tomato-700 active:scale-[0.99] disabled:opacity-60"
+            >
+              {moving
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <><PackagePlus className="h-4 w-4" /> {allSelected ? "Sposta tutto in dispensa" : `Sposta ${selectionCount} in dispensa`}</>}
+            </button>
+            <button
+              onClick={onRemove}
+              aria-label="Rimuovi selezionati"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-hair text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            {/* Chip toggle "Per reparto": arancione pieno quando attivo */}
+            <button
+              onClick={() => setByAisle((v) => !v)}
+              aria-pressed={byAisle}
+              className={`flex h-11 items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold transition ${
+                byAisle ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-600 hover:bg-stone-50"
+              }`}
+            >
+              <Store className="h-4 w-4" /> Per reparto
+            </button>
+            {/* Azione testuale (non un chip gemello): arancione, niente bordo */}
+            <button
+              onClick={onSelectAll}
+              className="flex h-11 items-center gap-1.5 px-2 text-sm font-semibold text-tomato transition hover:text-tomato-700"
+            >
+              <ListChecks className="h-4 w-4" /> Seleziona tutto
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -134,15 +191,9 @@ export default function ShoppingTab({
   const inputRef = useRef(null);
   const [awake, setAwake] = useState(false);
   const wakeRef = useRef(null);
-  // L'hint sullo swipe sparisce dopo la prima eliminazione col gesto.
-  const [showHint, setShowHint] = useState(() => {
-    try { return localStorage.getItem("dispensa-swipe-hint") !== "1"; } catch { return true; }
-  });
 
-  const toBuy = shopping.filter((s) => !s.checked);
-  const inCart = shopping.filter((s) => s.checked);
-  const checkedCount = inCart.length;
-  const allChecked = shopping.length > 0 && checkedCount === shopping.length;
+  const selectionCount = shopping.filter((s) => s.checked).length;
+  const allSelected = shopping.length > 0 && selectionCount === shopping.length;
 
   // Wake Lock: tiene lo schermo acceso mentre fai la spesa (se supportato).
   const wakeSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
@@ -157,7 +208,6 @@ export default function ShoppingTab({
       catch { setAwake(false); }
     };
     acquire();
-    // iOS rilascia il lock quando l'app va in background: lo riprendiamo.
     const onVis = () => { if (document.visibilityState === "visible") acquire(); };
     document.addEventListener("visibilitychange", onVis);
     return () => {
@@ -167,17 +217,13 @@ export default function ShoppingTab({
     };
   }, [awake]);
 
-  function handleDelete(id) {
-    if (showHint) {
-      try { localStorage.setItem("dispensa-swipe-hint", "1"); } catch { /* */ }
-      setShowHint(false);
-    }
-    onDelete(id);
+  // Annulla la selezione: deseleziona (silenzioso) tutti gli item selezionati.
+  function clearSelection() {
+    for (const it of shopping) if (it.checked) onToggle(it.id, false);
   }
+  const selectItem = (it) => onToggle(it.id, !it.checked);
 
-  // --- Pannello di modifica (come quello della dispensa, senza scadenze) ---
-  // Salvataggio automatico: nome al blur, quantità con breve attesa,
-  // reparto al tap; si chiude toccando fuori.
+  // --- Pannello di modifica (apre con pressione lunga; senza scadenze) ---
   const [editId, setEditId] = useState(null);
   const [draftName, setDraftName] = useState("");
   const [qtyDraft, setQtyDraft] = useState("");
@@ -239,7 +285,6 @@ export default function ShoppingTab({
     if (!it || c === catFor(it.name)) return;
     onAutoSave(it, { category: c }, { category: snapRef.current.category });
   }
-  // Cambio unità: la quantità si resetta sempre al default dell'unità.
   function applyUnit(u) {
     const DEFAULTS = { "": "1", g: "100 g", kg: "1 kg", l: "1 l" };
     const v = DEFAULTS[u] ?? "1";
@@ -263,7 +308,6 @@ export default function ShoppingTab({
     const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
     return (
       <li key={it.id} ref={panelRef} className="-mx-1 my-1 space-y-2.5 rounded-xl bg-stone-50 p-3">
-        {/* Riga 1: nome editabile + reparto · elimina */}
         <div className="flex items-center gap-1.5">
           <input
             className={`${editCls} min-w-0 flex-1`}
@@ -277,14 +321,14 @@ export default function ShoppingTab({
             onClick={() => setCatPickerOpen((v) => !v)}
             aria-label="Reparto"
             title="Reparto"
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-base transition ${
-              catPickerOpen ? "border-tomato bg-tomato/5" : "border-hair bg-paper"
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition ${
+              catPickerOpen ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-600"
             }`}
           >
-            {CAT_ICON[catFor(it.name)]}
+            <CatIcon cat={catFor(it.name)} className="h-[18px] w-[18px]" />
           </button>
           <button
-            onClick={() => { closeEdit(false); handleDelete(it.id); }}
+            onClick={() => { closeEdit(false); onDelete(it.id); }}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
             aria-label="Elimina"
           >
@@ -292,26 +336,24 @@ export default function ShoppingTab({
           </button>
         </div>
 
-        {/* Reparti come chips: un solo tap per scegliere */}
         {catPickerOpen && (
           <div className="animate-fade-in flex flex-wrap gap-1.5">
             {PICKER_CATS.map((c) => (
               <button
                 key={c}
                 onClick={() => chooseCategory(c)}
-                className={`rounded-full border px-2.5 py-1.5 text-xs font-semibold transition ${
+                className={`flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-semibold transition ${
                   c === catFor(it.name)
-                    ? "border-tomato bg-tomato text-white"
+                    ? "border-tomato bg-tomato text-[#fff]"
                     : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
                 }`}
               >
-                {CAT_ICON[c]} {c}
+                <CatIcon cat={c} className="h-3.5 w-3.5" /> {c}
               </button>
             ))}
           </div>
         )}
 
-        {/* Riga 2: stepper nudo a sinistra, unità a destra */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3 px-1">
             <button
@@ -342,7 +384,7 @@ export default function ShoppingTab({
                   onClick={() => applyUnit(u)}
                   aria-pressed={active}
                   className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
-                    active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
+                    active ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
                   }`}
                 >
                   {u || "pz"}
@@ -355,7 +397,7 @@ export default function ShoppingTab({
     );
   }
 
-  // --- Inserimento in linea: i nuovi prodotti appaiono subito qui sotto ---
+  // --- Inserimento in linea ---
   const pool = useMemo(() => {
     const seen = new Set();
     const out = [];
@@ -370,7 +412,6 @@ export default function ShoppingTab({
 
   const q = norm(name);
   const listSet = useMemo(() => new Set(shopping.map((x) => norm(x.name))), [shopping]);
-  // Scrivendo: completamenti; campo vuoto (ma attivo): i frequenti non in lista.
   const suggestions = q
     ? pool.filter((n) => norm(n).includes(q) && norm(n) !== q).slice(0, 5)
     : (historyNames || []).filter((n) => !listSet.has(norm(n))).slice(0, 4);
@@ -381,39 +422,30 @@ export default function ShoppingTab({
     const res = await onAdd(clean, "1");
     if (res?.merged) onNotify(<><strong>{clean}</strong> era già in lista: quantità aumentata</>);
     setName("");
-    inputRef.current?.focus(); // resta pronto per il prossimo
+    inputRef.current?.focus();
   }
 
-  // Condivide la lista (o la copia negli appunti se share non c'è).
   function shareList() {
-    const lines = toBuy.map((x) => `• ${x.name}${x.qty && x.qty !== "1" ? ` — ${x.qty}` : ""}`);
+    const lines = shopping.map((x) => `• ${x.name}${x.qty && x.qty !== "1" ? ` — ${x.qty}` : ""}`);
     const text = `🛒 Lista della spesa:\n${lines.join("\n")}`;
     if (navigator.share) {
       navigator.share({ text }).catch(() => { /* condivisione annullata */ });
     } else if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).then(
-        () => onNotify("Lista copiata negli appunti."),
-        () => {}
-      );
+      navigator.clipboard.writeText(text).then(() => onNotify("Lista copiata negli appunti."), () => {});
     }
   }
 
-  // Reparti nell'ordine del giro classico del supermercato (frutta e
-  // verdura all'ingresso, freschi, scaffali, surgelati e bevande in fondo).
+  // Reparti nell'ordine del giro classico del supermercato. Mostriamo TUTTI gli
+  // item (i selezionati restano in posizione, barrati).
   const groups = AISLE_ORDER
-    .map((c) => ({ cat: c, list: toBuy.filter((s) => catFor(s.name) === c) }))
+    .map((c) => ({ cat: c, list: shopping.filter((s) => catFor(s.name) === c) }))
     .filter((g) => g.list.length > 0);
 
   const renderItems = (list) =>
     list.map((it) =>
-      editId === it.id ? (
-        renderEditPanel(it)
-      ) : (
-        <SwipeItem
-          key={it.id} it={it}
-          onToggle={onToggle} onDelete={handleDelete} onStartEdit={openEdit}
-        />
-      )
+      editId === it.id
+        ? renderEditPanel(it)
+        : <ShoppingRow key={it.id} it={it} onSelect={selectItem} onLongEdit={openEdit} />
     );
 
   return (
@@ -426,9 +458,7 @@ export default function ShoppingTab({
               onClick={() => {
                 const next = !awake;
                 setAwake(next);
-                onNotify(next
-                  ? "💡 Schermo sempre acceso mentre fai la spesa"
-                  : "Lo schermo può spegnersi di nuovo");
+                onNotify(next ? "💡 Schermo sempre acceso mentre fai la spesa" : "Lo schermo può spegnersi di nuovo");
               }}
               aria-pressed={awake}
               className={`rounded-lg p-1.5 transition ${awake ? "bg-tomato/10 text-tomato" : "text-stone-500 hover:bg-stone-100 hover:text-ink"}`}
@@ -438,7 +468,7 @@ export default function ShoppingTab({
               <Lightbulb className="h-5 w-5" />
             </button>
           )}
-          {toBuy.length > 0 && (
+          {shopping.length > 0 && (
             <button
               onClick={shareList}
               className="rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-100 hover:text-ink"
@@ -451,54 +481,35 @@ export default function ShoppingTab({
         </div>
       </div>
 
-      {/* Occhiello rosso + inserimento in linea: bloccati insieme in alto
-          durante lo scroll. È nel flusso (sticky, non fixed in basso), quindi
-          la tastiera iOS non lo copre. */}
-      <div className="sticky top-0 z-20 -mx-5 mt-2 bg-cream/95 px-5 pb-2.5 pt-2.5 backdrop-blur">
+      {/* Occhiello + inserimento: bloccati in alto durante lo scroll. */}
+      <div className="sticky top-0 z-20 -mx-5 mt-2 bg-cream/95 px-5 pb-1.5 pt-2.5 backdrop-blur">
         <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua lista</div>
-        <div data-tour="shopping-input" className="flex items-center gap-2.5">
-          <div className="relative flex-1">
-            <Pencil className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
-            <input
-              ref={inputRef}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && add()}
-              placeholder="Scrivi cosa ti manca…"
-              className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-2 text-sm text-ink outline-none focus:border-ink"
-            />
-          </div>
-          {name.trim() ? (
-            <button
-              // pointerdown + preventDefault: aggiunge come "Invio" senza far
-              // perdere il focus all'input — la tastiera resta aperta per il
-              // prodotto successivo.
-              onPointerDown={(e) => { e.preventDefault(); add(); }}
-              className="flex h-11 shrink-0 items-center justify-center rounded-full bg-tomato px-4 text-xs font-bold text-white shadow-lg shadow-tomato/30 transition hover:bg-tomato-700 active:scale-95"
-            >
-              Aggiungi
-            </button>
-          ) : (
-            <button
-              onClick={onOpenVoice}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-tomato text-white shadow-lg shadow-tomato/30 transition hover:bg-tomato-700 active:scale-95"
-              aria-label="Aggiungi a voce"
-              title="Aggiungi a voce"
-            >
-              <Mic className="h-5 w-5" />
-            </button>
-          )}
+        <div data-tour="shopping-input" className="relative">
+          <Pencil className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
+          <input
+            ref={inputRef}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && add()}
+            placeholder="Scrivi cosa ti manca…"
+            className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-10 text-sm text-ink outline-none focus:border-ink"
+          />
+          {/* Microfono OUTLINE dentro il campo (arancione, senza riempimento) */}
+          <button
+            onClick={onOpenVoice}
+            aria-label="Aggiungi a voce"
+            title="Aggiungi a voce"
+            className="absolute right-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-tomato transition active:scale-90"
+          >
+            <Mic className="h-[22px] w-[22px]" />
+          </button>
         </div>
 
-        {/* Completamenti / acquisti frequenti: un tap e sono in lista */}
         {suggestions.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {suggestions.map((n) => (
               <button
                 key={n}
-                // pointerdown + preventDefault: scatta subito, senza far
-                // perdere il focus all'input (il click normale veniva
-                // "mangiato" dal reflow quando la tastiera iOS è aperta).
                 onPointerDown={(e) => { e.preventDefault(); add(n); }}
                 className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
               >
@@ -516,103 +527,44 @@ export default function ShoppingTab({
         </p>
       )}
 
-      <div className="mt-2">
-        {toBuy.length > 0 && (
+      {/* La lista inizia subito sotto l'input (gap ridotto). */}
+      <div className="mt-1">
+        {shopping.length > 0 && (
           byAisle ? (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {groups.map(({ cat, list }) => (
                 <section key={cat}>
-                  <div className="flex items-center gap-2 border-b border-ink/15 pb-2">
-                    <span className="text-base">{CAT_ICON[cat]}</span>
+                  <div className="flex items-center gap-2 border-b border-ink/10 pb-2">
+                    <CatIcon cat={cat} className="h-[18px] w-[18px] text-stone-500" />
                     <h4 className="font-display text-base font-bold uppercase tracking-wide text-ink">{cat}</h4>
-                    <span className="font-display text-sm font-bold text-tomato">{String(list.length).padStart(2, "0")}</span>
+                    <span className="font-display text-sm font-bold text-tomato">{list.length}</span>
                   </div>
                   <ul className="divide-y divide-hair">{renderItems(list)}</ul>
                 </section>
               ))}
             </div>
           ) : (
-            <ul className="divide-y divide-hair">{renderItems(toBuy)}</ul>
+            <ul className="divide-y divide-hair">{renderItems(shopping)}</ul>
           )
-        )}
-
-        {toBuy.length === 0 && inCart.length > 0 && (
-          <p className="py-6 text-center text-sm text-stone-400">Hai preso tutto! 🎉</p>
-        )}
-
-        {/* Gli articoli presi scivolano qui in fondo */}
-        {inCart.length > 0 && (
-          <section className="mt-7">
-            <div className="flex items-center gap-2 border-b border-ink/15 pb-2">
-              <span className="text-base">🛒</span>
-              <h4 className="font-display text-base font-bold uppercase tracking-wide text-stone-400">Nel carrello</h4>
-              <span className="font-display text-sm font-bold text-tomato">{String(inCart.length).padStart(2, "0")}</span>
-            </div>
-            <ul className="divide-y divide-hair">{renderItems(inCart)}</ul>
-          </section>
         )}
       </div>
 
-      {shopping.length > 0 && showHint && (
-        <p className="mt-3 text-center text-[11px] text-stone-400">
-          Spunta il quadratino quando lo prendi · tocca il nome per modificarlo · scorri di lato per eliminarlo
-        </p>
-      )}
+      {/* Spazio in fondo: l'ultimo prodotto resta visibile sopra il dock
+          (altezza fascia ~60px + tab bar 76px + safe-area). */}
+      {shopping.length > 0 && <div aria-hidden="true" style={{ height: "calc(56px + env(safe-area-inset-bottom))" }} />}
 
-      <div className={checkedCount > 0 ? "h-52" : "h-32"} />
-
-      {/* Dock in basso: un unico contenitore fisso e OPACO che fonde la barra
-          azioni con lo spazio della tab bar flottante (che ci galleggia sopra,
-          su sfondo opaco invece che sulla lista). Bordo superiore sottile;
-          paddingBottom riservato all'altezza della navbar + safe-area. */}
       {shopping.length > 0 && (
-        <div
-          className="fixed inset-x-0 bottom-0 z-20 border-t border-hair bg-cream"
-          style={{ paddingBottom: "calc(76px + env(safe-area-inset-bottom))" }}
-        >
-          <div className="mx-auto max-w-md px-5 py-1.5">
-            {checkedCount > 0 && (
-              <div className="animate-fade-in mb-2 flex gap-2">
-                <button
-                  onClick={onMoveChecked}
-                  disabled={movingChecked}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-tomato px-3 py-3 text-sm font-bold text-white transition hover:bg-tomato-700 active:scale-[0.99] disabled:opacity-60"
-                >
-                  {movingChecked
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <>
-                        <PackagePlus className="h-4 w-4" />
-                        {allChecked ? "Sposta tutto in dispensa" : `Sposta ${checkedCount} in dispensa`}
-                      </>}
-                </button>
-                <button
-                  onClick={onClearChecked}
-                  className="rounded-xl border border-hair px-3 py-3 text-sm font-semibold text-stone-500 transition hover:bg-stone-50"
-                >
-                  Rimuovi
-                </button>
-              </div>
-            )}
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setByAisle((v) => !v)}
-                aria-pressed={byAisle}
-                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
-                  byAisle ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-                }`}
-              >
-                <Store className="h-3.5 w-3.5" /> Per reparto
-              </button>
-              <button
-                onClick={onToggleAll}
-                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-stone-500 transition hover:bg-stone-100 hover:text-ink"
-              >
-                <ListChecks className="h-3.5 w-3.5" />
-                {allChecked ? "Deseleziona tutto" : "Seleziona tutto"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <BottomControls
+          byAisle={byAisle}
+          setByAisle={setByAisle}
+          selectionCount={selectionCount}
+          allSelected={allSelected}
+          moving={movingChecked}
+          onSelectAll={onToggleAll}
+          onClearSelection={clearSelection}
+          onMove={onMoveChecked}
+          onRemove={onClearChecked}
+        />
       )}
     </div>
   );
