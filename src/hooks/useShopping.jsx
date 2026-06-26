@@ -157,6 +157,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     if (!shopping.length) return;
     const target = !shopping.every((x) => x.checked);
     const toChange = shopping.filter((x) => x.checked !== target);
+    if (target) showToast("Hai preso tutto 🎉", undefined, undefined, undefined, 3500);
     setShopping((prev) => prev.map((x) => ({ ...x, checked: target })));
     try {
       await Promise.all(toChange.map((x) => updateShopping(x.id, { checked: target })));

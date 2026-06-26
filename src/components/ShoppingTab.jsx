@@ -107,10 +107,10 @@ function TopControls({ byAisle, setByAisle, allSelected, onSelectAll }) {
       >
         <Store className="h-4 w-4" /> Per reparto
       </button>
-      {/* Azione testuale (non un chip gemello): arancione, niente bordo */}
+      {/* Azione testuale (niente box): grigio come il testo di "Per reparto" */}
       <button
         onClick={onSelectAll}
-        className="flex h-9 items-center gap-1.5 px-2 text-sm font-semibold text-tomato transition hover:text-tomato-700"
+        className="flex h-9 items-center gap-1.5 px-2 text-sm font-semibold text-stone-600 transition hover:text-ink"
       >
         <ListChecks className="h-4 w-4" /> {allSelected ? "Svuota carrello" : "Seleziona tutto"}
       </button>
@@ -507,8 +507,9 @@ export default function ShoppingTab({
         </p>
       )}
 
-      {/* La lista inizia subito sotto l'input (gap ridotto). */}
-      <div className="mt-1">
+      {/* La lista inizia sotto l'input; un filo di margine in più così la prima
+          categoria non finisce sotto la fascia dei controlli. */}
+      <div className="mt-3">
         {shopping.length > 0 && (
           <>
             {byAisle ? (
