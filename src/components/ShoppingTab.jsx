@@ -1,15 +1,18 @@
-// Scheda "Spesa": lista della spesa con SELEZIONE CONTESTUALE.
-// - Tocca una riga (intera) per selezionarla; quando c'è almeno un selezionato
-//   compare la barra azioni (Sposta in dispensa / Rimuovi); la X annulla.
+// Scheda "Spesa": lista della spesa con CARRELLO.
+// - Tocca una riga (intera) per metterla NEL CARRELLO (barrata); ritoccala per
+//   rimetterla in lista. I prodotti nel carrello si raccolgono nel reparto
+//   "Nel carrello" in fondo.
+// - In alto (sotto la barra di testo): "Per reparto" e "Seleziona tutto",
+//   sempre visibili. In basso: "Sposta in dispensa" + cestino, solo quando il
+//   carrello non è vuoto.
 // - Pressione lunga sulla riga: apre l'editor (quantità/reparto/nome).
-// - Vista "Per reparto" (raggruppata, icone lineari) o lista piatta.
-// NB sul data layer: la "selezione" è il campo persistito `checked` degli item
-// (uso solo i prop esistenti: onToggle/onMoveChecked/onClearChecked). Nessuna
-// query/tabella/campo modificato.
+// NB sul data layer: il "carrello" è il campo persistito `checked` degli item
+// (uso solo i prop esistenti: onToggle/onToggleAll/onMoveChecked/onClearChecked).
+// Nessuna query/tabella/campo modificato.
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
-  Pencil, Mic, Check, X, Trash2, PackagePlus, Loader2, ListChecks, Store,
-  Share2, Lightbulb,
+  Pencil, Mic, Check, Trash2, PackagePlus, Loader2, ListChecks, Store,
+  Share2, Lightbulb, ShoppingCart,
   Carrot, Apple, Beef, Ham, Fish, Milk, Croissant, Wheat, Bean, Soup,
   Snowflake, CupSoda, Cookie, Grape, Droplet, Leaf, Package,
 } from "lucide-react";
@@ -38,6 +41,27 @@ const CAT_LUCIDE = {
   "Condimenti e Salse": Droplet,
   "Spezie ed Erbe": Leaf,
   "Altro": Package,
+};
+// Colore per reparto: dà identità visiva alle intestazioni di categoria
+// (colori letterali Tailwind, non temizzati — restano leggibili anche su scuro).
+const CAT_COLOR = {
+  "Verdura": "text-emerald-600",
+  "Frutta": "text-rose-500",
+  "Carne": "text-red-600",
+  "Salumi": "text-pink-500",
+  "Pesce": "text-sky-500",
+  "Latticini": "text-blue-400",
+  "Pane e Forno": "text-orange-400",
+  "Pasta, Riso e Cereali": "text-yellow-600",
+  "Legumi": "text-lime-600",
+  "Conserve": "text-orange-600",
+  "Surgelati": "text-cyan-500",
+  "Bevande": "text-indigo-500",
+  "Dolci": "text-fuchsia-500",
+  "Frutta Secca": "text-orange-700",
+  "Condimenti e Salse": "text-yellow-500",
+  "Spezie ed Erbe": "text-green-600",
+  "Altro": "text-stone-500",
 };
 function CatIcon({ cat, className }) {
   const I = CAT_LUCIDE[cat] || Package;
@@ -116,66 +140,60 @@ function ShoppingRow({ it, onSelect, onLongEdit }) {
   );
 }
 
-// --- Fascia di controlli unica sopra la tab bar, che si TRASFORMA in base alla
-// selezione. Dock fisso e opaco (la pillola nav ci galleggia sopra). ---
-function BottomControls({
-  byAisle, setByAisle, selectionCount, allSelected, moving,
-  onSelectAll, onClearSelection, onMove, onRemove,
-}) {
-  const selectionMode = selectionCount > 0;
+// --- Controlli in alto (sotto la barra di testo): "Per reparto" e "Seleziona
+// tutto", SEMPRE visibili (non spariscono quando metti roba nel carrello). ---
+function TopControls({ byAisle, setByAisle, allSelected, onSelectAll }) {
+  return (
+    <div className="mt-2 flex items-center justify-between">
+      {/* Chip toggle "Per reparto": arancione pieno quando attivo */}
+      <button
+        onClick={() => setByAisle((v) => !v)}
+        aria-pressed={byAisle}
+        className={`flex h-9 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold transition ${
+          byAisle ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-600 hover:bg-stone-50"
+        }`}
+      >
+        <Store className="h-4 w-4" /> Per reparto
+      </button>
+      {/* Azione testuale (non un chip gemello): arancione, niente bordo */}
+      <button
+        onClick={onSelectAll}
+        className="flex h-9 items-center gap-1.5 px-2 text-sm font-semibold text-tomato transition hover:text-tomato-700"
+      >
+        <ListChecks className="h-4 w-4" /> {allSelected ? "Svuota carrello" : "Seleziona tutto"}
+      </button>
+    </div>
+  );
+}
+
+// --- Barra in basso: appare solo quando il carrello NON è vuoto. Solo due
+// azioni: "Sposta in dispensa" (prende tutto il pieno schermo) + cestino.
+// Niente X (annullare = ritoccare la riga). Dock fisso (la nav ci galleggia
+// sopra). ---
+function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
+  if (cartCount === 0) return null;
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-20 border-t border-hair bg-cream"
       style={{ paddingBottom: "calc(76px + env(safe-area-inset-bottom))" }}
     >
-      <div className="mx-auto max-w-md px-5 py-2">
-        {selectionMode ? (
-          <div className="animate-fade-in flex items-center gap-2">
-            <button
-              onClick={onClearSelection}
-              aria-label="Annulla selezione"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-hair text-stone-500 transition hover:bg-stone-50"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <button
-              onClick={onMove}
-              disabled={moving}
-              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-tomato px-3 text-sm font-bold text-[#fff] transition hover:bg-tomato-700 active:scale-[0.99] disabled:opacity-60"
-            >
-              {moving
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <><PackagePlus className="h-4 w-4" /> {allSelected ? "Sposta tutto in dispensa" : `Sposta ${selectionCount} in dispensa`}</>}
-            </button>
-            <button
-              onClick={onRemove}
-              aria-label="Rimuovi selezionati"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-hair text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
-            >
-              <Trash2 className="h-5 w-5" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            {/* Chip toggle "Per reparto": arancione pieno quando attivo */}
-            <button
-              onClick={() => setByAisle((v) => !v)}
-              aria-pressed={byAisle}
-              className={`flex h-11 items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold transition ${
-                byAisle ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-600 hover:bg-stone-50"
-              }`}
-            >
-              <Store className="h-4 w-4" /> Per reparto
-            </button>
-            {/* Azione testuale (non un chip gemello): arancione, niente bordo */}
-            <button
-              onClick={onSelectAll}
-              className="flex h-11 items-center gap-1.5 px-2 text-sm font-semibold text-tomato transition hover:text-tomato-700"
-            >
-              <ListChecks className="h-4 w-4" /> Seleziona tutto
-            </button>
-          </div>
-        )}
+      <div className="mx-auto flex max-w-md items-center gap-2 px-5 py-2">
+        <button
+          onClick={onMove}
+          disabled={moving}
+          className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-tomato px-3 text-sm font-bold text-[#fff] transition hover:bg-tomato-700 active:scale-[0.99] disabled:opacity-60"
+        >
+          {moving
+            ? <Loader2 className="h-4 w-4 animate-spin" />
+            : <><PackagePlus className="h-4 w-4" /> {allInCart ? "Sposta tutto in dispensa" : `Sposta ${cartCount} in dispensa`}</>}
+        </button>
+        <button
+          onClick={onRemove}
+          aria-label="Rimuovi dal carrello"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-hair text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );
@@ -192,8 +210,11 @@ export default function ShoppingTab({
   const [awake, setAwake] = useState(false);
   const wakeRef = useRef(null);
 
-  const selectionCount = shopping.filter((s) => s.checked).length;
-  const allSelected = shopping.length > 0 && selectionCount === shopping.length;
+  // Carrello = articoli `checked`; lista = quelli ancora da prendere.
+  const cart = shopping.filter((s) => s.checked);
+  const todo = shopping.filter((s) => !s.checked);
+  const cartCount = cart.length;
+  const allInCart = shopping.length > 0 && cartCount === shopping.length;
 
   // Wake Lock: tiene lo schermo acceso mentre fai la spesa (se supportato).
   const wakeSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
@@ -217,10 +238,7 @@ export default function ShoppingTab({
     };
   }, [awake]);
 
-  // Annulla la selezione: deseleziona (silenzioso) tutti gli item selezionati.
-  function clearSelection() {
-    for (const it of shopping) if (it.checked) onToggle(it.id, false);
-  }
+  // Tocco sulla riga: mette nel carrello / rimette in lista.
   const selectItem = (it) => onToggle(it.id, !it.checked);
 
   // --- Pannello di modifica (apre con pressione lunga; senza scadenze) ---
@@ -435,10 +453,10 @@ export default function ShoppingTab({
     }
   }
 
-  // Reparti nell'ordine del giro classico del supermercato. Mostriamo TUTTI gli
-  // item (i selezionati restano in posizione, barrati).
+  // Reparti nell'ordine del giro classico del supermercato. Solo i prodotti
+  // ancora da prendere; quelli nel carrello vanno nel reparto "Nel carrello".
   const groups = AISLE_ORDER
-    .map((c) => ({ cat: c, list: shopping.filter((s) => catFor(s.name) === c) }))
+    .map((c) => ({ cat: c, list: todo.filter((s) => catFor(s.name) === c) }))
     .filter((g) => g.list.length > 0);
 
   const renderItems = (list) =>
@@ -518,6 +536,16 @@ export default function ShoppingTab({
             ))}
           </div>
         )}
+
+        {/* Controlli sempre in alto, sotto la barra di testo. */}
+        {shopping.length > 0 && (
+          <TopControls
+            byAisle={byAisle}
+            setByAisle={setByAisle}
+            allSelected={allInCart}
+            onSelectAll={onToggleAll}
+          />
+        )}
       </div>
 
       {shopping.length === 0 && (
@@ -530,42 +558,50 @@ export default function ShoppingTab({
       {/* La lista inizia subito sotto l'input (gap ridotto). */}
       <div className="mt-1">
         {shopping.length > 0 && (
-          byAisle ? (
-            <div className="space-y-5">
-              {groups.map(({ cat, list }) => (
-                <section key={cat}>
-                  <div className="flex items-center gap-2 border-b border-ink/10 pb-2">
-                    <CatIcon cat={cat} className="h-[18px] w-[18px] text-stone-500" />
-                    <h4 className="font-display text-base font-bold uppercase tracking-wide text-ink">{cat}</h4>
-                    <span className="font-display text-sm font-bold text-tomato">{list.length}</span>
-                  </div>
-                  <ul className="divide-y divide-hair">{renderItems(list)}</ul>
-                </section>
-              ))}
-            </div>
-          ) : (
-            <ul className="divide-y divide-hair">{renderItems(shopping)}</ul>
-          )
+          <>
+            {byAisle ? (
+              <div className="space-y-5">
+                {groups.map(({ cat, list }) => (
+                  <section key={cat}>
+                    <div className="flex items-center gap-2 border-b border-ink/10 pb-2">
+                      <CatIcon cat={cat} className={`h-[18px] w-[18px] ${CAT_COLOR[cat] || "text-stone-500"}`} />
+                      <h4 className="font-display text-base font-bold uppercase tracking-wide text-ink">{cat}</h4>
+                      <span className="font-display text-sm font-bold text-tomato">{list.length}</span>
+                    </div>
+                    <ul className="divide-y divide-hair">{renderItems(list)}</ul>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <ul className="divide-y divide-hair">{renderItems(todo)}</ul>
+            )}
+
+            {/* Reparto "Nel carrello": gli articoli presi, barrati. */}
+            {cart.length > 0 && (
+              <section className="mt-6">
+                <div className="flex items-center gap-2 border-b border-tomato/30 pb-2">
+                  <ShoppingCart className="h-[18px] w-[18px] text-tomato" aria-hidden="true" />
+                  <h4 className="font-display text-base font-bold uppercase tracking-wide text-tomato">Nel carrello</h4>
+                  <span className="font-display text-sm font-bold text-tomato">{cart.length}</span>
+                </div>
+                <ul className="divide-y divide-hair">{renderItems(cart)}</ul>
+              </section>
+            )}
+          </>
         )}
       </div>
 
-      {/* Spazio in fondo: l'ultimo prodotto resta visibile sopra il dock
-          (altezza fascia ~60px + tab bar 76px + safe-area). */}
-      {shopping.length > 0 && <div aria-hidden="true" style={{ height: "calc(56px + env(safe-area-inset-bottom))" }} />}
+      {/* Spazio in fondo: l'ultimo prodotto resta visibile sopra la nav (e
+          sopra la barra "Sposta in dispensa" quando il carrello è pieno). */}
+      {shopping.length > 0 && <div aria-hidden="true" style={{ height: "calc(72px + env(safe-area-inset-bottom))" }} />}
 
-      {shopping.length > 0 && (
-        <BottomControls
-          byAisle={byAisle}
-          setByAisle={setByAisle}
-          selectionCount={selectionCount}
-          allSelected={allSelected}
-          moving={movingChecked}
-          onSelectAll={onToggleAll}
-          onClearSelection={clearSelection}
-          onMove={onMoveChecked}
-          onRemove={onClearChecked}
-        />
-      )}
+      <BottomBar
+        cartCount={cartCount}
+        allInCart={allInCart}
+        moving={movingChecked}
+        onMove={onMoveChecked}
+        onRemove={onClearChecked}
+      />
     </div>
   );
 }
