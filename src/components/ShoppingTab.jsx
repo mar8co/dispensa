@@ -529,6 +529,11 @@ export default function ShoppingTab({
               <ul className="divide-y divide-hair">{renderItems(todo)}</ul>
             )}
 
+            {/* Tutto preso: messaggio al centro dov'erano i prodotti. */}
+            {todo.length === 0 && cart.length > 0 && (
+              <p className="py-6 text-center text-sm text-stone-400">Hai preso tutto! 🎉</p>
+            )}
+
             {/* Reparto "Nel carrello": gli articoli presi, barrati. */}
             {cart.length > 0 && (
               <section className="mt-6">
