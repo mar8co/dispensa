@@ -2,9 +2,11 @@
 // oppure un'etichetta personalizzata, es. "In lista spesa").
 import { Undo2 } from "lucide-react";
 
-export default function Toast({ message, onUndo, actionLabel = "Annulla", actionTone = "tomato" }) {
+// `raised`: alza il toast quando c'è una barra azioni in basso (scheda Spesa),
+// così non copre il pulsante "Sposta in dispensa". Altrove resta più in basso.
+export default function Toast({ message, onUndo, actionLabel = "Annulla", actionTone = "tomato", raised = false }) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-44 z-[60] flex justify-center px-4">
+    <div className={`pointer-events-none fixed inset-x-0 ${raised ? "bottom-44" : "bottom-28"} z-[60] flex justify-center px-4`}>
       <div className="pointer-events-auto flex max-w-full items-center gap-3 rounded-xl border border-stone-300 bg-stone-200 px-4 py-2.5 text-sm text-stone-900 shadow-lg">
         <span className="min-w-0 break-words">{message}</span>
         {onUndo && (

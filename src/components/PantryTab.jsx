@@ -93,6 +93,10 @@ export default function PantryTab({
   function scheduleQty(v) {
     setQtyDraft(v);
     clearTimeout(qtyTimer.current);
+    // Arrivati a 0 (prodotto finito) committiamo subito: il toast "Hai finito"
+    // deve comparire all'istante, senza gli 800 ms di attesa.
+    const m = String(v).replace(",", ".").match(/-?\d+(\.\d+)?/);
+    if (m && parseFloat(m[0]) === 0) { commitQtyNow(v); return; }
     qtyTimer.current = setTimeout(() => commitQtyNow(v), 800);
   }
   function commitNameNow() {
