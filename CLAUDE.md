@@ -1,100 +1,148 @@
 # CLAUDE.md — Regole permanenti del progetto "Dispensa"
 
-> Questo file vale per **ogni** conversazione su questo repo. Leggerlo PRIMA di modificare qualsiasi cosa.
-> Documenti collegati: `HANDOFF.md` (stato e ripresa lavoro) · `ARCHITECTURE.md` (architettura).
-> L'app si chiama **"Dispensa"** (ex "La Mia Dispensa"); la cartella/repo resta `dispensa`.
+> Questo file vale per **ogni** conversazione su questo repo. Leggerlo PRIMA di
+> modificare qualsiasi cosa. Collegati: `HANDOFF.md` (stato e ripresa) ·
+> `ARCHITECTURE.md` (architettura). L'app si chiama **"Dispensa"** (ex "La Mia
+> Dispensa"); cartella/repo: `dispensa`.
 
 ---
 
-## 0. Le regole non negoziabili
-1. **Rispondi SEMPRE in italiano.** App, commenti del codice e testi UI sono in italiano.
-2. **Solo unità metriche**: g, kg, ml, l. Mai cups/oz/tbsp/tsp (vale anche nei prompt AI e nei dati demo). Le quantità di conteggio come numero ("3", "6").
-3. **API key MAI nel client.** `GEMINI_API_KEY`, `PEXELS_API_KEY` e `SUPABASE_SERVICE_ROLE_KEY` vivono solo nelle env server (`server/*`, serverless Vercel, middleware dev). Nel bundle client possono finire SOLO le var `VITE_*` (URL e anon key Supabase).
-4. **Workflow di rilascio**: `edit → npm run build → git commit → git push origin main` (Vercel auto-deploy). **Committa e pusha SEMPRE in automatico** dopo ogni modifica con build verde, senza che l'utente lo chieda (preferenza esplicita). Messaggio di commit terminante con:
-   `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`
-5. **Mockup prima delle modifiche visive**: l'utente è molto attento all'UX/UI e di solito vuole vedere mockup (via widget di visualizzazione) prima di applicare cambiamenti estetici. Offrirli.
-6. **Non rompere il pattern proxy** "stile Anthropic ↔ Gemini" (vedi §5): prompt e formato lato client non devono cambiare.
+## Regole permanenti (non negoziabili)
 
-## 1. Verifica e qualità (test / CI / lint)
-- Dopo ogni modifica significativa: **`npm run build` deve passare** (è la verifica autorevole; il preview locale mostra solo il login).
-- Quando tocchi logica esegui anche **`npm test`** (Vitest, 34 test su `src/lib/pantry.js`) e **`npm run lint`** (ESLint flat config, regole `eslint-plugin-react-hooks`).
-- La **CI** (`.github/workflows/ci.yml`) ripete `npm ci → lint → test → build` su ogni push/PR: tienila verde.
-- Mantieni **0 warning ESLint** (stato attuale). Se aggiungi un `// eslint-disable-…`, motivalo con un commento (es. i 3 effetti once-mount in `Dispensa.jsx`).
-- Se aggiungi logica di quantità/categorie/scadenze in `pantry.js`, **aggiungi i relativi test** in `pantry.test.js`.
-- Riferisci onestamente cosa è verificato e cosa no: tutorial e viste interne richiedono login → spesso **non verificabili da Claude**, vanno provati sul telefono dall'utente.
+1. **Rispondere SEMPRE in italiano.** UI, testi, commenti del codice e messaggi di
+   commit sono in italiano. **Unità metriche** (g/kg/ml/l) ovunque, mai cups/oz.
+2. **API key MAI nel client.** Gemini, Pexels e il service-role Supabase vivono
+   solo lato server (`server/*` + `api/*`). Nel bundle finiscono solo
+   `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (anon, protetta da RLS).
+3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
+   degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
+4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
+   (46/46), `npm run build`. Se tocchi `pantry.js`, aggiorna `pantry.test.js`.
+5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
+   questo progetto), senza chiedere. Branch `main`, remoto `origin`.
+6. **Refactor incrementali, mai big-bang.** Un cambiamento coerente per commit.
 
-## 2. Convenzioni di codice
-- **JavaScript + JSX** (NON TypeScript). React 18, function components + hooks. Indentazione 2 spazi, virgolette doppie, punto e virgola.
-- **Commenti in italiano**, densità media: spiegano il *perché* (scelte iOS, anti-quota, gotcha), non il banale. Mantenere lo stile dei file vicini.
-- **Niente librerie nuove** senza motivo forte (vedi §4). Preferire funzioni pure in `lib/`.
-- **Logica pura** (categorie, quantità, scadenze) va in `src/lib/pantry.js`, testabile in isolamento (e testata).
-- **Naming**: componenti `PascalCase.jsx`, librerie `camelCase.js`, handler `onX`/`handleX`. Stato in `Dispensa.jsx` passato ai figli via props. Le funzioni di `lib/` sono pure o con lato-effetto isolato (db/network).
-- **Persistenza locale**: chiavi `localStorage` con prefisso `dispensa-…` (es. `dispensa-onboarded-<uid>`, `dispensa-ideas-<uid>`, `dispensa-timers`).
-- **Import**: i componenti pesanti si caricano lazy (`BarcodeScanModal`, `ReceiptScanModal`).
-- Bersagli tutorial via attributo `data-tour="kebab-case"`.
+---
 
-## 3. Standard UX/UI ("stile editoriale")
-- **Palette**: sfondo avorio **#F4F1E9** (token `cream`), testo nero **#0A0A0A** (token `ink`), accento **rosso `#FF4306`** (token `tomato`, 700 più scuro), righe sottili `hair`. Font UNICO **Hanken Grotesk** (sans + `font-display` con tracking stretto; NON serif). I colori vivono come terne RGB in `index.css` → cambiare lì aggiorna tutta l'app.
-- **Palette via CSS variables** in `index.css` (terne RGB), mappate da Tailwind con `rgb(var(--x) / <alpha-value>)`.
-- **Dark mode**: `prefers-color-scheme` + override manuale `:root[data-theme="…"]`. **I due blocchi scuri devono restare identici.**
-- ⚠️ **TRAPPOLA**: il token Tailwind `white`/`black` è **TEMATO** (si scurisce in dark). Su fondi scuri *letterali* (fotocamera, chip nere, scrim, overlay, testo su `bg-tomato`) usare **`text-[#fff]` / `bg-[#fff]` / `bg-[#111]`**, non `text-white`/`bg-white`.
-- **Navbar**: pillola flottante centrata `bg-cream/80 backdrop-blur-md`; ordine **Dispensa · Spesa · [+] · Ricette · Profilo**; scheda attiva con pillola `tomato/10`; "+" centrale rialzato con menù a **semicerchio** (4 modalità: A mano · Foto · Barcode · Voce).
-- **Bottom-sheet** (`Sheet.jsx`) per quasi tutti i modali (maniglia, drag-to-dismiss, sfondo scuro); blocca lo scroll di sfondo, contenuto scrollabile con `overscroll-contain`.
-- **Input in alto, non in basso**: su iOS la tastiera copre ciò che è fisso in basso → ricerca/aggiunta sono **sticky-top**.
-- **Pattern coerenti**: chips unità pz/g/kg/l, stepper −/+, toast in basso con azione (Annulla/Stop), swipe-to-delete in due tempi, skeleton durante il caricamento AI, View Transitions tra schede, animazioni morbide (`cubic-bezier(0.22,1,0.36,1)`).
-- **Auto-save ovunque** nei pannelli prodotto/spesa: niente bottone "Salva" (nome al blur, qty/scadenza con debounce, resto al tap). Confermare con toast "Modifica salvata · Annulla".
-- **Icone `lucide-react`** nei pulsanti d'azione (no emoji lì; emoji ok per categorie/occasioni). Es. "Cucina con questo" usa `Sparkles`.
-- **Privacy** ed **"Elimina account"** restano **discreti** (link piccoli in fondo al Profilo): non rovinare l'estetica.
-- **Mobile-first**, target iPhone Safari/PWA: rispetta `env(safe-area-inset-*)`, anti-zoom iOS (input ≥16px / regole in `index.css`).
+## Convenzioni di codice
 
-## 4. Librerie approvate (e cosa evitare)
-**Approvate / già in uso** — non aggiungerne altre senza necessità:
-- `react`, `react-dom` (18.3); `@supabase/supabase-js`; `lucide-react`; `@zxing/browser`+`@zxing/library` (barcode, lazy); `vaul` (bottom-sheet drag-to-dismiss, su `@radix-ui/react-dialog`; usata SOLO dentro `Sheet.jsx`)
-- dev/build: `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa`, `tailwindcss`, `postcss`, `autoprefixer`, `sharp`, `vitest`, `eslint` (+ `eslint-plugin-react-hooks`)
-- servizi esterni: Gemini, Pexels, Open Food Facts, Web APIs del browser
+- **React funzionale + hook.** Niente classi. Niente TypeScript (è un progetto JS
+  `.jsx`/`.js`).
+- **Logica pura in `src/lib/`** (testabile), stato/effetti negli **hook**
+  `src/hooks/`, presentazione nei **componenti** `src/components/`.
+- **Commenti in italiano** che spiegano il *perché*, densi quanto il codice
+  circostante (lo stile del repo è molto commentato: rispettalo).
+- **ESLint flat config** (`eslint.config.js`): `react-hooks`, `no-unused-vars` con
+  `varsIgnorePattern: ^[A-Z_]`. Quindi le variabili non usate **minuscole** danno
+  errore: rimuovile (non rinominarle in maiuscolo per aggirare il lint).
+- **Nessun bianco letterale tematizzato**: per superfici/testi bianchi usa il
+  token `white` (che diventa scuro in dark mode); il **nero scrim** resta
+  letterale (`bg-black/40`, `text-[#fff]` nelle UI fotocamera su sfondo scuro).
+- **localStorage**: chiavi sempre con prefisso `dispensa-*`, per-uid dove ha senso
+  (es. `dispensa-sort-<uid>`, `dispensa-theme`).
+- **Commit su Windows/PowerShell**: messaggi multilinea/con emoji → scrivere in
+  `.git/COMMIT_EDITMSG_TMP` e `git commit -F`. I messaggi finiscono con
+  `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
-**Da evitare salvo richiesta esplicita**: state manager (Zustand/Redux), UI kit (MUI…), date lib pesanti, framework CSS alternativi, SDK Anthropic/OpenAI nel client, qualunque dipendenza che porti una API key nel bundle.
+---
 
-## 5. Il pattern proxy AI (capirlo prima di toccarlo)
-- Il **client** (`lib/claude.js`) manda a `/api/claude` un payload "stile Anthropic": `{ content: [{type:"text"|"image", …}], max_tokens }` + header `Authorization: Bearer <token Supabase>`.
-- Il **core** `server/claude.js` (condiviso tra serverless Vercel `api/claude.js` e middleware dev `devApi` in `vite.config.js`): verifica il token Supabase (→ 401), traduce i blocchi in formato Gemini, chiama Gemini con la **API key server**, ritraduce nella forma attesa dal client (`{ content:[{type:"text",text}] }`).
-- Sui modelli `2.5` imposta `thinkingConfig.thinkingBudget=0` e `responseMimeType:"application/json"` (i prompt chiedono già JSON).
-- **Indurimento (sicurezza)**: cap dimensione payload (~9 MB → 413), `max_tokens` clampato 1..2048, **rate-limit per utente/giorno** best-effort via `admin.rpc("bump_ai_usage")` se `SUPABASE_SERVICE_ROLE_KEY` è presente (tabella `ai_usage`, `migration-5.sql`; default 80, env `AI_DAILY_LIMIT`; non blocca se non configurato → 429 se superato).
-- Stesso schema per `/api/photo` → Pexels (`server/photo.js`). Cancellazione account: `/api/account` → `server/account.js` (verifica token, poi `admin.auth.admin.deleteUser`; dati via FK cascade).
-- **Conseguenza pratica**: per cambiare provider AI si tocca SOLO `server/claude.js`; prompt e client restano invariati. Non spostare la traduzione nel client.
+## Standard UX/UI da rispettare
 
-## 6. Pattern architetturali da seguire (dettagli in ARCHITECTURE.md)
-- **`Dispensa.jsx` è la composition root** (ex god component): lo stato è stato estratto in custom hook per dominio (`src/hooks/`: `usePantry`, `useShopping`, `useRecipes`, `useTimersTicker`, `useOnline`). Dispensa compone gli hook e tiene solo gli **effetti condivisi** (load cache-first, persistenza impostazioni, cache mirror, Realtime) e l'**orchestrazione cross-dominio** (tutorial, flussi scan/voce/barcode, CookModal, bridge `moveCheckedToPantry`/`cookWith*`). **Nuova logica di stato va nell'hook del dominio giusto**; se tocca più domini resta in Dispensa come bridge. Confini e ordine (`useShopping` prima di `usePantry`) in HANDOFF §7/§11. Eventuali nuove estrazioni: sempre **incrementali** (un pezzo per volta, build+test+CI verdi, commit) — mai big-bang.
-- **Dati cache-first**: leggere prima da `localStorage` (`lib/cache.js`), poi refresh da Supabase; **Realtime** sincronizza `pantry_items` e `shopping_items`; `user_settings` (jsonb) si applica dal DB **solo se più recente** della cache (confronto `updated_at`).
-- **Layer dati isolato**: tutte le query Supabase stanno in `src/lib/db.js`; i componenti non chiamano Supabase direttamente (eccetto auth/session in `lib/supabase.js`, `lib/claude.js`).
-- **AI dietro proxy**: il client usa `callClaude(content, maxTokens)` e `fetchPhotos(queries)` da `lib/claude.js`; mai chiamare Gemini/Pexels direttamente.
-- **Stato fuori da React quando serve persistere tra schede**: timer in store module-level (`lib/timers.js`); tutorial in store esterno (`lib/tour.js`, `useSyncExternalStore`).
-- **Tutorial**: aggiungere passi → `STEPS` in `lib/tour.js`; aggiungere bersagli → `data-tour="…"`; far avanzare un passo d'azione → `tourSignal('nome')` nell'handler reale (no-op se il tutorial non è attivo o non aspetta quel segnale). Il tutorial ha **13 passi** (vedi HANDOFF §5).
-- **`qty` come testo**; matematica in `lib/pantry.js`. **Ricettario local-first** (`lib/recipes.js`, funziona senza `migration-4`).
+- **Mobile-first, iPhone Safari/PWA.** Tutto va pensato per una mano sola, target
+  tocco ≥ 44px, rispetto di `env(safe-area-inset-*)`.
+- **Palette** (variabili CSS in `src/index.css`, mappate ai token Tailwind):
+  - Light: `--cream 244 241 233` (sfondo), `--ink 10 10 10` (#0A0A0A), `--tomato
+    255 67 6` (#FF4306), `--tomato-700 214 54 0`.
+  - Dark: definito nei blocchi `[data-theme="dark"]` e media query; **i token
+    devono restare allineati** a quelli light (stessi nomi).
+  - Tomato in dark: `255 96 56`.
+- **Icone categoria = emoji** da `CAT_ICON` (constants.js), **identiche** tra
+  Dispensa e Spesa. Non sostituirle con icone lineari.
+- **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
+- **Toast** (`Toast.jsx`): posizione `bottom-28`, e `bottom-44` solo sulla scheda
+  Spesa (prop `raised`), per non coprire la barra "Sposta in dispensa".
+- **Feedback immediato**: niente attese percepibili inutili (es. lo stepper
+  committa subito quando arriva a 0, così il toast appare all'istante).
+- **Microcopy** caldo e diretto, in italiano, breve (sta in una riga su mobile).
+- **Rispetta `prefers-reduced-motion`** (già gestito per Vaul in `index.css`).
 
-## 7. Cose da evitare (gotcha che hanno già morso)
-- ❌ `text-white`/`bg-white`/`text-black` su fondi letterali → usare `[#fff]`/`[#111]` (§3).
-- ❌ Mettere segreti nel client o committarli; rendere il repo privato (i deploy Vercel si bloccano — vedi HANDOFF §8).
-- ❌ Big-bang refactor del god component.
-- ❌ Reintrodurre un seed permanente: il primo accesso popola `DEMO_DATA` e il tutorial li pulisce a fine giro.
-- ❌ Tradurre i testi UI in inglese o usare unità imperiali (anche nei prompt/dati demo).
-- ❌ Far partire chiamate AI nel tutorial: usa i dati demo di `lib/tour.js` (consuma quota e richiede rete).
-- ⚠️ `position: fixed` dentro un contenitore con `transform` si ancora al genitore: overlay globali (menù "+", `TourCoach`) vanno renderizzati a livello pagina.
-- ⚠️ `<input type="date">` invisibile sopra un'icona su iOS → serve `overflow-hidden`; **non** salvare la scadenza dall'`onChange` di un input invisibile (iOS imposta "oggi"). Salvare con **debounce + flush alla chiusura**; l'effetto di chiusura DEVE includere `expDraft` nelle dipendenze (stale closure già successa).
-- ⚠️ I pannelli del tutorial (tooltip/banner/card) DEVONO fare `stopPropagation` sul `pointerdown`, altrimenti il "tocco fuori" chiude il pannello prodotto / apre la tastiera (bug già capitato).
-- ⚠️ iOS cachea nome e icona della PWA: per aggiornarli va rimossa e re-installata. Dopo aver toccato `public/icon.svg`, rigenera i PNG con `node scripts/generate-icons.mjs`.
+---
 
-## 8. Modalità di lavoro nelle future conversazioni
-- **Leggi prima** `HANDOFF.md` (stato, cosa è/non è deployato) e questo file.
-- **Refactor incrementale di `Dispensa.jsx` in custom hooks: COMPLETATO** (5 hook estratti). Possibile passo successivo: estrarre anche scan/voce/barcode e CookModal. Vedi HANDOFF §4/§7/§10.
-- **Pubblicazione store**: bloccata su Windows (serve Mac/servizio cloud + Apple Developer 99 €/anno). Quando si affronterà: wrapper (Capacitor/PWABuilder) + Sign in with Apple + stringhe permessi + gestione voce in WKWebView. Vedi HANDOFF §8/§10.
-- Per nuove feature AI restare nel **free tier Gemini** (preferenza utente: niente piani a pagamento per l'AI per ora); sfruttare/estendere le cache (idee 24h) per non bruciare quota.
-- Per richieste grandi/ambigue, **chiarisci 1–2 scelte chiave** prima di scrivere centinaia di righe. Lavora in modo **decisionale**: quando hai abbastanza per agire, agisci; dai una raccomandazione, non un sondaggio. Mantieni lo **stile dei file vicini**.
+## Librerie approvate
 
-## 9. Info che una nuova istanza dovrebbe conoscere
-- App **personale**, single-user di fatto (ma multi-utente via RLS). iPhone Safari/PWA è il dispositivo target. L'utente è molto attento all'UX/UI, risponde in italiano, vuole commit/push automatici.
-- Ambiente di lavoro **Windows + PowerShell** (lo strumento Bash usa sintassi POSIX). Dir: `C:\Users\pasqu\Downloads\dispensa`.
-- Repo **pubblico** `mar8co/dispensa` → Vercel auto-deploy su `main`. Produzione: https://la-dispensa-omega.vercel.app
-- SQL Supabase da eseguire in ordine: `schema → migration-2 → migration-3 → migration-4 → migration-5` (idempotenti). `SUPABASE_SERVICE_ROLE_KEY` è configurata su Vercel (serve a "Elimina account" e rate-limit).
-- Esiste un file legacy `dispensa-ui.jsx` nella root (monolite originale, **non** usato). Componenti orfani: `AddMenu.jsx`, `ProfileTab.jsx` (non importati).
-- Memoria persistente di Claude su questo progetto: `project_dispensa.md` + `feedback_dispensa_autocommit.md` (indice in `MEMORY.md`).
+Usa quelle già presenti; **non aggiungere dipendenze senza un buon motivo** (è una
+PWA leggera). Approvate:
+
+- `react`, `react-dom`
+- `@supabase/supabase-js`
+- `lucide-react` (icone UI) + **emoji** (categorie)
+- `vaul` (+ `@radix-ui/react-dialog` transitiva) per i bottom sheet
+- `@zxing/browser`, `@zxing/library` (barcode)
+- Dev: `vite`, `vite-plugin-pwa`, `tailwindcss`, `vitest`, `eslint`, `sharp`
+
+Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto usa
+`fetchPhotos` (proxy Pexels).
+
+---
+
+## Pattern architetturali da seguire
+
+- **Composition root**: lo stato condiviso e gli effetti cross-dominio stanno in
+  `Dispensa.jsx`; ogni dominio (pantry/shopping/recipes) ha il suo hook. Se due
+  domini devono parlarsi, il **bridge** sta in `Dispensa.jsx` (es.
+  `moveCheckedToPantry`), non in un hook che ne importa un altro.
+- **Ordine degli hook** in Dispensa: `useOnline → useTimersTicker → useRecipes →
+  useShopping → usePantry` (usePantry per ultimo perché usa il bridge della
+  spesa). Non invertire senza motivo.
+- **Optimistic UI + Supabase**: aggiorna lo stato locale subito, poi persiste; il
+  **Realtime** riconcilia tra dispositivi.
+- **AI stile Anthropic**: i prompt mandano blocchi `{type:"text"|"image"}`; il
+  parsing della risposta è JSON (con fallback regex) in `callClaude`. Non cambiare
+  il formato lato client.
+- **q.b. disaccoppiato**: `isStapleQb` (CookModal, ristretto) ≠ `isQbIngredient`
+  (display ricetta, ampio). Tienili separati.
+- **Persistenza impostazioni**: in `user_settings` (jsonb) ciò che è cross-device
+  (ordini, collassato, porzioni, preferenze); in localStorage ciò che è
+  per-dispositivo (tema) o per-uid (ultimo ordinamento spesa).
+
+---
+
+## Cose da evitare
+
+- ❌ Mettere chiavi/segreti nel client o committarli.
+- ❌ Modificare schema/tabelle/colonne o i campi degli item senza richiesta.
+- ❌ Aggiungere dipendenze pesanti o duplicare ciò che `lucide`/`vaul`/`pantry.js`
+  già fanno.
+- ❌ Avviare **più di una** View Transition insieme (freeze su iOS).
+- ❌ Rimontare/aprire i `Sheet` in ritardo (rompe le fotocamere: vanno montati
+  `open=true`).
+- ❌ Big-bang refactor, o commit che mescolano più cambiamenti scollegati.
+- ❌ Icone lineari al posto delle emoji per le categorie.
+- ❌ Verificare via preview cose dietro login/camera e spacciarle per testate:
+  dillo chiaramente e fai provare sul telefono.
+
+---
+
+## Modalità di lavoro nelle future conversazioni
+
+1. Leggi `HANDOFF.md` + `ARCHITECTURE.md` prima di agire.
+2. Per modifiche UX: punta prima il file giusto (vedi tabella in HANDOFF), fai un
+   cambiamento mirato, poi lint/test/build, poi commit+push automatico.
+3. Quando una scelta è davvero dell'utente (estetica/prodotto), proponi **opzioni
+   con una raccomandazione**, non un sondaggio infinito; per il resto, agisci.
+4. Se l'utente segnala un comportamento "di prima", **controlla la cronologia git**
+   (`git log -S "<testo>"`, `git show <commit>^:<file>`) prima di reimplementare a
+   memoria: spesso il comportamento esiste già in un commit precedente.
+5. Aggiorna questi tre documenti quando cambi qualcosa di strutturale.
+
+---
+
+## Cosa una nuova istanza di Claude deve sapere subito
+
+- L'app è **personale** (un solo utente) ma con **auth + RLS reali**: niente
+  scorciatoie che espongano dati o chiavi.
+- È **molto curata sull'UX**: dettagli di pochi pixel, microcopy e feedback contano
+  per l'utente. Le richieste sono spesso iterazioni fini su UI già esistente.
+- Il provider AI è **Gemini**, ma l'interfaccia è "stile Anthropic" per
+  portabilità: ragiona sui prompt, non sul provider.
+- L'utente lavora da **iPhone**: la prova finale è sul telefono, non nel preview.
