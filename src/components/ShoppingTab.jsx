@@ -12,61 +12,13 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Pencil, Mic, Check, Trash2, PackagePlus, Loader2, ListChecks, Store,
-  Share2, Lightbulb, ShoppingCart,
-  Carrot, Apple, Beef, Ham, Fish, Milk, Croissant, Wheat, Bean, Soup,
-  Snowflake, CupSoda, Cookie, Grape, Droplet, Leaf, Package,
+  Share2, Lightbulb,
 } from "lucide-react";
-import { PICKER_CATS, AISLE_ORDER } from "../constants.js";
+import { PICKER_CATS, AISLE_ORDER, CAT_ICON } from "../constants.js";
 import { norm, atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 
 const editCls =
   "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
-
-// Icone lineari per reparto (coerenti, una sola libreria), al posto delle emoji.
-const CAT_LUCIDE = {
-  "Verdura": Carrot,
-  "Frutta": Apple,
-  "Carne": Beef,
-  "Salumi": Ham,
-  "Pesce": Fish,
-  "Latticini": Milk,
-  "Pane e Forno": Croissant,
-  "Pasta, Riso e Cereali": Wheat,
-  "Legumi": Bean,
-  "Conserve": Soup,
-  "Surgelati": Snowflake,
-  "Bevande": CupSoda,
-  "Dolci": Cookie,
-  "Frutta Secca": Grape,
-  "Condimenti e Salse": Droplet,
-  "Spezie ed Erbe": Leaf,
-  "Altro": Package,
-};
-// Colore per reparto: dà identità visiva alle intestazioni di categoria
-// (colori letterali Tailwind, non temizzati — restano leggibili anche su scuro).
-const CAT_COLOR = {
-  "Verdura": "text-emerald-600",
-  "Frutta": "text-rose-500",
-  "Carne": "text-red-600",
-  "Salumi": "text-pink-500",
-  "Pesce": "text-sky-500",
-  "Latticini": "text-blue-400",
-  "Pane e Forno": "text-orange-400",
-  "Pasta, Riso e Cereali": "text-yellow-600",
-  "Legumi": "text-lime-600",
-  "Conserve": "text-orange-600",
-  "Surgelati": "text-cyan-500",
-  "Bevande": "text-indigo-500",
-  "Dolci": "text-fuchsia-500",
-  "Frutta Secca": "text-orange-700",
-  "Condimenti e Salse": "text-yellow-500",
-  "Spezie ed Erbe": "text-green-600",
-  "Altro": "text-stone-500",
-};
-function CatIcon({ cat, className }) {
-  const I = CAT_LUCIDE[cat] || Package;
-  return <I className={className} aria-hidden="true" />;
-}
 
 // --- Riga prodotto: l'INTERA riga fa toggle della selezione (tap); pressione
 // lunga apre l'editor. Accessibile (role=button, tastiera). Niente swipe:
@@ -343,7 +295,7 @@ export default function ShoppingTab({
               catPickerOpen ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-600"
             }`}
           >
-            <CatIcon cat={catFor(it.name)} className="h-[18px] w-[18px]" />
+            <span className="text-[17px] leading-none">{CAT_ICON[catFor(it.name)]}</span>
           </button>
           <button
             onClick={() => { closeEdit(false); onDelete(it.id); }}
@@ -366,7 +318,7 @@ export default function ShoppingTab({
                     : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
                 }`}
               >
-                <CatIcon cat={c} className="h-3.5 w-3.5" /> {c}
+                {CAT_ICON[c]} {c}
               </button>
             ))}
           </div>
@@ -564,7 +516,7 @@ export default function ShoppingTab({
                 {groups.map(({ cat, list }) => (
                   <section key={cat}>
                     <div className="flex items-center gap-2 border-b border-ink/10 pb-2">
-                      <CatIcon cat={cat} className={`h-[18px] w-[18px] ${CAT_COLOR[cat] || "text-stone-500"}`} />
+                      <span className="text-base">{CAT_ICON[cat]}</span>
                       <h4 className="font-display text-base font-bold uppercase tracking-wide text-ink">{cat}</h4>
                       <span className="font-display text-sm font-bold text-tomato">{list.length}</span>
                     </div>
@@ -580,7 +532,7 @@ export default function ShoppingTab({
             {cart.length > 0 && (
               <section className="mt-6">
                 <div className="flex items-center gap-2 border-b border-tomato/30 pb-2">
-                  <ShoppingCart className="h-[18px] w-[18px] text-tomato" aria-hidden="true" />
+                  <span className="text-base">🛒</span>
                   <h4 className="font-display text-base font-bold uppercase tracking-wide text-tomato">Nel carrello</h4>
                   <span className="font-display text-sm font-bold text-tomato">{cart.length}</span>
                 </div>
