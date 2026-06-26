@@ -509,7 +509,7 @@ export default function ShoppingTab({
 
       {/* La lista inizia sotto l'input; un filo di margine in più così la prima
           categoria non finisce sotto la fascia dei controlli. */}
-      <div className="mt-3">
+      <div className="mt-2">
         {shopping.length > 0 && (
           <>
             {byAisle ? (
