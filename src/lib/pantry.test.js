@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
-  subtractQty, qtyStep, adjustQty, atMinQty, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, findMatch,
+  subtractQty, qtyStep, adjustQty, atMinQty, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, matchKey, findMatch,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
 
@@ -73,6 +73,31 @@ describe("correctName", () => {
     expect(guessCategory(correctName("nutella"))).toBe("Dolci");
     expect(correctName("Philadelphia")).toBe("Formaggio spalmabile");
     expect(guessCategory(correctName("Philadelphia"))).toBe("Latticini");
+  });
+});
+
+describe("matchKey (plurale/singolare)", () => {
+  it("riconduce i plurali comuni al singolare", () => {
+    expect(matchKey("Limoni")).toBe("limone");
+    expect(matchKey("pomodori")).toBe("pomodoro");
+    expect(matchKey("Uova")).toBe("uovo");
+    expect(matchKey("zucchine")).toBe("zucchina");
+  });
+  it("unifica singolare e plurale sulla stessa chiave", () => {
+    expect(matchKey("Mela")).toBe(matchKey("mele"));
+    expect(matchKey("Cipolla")).toBe(matchKey("cipolle"));
+  });
+  it("lascia invariate le parole non in tabella", () => {
+    expect(matchKey("Pane")).toBe("pane");
+    expect(matchKey("Spaghetti")).toBe("spaghetti");
+  });
+});
+
+describe("findMatch (con plurale/singolare)", () => {
+  const pantry = [{ name: "Pomodoro" }, { name: "Uova" }, { name: "Latte" }];
+  it("trova il prodotto al singolare partendo dal plurale della ricetta", () => {
+    expect(findMatch("pomodori", pantry)).toEqual({ name: "Pomodoro" });
+    expect(findMatch("uovo", pantry)).toEqual({ name: "Uova" });
   });
 });
 

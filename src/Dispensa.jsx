@@ -9,7 +9,7 @@ import {
 import {
   guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  norm, isStapleQb, isQbQty,
+  norm, matchKey, isStapleQb, isQbQty,
 } from "./lib/pantry.js";
 import { callClaude } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
@@ -507,7 +507,7 @@ export default function Dispensa({ session }) {
       for (const it of raw) {
         const name = String(it?.name || "").trim();
         if (!name) continue;
-        const k = norm(name);
+        const k = matchKey(name); // singolare/plurale uniti: "Limoni"+"limone" → 1 voce
         const qty = normalizeWeight(String(it?.qty || "1").trim() || "1");
         if (byName.has(k)) {
           const ex = byName.get(k);

@@ -358,6 +358,51 @@ export function norm(s) {
     .trim();
 }
 
+// Forme plurale/singolare (e qualche sinonimo) ricondotte a una stessa CHIAVE
+// canonica, per dedup e matching. In italiano lo stemming algoritmico è
+// inaffidabile (plurali irregolari: uovo→uova, -o→-i, -a→-e, -e→-i): meglio una
+// tabella curata dei cibi più comuni. Le voci NON presenti restano invariate,
+// così non si rischiano fusioni spurie. Chiave = token così come appare in norm.
+const TOKEN_CANON = {
+  // verdura
+  pomodori: "pomodoro", pomodorini: "pomodorino", zucchine: "zucchina",
+  melanzane: "melanzana", peperoni: "peperone", carote: "carota", cipolle: "cipolla",
+  patate: "patata", carciofi: "carciofo", cetrioli: "cetriolo", finocchi: "finocchio",
+  ravanelli: "ravanello", porri: "porro", barbabietole: "barbabietola",
+  // frutta
+  limoni: "limone", arance: "arancia", mele: "mela", banane: "banana", pere: "pera",
+  pesche: "pesca", albicocche: "albicocca", ciliegie: "ciliegia", prugne: "prugna",
+  fragole: "fragola", fichi: "fico", more: "mora", nespole: "nespola",
+  mandarini: "mandarino", clementine: "clementina",
+  // legumi
+  fagioli: "fagiolo", ceci: "cece", piselli: "pisello", lenticchie: "lenticchia",
+  fave: "fava", cannellini: "cannellino", borlotti: "borlotto",
+  // pesce
+  gamberi: "gambero", gamberetti: "gambero", calamari: "calamaro", cozze: "cozza",
+  vongole: "vongola", seppie: "seppia", alici: "alice", sardine: "sardina",
+  acciughe: "acciuga", totani: "totano", scampi: "scampo",
+  // carne
+  salsicce: "salsiccia", polpette: "polpetta", cotolette: "cotoletta",
+  fettine: "fettina", braciole: "braciola", costine: "costina", scaloppine: "scaloppina",
+  spiedini: "spiedino", hamburger: "hamburger",
+  // frutta secca / dolci
+  mandorle: "mandorla", noci: "noce", nocciole: "nocciola", pistacchi: "pistacchio",
+  arachidi: "arachide", datteri: "dattero", biscotti: "biscotto", merendine: "merendina",
+  // conserve / varie
+  olive: "oliva", capperi: "cappero", uova: "uovo",
+};
+
+// Chiave canonica per confronti (dedup, match ingrediente↔prodotto): normalizza
+// e riconduce ogni token alla sua forma canonica nota. Così "Limoni" e "limone",
+// "pomodori" e "pomodoro" risultano lo stesso prodotto.
+export function matchKey(s) {
+  return norm(s)
+    .split(" ")
+    .map((w) => TOKEN_CANON[w] || w)
+    .join(" ")
+    .trim();
+}
+
 // Passo dello stepper in base all'unità: pezzi ±1, grammi ±50,
 // kg e litri ±0,25 (ml ±250). Scelte dell'utente.
 export function qtyStep(qty) {
@@ -528,12 +573,14 @@ export function formatExpiry(dateStr) {
 }
 
 export function findMatch(ingName, items) {
-  const a = norm(ingName);
+  // matchKey: singolare/plurale unificati, così "pomodori" (ricetta) trova
+  // "Pomodoro" (dispensa) e viceversa.
+  const a = matchKey(ingName);
   if (!a) return null;
   const aw = a.split(" ").filter((w) => w.length >= 4);
   let weak = null;
   for (const it of items) {
-    const b = norm(it.name);
+    const b = matchKey(it.name);
     if (!b) continue;
     if (a === b || a.includes(b) || b.includes(a)) return it;
     const bw = b.split(" ").filter((w) => w.length >= 4);

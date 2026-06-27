@@ -12,7 +12,7 @@
 import { useState, useEffect } from "react";
 import {
   guessCategory, correctName, normalizeWeight, mergeQty, findMatch,
-  norm, daysUntilExpiry,
+  norm, matchKey, daysUntilExpiry,
 } from "../lib/pantry.js";
 import { CATEGORIES } from "../constants.js";
 import {
@@ -123,7 +123,7 @@ export function usePantry({
     const expiry = newExpiry || null;
     let result = null;
     try {
-      const existing = items.find((x) => x.name.trim().toLowerCase() === name.toLowerCase());
+      const existing = items.find((x) => matchKey(x.name) === matchKey(name));
       if (existing) {
         const merged = normalizeWeight(mergeQty(existing.qty, qty));
         const fields = { qty: merged };
@@ -234,7 +234,7 @@ export function usePantry({
       if (!name) continue;
       const qty = normalizeWeight(String(raw.qty || "1").trim());
       const cat = CATEGORIES.includes(raw.category) ? raw.category : "Altro";
-      const idx = working.findIndex((x) => x.name.trim().toLowerCase() === name.toLowerCase());
+      const idx = working.findIndex((x) => matchKey(x.name) === matchKey(name));
       if (idx >= 0) {
         const merged = normalizeWeight(mergeQty(working[idx].qty, qty));
         working[idx] = { ...working[idx], qty: merged };
