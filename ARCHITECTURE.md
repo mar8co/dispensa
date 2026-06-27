@@ -194,11 +194,11 @@ verifica la sessione) → se assente mostra `Auth.jsx` (magic-link / Google / Ap
 - *Manuale*: `ManualAddModal` → `usePantry` (correzione nome locale + categoria
   via `categorize`).
 - *Voce*: `VoiceAddModal` → trascrizione → `callClaude` estrae prodotti → insert.
-- *Scontrino*: `ReceiptScanModal` → **fotocamera nativa** (`<input capture>`,
-  ~12 MP) → resize a 2000px (`lib/image.js`) → `callClaude` (immagine, output
-  strutturato `ITEMS_SCHEMA`) → `ReviewScanModal` per confermare → insert
-  multiplo. (Non si usa più il frame del `<video>`: su iOS la preview è a bassa
-  risoluzione e `ImageCapture` non è supportato.)
+- *Scontrino*: `ReceiptScanModal` → anteprima live in-app alla massima
+  risoluzione del track (constraints + `applyConstraints`) → cattura frame →
+  resize a 2000px (`lib/image.js → videoFrameToBase64`) → `callClaude` (immagine,
+  output strutturato `ITEMS_SCHEMA`) → `ReviewScanModal` → insert multiplo.
+  Fallback galleria (`fileToResizedBase64`) per scontrini molto lunghi.
 - *Barcode*: `BarcodeScanModal` (ZXing, callback-ref sul `<video>`) → Open Food
   Facts → `ReviewScanModal`.
 

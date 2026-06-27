@@ -89,12 +89,16 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Bug noti / da verificare
 
-- **OCR scontrini lunghi** — **risolto**: lo scatto non usa più il frame del
-  `<video>` (preview ~1280×720, e iOS non ha `ImageCapture`) ma la **fotocamera
-  nativa** via `<input capture>` (~12 MP, autofocus). `ReceiptScanModal.jsx`
-  riscritto (niente più preview live/sharpness/overlay); l'immagine è
-  ridimensionata a 2000px (`src/lib/image.js`) prima dell'invio. Lo scontrino si
-  fotografa **per intero**, anche se lungo. **Da provare sul telefono.**
+- **OCR scontrini lunghi** — migliorato: l'anteprima resta **dentro l'app**
+  (bottom-sheet, scelta UX dell'utente — niente fotocamera nativa), ma ora si
+  chiede la **massima risoluzione** al track (constraints alti +
+  `applyConstraints` sulle capabilities), l'anteprima è **grande** (`h-[64vh]`)
+  e l'overlay **non è più restrittivo** (si riempie il riquadro senza
+  allontanare lo scontrino). Il frame catturato è ridimensionato a 2000px
+  (`src/lib/image.js → videoFrameToBase64`). Per scontrini molto lunghi resta la
+  **galleria** (foto a piena risoluzione scattata con l'app Fotocamera). Limite
+  onesto: la preview in-app su iPhone arriva ~1080–1440p (non i 12 MP del
+  nativo). **Da provare sul telefono.**
 - **Barcode camera** — regressione (camera nera) dopo il passaggio dei bottom
   sheet a Vaul, **risolta** con **callback-ref** in `BarcodeScanModal.jsx` (la
   scansione parte quando il `<video>` è davvero montato). **Da confermare sul
@@ -117,7 +121,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/lib/db.js` | Tutte le query Supabase (pantry / shopping / recipes / settings). **Confine del data layer.** |
 | `src/lib/supabase.js` | Client Supabase (anon key pubblica, protetta da RLS). |
 | `src/lib/claude.js` | Client AI lato browser → `/api/claude` e `/api/photo`. `callClaude(content, maxTokens, opts)` con `opts.schema` (responseSchema), `opts.temperature`, timeout (AbortController) e retry. |
-| `src/lib/image.js` | Ridimensiona la foto scontrino (lato lungo 2000px, JPEG) prima dell'OCR AI. |
+| `src/lib/image.js` | Ridimensiona la foto scontrino a 2000px (JPEG) prima dell'OCR AI: `videoFrameToBase64` (frame anteprima live) e `fileToResizedBase64` (galleria). |
 | `server/claude.js` | **Core del proxy AI** (Gemini), condiviso da Vercel e dev locale; verifica token, rate-limit, traduzione Anthropic↔Gemini, **responseSchema + temperature**. |
 | `vite.config.js` | Plugin React, **proxy `/api/*` in dev**, config PWA/manifest. |
 | `src/hooks/usePantry.jsx`, `useShopping.jsx`, `useRecipes.jsx` | Stato + logica dei tre domini. |

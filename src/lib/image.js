@@ -17,6 +17,24 @@ function loadImage(src) {
   });
 }
 
+// Cattura il frame corrente di un <video> come base64 JPEG, ridimensionato con
+// il lato lungo a maxSide px. Usato dall'anteprima live dello scontrino: il
+// frame esce alla risoluzione reale del track (videoWidth×videoHeight), poi si
+// rimpicciolisce solo se più grande del necessario.
+export function videoFrameToBase64(video, maxSide = 2000, quality = 0.85) {
+  const vw = video?.videoWidth || 0;
+  const vh = video?.videoHeight || 0;
+  if (!vw || !vh) return null;
+  const scale = Math.min(1, maxSide / Math.max(vw, vh));
+  const w = Math.max(1, Math.round(vw * scale));
+  const h = Math.max(1, Math.round(vh * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext("2d").drawImage(video, 0, 0, w, h);
+  return canvas.toDataURL("image/jpeg", quality).split(",")[1];
+}
+
 // File immagine -> { base64, mediaType }, ridimensionato con il lato lungo a
 // maxSide px (se più piccolo, resta invariato) e codificato JPEG.
 export async function fileToResizedBase64(file, maxSide = 2000, quality = 0.85) {
