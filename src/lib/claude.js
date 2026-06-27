@@ -34,7 +34,17 @@ export async function fetchPhotos(queries) {
   }
 }
 
-export async function callClaude(content, maxTokens = 1000, retries = 2) {
+// Chiama il proxy AI e restituisce il JSON già parsato.
+// opts:
+//  - schema: responseSchema Gemini (output strutturato garantito)
+//  - temperature: 0–2 (bassa per estrazione, alta/omessa per ricette)
+//  - timeoutMs: stacca la richiesta se il servizio non risponde (default 30s)
+//  - retries: tentativi residui su errori transitori (default 2)
+export async function callClaude(content, maxTokens = 1000, opts = {}) {
+  const { schema = null, temperature, timeoutMs = 30000, retries = 2 } = opts;
+  // Timeout esplicito: senza, una richiesta lenta lascia la UI appesa all'infinito.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token;
@@ -45,7 +55,13 @@ export async function callClaude(content, maxTokens = 1000, retries = 2) {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ content, max_tokens: maxTokens }),
+      body: JSON.stringify({
+        content,
+        max_tokens: maxTokens,
+        ...(schema ? { schema } : {}),
+        ...(temperature != null ? { temperature } : {}),
+      }),
+      signal: controller.signal,
     });
 
     if (!res.ok) {
@@ -53,6 +69,7 @@ export async function callClaude(content, maxTokens = 1000, retries = 2) {
       const detail = info?.detail?.error?.message;
       const err = new Error((info?.error || `API ${res.status}`) + (detail ? `: ${detail}` : ""));
       err.status = res.status;
+      err.code = info?.code; // es. "daily_limit": non ritentare
       throw err;
     }
 
@@ -76,14 +93,20 @@ export async function callClaude(content, maxTokens = 1000, retries = 2) {
       throw err;
     }
   } catch (err) {
-    // Riprova automatico su limite di richieste (429), errori temporanei del
-    // servizio (500/503) o risposta vuota/non valida (502), con attese
-    // crescenti: 2s al primo tentativo, 4s al secondo.
-    const retriable = [429, 500, 502, 503].includes(err.status);
+    if (err.name === "AbortError") {
+      err.status = 408; // timeout: trattato come transitorio (ritentabile)
+      err.message = "Il servizio AI non ha risposto in tempo.";
+    }
+    // Riprova su timeout (408), errori temporanei (500/502/503) o 429 transitorio,
+    // con attese crescenti (2s, poi 4s). NON ritenta il limite giornaliero
+    // (code: "daily_limit"): è inutile, il tetto si azzera solo l'indomani.
+    const retriable = [408, 429, 500, 502, 503].includes(err.status) && err.code !== "daily_limit";
     if (retries > 0 && retriable) {
       await new Promise((r) => setTimeout(r, 2000 * (3 - retries)));
-      return callClaude(content, maxTokens, retries - 1);
+      return callClaude(content, maxTokens, { ...opts, retries: retries - 1 });
     }
     throw err;
+  } finally {
+    clearTimeout(timer);
   }
 }

@@ -72,7 +72,9 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
       const limit = Number(env.AI_DAILY_LIMIT) || 80;
       const { data: count, error } = await admin.rpc("bump_ai_usage", { p_uid: userData.user.id });
       if (!error && typeof count === "number" && count > limit) {
-        return { status: 429, json: { error: "Hai raggiunto il limite di richieste AI per oggi. Riprova domani." } };
+        // code: "daily_limit" → il client NON ritenta (il limite è giornaliero,
+        // ritentare sprecherebbe solo attese). Diverso da un 429 transitorio Gemini.
+        return { status: 429, json: { error: "Hai raggiunto il limite di richieste AI per oggi. Riprova domani.", code: "daily_limit" } };
       }
     } catch { /* best-effort: non blocca la richiesta */ }
   }
@@ -94,6 +96,18 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
     maxOutputTokens: maxTokens,
     responseMimeType: "application/json", // i prompt chiedono già JSON
   };
+  // Output strutturato: se il client passa uno schema, lo applichiamo come
+  // responseSchema. Gemini garantisce così la forma del JSON (e l'enum delle
+  // categorie), eliminando il parsing fragile lato client.
+  if (body?.schema && typeof body.schema === "object") {
+    generationConfig.responseSchema = body.schema;
+  }
+  // Temperatura: per i task estrattivi (scontrino/voce/categoria) il client passa
+  // un valore basso (più deterministico); per le ricette resta il default creativo.
+  const temp = Number(body?.temperature);
+  if (Number.isFinite(temp)) {
+    generationConfig.temperature = Math.min(Math.max(temp, 0), 2);
+  }
   // Sui modelli 2.5 il "thinking" è attivo di default e consumerebbe il budget
   // di token (rischio risposta troncata): lo disattiviamo per i nostri task JSON.
   if (model.includes("2.5")) {

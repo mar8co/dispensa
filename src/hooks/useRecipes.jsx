@@ -13,6 +13,7 @@
 // leggere/scrivere lo stato ricette.
 import { useState } from "react";
 import { callClaude, fetchPhotos } from "../lib/claude.js";
+import { RECIPES_SCHEMA } from "../constants.js";
 import { norm, stripParens } from "../lib/pantry.js";
 import { upsertSavedRecipe, updateSavedRecipe, deleteSavedRecipe } from "../lib/db.js";
 import { loadSavedRecipes, saveSavedRecipes, localRecipeId } from "../lib/recipes.js";
@@ -91,7 +92,9 @@ export function useRecipes({
       `Rispondi SOLO con JSON valido senza markdown: ` +
       `{"recipes":[{"title":"...","description":"breve, max 14 parole","time":"es. 15 min","difficulty":"Facile|Media|Elaborata","imageQuery":"2-4 parole IN INGLESE per cercare una foto del piatto, es. spaghetti tomato"}]}`;
     try {
-      const parsed = await callClaude([{ type: "text", text: prompt }], 1200);
+      // Schema strutturato per blindare la forma; niente temperature bassa qui:
+      // per le proposte serve varietà (default creativo del modello).
+      const parsed = await callClaude([{ type: "text", text: prompt }], 1200, { schema: RECIPES_SCHEMA });
       const list = Array.isArray(parsed.recipes) ? parsed.recipes : [];
       animateUI(() => { setIdeas(list); setLoadingIdeas(false); });
       if (!m.custom && list.length) saveIdeasCache(m.id, list);

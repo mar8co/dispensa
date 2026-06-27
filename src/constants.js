@@ -94,6 +94,64 @@ Rispondi SOLO con JSON valido senza markdown:
 {"items":[{"name":"...","qty":"...","category":"..."}]}
 ${CATEGORY_PROMPT}`;
 
+// Schemi di output strutturato per Gemini (generationConfig.responseSchema):
+// garantiscono la FORMA del JSON e vincolano "category" alle categorie valide
+// (enum), eliminando il bisogno di parsing difensivo con regex. Il tipo va in
+// MAIUSCOLO come richiesto dall'enum Type dell'API Gemini.
+const CATEGORY_FIELD = { type: "STRING", enum: CATEGORIES };
+
+// Estrazione prodotti da scontrino/foto/voce: lista di {name, qty, category}.
+export const ITEMS_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    items: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          name: { type: "STRING" },
+          qty: { type: "STRING" },
+          category: CATEGORY_FIELD,
+        },
+        required: ["name", "qty", "category"],
+      },
+    },
+  },
+  required: ["items"],
+};
+
+// Pulizia nome singolo (barcode → nome generico + categoria).
+export const NAME_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    name: { type: "STRING" },
+    category: CATEGORY_FIELD,
+  },
+  required: ["name", "category"],
+};
+
+// Proposte di ricette (lista di idee con metadati per la card e la foto).
+export const RECIPES_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    recipes: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING" },
+          description: { type: "STRING" },
+          time: { type: "STRING" },
+          difficulty: { type: "STRING", enum: ["Facile", "Media", "Elaborata"] },
+          imageQuery: { type: "STRING" },
+        },
+        required: ["title", "description", "time", "difficulty", "imageQuery"],
+      },
+    },
+  },
+  required: ["recipes"],
+};
+
 // Data ISO (YYYY-MM-DD) a +N giorni da oggi, per le scadenze demo (calcolata
 // all'avvio: i dati demo si inseriscono nella stessa sessione).
 const demoDate = (days) => {

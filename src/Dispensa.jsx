@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 
 import {
   CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES, CATEGORY_PROMPT,
+  ITEMS_SCHEMA, NAME_SCHEMA,
 } from "./constants.js";
 import {
   guessCategory, categorize,
@@ -358,7 +359,7 @@ export default function Dispensa({ session }) {
       `Assegna anche la categoria corretta seguendo queste istruzioni:\n${CATEGORY_PROMPT}\n` +
       `Input: "${raw}". ` +
       `Rispondi SOLO con JSON valido senza markdown: {"name":"...","category":"..."}`;
-    return callClaude([{ type: "text", text: prompt }], 256);
+    return callClaude([{ type: "text", text: prompt }], 256, { schema: NAME_SCHEMA, temperature: 0.1 });
   }
 
   // --- Operazioni dispensa: CRUD e derivati estratti in hooks/usePantry.jsx ---
@@ -498,7 +499,7 @@ export default function Dispensa({ session }) {
       const parsed = await callClaude([
         { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: data64 } },
         { type: "text", text: RECEIPT_PROMPT },
-      ], 1000);
+      ], 2048, { schema: ITEMS_SCHEMA, temperature: 0.1 });
       const raw = Array.isArray(parsed.items) ? parsed.items : [];
       // Rete di sicurezza: anche se l'AI non aggrega, uniamo qui i prodotti
       // con lo stesso nome sommando le quantità compatibili (mergeQty).
@@ -572,7 +573,7 @@ export default function Dispensa({ session }) {
         `MAI nel nome; altrimenti "1". ` +
         `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"...","category":"..."}]}\n` +
         `${CATEGORY_PROMPT}`;
-      const parsed = await callClaude([{ type: "text", text: prompt }], 800);
+      const parsed = await callClaude([{ type: "text", text: prompt }], 1200, { schema: ITEMS_SCHEMA, temperature: 0.1 });
       const raw = Array.isArray(parsed?.items) ? parsed.items : [];
       // Dizionario-first sulla categoria: le varianti note (es. formati di
       // pasta) vengono corrette anche se l'AI le sbaglia; l'utente può poi
