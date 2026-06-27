@@ -550,8 +550,9 @@ export default function Dispensa({ session }) {
     }
     name = name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
     // Dizionario-first: le varianti note finiscono nella categoria giusta;
-    // l'AI è fallback per i prodotti che il dizionario non riconosce.
-    const category = categorize(name, aiCategory);
+    // come fallback l'AI, poi la categoria dedotta dai tag Open Food Facts
+    // (gratis, già nel risultato del lookup) quando l'AI non ha una categoria.
+    const category = categorize(name, aiCategory || item?.category);
     const qty = normalizeWeight(String(item?.qty || "1"));
     setScanItems([{ name, qty, category }]);
     setScanOpen(true);

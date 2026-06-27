@@ -37,6 +37,11 @@ describe("guessCategory", () => {
   it("la pasta vince anche con marca/formato nel nome", () => {
     expect(guessCategory("Farfalle Barilla 500g")).toBe("Pasta, Riso e Cereali");
   });
+  it("i casi contestuali battono il sostantivo base (longest-match)", () => {
+    expect(guessCategory("Pomodori secchi")).toBe("Conserve");
+    expect(guessCategory("Latte di cocco")).toBe("Bevande");
+    expect(guessCategory("Latte di mandorla")).toBe("Bevande");
+  });
 });
 
 describe("categorize", () => {

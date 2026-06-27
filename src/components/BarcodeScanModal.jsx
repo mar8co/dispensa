@@ -23,6 +23,34 @@ function buildHints() {
   return hints;
 }
 
+// Deduce la categoria dell'app dai categories_tags di Open Food Facts (tassonomia
+// inglese gerarchica, es. "en:frozen-...", "en:plant-based-milks"). Segnale
+// gratuito usato come fallback nella categorizzazione del barcode. L'ordine conta:
+// surgelati e bevande (anche vegetali) PRIMA di latticini, per non scambiare il
+// "latte di mandorla" (plant-based-milk → Bevande) con un latticino.
+function offCategory(tags) {
+  const t = (Array.isArray(tags) ? tags : []).join(" ").toLowerCase();
+  if (!t) return null;
+  const has = (...ks) => ks.some((k) => t.includes(k));
+  if (has("frozen")) return "Surgelati";
+  if (has("plant-based-milk", "plant-based-beverage", "beverages", "waters", "juices", "sodas", "teas", "coffees")) return "Bevande";
+  if (has("dairies", "milks", "yogurts", "cheeses", "butters", "creams")) return "Latticini";
+  if (has("charcuterie", "hams", "salami", "cured-meats", "sausages", "deli-meats")) return "Salumi";
+  if (has("seafood", "fishes", "fish-")) return "Pesce";
+  if (has("poultry", "beef", "pork", "meats", "chicken")) return "Carne";
+  if (has("pastas", "rices", "cereals", "breakfast-cereals", "flours", "couscous", "oats")) return "Pasta, Riso e Cereali";
+  if (has("breads", "bakery")) return "Pane e Forno";
+  if (has("legumes", "beans", "chickpeas", "lentils", "peas")) return "Legumi";
+  if (has("canned", "preserves", "tinned")) return "Conserve";
+  if (has("nuts", "dried-fruits", "seeds")) return "Frutta Secca";
+  if (has("chocolates", "biscuits", "cookies", "sweet-snacks", "confectioneries", "spreads", "jams", "honeys", "desserts")) return "Dolci";
+  if (has("condiments", "sauces", "olive-oils", "vegetable-oils", "vinegars")) return "Condimenti e Salse";
+  if (has("spices", "herbs", "salts", "seasonings")) return "Spezie ed Erbe";
+  if (has("fresh-vegetables", "vegetables")) return "Verdura";
+  if (has("fresh-fruits", "fruits")) return "Frutta";
+  return null;
+}
+
 async function lookupProduct(code) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
@@ -31,12 +59,12 @@ async function lookupProduct(code) {
       const p = data.product;
       const name = String(p.product_name_it || p.product_name || "").trim();
       const qty = String(p.quantity || "1").trim() || "1";
-      return { found: !!name, barcode: code, name, qty };
+      return { found: !!name, barcode: code, name, qty, category: offCategory(p.categories_tags) };
     }
   } catch {
     // rete assente o errore: trattiamo come "non trovato"
   }
-  return { found: false, barcode: code, name: "", qty: "1" };
+  return { found: false, barcode: code, name: "", qty: "1", category: null };
 }
 
 export default function BarcodeScanModal({ onClose, onResult }) {

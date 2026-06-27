@@ -96,6 +96,8 @@ const CATEGORY_KEYWORDS = {
     "pesto in barattolo", "salmone affumicato", "sgombro al naturale", "alici in olio",
     "tonno in olio", "tonno al naturale", "tonno in scatola", "fagioli in scatola",
     "ceci in scatola", "lenticchie in scatola",
+    // pomodori essiccati: battono "pomodori" (Verdura) per lunghezza
+    "pomodori secchi", "pomodorini secchi", "pomodori sott olio",
   ],
   "Condimenti e Salse": [
     "olio", "aceto", "salsa", "maionese", "ketchup", "senape", "pesto", "sugo", "condimento",
@@ -143,7 +145,7 @@ const CATEGORY_KEYWORDS = {
     "tisana", "spremuta", "camomilla", "tè", "the verde", "energy drink", "tonica",
     "prosecco", "spumante", "frullato", "smoothie", "kombucha", "kefir di acqua",
     "latte vegetale", "latte di soia", "latte di avena", "latte di riso", "latte di mandorla",
-    "succo di frutta", "succo di arancia", "succo di mela", "acqua frizzante",
+    "latte di cocco", "succo di frutta", "succo di arancia", "succo di mela", "acqua frizzante",
   ],
 };
 
