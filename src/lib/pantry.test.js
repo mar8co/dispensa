@@ -42,6 +42,11 @@ describe("guessCategory", () => {
     expect(guessCategory("Latte di cocco")).toBe("Bevande");
     expect(guessCategory("Latte di mandorla")).toBe("Bevande");
   });
+  it("limone e lime sono Verdura (scelta dell'utente), non Altro", () => {
+    expect(guessCategory("Lime")).toBe("Verdura");
+    expect(guessCategory("Limone")).toBe("Verdura");
+    expect(guessCategory("Limoni")).toBe("Verdura");
+  });
 });
 
 describe("categorize", () => {

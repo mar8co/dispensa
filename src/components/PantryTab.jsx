@@ -147,6 +147,12 @@ export default function PantryTab({
     setExpDraft(it.expiry || "");
     setExpOpen(false); // box scadenza chiuso all'apertura (compare al tocco del calendario)
     setCatPickerOpen(false);
+    // Porta il pannello al centro dello schermo: sugli ultimi prodotti finiva
+    // sotto la barra di navigazione e il "+" (controlli quantità irraggiungibili).
+    // Doppio rAF: aspetta che il pannello (e lo spazio extra sotto) sia montato.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      panelRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }));
   }
   // Rimuove la scadenza e richiude il box (deve sparire del tutto, senza occupare spazio).
   function clearExpiry() {
@@ -614,6 +620,11 @@ export default function PantryTab({
           </section>
         ))}
       </div>
+
+      {/* Spazio extra mentre un pannello è aperto: dà margine di scorrimento
+          così anche l'ultimo prodotto può salire sopra la barra di navigazione
+          e il "+" (vedi scrollIntoView in openPanel). */}
+      {openId && <div aria-hidden="true" style={{ height: "45vh" }} />}
     </div>
   );
 }
