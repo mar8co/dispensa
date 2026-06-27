@@ -65,7 +65,7 @@ export function useRecipes({
   }
 
   async function chooseMode(m, force = false) {
-    scrollToTop(); // le 4 proposte partono sempre dall'alto
+    scrollToTop(); // le 5 proposte partono sempre dall'alto
     // Richiesta libera ("Cosa ti va?"): niente cache, sempre fresca.
     if (!force && !m.custom) {
       const hit = loadIdeasCache()[m.id];
@@ -84,8 +84,8 @@ export function useRecipes({
       : m.id === "Schiscetta" ? "Ricette veloci e facili, comode da preparare in anticipo, trasportare nel tupperware e mangiare il giorno dopo (al lavoro, a scuola, fuori): buone anche fredde/a temperatura ambiente o semplici da riscaldare. "
       : "";
     const ask = m.custom
-      ? `L'utente chiede: "${m.id}". Proponi esattamente 4 ricette diverse che soddisfino questa richiesta usando principalmente `
-      : `Voglio idee per la categoria "${m.id}". Proponi esattamente 4 ricette diverse che usino principalmente `;
+      ? `L'utente chiede: "${m.id}". Proponi esattamente 5 ricette diverse che soddisfino questa richiesta usando principalmente `
+      : `Voglio idee per la categoria "${m.id}". Proponi esattamente 5 ricette diverse che usino principalmente `;
     const prompt =
       `Sei uno chef esperto di cucina casalinga. Questi sono gli alimenti nella mia dispensa: ${pantryStr}. ` +
       `${prefLine}${ask}ingredienti della mia dispensa (puoi assumere disponibili sale, acqua e olio). ${fast}` +
@@ -94,7 +94,7 @@ export function useRecipes({
     try {
       // Schema strutturato per blindare la forma; niente temperature bassa qui:
       // per le proposte serve varietà (default creativo del modello).
-      const parsed = await callClaude([{ type: "text", text: prompt }], 1200, { schema: RECIPES_SCHEMA });
+      const parsed = await callClaude([{ type: "text", text: prompt }], 1500, { schema: RECIPES_SCHEMA });
       const list = Array.isArray(parsed.recipes) ? parsed.recipes : [];
       animateUI(() => { setIdeas(list); setLoadingIdeas(false); });
       if (!m.custom && list.length) saveIdeasCache(m.id, list);

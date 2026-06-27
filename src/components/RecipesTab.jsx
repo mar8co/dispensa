@@ -1,4 +1,4 @@
-// Scheda Ricette (stile editoriale): griglia occasioni -> 4 proposte -> ricetta
+// Scheda Ricette (stile editoriale): griglia occasioni -> 5 proposte -> ricetta
 // completa con grammature, "cosa mi manca", timer e "Ho cucinato questa ricetta".
 import { useState, useEffect } from "react";
 import {
@@ -26,7 +26,7 @@ function FadeImg({ src, className = "" }) {
   );
 }
 
-// Scheletro di una card proposta (mentre l'AI prepara le 4 idee).
+// Scheletro di una card proposta (mentre l'AI prepara le 5 idee).
 function IdeaSkeleton() {
   return (
     <div className="animate-pulse overflow-hidden rounded-2xl border border-hair bg-paper">
@@ -213,7 +213,7 @@ export default function RecipesTab({
 
           {loadingIdeas && (
             <div className="space-y-3">
-              {[0, 1, 2, 3].map((i) => <IdeaSkeleton key={i} />)}
+              {[0, 1, 2, 3, 4].map((i) => <IdeaSkeleton key={i} />)}
             </div>
           )}
           {recipeErr && !loadingIdeas && (
