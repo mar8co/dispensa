@@ -7,8 +7,25 @@
 import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { DecodeHintType, BarcodeFormat } from "@zxing/library";
-import { ScanBarcode, Loader2, Keyboard, Search } from "lucide-react";
+import { ScanBarcode, Loader2, Keyboard, Search, Flashlight, FlashlightOff } from "lucide-react";
 import CameraScanShell from "./CameraScanShell.jsx";
+
+// Messaggio d'errore fotocamera in base alla causa reale (err.name), così
+// l'utente sa se è un permesso negato, una camera occupata o assente.
+function cameraErrorMessage(err) {
+  switch (err?.name) {
+    case "NotAllowedError":
+    case "SecurityError":
+      return "Permesso fotocamera negato. Autorizzala nelle impostazioni o inserisci il codice a mano.";
+    case "NotFoundError":
+    case "OverconstrainedError":
+      return "Nessuna fotocamera disponibile. Inserisci il codice a mano.";
+    case "NotReadableError":
+      return "La fotocamera è usata da un'altra app. Chiudila e riprova, o inserisci il codice a mano.";
+    default:
+      return "Impossibile accedere alla fotocamera. Inserisci il codice a mano.";
+  }
+}
 
 function buildHints() {
   const hints = new Map();
@@ -82,6 +99,20 @@ export default function BarcodeScanModal({ onClose, onResult }) {
   const [error, setError] = useState("");
   const [manualMode, setManualMode] = useState(false);
   const [manualCode, setManualCode] = useState("");
+  const [torchAvailable, setTorchAvailable] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
+
+  // Torcia: i controlli ZXing espongono switchTorch solo se il dispositivo la
+  // supporta (di norma Android/Chrome; iOS Safari non la espone). Utile per i
+  // codici al buio/in ombra.
+  async function toggleTorch() {
+    const c = controlsRef.current;
+    if (typeof c?.switchTorch !== "function") return;
+    try {
+      await c.switchTorch(!torchOn);
+      setTorchOn((v) => !v);
+    } catch { /* non supportata davvero: ignora */ }
+  }
 
   async function handleCode(code) {
     if (handledRef.current) return;
@@ -109,15 +140,18 @@ export default function BarcodeScanModal({ onClose, onResult }) {
           }
         );
         controlsRef.current = controls;
+        if (!cancelled) setTorchAvailable(typeof controls.switchTorch === "function");
       } catch (e) {
         console.error(e);
-        if (!cancelled) setError("Impossibile accedere alla fotocamera. Inserisci il codice a mano.");
+        if (!cancelled) setError(cameraErrorMessage(e));
       }
     })();
 
     return () => {
       cancelled = true;
       try { controlsRef.current?.stop(); } catch { /* ignora */ }
+      setTorchAvailable(false);
+      setTorchOn(false);
     };
   }, [manualMode, videoEl]);
 
@@ -184,6 +218,19 @@ export default function BarcodeScanModal({ onClose, onResult }) {
               {status}
             </span>
           </div>
+          {/* Torcia: solo se il dispositivo la supporta (di norma non su iOS). */}
+          {torchAvailable && (
+            <button
+              onClick={toggleTorch}
+              aria-label={torchOn ? "Spegni torcia" : "Accendi torcia"}
+              aria-pressed={torchOn}
+              className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur transition active:scale-95 ${
+                torchOn ? "bg-[#fff] text-black" : "bg-black/50 text-[#fff] hover:bg-black/65"
+              }`}
+            >
+              {torchOn ? <Flashlight className="h-5 w-5" /> : <FlashlightOff className="h-5 w-5" />}
+            </button>
+          )}
         </>
       )}
     </CameraScanShell>
