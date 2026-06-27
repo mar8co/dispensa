@@ -13,22 +13,138 @@ export function seed() {
 }
 
 const CATEGORY_KEYWORDS = {
-  "Verdura": ["pomodoro", "pomodori", "pomodorini", "insalata", "lattuga", "zucchine", "zucchina", "melanzane", "melanzana", "peperoni", "peperone", "carote", "carota", "cipolla", "cipolle", "aglio", "patate", "patata", "verdura", "verdure", "zucca", "finocchi", "sedano", "funghi", "avocado", "broccoli", "spinaci", "cavolfiore", "cavolo", "verza", "porri", "asparagi", "rucola", "radicchio", "bietole", "fagiolini", "cetrioli", "cetriolo", "ravanelli", "scalogno", "carciofi", "carciofo", "songino", "cime di rapa", "catalogna", "puntarelle"],
-  "Frutta": ["limone", "limoni", "arancia", "arance", "mela", "mele", "banana", "banane", "frutta fresca", "fragole", "pere", "pera", "pesche", "pesca", "kiwi", "uva", "anguria", "cocomero", "melone", "ananas", "mandarini", "mandaranci", "clementine", "albicocche", "albicocca", "ciliegie", "ciliegia", "prugne", "prugna", "fichi", "mirtilli", "mirtillo", "lamponi", "lampone", "pompelmo", "frutti di bosco", "cachi", "melograno"],
-  "Carne": ["pollo", "manzo", "maiale", "tacchino", "vitello", "salsicc", "macinato", "bistecca", "bovino", "agnello", "carne", "fettine", "hamburger", "burger di", "polpett", "cotolett", "spezzatino", "arrosto", "coscia", "sovracosc", "petto", "lonza", "tagliata", "costine", "scaloppine", "braciole", "ossobuco", "fegato", "spiedini"],
-  "Salumi": ["prosciutto", "salame", "salami", "mortadella", "speck", "bresaola", "pancetta", "wurstel", "wurst", "coppa", "porchetta", "salumi", "affettati", "guanciale", "lardo", "culatello", "lonzino"],
-  "Pesce": ["pesce", "salmone", "merluzzo", "gamber", "calamar", "vongole", "cozze", "branzino", "orata", "baccala", "spigola", "seppi", "polpo", "sgombro", "tonno fresco", "trota", "sogliola", "platessa", "nasello", "spada", "alici fresche", "scampi", "totani", "tilapia", "pangasio", "frutti di mare", "filetto di pesce", "surimi", "granchio"],
-  "Latticini": ["latte", "formaggio", "parmigiano", "pecorino", "mozzarella", "yogurt", "burro", "panna", "ricotta", "mascarpone", "grana", "gorgonzola", "stracchino", "philadelphia", "scamorza", "provola", "fontina", "crescenza", "kefir", "burrata", "caciotta", "caciocavallo", "emmental", "asiago", "taleggio", "robiola", "squacquerone"],
-  "Pane e Forno": ["pane", "piadina", "piadine", "cracker", "grissini", "pancarre", "pancarrè", "focaccia", "taralli", "panini", "baguette", "tortillas", "pita", "friselle", "pan bauletto"],
-  "Pasta, Riso e Cereali": ["pasta", "spaghetti", "spaghettoni", "spaghettini", "penne", "pennette", "fusilli", "rigatoni", "tortiglioni", "farfalle", "conchiglie", "conchiglioni", "orecchiette", "linguine", "bavette", "tagliatelle", "tagliolini", "pappardelle", "fettuccine", "lasagne", "lasagna", "cannelloni", "paccheri", "mezze maniche", "ditalini", "ditaloni", "sedanini", "bucatini", "vermicelli", "capellini", "maccheroni", "gnocchetti", "trofie", "casarecce", "caserecce", "gemelli", "mafalde", "reginette", "anellini", "stelline", "risoni", "pastina", "tortellini", "tortelloni", "ravioli", "agnolotti", "cappelletti", "strozzapreti", "pici", "fregola", "riso", "risotto", "basmati", "carnaroli", "arborio", "cous", "couscous", "farina", "avena", "cereali", "cornflakes", "corn flakes", "orzo", "farro", "polenta", "gnocchi", "pangrattato", "pan grattato", "grano", "quinoa", "bulgur", "semola", "lievito"],
-  "Legumi": ["fagioli", "cannellini", "borlotti", "ceci", "lenticchie", "piselli secchi", "legumi", "fave", "lupini", "soia", "edamame", "cicerchie"],
-  "Conserve": ["tonno", "pelati", "passata", "passata di pomodoro", "pomodori pelati", "in scatola", "barattolo", "acciughe", "sardine", "olive", "conserva", "mais in scatola", "sottoli", "sottaceti", "capperi", "concentrato di pomodoro", "polpa di pomodoro", "carciofini", "pesto in barattolo"],
-  "Condimenti e Salse": ["olio", "aceto", "salsa", "soia", "maionese", "ketchup", "senape", "pesto", "sugo", "condimento", "tahina", "brodo", "dado", "besciamella", "tabasco", "worcester"],
-  "Spezie ed Erbe": ["sale", "pepe", "paprika", "curcuma", "cumino", "origano", "basilico", "rosmarino", "timo", "prezzemolo", "cannella", "zenzero", "peperoncino", "noce moscata", "spezie", "aglio in polvere", "curry", "zafferano", "alloro", "salvia", "erba cipollina", "menta", "vaniglia", "cardamomo"],
-  "Frutta Secca": ["mandorle", "noci", "nocciole", "pistacchi", "pinoli", "anacardi", "arachidi", "uvetta", "datteri", "semi di", "noccioline", "frutta secca"],
-  "Dolci": ["biscotti", "cioccolato", "cioccolata", "merendine", "marmellata", "miele", "zucchero", "torta", "crostata", "ciambellone", "plumcake", "panettone", "pandoro", "colomba", "torrone", "meringhe", "caramelle", "crema spalmabile", "nutella", "muesli", "fette biscottate", "brioche", "croissant", "wafer", "budino", "gelatina", "cacao", "savoiardi", "pan di spagna", "granella"],
-  "Surgelati": ["surgelat", "congelat", "gelato", "bastoncini", "sofficini", "ghiaccioli", "in freezer"],
-  "Bevande": ["acqua", "caffe", "caffè", "succo", "vino", "birra", "bibita", "cola", "aranciata", "tisana", "spremuta", "camomilla", "tè", "the verde", "energy drink", "tonica", "prosecco", "spumante"],
+  "Verdura": [
+    "pomodoro", "pomodori", "pomodorini", "insalata", "lattuga", "zucchine", "zucchina",
+    "melanzane", "melanzana", "peperoni", "peperone", "carote", "carota", "cipolla", "cipolle",
+    "aglio", "patate", "patata", "verdura", "verdure", "zucca", "finocchi", "sedano", "funghi",
+    "avocado", "broccoli", "spinaci", "cavolfiore", "cavolo", "verza", "porri", "asparagi",
+    "rucola", "radicchio", "bietole", "fagiolini", "cetrioli", "cetriolo", "ravanelli",
+    "scalogno", "carciofi", "carciofo", "songino", "cime di rapa", "catalogna", "puntarelle",
+    // erbe fresche in vaso/mazzo (secche → Spezie ed Erbe)
+    "menta", "menta fresca", "basilico fresco", "prezzemolo fresco", "rosmarino fresco",
+    "timo fresco", "erba cipollina fresca", "salvia fresca",
+    // verdure meno comuni ma frequenti
+    "mais fresco", "mais in pannocchia", "piselli freschi", "piselli in baccello",
+    "fave fresche", "erbette", "pak choy", "pak choi", "bok choy",
+    "barbabietola", "barbabietole", "topinambur", "daikon", "germogli",
+    "friarielli", "cicoria", "tarassaco", "castelfranco", "cime di broccolo",
+  ],
+  "Frutta": [
+    "limone", "limoni", "arancia", "arance", "mela", "mele", "banana", "banane",
+    "frutta fresca", "fragole", "pere", "pera", "pesche", "pesca", "kiwi", "uva",
+    "anguria", "cocomero", "melone", "ananas", "mandarini", "mandaranci", "clementine",
+    "albicocche", "albicocca", "ciliegie", "ciliegia", "prugne", "prugna", "fichi",
+    "mirtilli", "mirtillo", "lamponi", "lampone", "pompelmo", "frutti di bosco",
+    "cachi", "melograno", "nespole", "ribes", "more", "papaya", "mango", "cocco",
+  ],
+  "Carne": [
+    "pollo", "manzo", "maiale", "tacchino", "vitello", "salsicc", "macinato", "bistecca",
+    "bovino", "agnello", "carne", "fettine", "hamburger", "burger di", "polpett", "cotolett",
+    "spezzatino", "arrosto", "coscia", "sovracosc", "petto di pollo", "lonza", "tagliata",
+    "costine", "scaloppine", "braciole", "ossobuco", "fegato", "spiedini", "carpaccio",
+    "filetto di manzo", "entrecôte", "entrecote", "lombata",
+  ],
+  "Salumi": [
+    "prosciutto", "salame", "salami", "mortadella", "speck", "bresaola", "pancetta",
+    "wurstel", "wurst", "coppa", "porchetta", "salumi", "affettati", "guanciale", "lardo",
+    "culatello", "lonzino", "nduja", "finocchiona", "soppressata",
+  ],
+  "Pesce": [
+    "pesce", "salmone", "merluzzo", "gamber", "calamar", "vongole", "cozze", "branzino",
+    "orata", "baccala", "spigola", "seppi", "polpo", "sgombro", "tonno fresco", "trota",
+    "sogliola", "platessa", "nasello", "spada", "alici fresche", "scampi", "totani",
+    "tilapia", "pangasio", "frutti di mare", "filetto di pesce", "surimi", "granchio",
+    "pesce spada", "rana pescatrice", "dentice", "cernia", "rombo", "salmone fresco",
+    "gambero fresco", "gamberi freschi",
+  ],
+  "Latticini": [
+    "latte", "formaggio", "parmigiano", "pecorino", "mozzarella", "yogurt", "burro",
+    "panna", "ricotta", "mascarpone", "grana", "gorgonzola", "stracchino", "philadelphia",
+    "scamorza", "provola", "fontina", "crescenza", "kefir", "burrata", "caciotta",
+    "caciocavallo", "emmental", "asiago", "taleggio", "robiola", "squacquerone",
+    "formaggio spalmabile", "quartirolo", "brie", "camembert", "gruyere", "gruyère",
+  ],
+  "Pane e Forno": [
+    "pane", "piadina", "piadine", "cracker", "grissini", "pancarre", "pancarrè",
+    "focaccia", "taralli", "panini", "baguette", "tortillas", "pita", "friselle",
+    "pan bauletto", "chapati", "naan", "ciabatta", "filone", "sfilatino",
+  ],
+  "Pasta, Riso e Cereali": [
+    "pasta", "spaghetti", "spaghettoni", "spaghettini", "penne", "pennette", "fusilli",
+    "rigatoni", "tortiglioni", "farfalle", "conchiglie", "conchiglioni", "orecchiette",
+    "linguine", "bavette", "tagliatelle", "tagliolini", "pappardelle", "fettuccine",
+    "lasagne", "lasagna", "cannelloni", "paccheri", "mezze maniche", "ditalini", "ditaloni",
+    "sedanini", "bucatini", "vermicelli", "capellini", "maccheroni", "gnocchetti", "trofie",
+    "casarecce", "caserecce", "gemelli", "mafalde", "reginette", "anellini", "stelline",
+    "risoni", "pastina", "tortellini", "tortelloni", "ravioli", "agnolotti", "cappelletti",
+    "strozzapreti", "pici", "fregola", "riso", "risotto", "basmati", "carnaroli", "arborio",
+    "cous", "couscous", "farina", "avena", "cereali", "cornflakes", "corn flakes", "orzo",
+    "farro", "polenta", "gnocchi", "pangrattato", "pan grattato", "grano", "quinoa",
+    "bulgur", "semola", "lievito", "fiocchi di avena", "fiocchi d avena", "fiocchi",
+    "riso basmati", "riso carnaroli", "riso integrale", "pasta integrale",
+  ],
+  "Legumi": [
+    "fagioli", "cannellini", "borlotti", "ceci", "lenticchie", "piselli secchi",
+    "piselli verdi", "piselli", "legumi", "fave", "lupini", "soia", "edamame",
+    "cicerchie", "fagiolo", "lenticchie rosse", "lenticchie nere", "lenticchie verdi",
+    "lenticchie di castelluccio", "borlotti freschi",
+  ],
+  "Conserve": [
+    "tonno", "pelati", "passata", "passata di pomodoro", "pomodori pelati", "in scatola",
+    "barattolo", "acciughe", "sardine", "olive", "conserva", "mais in scatola", "sottoli",
+    "sottaceti", "capperi", "concentrato di pomodoro", "polpa di pomodoro", "carciofini",
+    "pesto in barattolo", "salmone affumicato", "sgombro al naturale", "alici in olio",
+    "tonno in olio", "tonno al naturale", "tonno in scatola", "fagioli in scatola",
+    "ceci in scatola", "lenticchie in scatola",
+  ],
+  "Condimenti e Salse": [
+    "olio", "aceto", "salsa", "maionese", "ketchup", "senape", "pesto", "sugo", "condimento",
+    "tahina", "brodo", "dado", "besciamella", "tabasco", "worcester", "salsa di soia",
+    // versioni "brodo di X" con frase lunga per battere il match su "pollo/manzo" in Carne
+    "brodo di pollo", "brodo di manzo", "brodo vegetale", "brodo di verdure",
+    "brodo di pesce", "brodo di carne", "dado da brodo",
+    "olio evo", "olio extravergine", "aceto balsamico", "aceto di mele",
+    "salsa worcestershire", "salsa sriracha",
+    // soia qui (la parola "soia" da sola è ambigua ma come condimento è più comune)
+    "soia",
+  ],
+  "Spezie ed Erbe": [
+    "sale", "pepe", "paprika", "curcuma", "cumino", "origano", "basilico", "rosmarino",
+    "timo", "prezzemolo", "cannella", "zenzero", "peperoncino", "noce moscata", "spezie",
+    "aglio in polvere", "curry", "zafferano", "alloro", "salvia", "erba cipollina",
+    "vaniglia", "cardamomo", "anice", "finocchio in polvere", "za atar", "ras el hanout",
+    "miscela di spezie", "pepe nero", "pepe bianco", "pepe rosa", "mix di spezie",
+    "paprika dolce", "paprika piccante", "paprika affumicata", "peperoncino in polvere",
+    "zenzero in polvere", "aglio essiccato", "cipolla in polvere", "erbe provenzali",
+  ],
+  "Frutta Secca": [
+    "mandorle", "noci", "nocciole", "pistacchi", "pinoli", "anacardi", "arachidi",
+    "uvetta", "datteri", "semi di", "noccioline", "frutta secca",
+    "semi di chia", "semi di lino", "semi di girasole", "semi di zucca",
+    "mix di frutta secca", "noci pecan", "noci di macadamia", "noci del brasile",
+    "fichi secchi", "albicocche secche", "prugne secche", "mango secco",
+  ],
+  "Dolci": [
+    "biscotti", "cioccolato", "cioccolata", "merendine", "marmellata", "miele",
+    "zucchero", "torta", "crostata", "ciambellone", "plumcake", "panettone", "pandoro",
+    "colomba", "torrone", "meringhe", "caramelle", "crema spalmabile", "nutella",
+    "muesli", "fette biscottate", "brioche", "croissant", "wafer", "budino", "gelatina",
+    "cacao", "savoiardi", "pan di spagna", "granella",
+    // creme a base di frutta secca → Dolci (più lungo di "nocciole" in Frutta Secca)
+    "crema di nocciole", "pasta di nocciole", "crema al cioccolato",
+    "cioccolata calda", "cacao amaro", "cacao in polvere",
+    "zucchero di canna", "zucchero a velo", "sciroppo d acero", "sciroppo di agave",
+  ],
+  "Surgelati": [
+    "surgelat", "congelat", "gelato", "bastoncini", "sofficini", "ghiaccioli", "in freezer",
+  ],
+  "Bevande": [
+    "acqua", "caffe", "caffè", "succo", "vino", "birra", "bibita", "cola", "aranciata",
+    "tisana", "spremuta", "camomilla", "tè", "the verde", "energy drink", "tonica",
+    "prosecco", "spumante", "frullato", "smoothie", "kombucha", "kefir di acqua",
+    "latte vegetale", "latte di soia", "latte di avena", "latte di riso", "latte di mandorla",
+    "succo di frutta", "succo di arancia", "succo di mela", "acqua frizzante",
+  ],
 };
 
 export function guessCategory(name) {
@@ -318,6 +434,11 @@ export function isQbQty(qty) {
 // Agrumi "a piacere" (frutta, quindi non presi dalle categorie): mostrati q.b.
 const QB_RECIPE_NAMES = ["limone", "lime"];
 
+// Condimenti che si misurano con precisione nelle ricette (es. "150 ml di
+// brodo"): NON vanno mostrati q.b. se hanno una quantità in volume. Al
+// contrario olio/aceto/soia si usano a piacere anche se la ricetta indica ml.
+const QB_CONDIMENTI_MISURATI = ["brodo", "besciamella", "latte di cocco", "succo di limone", "succo di lime"];
+
 // True se l'ingrediente di una ricetta va mostrato come "q.b." (DISPLAY): la
 // ricetta lo dice già, oppure appartiene a "Spezie ed Erbe" o "Condimenti e
 // Salse" (tutta la categoria), o è un agrume usato a piacere.
@@ -326,7 +447,15 @@ const QB_RECIPE_NAMES = ["limone", "lime"];
 export function isQbIngredient(name, qty) {
   if (isQbQty(qty)) return true;
   const cat = guessCategory(name);
-  if (cat === "Spezie ed Erbe" || cat === "Condimenti e Salse") return true;
+  if (cat === "Spezie ed Erbe" || cat === "Condimenti e Salse") {
+    // Eccezione: condimenti liquidi misurati con precisione (es. 150 ml di
+    // brodo) non sono q.b. — si distinguono da olio/aceto che sono sempre a piacere.
+    const n2 = norm(name);
+    const p = parseQty(qty);
+    if (p && p.family === "volume" &&
+        QB_CONDIMENTI_MISURATI.some((k) => n2.includes(k))) return false;
+    return true;
+  }
   const n = norm(name);
   return QB_RECIPE_NAMES.some((k) => new RegExp(`(^|\\s)${k}(\\s|$)`).test(n));
 }

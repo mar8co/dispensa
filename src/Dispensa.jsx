@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 import {
-  CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES,
+  CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES, CATEGORY_PROMPT,
 } from "./constants.js";
 import {
   guessCategory, categorize,
@@ -355,9 +355,10 @@ export default function Dispensa({ session }) {
     const prompt =
       `Sei un assistente per una dispensa italiana. Dall'input dell'utente ricava il nome dell'alimento. ` +
       `${NAME_RULES} ` +
-      `Assegna anche una categoria tra: ${CATEGORIES.join(", ")}. Input: "${raw}". ` +
+      `Assegna anche la categoria corretta seguendo queste istruzioni:\n${CATEGORY_PROMPT}\n` +
+      `Input: "${raw}". ` +
       `Rispondi SOLO con JSON valido senza markdown: {"name":"...","category":"..."}`;
-    return callClaude([{ type: "text", text: prompt }], 200);
+    return callClaude([{ type: "text", text: prompt }], 256);
   }
 
   // --- Operazioni dispensa: CRUD e derivati estratti in hooks/usePantry.jsx ---
@@ -569,8 +570,8 @@ export default function Dispensa({ session }) {
         `Per la quantità: se l'utente indica un numero o una confezione ("6 uova", "un pacco di pasta", ` +
         `"due litri di latte"), mettila nel campo "qty" (numero oppure unità metriche come "500 g"/"1 l"), ` +
         `MAI nel nome; altrimenti "1". ` +
-        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"...","category":"..."}]} ` +
-        `Categorie possibili: ${CATEGORIES.join(", ")}.`;
+        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"...","category":"..."}]}\n` +
+        `${CATEGORY_PROMPT}`;
       const parsed = await callClaude([{ type: "text", text: prompt }], 800);
       const raw = Array.isArray(parsed?.items) ? parsed.items : [];
       // Dizionario-first sulla categoria: le varianti note (es. formati di

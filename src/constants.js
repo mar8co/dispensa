@@ -59,6 +59,28 @@ MANTIENI SOLO le qualità che identificano un alimento davvero diverso (es. grec
 Il nome deve avere la prima lettera maiuscola e il resto minuscolo.
 Esempi: "Rosa Blu acqua naturale 1,5L" -> "Acqua"; "Parmigiano Reggiano grattugiato 100g" -> "Parmigiano"; "Yoga Succo di Pera PET" -> "Succo di pera"; "Meteora yogurt greco 0% 500g" -> "Yogurt greco"; "Barilla spaghetti n.5 500g" -> "Spaghetti"; "Petto di pollo a fette 400g" -> "Petto di pollo".`;
 
+// Blocco categorie + regole per TUTTI i prompt AI: usa | come separatore per
+// evitare l'ambiguità della virgola in "Pasta, Riso e Cereali", e fornisce
+// regole esplicite per i casi che l'AI sbaglia più spesso.
+export const CATEGORY_PROMPT = `Usa SOLO una di queste categorie (nome ESATTO):
+Verdura | Frutta | Carne | Salumi | Pesce | Latticini | Pane e Forno | Pasta, Riso e Cereali | Legumi | Conserve | Surgelati | Bevande | Dolci | Frutta Secca | Condimenti e Salse | Spezie ed Erbe | Altro
+
+Regole (applica nell'ordine — la prima che corrisponde vince):
+• SURGELATO/CONGELATO → "Surgelati" (gelato, bastoncini, sofficini, piselli/spinaci/broccoli surgelati, carne o pesce congelati…)
+• Pasta (spaghetti, penne, rigatoni, farfalle, lasagne, gnocchi, tortellini, ravioli…), riso, farro, orzo, couscous, quinoa, bulgur, farina, avena, polenta, pan grattato → "Pasta, Riso e Cereali"
+• Uova → "Altro"
+• Tonno, salmone, sgombro, acciughe, sardine IN SCATOLA / al naturale / sott'olio → "Conserve"; gli stessi prodotti FRESCHI (banco pescheria) → "Pesce"
+• Prosciutto, salame, bresaola, speck, mortadella, wurstel, nduja, pancetta, guanciale, affettati → "Salumi"
+• Latte (anche vegetale: soia, avena, riso, mandorla), formaggio, yogurt, burro, panna, ricotta, mozzarella, parmigiano, kefir, burrata → "Latticini"
+• Sale, pepe, spezie (curry, curcuma, paprika, cumino, cannella…), erbe aromatiche SECCHE (origano, basilico, rosmarino, timo secchi…), lievito → "Spezie ed Erbe"
+• Olio, aceto, salsa, pesto, sugo, brodo (anche "brodo di pollo/manzo/vegetale"), dado, ketchup, maionese, senape, soia, tahina, besciamella → "Condimenti e Salse"
+• Piselli, mais, fagioli, ceci, lenticchie, fave, soia (non surgelati) → "Legumi"
+• Conserve vegetali (pelati, passata, olive, capperi, sottoli, sottaceti), tonno/pesce in scatola → "Conserve"
+• Mandorle, noci, nocciole, pistacchi, pinoli, anacardi, arachidi, semi (chia, lino, girasole, zucca) → "Frutta Secca"
+• Crema/pasta di nocciole, nutella, cioccolato, biscotti, marmellata, miele, dolci, merendine → "Dolci"
+• Acqua, succhi, vino, birra, caffè, tè, tisane, bibite → "Bevande"
+• Tutto il resto → "Altro"`;
+
 export const RECEIPT_PROMPT = `Sei un assistente per la gestione della dispensa italiana.
 L'immagine può essere di tre tipi: (a) uno scontrino della spesa, (b) uno screenshot con una lista di prodotti (es. riepilogo ordine di un'app), oppure (c) una foto di alimenti reali (sul tavolo, nel frigo, nella busta della spesa). Identifica TUTTI gli alimenti presenti.
 - Se è uno scontrino o un testo: leggi i nomi dei prodotti dal testo.
@@ -70,10 +92,7 @@ IMPORTANTISSIMO: AGGREGA i prodotti uguali in UNA SOLA voce sommando le quantit�
 Ignora prodotti non alimentari. Se non riconosci alcun alimento, restituisci una lista vuota.
 Rispondi SOLO con JSON valido senza markdown:
 {"items":[{"name":"...","qty":"...","category":"..."}]}
-Categorie possibili: Verdura, Frutta, Carne, Salumi, Pesce, Latticini,
-Pane e Forno, Pasta, Riso e Cereali (unica categoria), Legumi, Conserve, Surgelati,
-Bevande, Dolci, Frutta Secca, Condimenti e Salse, Spezie ed Erbe, Altro.
-NB: i prodotti congelati/surgelati vanno SEMPRE in "Surgelati"; le uova in "Altro"; TUTTI i formati di pasta (spaghetti, penne, rigatoni, fusilli, farfalle, tagliatelle, tortellini, ecc.) vanno in "Pasta, Riso e Cereali".`;
+${CATEGORY_PROMPT}`;
 
 // Data ISO (YYYY-MM-DD) a +N giorni da oggi, per le scadenze demo (calcolata
 // all'avvio: i dati demo si inseriscono nella stessa sessione).
