@@ -62,6 +62,18 @@ describe("correctName", () => {
     expect(correctName("mozzarela")).toBe("Mozzarella");
     expect(correctName("yogrt")).toBe("Yogurt");
   });
+  it("non trasforma 'pan' in 'pane' (tronchi e marche restano intatti)", () => {
+    // "pan di stelle"/"pan di spagna" non devono diventare "pane di…"
+    expect(correctName("Pan di spagna")).toBe("Pan di spagna");
+  });
+  it("genericizza le marche note nella categoria giusta", () => {
+    expect(correctName("Pan di Stelle")).toBe("Biscotti");
+    expect(guessCategory(correctName("Pan di Stelle"))).toBe("Dolci");
+    expect(correctName("nutella")).toBe("Crema di nocciole");
+    expect(guessCategory(correctName("nutella"))).toBe("Dolci");
+    expect(correctName("Philadelphia")).toBe("Formaggio spalmabile");
+    expect(guessCategory(correctName("Philadelphia"))).toBe("Latticini");
+  });
 });
 
 describe("parseQty", () => {

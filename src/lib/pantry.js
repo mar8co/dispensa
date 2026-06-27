@@ -193,21 +193,53 @@ function lev(a, b) {
   return d[m][n];
 }
 
+// Marche commerciali il cui nome è di fatto sinonimo di UN prodotto preciso:
+// nel flusso manuale (che NON passa dall'AI e quindi non genericizza il nome)
+// le ricolleghiamo qui al nome generico, così finiscono nella categoria giusta.
+// Chiave = nome normalizzato (norm) dell'intero input. Estendibile a piacere.
+const BRAND_TO_GENERIC = {
+  "pan di stelle": "Biscotti",
+  "gocciole": "Biscotti",
+  "pavesini": "Biscotti",
+  "ringo": "Biscotti",
+  "oro saiwa": "Biscotti",
+  "abbracci": "Biscotti",
+  "macine": "Biscotti",
+  "nutella": "Crema di nocciole",
+  "nocciolata": "Crema di nocciole",
+  "philadelphia": "Formaggio spalmabile",
+  "estathe": "Tè",
+  "esta the": "Tè",
+};
+
+function cap(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function correctName(raw) {
+  // (A) Marca nota → nome generico: scorciatoia sull'intero input, prima di
+  // qualsiasi correzione ortografica (che altrimenti rovinerebbe la marca).
+  const whole = norm(raw);
+  if (BRAND_TO_GENERIC[whole]) return BRAND_TO_GENERIC[whole];
+
   const words = raw.trim().toLowerCase().split(/\s+/);
   const fixed = words.map((w) => {
-    if (w.length < 3) return w;
+    // (B) Correzione ortografica SOLO da 4 caratteri in su: sotto, parole
+    // come "pan" (tronco di "pan di stelle"/"pan di spagna") venivano
+    // erroneamente "corrette" in "pane", cambiando categoria. Le parole già
+    // presenti nel dizionario sono valide e non vanno toccate.
+    if (w.length < 4 || FOOD_DICTIONARY.includes(w)) return w;
     let best = null, bestD = Infinity;
     for (const cand of FOOD_DICTIONARY) {
       const d = lev(w, cand);
       if (d < bestD) { bestD = d; best = cand; }
     }
-    const thresh = w.length >= 6 ? 2 : 1;
-    if (best && bestD > 0 && bestD <= thresh) return best;
+    // Solo distanza 1 (un refuso): correggiamo "mozzarela"→"mozzarella" ma NON
+    // parole legittime non alimentari (es. "spagna" non deve diventare "panna").
+    if (best && bestD === 1) return best;
     return w;
   });
-  const joined = fixed.join(" ");
-  return joined.charAt(0).toUpperCase() + joined.slice(1);
+  return cap(fixed.join(" "));
 }
 
 // --- Quantità: parsing e normalizzazione delle unità ---
