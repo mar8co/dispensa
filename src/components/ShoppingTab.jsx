@@ -20,44 +20,95 @@ import { norm, atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 const editCls =
   "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
-// --- Riga prodotto: l'INTERA riga fa toggle della selezione/carrello (tap).
-// La modifica (quantità/reparto/nome/elimina) si apre con il pulsante matita
-// visibile a destra, oppure con la pressione lunga sulla riga. Accessibile
-// (role=button, tastiera). ---
-function ShoppingRow({ it, onSelect, onLongEdit }) {
+// --- Riga prodotto. Gesti:
+// • tap = mette/toglie dal carrello;
+// • swipe ← (verso sinistra) = elimina;
+// • swipe → (verso destra) = apre la modifica;
+// • matita visibile = apre la modifica;
+// • pressione lunga = apre la modifica.
+// Accessibile (role=button, tastiera). ---
+function ShoppingRow({ it, onSelect, onLongEdit, onDelete }) {
   const selected = !!it.checked;
+  const [dx, setDx] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const start = useRef(null);
-  const moved = useRef(false);
+  const axis = useRef(null); // "h" | "v" | null
   const longFired = useRef(false);
   const timer = useRef(null);
+  const THRESHOLD = 72; // px oltre cui scatta l'azione
+  const MAX = 104;      // limite visivo (oltre, resistenza elastica)
 
+  function clamp(v) {
+    if (v > MAX) return MAX + (v - MAX) * 0.25;
+    if (v < -MAX) return -MAX + (v + MAX) * 0.25;
+    return v;
+  }
   function down(e) {
     start.current = { x: e.clientX, y: e.clientY };
-    moved.current = false;
+    axis.current = null;
     longFired.current = false;
+    setDragging(true);
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => { longFired.current = true; onLongEdit(it); }, 450);
+    timer.current = setTimeout(() => { longFired.current = true; onLongEdit(it); }, 500);
   }
   function move(e) {
     if (!start.current) return;
-    if (Math.abs(e.clientX - start.current.x) > 10 || Math.abs(e.clientY - start.current.y) > 10) {
-      moved.current = true;
-      clearTimeout(timer.current);
+    const ddx = e.clientX - start.current.x;
+    const ddy = e.clientY - start.current.y;
+    if (axis.current == null) {
+      if (Math.abs(ddx) < 8 && Math.abs(ddy) < 8) return;
+      axis.current = Math.abs(ddx) > Math.abs(ddy) ? "h" : "v";
+      clearTimeout(timer.current); // ogni movimento annulla la pressione lunga
+      if (axis.current === "h") {
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
+      }
     }
+    if (axis.current === "h") setDx(clamp(ddx));
   }
-  function up() {
+  function up(e) {
     clearTimeout(timer.current);
-    const wasTap = start.current && !moved.current && !longFired.current;
+    const wasH = axis.current === "h";
+    const ddx = start.current ? e.clientX - start.current.x : 0;
+    const wasTap = start.current && axis.current == null && !longFired.current;
     start.current = null;
+    setDragging(false);
+    if (wasH) {
+      if (ddx <= -THRESHOLD) { // swipe ← : elimina (scivola fuori, poi rimosso)
+        const w = typeof window !== "undefined" ? window.innerWidth : 400;
+        setDx(-w);
+        setTimeout(() => onDelete(it.id), 200);
+        return;
+      }
+      if (ddx >= THRESHOLD) { setDx(0); onLongEdit(it); return; } // swipe → : modifica
+      setDx(0); // sotto soglia: torna a posto
+      return;
+    }
     if (wasTap) onSelect(it);
   }
-  function cancel() { clearTimeout(timer.current); start.current = null; }
+  function cancel() {
+    clearTimeout(timer.current);
+    start.current = null;
+    axis.current = null;
+    setDragging(false);
+    setDx(0);
+  }
   function onKey(e) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(it); }
   }
 
   return (
-    <li>
+    <li className="relative overflow-hidden">
+      {/* Sfondi azione, rivelati dallo scorrimento: modifica (sx) / elimina (dx) */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-between text-sm font-bold text-tomato">
+        <span className={`flex items-center gap-1.5 pl-3 transition-opacity ${dx > 4 ? "opacity-100" : "opacity-0"}`}>
+          <Pencil className="h-4 w-4" /> Modifica
+        </span>
+        <span className={`flex items-center gap-1.5 pr-3 transition-opacity ${dx < -4 ? "opacity-100" : "opacity-0"}`}>
+          Elimina <Trash2 className="h-4 w-4" />
+        </span>
+      </div>
+
+      {/* Riga in primo piano, traslata dallo swipe (sfondo opaco = copre gli hint) */}
       <div
         role="button"
         tabIndex={0}
@@ -67,8 +118,12 @@ function ShoppingRow({ it, onSelect, onLongEdit }) {
         onPointerUp={up}
         onPointerCancel={cancel}
         onKeyDown={onKey}
-        style={{ touchAction: "pan-y" }}
-        className="flex min-h-[44px] cursor-pointer select-none items-center gap-3 py-2 outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-tomato/30"
+        style={{
+          touchAction: "pan-y",
+          transform: `translateX(${dx}px)`,
+          transition: dragging ? "none" : "transform 0.2s ease",
+        }}
+        className="relative flex min-h-[44px] cursor-pointer select-none items-center gap-3 bg-cream py-2 outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-tomato/30"
       >
         <span className={`min-w-0 flex-1 truncate text-[15px] font-semibold ${selected ? "text-stone-400 line-through" : "text-ink"}`}>
           {it.name}
@@ -79,8 +134,8 @@ function ShoppingRow({ it, onSelect, onLongEdit }) {
             {formatQtyDisplay(it.qty)}
           </span>
         )}
-        {/* Matita: apre la modifica (qty/reparto/nome/elimina). stopPropagation
-            così il tocco NON mette la riga nel carrello. */}
+        {/* Matita: apre la modifica. stopPropagation così il tocco NON mette
+            la riga nel carrello e non avvia lo swipe. */}
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
@@ -253,6 +308,11 @@ export default function ShoppingTab({
     setDraftName(it.name);
     setQtyDraft(it.qty);
     setCatPickerOpen(false);
+    // Porta il pannello al centro: sull'ultima riga finiva sotto la barra
+    // "Sposta in dispensa"/navigazione. Doppio rAF: aspetta il montaggio.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      panelRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }));
   }
   function closeEdit(flush = true) {
     if (flush) flushEdit();
@@ -427,7 +487,7 @@ export default function ShoppingTab({
     list.map((it) =>
       editId === it.id
         ? renderEditPanel(it)
-        : <ShoppingRow key={it.id} it={it} onSelect={selectItem} onLongEdit={openEdit} />
+        : <ShoppingRow key={it.id} it={it} onSelect={selectItem} onLongEdit={openEdit} onDelete={onDelete} />
     );
 
   return (
@@ -562,8 +622,12 @@ export default function ShoppingTab({
       </div>
 
       {/* Spazio in fondo: l'ultimo prodotto resta visibile sopra la nav (e
-          sopra la barra "Sposta in dispensa" quando il carrello è pieno). */}
-      {shopping.length > 0 && <div aria-hidden="true" style={{ height: "calc(72px + env(safe-area-inset-bottom))" }} />}
+          sopra la barra "Sposta in dispensa" quando il carrello è pieno).
+          Mentre un pannello di modifica è aperto, spazio extra così anche
+          l'ultima riga può salire al centro (vedi scrollIntoView in openEdit). */}
+      {shopping.length > 0 && (
+        <div aria-hidden="true" style={{ height: editId ? "45vh" : "calc(72px + env(safe-area-inset-bottom))" }} />
+      )}
 
       <BottomBar
         cartCount={cartCount}
