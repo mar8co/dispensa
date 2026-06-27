@@ -194,8 +194,11 @@ verifica la sessione) → se assente mostra `Auth.jsx` (magic-link / Google / Ap
 - *Manuale*: `ManualAddModal` → `usePantry` (correzione nome locale + categoria
   via `categorize`).
 - *Voce*: `VoiceAddModal` → trascrizione → `callClaude` estrae prodotti → insert.
-- *Scontrino*: `ReceiptScanModal` (getUserMedia) → foto → `callClaude` (immagine)
-  → `ReviewScanModal` per confermare → insert multiplo.
+- *Scontrino*: `ReceiptScanModal` → **fotocamera nativa** (`<input capture>`,
+  ~12 MP) → resize a 2000px (`lib/image.js`) → `callClaude` (immagine, output
+  strutturato `ITEMS_SCHEMA`) → `ReviewScanModal` per confermare → insert
+  multiplo. (Non si usa più il frame del `<video>`: su iOS la preview è a bassa
+  risoluzione e `ImageCapture` non è supportato.)
 - *Barcode*: `BarcodeScanModal` (ZXing, callback-ref sul `<video>`) → Open Food
   Facts → `ReviewScanModal`.
 

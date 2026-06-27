@@ -89,6 +89,12 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Bug noti / da verificare
 
+- **OCR scontrini lunghi** — **risolto**: lo scatto non usa più il frame del
+  `<video>` (preview ~1280×720, e iOS non ha `ImageCapture`) ma la **fotocamera
+  nativa** via `<input capture>` (~12 MP, autofocus). `ReceiptScanModal.jsx`
+  riscritto (niente più preview live/sharpness/overlay); l'immagine è
+  ridimensionata a 2000px (`src/lib/image.js`) prima dell'invio. Lo scontrino si
+  fotografa **per intero**, anche se lungo. **Da provare sul telefono.**
 - **Barcode camera** — regressione (camera nera) dopo il passaggio dei bottom
   sheet a Vaul, **risolta** con **callback-ref** in `BarcodeScanModal.jsx` (la
   scansione parte quando il `<video>` è davvero montato). **Da confermare sul
@@ -110,8 +116,9 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/lib/pantry.js` | **Logica pura** (categorizzazione, quantità, q.b., low, match, ½). Coperto da test (`pantry.test.js`). |
 | `src/lib/db.js` | Tutte le query Supabase (pantry / shopping / recipes / settings). **Confine del data layer.** |
 | `src/lib/supabase.js` | Client Supabase (anon key pubblica, protetta da RLS). |
-| `src/lib/claude.js` | Client AI lato browser → `/api/claude` e `/api/photo`. |
-| `server/claude.js` | **Core del proxy AI** (Gemini), condiviso da Vercel e dev locale; verifica token, rate-limit, traduzione Anthropic↔Gemini. |
+| `src/lib/claude.js` | Client AI lato browser → `/api/claude` e `/api/photo`. `callClaude(content, maxTokens, opts)` con `opts.schema` (responseSchema), `opts.temperature`, timeout (AbortController) e retry. |
+| `src/lib/image.js` | Ridimensiona la foto scontrino (lato lungo 2000px, JPEG) prima dell'OCR AI. |
+| `server/claude.js` | **Core del proxy AI** (Gemini), condiviso da Vercel e dev locale; verifica token, rate-limit, traduzione Anthropic↔Gemini, **responseSchema + temperature**. |
 | `vite.config.js` | Plugin React, **proxy `/api/*` in dev**, config PWA/manifest. |
 | `src/hooks/usePantry.jsx`, `useShopping.jsx`, `useRecipes.jsx` | Stato + logica dei tre domini. |
 | `src/hooks/useOnline.js`, `useTimersTicker.js`, `useAuth.js` | Hook di supporto. |
@@ -156,7 +163,9 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Todo prioritari
 
-1. **Verificare sul telefono** la fix camera barcode (Vaul callback-ref).
+1. **Verificare sul telefono**: (a) scatto scontrino dalla **fotocamera nativa**
+   `<input capture>` su uno scontrino lungo reale; (b) fix camera barcode (Vaul
+   callback-ref); (c) torcia barcode dove supportata.
 2. **Configurare Apple Sign-In** (Apple Developer + Supabase) — guida sotto.
 3. **Decidere il placeholder ricerca ricette** e applicarlo (1 riga, no a-capo).
 4. Eventuali rifiniture UX su Spesa (altezze barra/nav sul dispositivo reale).
