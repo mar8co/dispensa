@@ -132,7 +132,7 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
       title="Aggiungi alla dispensa"
       subtitle="Inquadra lo scontrino, i prodotti o uno screenshot della spesa 🛒"
       onClose={onClose}
-      previewClass="h-[64vh]"
+      previewClass="h-[54vh]"
       footer={
         <>
           {!error && (
@@ -172,19 +172,20 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
         </div>
       ) : (
         <div className="pointer-events-none absolute inset-0">
-          {/* Cornice guida NON restrittiva: copre quasi tutta l'anteprima, così
-              si riempie il riquadro con lo scontrino senza allontanarlo. */}
+          {/* Cornice guida poco restrittiva (un filo più stretta ai lati): si
+              riempie con lo scontrino senza doverlo allontanare. */}
           <div
-            className={`absolute inset-3 rounded-2xl border-2 transition-colors ${
+            className={`absolute inset-y-6 inset-x-7 rounded-2xl border-2 transition-colors ${
               sharp ? "border-tomato" : "border-[#fff]/70"
             }`}
           />
+          {/* Scritta centrata SULLA linea superiore del riquadro. */}
           <span
-            className={`absolute left-1/2 top-3 max-w-[88%] -translate-x-1/2 rounded-full px-3.5 py-1.5 text-center text-xs font-bold shadow-lg backdrop-blur transition ${
+            className={`absolute left-1/2 top-6 max-w-[80%] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-center text-xs font-bold shadow-lg backdrop-blur transition ${
               sharp ? "bg-tomato text-[#fff]" : "bg-black/70 text-[#fff]"
             }`}
           >
-            {sharp ? "A fuoco — scatta" : "Riempi il riquadro con lo scontrino e scatta"}
+            {sharp ? "A fuoco — scatta" : "Metti a fuoco e scatta"}
           </span>
         </div>
       )}
