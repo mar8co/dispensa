@@ -20,9 +20,10 @@ import { norm, atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 const editCls =
   "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
-// --- Riga prodotto: l'INTERA riga fa toggle della selezione (tap); pressione
-// lunga apre l'editor. Accessibile (role=button, tastiera). Niente swipe:
-// l'eliminazione passa dalla selezione (azione "Rimuovi"). ---
+// --- Riga prodotto: l'INTERA riga fa toggle della selezione/carrello (tap).
+// La modifica (quantità/reparto/nome/elimina) si apre con il pulsante matita
+// visibile a destra, oppure con la pressione lunga sulla riga. Accessibile
+// (role=button, tastiera). ---
 function ShoppingRow({ it, onSelect, onLongEdit }) {
   const selected = !!it.checked;
   const start = useRef(null);
@@ -78,6 +79,17 @@ function ShoppingRow({ it, onSelect, onLongEdit }) {
             {formatQtyDisplay(it.qty)}
           </span>
         )}
+        {/* Matita: apre la modifica (qty/reparto/nome/elimina). stopPropagation
+            così il tocco NON mette la riga nel carrello. */}
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onLongEdit(it); }}
+          aria-label="Modifica prodotto"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-ink"
+        >
+          <Pencil className="h-[18px] w-[18px]" />
+        </button>
         {/* Checkbox: arancione pieno con spunta bianca quando selezionata */}
         <span
           aria-hidden="true"
