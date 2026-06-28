@@ -55,12 +55,12 @@ export const MODES = [
 // le considera (oltre alla stagione corrente, iniettata automaticamente) PRIMA
 // di proporre le idee per l'occasione scelta. `hint` = frase messa nel prompt.
 export const RECIPE_CONTEXTS = [
-  { id: "fresco", icon: "🌞", label: "Fresco", hint: "il piatto deve essere fresco, anche freddo o a temperatura ambiente" },
-  { id: "caldo", icon: "🍲", label: "Caldo", hint: "il piatto deve essere caldo e confortante" },
+  { id: "fresco", icon: "🥒", label: "Fresco", hint: "il piatto deve essere fresco, anche freddo o a temperatura ambiente" },
+  { id: "caldo", icon: "🍜", label: "Caldo", hint: "il piatto deve essere caldo e confortante" },
   { id: "leggero", icon: "🪶", label: "Leggero", hint: "il piatto deve essere leggero e digeribile" },
-  { id: "sostanzioso", icon: "💪", label: "Sostanzioso", hint: "il piatto deve essere sostanzioso e saziante" },
-  { id: "senzacottura", icon: "🧊", label: "Senza cottura", hint: "la ricetta NON deve richiedere alcuna cottura, né fornelli né forno: solo ingredienti crudi o già pronti da assemblare (insalate, piatti freddi, ecc.)" },
-  { id: "proteico", icon: "🍗", label: "Proteico", hint: "il piatto deve essere ricco di proteine" },
+  { id: "sostanzioso", icon: "🔋", label: "Sostanzioso", hint: "il piatto deve essere sostanzioso e saziante" },
+  { id: "senzacottura", icon: "🌯", label: "Senza cottura", hint: "la ricetta NON deve richiedere alcuna cottura, né fornelli né forno: solo ingredienti crudi o già pronti da assemblare (insalate, piatti freddi, ecc.)" },
+  { id: "proteico", icon: "🏋️", label: "Proteico", hint: "il piatto deve essere ricco di proteine" },
 ];
 
 // Regole condivise per ottenere il NOME GENERICO dell'alimento (usate da
