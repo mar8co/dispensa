@@ -341,6 +341,7 @@ export default function Dispensa({ session }) {
     mode, setMode, ideas, setIdeas, recipe, setRecipe, servings,
     loadingIdeas, setLoadingIdeas, loadingRecipe, setLoadingRecipe,
     recipeErr, setRecipeErr, savedRecipes,
+    recipeContext, toggleRecipeContext,
     chooseMode, askCustom, changeServings, savedByTitle,
     openRecipe, openSavedRecipe, commitRecipes,
     toggleSaveRecipe, recordCookedRecipe, removeSavedRecipe,
@@ -770,6 +771,7 @@ export default function Dispensa({ session }) {
             hasIngredient={hasIngredient} onAddMissing={addMissingToShopping}
             onRegenerate={() => mode && chooseMode(mode, true)}
             onCustomAsk={askCustom}
+            recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
             onDeleteSaved={removeSavedRecipe}

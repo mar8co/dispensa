@@ -13,7 +13,7 @@
 // leggere/scrivere lo stato ricette.
 import { useState } from "react";
 import { callClaude, fetchPhotos } from "../lib/claude.js";
-import { RECIPES_SCHEMA } from "../constants.js";
+import { RECIPES_SCHEMA, RECIPE_CONTEXTS } from "../constants.js";
 import { norm, stripParens } from "../lib/pantry.js";
 import { upsertSavedRecipe, updateSavedRecipe, deleteSavedRecipe } from "../lib/db.js";
 import { loadSavedRecipes, saveSavedRecipes, localRecipeId } from "../lib/recipes.js";
@@ -49,6 +49,41 @@ export function useRecipes({
     ? `Preferenze alimentari dell'utente, da rispettare SEMPRE: ${foodPrefs.trim()}. `
     : "";
 
+  // --- Contesto/umore delle proposte (pill) + stagione automatica ---
+  // Le pill scelte dall'utente sono override espliciti; la stagione (dalla data)
+  // è la base sempre attiva, così d'estate le proposte sono già fresche/leggere.
+  const [recipeContext, setRecipeContext] = useState([]); // id delle pill attive
+  function toggleRecipeContext(id) {
+    setRecipeContext((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+  function currentSeason() {
+    const m = new Date().getMonth(); // 0-11
+    if (m === 11 || m <= 1) return "inverno";
+    if (m <= 4) return "primavera";
+    if (m <= 7) return "estate";
+    return "autunno";
+  }
+  const SEASON_HINT = {
+    estate: "Siamo in piena estate e fa caldo: privilegia piatti freschi, leggeri e veloci; evita zuppe calde, brasati e lunghe cotture al forno.",
+    inverno: "Siamo in inverno e fa freddo: vanno benissimo piatti caldi e confortanti, zuppe, brasati, cotture al forno.",
+    primavera: "Siamo in primavera: piatti freschi e colorati, con verdure di stagione.",
+    autunno: "Siamo in autunno: piatti di stagione (zucca, funghi, legumi), comfort food tiepido.",
+  };
+  // Frase di contesto iniettata nel prompt (stagione + eventuali pill).
+  function contextPrompt() {
+    const hints = recipeContext
+      .map((id) => RECIPE_CONTEXTS.find((c) => c.id === id)?.hint)
+      .filter(Boolean);
+    const season = `${SEASON_HINT[currentSeason()]} `;
+    const pills = hints.length ? `Inoltre rispetta queste richieste dell'utente: ${hints.join("; ")}. ` : "";
+    return season + pills;
+  }
+  // Chiave cache: occasione + pill attive + stagione (così cambiando contesto
+  // non rivedi la lista vecchia, e la stagione non resta "congelata").
+  function ideasCacheKey(m) {
+    return `${m.id}|${[...recipeContext].sort().join(",")}|${currentSeason()}`;
+  }
+
   // Cache delle proposte per occasione (per utente, 24h): riaprire
   // un'occasione non consuma chiamate AI; "Altre idee" forza la rigenerazione.
   const IDEAS_TTL = 24 * 60 * 60 * 1000;
@@ -56,10 +91,10 @@ export function useRecipes({
   function loadIdeasCache() {
     try { return JSON.parse(localStorage.getItem(ideasKey())) || {}; } catch { return {}; }
   }
-  function saveIdeasCache(modeId, list) {
+  function saveIdeasCache(key, list) {
     try {
       const all = loadIdeasCache();
-      all[modeId] = { ideas: list, ts: Date.now() };
+      all[key] = { ideas: list, ts: Date.now() };
       localStorage.setItem(ideasKey(), JSON.stringify(all));
     } catch { /* niente cache */ }
   }
@@ -68,7 +103,7 @@ export function useRecipes({
     scrollToTop(); // le 5 proposte partono sempre dall'alto
     // Richiesta libera ("Cosa ti va?"): niente cache, sempre fresca.
     if (!force && !m.custom) {
-      const hit = loadIdeasCache()[m.id];
+      const hit = loadIdeasCache()[ideasCacheKey(m)];
       if (hit && Array.isArray(hit.ideas) && hit.ideas.length && Date.now() - hit.ts < IDEAS_TTL) {
         animateUI(() => {
           setMode(m); setRecipe(null); setIdeas(hit.ideas); setRecipeErr(""); setLoadingIdeas(false);
@@ -88,7 +123,7 @@ export function useRecipes({
       : `Voglio idee per la categoria "${m.id}". Proponi esattamente 5 ricette diverse che usino principalmente `;
     const prompt =
       `Sei uno chef esperto di cucina casalinga. Questi sono gli alimenti nella mia dispensa: ${pantryStr}. ` +
-      `${prefLine}${ask}ingredienti della mia dispensa (puoi assumere disponibili sale, acqua e olio). ${fast}` +
+      `${prefLine}${ask}ingredienti della mia dispensa (puoi assumere disponibili sale, acqua e olio). ${fast}${contextPrompt()}` +
       `Rispondi SOLO con JSON valido senza markdown: ` +
       `{"recipes":[{"title":"...","description":"breve, max 14 parole","time":"es. 15 min","difficulty":"Facile|Media|Elaborata","imageQuery":"2-4 parole IN INGLESE per cercare una foto del piatto, es. spaghetti tomato"}]}`;
     try {
@@ -97,12 +132,12 @@ export function useRecipes({
       const parsed = await callClaude([{ type: "text", text: prompt }], 1500, { schema: RECIPES_SCHEMA });
       const list = Array.isArray(parsed.recipes) ? parsed.recipes : [];
       animateUI(() => { setIdeas(list); setLoadingIdeas(false); });
-      if (!m.custom && list.length) saveIdeasCache(m.id, list);
+      if (!m.custom && list.length) saveIdeasCache(ideasCacheKey(m), list);
       if (list.length) {
         fetchPhotos(list.map((r) => r.imageQuery || r.title)).then((urls) => {
           const withPhotos = list.map((r, i) => (urls[i] ? { ...r, image: urls[i] } : r));
           setIdeas(withPhotos);
-          if (!m.custom) saveIdeasCache(m.id, withPhotos);
+          if (!m.custom) saveIdeasCache(ideasCacheKey(m), withPhotos);
         });
       }
     } catch (err) {
@@ -311,6 +346,8 @@ export function useRecipes({
     loadingRecipe, setLoadingRecipe,
     recipeErr, setRecipeErr,
     savedRecipes, setSavedRecipes,
+    // contesto/umore (pill) delle proposte
+    recipeContext, toggleRecipeContext,
     // funzioni
     chooseMode, askCustom,
     initialServings, changeServings,

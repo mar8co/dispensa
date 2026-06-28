@@ -51,6 +51,18 @@ export const MODES = [
   { id: "Dolci & dessert", icon: "🍰", desc: "Per concludere in dolcezza" },
 ];
 
+// Pill di "contesto/umore" per le ricette: l'utente ne tocca una o più, e l'AI
+// le considera (oltre alla stagione corrente, iniettata automaticamente) PRIMA
+// di proporre le idee per l'occasione scelta. `hint` = frase messa nel prompt.
+export const RECIPE_CONTEXTS = [
+  { id: "fresco", icon: "🌞", label: "Fresco", hint: "il piatto deve essere fresco, anche freddo o a temperatura ambiente" },
+  { id: "caldo", icon: "🍲", label: "Caldo", hint: "il piatto deve essere caldo e confortante" },
+  { id: "leggero", icon: "🪶", label: "Leggero", hint: "il piatto deve essere leggero e digeribile" },
+  { id: "sostanzioso", icon: "💪", label: "Sostanzioso", hint: "il piatto deve essere sostanzioso e saziante" },
+  { id: "piccante", icon: "🌶️", label: "Piccante", hint: "il piatto deve avere una nota piccante" },
+  { id: "veloce", icon: "⚡", label: "Veloce", hint: "il piatto deve essere pronto in poco tempo (max 20 minuti)" },
+];
+
 // Regole condivise per ottenere il NOME GENERICO dell'alimento (usate da
 // scontrino/foto, scansione barcode e aggiunta manuale).
 export const NAME_RULES = `Restituisci solo il NOME GENERICO dell'alimento, il più semplice possibile.

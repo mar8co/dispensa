@@ -210,9 +210,12 @@ rimuove i barrati. Controlli "Per reparto" e "Seleziona tutto" in alto; barra
 "Sposta in dispensa" + cestino in basso solo a carrello pieno.
 
 **Ricette** (`RecipesTab`)
-Selezione occasione/"modo" → `useRecipes` costruisce il prompt con la dispensa e
-le preferenze → `callClaude` genera ricette → `fetchPhotos` (Pexels) per le foto →
-preferiti/cucinate su `saved_recipes` (upsert per titolo). **Modalità cucina**:
+(Opzionale) pill di **contesto/umore** (`RECIPE_CONTEXTS`: fresco, caldo,
+leggero…) + **stagione automatica** dalla data → selezione occasione/"modo" →
+`useRecipes` costruisce il prompt con dispensa, preferenze, **stagione e
+contesto** → `callClaude` genera ricette → `fetchPhotos` (Pexels) per le foto →
+preferiti/cucinate su `saved_recipes` (upsert per titolo). La cache idee (24h,
+localStorage) è chiavata su **occasione + pill + stagione**. **Modalità cucina**:
 passi + `StepTimer`/`TimerBar` (timer in `timers.js`, tick in `useTimersTicker`).
 
 **"Ho cucinato"** (`CookModal`)

@@ -7,6 +7,7 @@ import {
   ChefHat, Trash2, Check,
 } from "lucide-react";
 import { stripParens, formatRecipeQty } from "../lib/pantry.js";
+import { RECIPE_CONTEXTS } from "../constants.js";
 import StepTimer from "./StepTimer.jsx";
 import CookingMode from "./CookingMode.jsx";
 
@@ -52,6 +53,7 @@ export default function RecipesTab({
   openCookModal, cookDone,
   hasIngredient, onAddMissing,
   onRegenerate, onCustomAsk,
+  recipeContext = [], onToggleContext,
   savedRecipes, onOpenSaved, onDeleteSaved, isSaved, onToggleSave,
 }) {
   const [addedMissing, setAddedMissing] = useState(false);
@@ -104,6 +106,26 @@ export default function RecipesTab({
                 </button>
               )}
             </form>
+          </div>
+
+          {/* Pill di contesto/umore: l'AI le considera (oltre alla stagione)
+              quando poi scegli un'occasione. Multi-select, opzionali. */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {RECIPE_CONTEXTS.map((c) => {
+              const on = recipeContext.includes(c.id);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => onToggleContext(c.id)}
+                  aria-pressed={on}
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    on ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
+                  }`}
+                >
+                  <span>{c.icon}</span> {c.label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-3">
