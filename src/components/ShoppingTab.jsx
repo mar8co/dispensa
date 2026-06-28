@@ -509,7 +509,7 @@ export default function ShoppingTab({
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && add()}
-            placeholder="Scrivi cosa ti manca…"
+            placeholder="Scrivi o dimmi cosa ti manca…"
             className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-10 text-sm text-ink outline-none focus:border-ink"
           />
           {/* Microfono OUTLINE dentro il campo (arancione, senza riempimento) */}
