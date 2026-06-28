@@ -60,7 +60,7 @@ export const RECIPE_CONTEXTS = [
   { id: "leggero", icon: "🪶", label: "Leggero", hint: "il piatto deve essere leggero e digeribile" },
   { id: "sostanzioso", icon: "💪", label: "Sostanzioso", hint: "il piatto deve essere sostanzioso e saziante" },
   { id: "piccante", icon: "🌶️", label: "Piccante", hint: "il piatto deve avere una nota piccante" },
-  { id: "veloce", icon: "⚡", label: "Veloce", hint: "il piatto deve essere pronto in poco tempo (max 20 minuti)" },
+  { id: "proteico", icon: "🍗", label: "Proteico", hint: "il piatto deve essere ricco di proteine" },
 ];
 
 // Regole condivise per ottenere il NOME GENERICO dell'alimento (usate da
