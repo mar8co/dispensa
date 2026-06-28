@@ -9,7 +9,7 @@ import {
 import {
   guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  norm, matchKey, isStapleQb, isQbQty,
+  norm, matchKey, isStapleQb, isQbQty, isSpoonQty,
 } from "./lib/pantry.js";
 import { callClaude } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
@@ -665,7 +665,9 @@ export default function Dispensa({ session }) {
       const match = findMatch(ing.name, items);
       if (!match || seen.has(match.id)) continue;
       seen.add(match.id);
-      if (isQbQty(ing.qty) || isStapleQb(match.name, match.category)) {
+      // I cucchiaini (spezie dosate) sono scorte q.b.: si mostrano ma NON si
+      // sottraggono dalla dispensa.
+      if (isQbQty(ing.qty) || isSpoonQty(ing.qty) || isStapleQb(match.name, match.category)) {
         rows.push({ itemId: match.id, name: match.name, before: match.qty, kind: "qb" });
         continue;
       }

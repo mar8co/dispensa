@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
   subtractQty, qtyStep, adjustQty, atMinQty, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, matchKey, findMatch,
+  toCookFraction, isSpoonQty, formatRecipeQty,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
 
@@ -108,6 +109,57 @@ describe("findMatch (con plurale/singolare)", () => {
   it("trova il prodotto al singolare partendo dal plurale della ricetta", () => {
     expect(findMatch("pomodori", pantry)).toEqual({ name: "Pomodoro" });
     expect(findMatch("uovo", pantry)).toEqual({ name: "Uova" });
+  });
+});
+
+describe("toCookFraction", () => {
+  it("interi e frazioni comuni", () => {
+    expect(toCookFraction(2)).toBe("2");
+    expect(toCookFraction(0.5)).toBe("½");
+    expect(toCookFraction(1.5)).toBe("1½");
+    expect(toCookFraction(0.33)).toBe("⅓");
+    expect(toCookFraction(0.25)).toBe("¼");
+    expect(toCookFraction(0.75)).toBe("¾");
+    expect(toCookFraction(0.98)).toBe("1");
+  });
+  it("decimale se nessuna frazione vicina", () => {
+    expect(toCookFraction(0.4)).toBe("0,4");
+  });
+});
+
+describe("isSpoonQty", () => {
+  it("riconosce le dosi a cucchiaino", () => {
+    expect(isSpoonQty("1 cucchiaino")).toBe(true);
+    expect(isSpoonQty("2 cucchiaini")).toBe(true);
+    expect(isSpoonQty("100 g")).toBe(false);
+    expect(isSpoonQty("q.b.")).toBe(false);
+  });
+});
+
+describe("formatRecipeQty", () => {
+  it("olio/sale/pepe sempre q.b.", () => {
+    expect(formatRecipeQty("Olio EVO", "20 g", 2)).toBe("q.b.");
+    expect(formatRecipeQty("Sale", "5 g", 2)).toBe("q.b.");
+    expect(formatRecipeQty("Pepe nero", "1 g", 2)).toBe("q.b.");
+  });
+  it("cucchiaini: solo numero + 🥄, scalati", () => {
+    expect(formatRecipeQty("Curcuma", "1 cucchiaino", 1)).toBe("1 🥄");
+    expect(formatRecipeQty("Curcuma", "1 cucchiaino", 2)).toBe("2 🥄");
+    expect(formatRecipeQty("Curcuma", "1 cucchiaino", 0.5)).toBe("½ 🥄");
+    expect(formatRecipeQty("Cumino", "½ cucchiaino", 1)).toBe("½ 🥄");
+  });
+  it("peperoncino NON è q.b. forzato (pepe a parola intera)", () => {
+    expect(formatRecipeQty("Peperoncino", "1 cucchiaino", 1)).toBe("1 🥄");
+  });
+  it("pesi restano in grammi, scalati (niente frazioni)", () => {
+    expect(formatRecipeQty("Farina", "100 g", 2)).toBe("200 g");
+  });
+  it("pezzi con frazioni", () => {
+    expect(formatRecipeQty("Uova", "2", 0.5)).toBe("1");
+    expect(formatRecipeQty("Cipolla", "1", 0.5)).toBe("½");
+  });
+  it("toglie sempre le parentesi", () => {
+    expect(formatRecipeQty("Aglio", "1 spicchio (medio)", 1)).toBe("1 spicchio");
   });
 });
 

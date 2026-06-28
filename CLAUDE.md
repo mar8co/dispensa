@@ -101,8 +101,11 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
 - **AI stile Anthropic**: i prompt mandano blocchi `{type:"text"|"image"}`; il
   parsing della risposta è JSON (con fallback regex) in `callClaude`. Non cambiare
   il formato lato client.
-- **q.b. disaccoppiato**: `isStapleQb` (CookModal, ristretto) ≠ `isQbIngredient`
-  (display ricetta, ampio). Tienili separati.
+- **Quantità ricette** (`formatRecipeQty`, display scalato per porzioni): `q.b.`
+  solo per olio/sale/pepe; spezie in **cucchiaini** (numero + 🥄, scalati, **mai
+  la parola**); pezzi e cucchiaini con **frazioni** (½ ⅓ ¼ ⅔ ¾); pesi/volumi in
+  g/ml/kg/l; **mai parentesi** nel campo qty. Nel **CookModal** i cucchiaini sono
+  scorte q.b. (mostrati, non sottratti) — vedi `isSpoonQty`/`isStapleQb`.
 - **Persistenza impostazioni**: in `user_settings` (jsonb) ciò che è cross-device
   (ordini, collassato, porzioni, preferenze); in localStorage ciò che è
   per-dispositivo (tema) o per-uid (ultimo ordinamento spesa).

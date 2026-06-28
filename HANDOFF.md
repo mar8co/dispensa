@@ -151,9 +151,11 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   `user_settings` sincronizzato a parte.
 - **Bottom sheet unico (Vaul)**: `Sheet.jsx` montato già aperto (`open=true`) così
   il `<video>` delle fotocamere è subito nel DOM.
-- **q.b. disaccoppiato**: `isStapleQb` (non scalare nel CookModal, ristretto) ≠
-  `isQbIngredient` (mostrare "q.b." nel display ricetta, ampio: Spezie+Condimenti
-  +limone/lime). Pesto/sugo/maionese restano scalabili.
+- **Quantità ricette** (`formatRecipeQty`): `q.b.` solo per olio/sale/pepe; le
+  spezie sono **cucchiaini** (numero + 🥄, scalati con le porzioni, mai la parola);
+  pezzi/cucchiaini con **frazioni** (½ ⅓ ¼ ⅔ ¾, aggancio ±0,04); pesi/volumi in
+  g/ml/kg/l; **mai parentesi** nel qty. I cucchiaini nel **CookModal** sono scorte
+  q.b. (non sottratte): `isSpoonQty`. `isStapleQb` resta per le scorte del CookModal.
 - **Carrello = campo `checked`** degli `shopping_items` (nessuna tabella nuova).
 - **Toast**: `bottom-32` (appena sopra il FAB) su tutte le schede; si alza a
   `bottom-44` **solo** sulla Spesa quando c'è la barra "Sposta in dispensa"

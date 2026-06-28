@@ -488,6 +488,81 @@ export function formatQtyDisplay(qty) {
   return String(qty);
 }
 
+// --- Quantità delle RICETTE (display, scalato per le porzioni) ---
+
+// Frazioni "da cucina": glifi delle più comuni, con tolleranza di aggancio. Lo
+// scaling per porzioni produce decimali (0,33, 0,5, 0,75…) che mostriamo come
+// ⅓ ½ ¾. SOLO per pezzi e cucchiaini (i pesi/volumi restano in g/ml/kg/l).
+const COOK_FRACTIONS = [
+  [0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"],
+];
+const FRAC_TOL = 0.04;
+
+// Numero -> stringa "da cucina": intero puro, oppure intero+frazione (1½, ⅓),
+// agganciando alla frazione comune più vicina entro la tolleranza; altrimenti
+// decimale con la virgola.
+export function toCookFraction(n) {
+  if (!Number.isFinite(n)) return String(n);
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  let whole = Math.floor(abs + 1e-9);
+  let frac = abs - whole;
+  if (frac > 1 - FRAC_TOL) { whole += 1; frac = 0; } // 0,98 -> 1
+  if (frac < FRAC_TOL) return sign + String(whole);  // intero
+  for (const [v, g] of COOK_FRACTIONS) {
+    if (Math.abs(frac - v) <= FRAC_TOL) {
+      return sign + (whole > 0 ? String(whole) + g : g); // 1½, ⅓
+    }
+  }
+  const r = Math.round(abs * 10) / 10; // niente frazione comune: 1 decimale
+  return sign + String(r).replace(".", ",");
+}
+
+// Glifi/forme frazionarie in INGRESSO (dall'AI) -> decimali, così parseQty le
+// capisce: "½ cucchiaino"/"1/2 cucchiaino"/"mezzo cucchiaino" -> 0.5.
+function defraction(s) {
+  return String(s ?? "")
+    .replace(/½/g, "0.5").replace(/⅓/g, "0.333").replace(/⅔/g, "0.667")
+    .replace(/¼/g, "0.25").replace(/¾/g, "0.75")
+    .replace(/\b1\/2\b/g, "0.5").replace(/\b1\/3\b/g, "0.333").replace(/\b2\/3\b/g, "0.667")
+    .replace(/\b1\/4\b/g, "0.25").replace(/\b3\/4\b/g, "0.75")
+    .replace(/\bmezz[oa]\b/gi, "0.5");
+}
+
+// True se la dose della ricetta è "a cucchiaino/i" (qualunque forma).
+export function isSpoonQty(qty) {
+  return /cucchia/.test(norm(qty));
+}
+
+// olio/sale/pepe: dose sempre a occhio -> "q.b." (parola intera, così
+// "peperoncino" non aggancia "pepe").
+const QB_FORCED_NAMES = ["olio", "sale", "pepe"];
+function isQbForced(name) {
+  const n = norm(name);
+  return QB_FORCED_NAMES.some((k) => new RegExp(`(^|\\s)${k}(\\s|$)`).test(n));
+}
+
+// Quantità DA MOSTRARE per un ingrediente di ricetta, scalata per le porzioni:
+//  - olio/sale/pepe o "q.b." esplicito  -> "q.b."
+//  - cucchiaini                         -> numero scalato + 🥄 (con frazioni)
+//  - pezzi                              -> numero scalato con frazioni (½, ⅓…)
+//  - pesi/volumi/unità libere           -> come prima (scaleQty), niente frazioni
+// Le parentesi vengono sempre rimosse.
+export function formatRecipeQty(name, qty, factor = 1) {
+  if (isQbForced(name)) return "q.b.";
+  const clean = defraction(stripParens(qty));
+  if (isQbQty(clean)) return "q.b.";
+  const p = parseQty(clean);
+  if (p == null) return "q.b.";
+  const scaled = p.base * (factor || 1);
+  if (isSpoonQty(clean)) return `${toCookFraction(scaled)} 🥄`;
+  if (p.family === "count") {
+    const num = toCookFraction(scaled);
+    return p.unit ? `${num} ${p.unit}` : num;
+  }
+  return scaleQty(clean, factor); // pesi/volumi/altro: come prima, niente frazioni
+}
+
 // --- "q.b." (quanto basta): scorte che NON si scalano cucinando ---
 // Prodotti che usi "a piacere" e tieni finché finiscono: tutta la categoria
 // "Spezie ed Erbe" + una lista curata di condimenti/basi. NON includono

@@ -164,9 +164,9 @@ export function useRecipes({
       `Sei uno chef esperto. Dammi la ricetta completa e dettagliata per "${title}". ` +
       `Usa principalmente gli ingredienti della mia dispensa: ${pantryStr}. ${prefLine}` +
       `Indica le grammature per il numero di porzioni nel campo "servings". ` +
-      `IMPORTANTISSIMO: usa SOLO unità di misura metriche (g, kg, ml, l) — mai cups, oz, tbsp, tsp. ` +
+      `IMPORTANTISSIMO: per pesi e volumi usa SOLO unità metriche (g, kg, ml, l) — mai cups/oz. ` +
       `Nel nome di ogni ingrediente NON usare MAI parentesi né chiarimenti tra parentesi (es. scrivi "Insalata", non "Insalata (da lattuga)"): solo il nome semplice del prodotto. ` +
-      `Per i condimenti e gli aromi usati a piacere (olio, sale, pepe, erbe aromatiche come prezzemolo/basilico, succo di limone) metti "q.b." nel campo "qty" invece di una grammatura. ` +
+      `Dosi: metti "q.b." nel campo "qty" SOLO per olio, sale e pepe. Per le spezie e gli aromi secchi (curcuma, paprika, cumino, peperoncino, origano, cannella, noce moscata, zenzero in polvere, curry…) NON usare "q.b.": indica la dose in cucchiaini, es. "1 cucchiaino", "2 cucchiaini", "0,5 cucchiaino" (sempre "cucchiaino", mai "cucchiaio"). Per tutto il resto usa grammi/ml o il numero di pezzi. NON usare MAI parentesi nel campo "qty". ` +
       `Per ogni passaggio che richiede attesa o cottura indica i minuti nel campo "timer" (numero), altrimenti null. ` +
       `Rispondi SOLO con JSON valido senza markdown: ` +
       `{"title":"...","servings":2,"time":"...","imageQuery":"2-4 parole IN INGLESE per la foto del piatto","ingredients":[{"name":"...","qty":"120 g"}],"steps":[{"text":"...","timer":10}]}`;
