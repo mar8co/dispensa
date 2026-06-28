@@ -18,8 +18,8 @@ const pos = (deg) => ({
 export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBarcode, onVoice }) {
   const options = [
     { id: "manual", icon: Pencil, label: "A mano", action: onManual },
-    { id: "photo", icon: Camera, label: "Foto", action: onPhoto },
     { id: "barcode", icon: ScanBarcode, label: "Barcode", action: onBarcode },
+    { id: "photo", icon: Camera, label: "Foto", action: onPhoto },
     { id: "voice", icon: Mic, label: "Voce", action: onVoice },
   ];
 

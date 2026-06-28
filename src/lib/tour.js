@@ -101,7 +101,7 @@ export const STEPS = [
   },
   {
     id: "add-modes", view: "dispensa", overlay: "banner", pos: "bottom",
-    title: "4 modi per aggiungere la spesa", text: "A mano, fotografando lo scontrino o la spesa, col codice a barre o a voce: scegli come preferisci.",
+    title: "4 modi per aggiungere la spesa", text: "A mano, scannerizzando il codice a barre, fotografando lo scontrino o la spesa, come preferisci.",
     advance: "next",
   },
   {
