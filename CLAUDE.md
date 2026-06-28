@@ -59,8 +59,8 @@
 - **Icone categoria = emoji** da `CAT_ICON` (constants.js), **identiche** tra
   Dispensa e Spesa. Non sostituirle con icone lineari.
 - **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
-- **Toast** (`Toast.jsx`): posizione `bottom-28`, e `bottom-44` solo sulla scheda
-  Spesa (prop `raised`), per non coprire la barra "Sposta in dispensa".
+- **Toast** (`Toast.jsx`): posizione UNICA `bottom-32` su tutte le schede
+  (Dispensa e Spesa allineate, appena sopra il FAB "+"). Niente più `raised`.
 - **Feedback immediato**: niente attese percepibili inutili (es. lo stepper
   committa subito quando arriva a 0, così il toast appare all'istante).
 - **Microcopy** caldo e diretto, in italiano, breve (sta in una riga su mobile).

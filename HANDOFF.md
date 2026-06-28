@@ -155,8 +155,10 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   `isQbIngredient` (mostrare "q.b." nel display ricetta, ampio: Spezie+Condimenti
   +limone/lime). Pesto/sugo/maionese restano scalabili.
 - **Carrello = campo `checked`** degli `shopping_items` (nessuna tabella nuova).
-- **Toast adattivo**: `bottom-28` normale, `bottom-44` solo sulla scheda Spesa
-  (per non coprire "Sposta in dispensa"); prop `raised={view === "spesa"}`.
+- **Toast a posizione unica**: `bottom-32` su tutte le schede (Dispensa e Spesa
+  alla stessa altezza, appena sopra il FAB "+"). Rimosso il vecchio `raised`
+  (scelta dell'utente: coerenza tra le schede; il toast del carrello può quindi
+  sovrapporsi brevemente alla barra "Sposta in dispensa", che è accettabile).
   Lo stepper quantità committa **subito a 0** (toast "Hai finito" immediato).
 - **View Transition serializzata** (`animateUI`, una per volta) per evitare freeze
   su iOS.
