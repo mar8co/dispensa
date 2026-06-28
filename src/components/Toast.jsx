@@ -2,11 +2,12 @@
 // oppure un'etichetta personalizzata, es. "In lista spesa").
 import { Undo2 } from "lucide-react";
 
-// Posizione unica per tutte le schede: appena sopra il FAB "+" (piccolo
-// margine di stacco), così Dispensa e Spesa hanno il toast alla STESSA altezza.
-export default function Toast({ message, onUndo, actionLabel = "Annulla", actionTone = "tomato" }) {
+// Posizione: appena sopra il FAB "+" (`bottom-32`), uguale su tutte le schede.
+// Eccezione: sulla Spesa, quando c'è la barra "Sposta in dispensa" (carrello
+// non vuoto), il toast si alza (`bottom-44`) per non coprirla.
+export default function Toast({ message, onUndo, actionLabel = "Annulla", actionTone = "tomato", raised = false }) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-32 z-[60] flex justify-center px-4">
+    <div className={`pointer-events-none fixed inset-x-0 ${raised ? "bottom-44" : "bottom-32"} z-[60] flex justify-center px-4`}>
       <div className="pointer-events-auto flex max-w-full items-center gap-3 rounded-xl border border-stone-300 bg-stone-200 px-4 py-2.5 text-sm text-stone-900 shadow-lg">
         <span className="min-w-0 break-words">{message}</span>
         {onUndo && (

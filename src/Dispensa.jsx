@@ -954,7 +954,9 @@ export default function Dispensa({ session }) {
         <TourCoach onExit={tourExit} onComplete={tourComplete} onEmptyDemo={tourEmptyDemo} />
       )}
 
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} actionTone={toast.actionTone} />}
+      {/* Toast alzato solo quando c'è la barra "Sposta in dispensa" (Spesa con
+          carrello non vuoto), così non la copre; altrove appena sopra il FAB. */}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} actionTone={toast.actionTone} raised={view === "spesa" && shopping.some((s) => s.checked)} />}
     </div>
   );
 }
