@@ -147,11 +147,12 @@ export default function PantryTab({
     setExpDraft(it.expiry || "");
     setExpOpen(false); // box scadenza chiuso all'apertura (compare al tocco del calendario)
     setCatPickerOpen(false);
-    // Porta il pannello al centro dello schermo: sugli ultimi prodotti finiva
-    // sotto la barra di navigazione e il "+" (controlli quantità irraggiungibili).
+    // Porta il pannello in vista appena sopra il FAB (block:"nearest" = scrolla
+    // il minimo indispensabile; lo scroll-margin-bottom sul pannello riserva lo
+    // spazio per navbar/FAB). Niente più centratura: evita il vuoto sotto.
     // Doppio rAF: aspetta che il pannello (e lo spazio extra sotto) sia montato.
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      panelRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      panelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }));
   }
   // Rimuove la scadenza e richiude il box (deve sparire del tutto, senza occupare spazio).
@@ -424,7 +425,7 @@ export default function PantryTab({
                 if (openId === it.id) {
                   const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
                   return (
-                    <li key={it.id} ref={panelRef} className="-mx-2 my-1 rounded-xl bg-stone-50 p-3">
+                    <li key={it.id} ref={panelRef} className="-mx-2 my-1 scroll-mb-[128px] rounded-xl bg-stone-50 p-3">
                       {/* Riga 1: nome editabile · categoria · calendario · elimina.
                           Sempre visibile; il box scadenza compare solo al tocco
                           dell'icona calendario (vedi sotto). */}
@@ -621,10 +622,10 @@ export default function PantryTab({
         ))}
       </div>
 
-      {/* Spazio extra mentre un pannello è aperto: dà margine di scorrimento
-          così anche l'ultimo prodotto può salire sopra la barra di navigazione
-          e il "+" (vedi scrollIntoView in openPanel). */}
-      {openId && <div aria-hidden="true" style={{ height: "45vh" }} />}
+      {/* Piccolo spazio extra mentre un pannello è aperto: solo quel tanto che
+          basta perché anche l'ultimo prodotto possa salire appena sopra il FAB
+          (il parcheggio lo fa lo scroll-margin-bottom del pannello). */}
+      {openId && <div aria-hidden="true" className="h-14" />}
     </div>
   );
 }

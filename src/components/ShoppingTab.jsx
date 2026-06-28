@@ -301,10 +301,11 @@ export default function ShoppingTab({
     setDraftName(it.name);
     setQtyDraft(it.qty);
     setCatPickerOpen(false);
-    // Porta il pannello al centro: sull'ultima riga finiva sotto la barra
-    // "Sposta in dispensa"/navigazione. Doppio rAF: aspetta il montaggio.
+    // Porta il pannello in vista appena sopra il FAB (block:"nearest" = scroll
+    // minimo; lo scroll-margin-bottom del pannello riserva lo spazio per
+    // navbar/FAB/barra azioni). Niente centratura: evita il vuoto sotto.
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      panelRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      panelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }));
   }
   function closeEdit(flush = true) {
@@ -342,7 +343,7 @@ export default function ShoppingTab({
   function renderEditPanel(it) {
     const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
     return (
-      <li key={it.id} ref={panelRef} className="-mx-1 my-1 space-y-2.5 rounded-xl bg-stone-50 p-3">
+      <li key={it.id} ref={panelRef} className="-mx-1 my-1 scroll-mb-[150px] space-y-2.5 rounded-xl bg-stone-50 p-3">
         <div className="flex items-center gap-1.5">
           <input
             className={`${editCls} min-w-0 flex-1`}
@@ -584,10 +585,10 @@ export default function ShoppingTab({
 
       {/* Spazio in fondo: l'ultimo prodotto resta visibile sopra la nav (e
           sopra la barra "Sposta in dispensa" quando il carrello è pieno).
-          Mentre un pannello di modifica è aperto, spazio extra così anche
-          l'ultima riga può salire al centro (vedi scrollIntoView in openEdit). */}
+          Durante la modifica un filo di spazio in più, così l'ultima riga può
+          salire appena sopra il FAB (il parcheggio lo fa scroll-margin-bottom). */}
       {shopping.length > 0 && (
-        <div aria-hidden="true" style={{ height: editId ? "45vh" : "calc(72px + env(safe-area-inset-bottom))" }} />
+        <div aria-hidden="true" style={{ height: editId ? "104px" : "calc(72px + env(safe-area-inset-bottom))" }} />
       )}
 
       <BottomBar
