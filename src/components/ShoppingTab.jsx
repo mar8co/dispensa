@@ -9,13 +9,13 @@
 // NB sul data layer: il "carrello" è il campo persistito `checked` degli item
 // (uso solo i prop esistenti: onToggle/onToggleAll/onMoveChecked/onClearChecked).
 // Nessuna query/tabella/campo modificato.
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Pencil, Mic, Check, Trash2, PackagePlus, Loader2, ListChecks, Store,
   Share2, Lightbulb,
 } from "lucide-react";
 import { PICKER_CATS, AISLE_ORDER, CAT_ICON } from "../constants.js";
-import { norm, atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
+import { atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 
 const editCls =
   "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -24,17 +24,15 @@ const editCls =
 // • tap = mette/toglie dal carrello;
 // • swipe ← (verso sinistra) = elimina;
 // • swipe → (verso destra) = apre la modifica;
-// • matita visibile = apre la modifica;
-// • pressione lunga = apre la modifica.
+// • matita visibile = apre la modifica.
+// (Niente pressione lunga: la modifica passa solo da swipe o matita.)
 // Accessibile (role=button, tastiera). ---
-function ShoppingRow({ it, onSelect, onLongEdit, onDelete }) {
+function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
   const selected = !!it.checked;
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const start = useRef(null);
   const axis = useRef(null); // "h" | "v" | null
-  const longFired = useRef(false);
-  const timer = useRef(null);
   const THRESHOLD = 72; // px oltre cui scatta l'azione
   const MAX = 104;      // limite visivo (oltre, resistenza elastica)
 
@@ -46,10 +44,7 @@ function ShoppingRow({ it, onSelect, onLongEdit, onDelete }) {
   function down(e) {
     start.current = { x: e.clientX, y: e.clientY };
     axis.current = null;
-    longFired.current = false;
     setDragging(true);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => { longFired.current = true; onLongEdit(it); }, 500);
   }
   function move(e) {
     if (!start.current) return;
@@ -58,7 +53,6 @@ function ShoppingRow({ it, onSelect, onLongEdit, onDelete }) {
     if (axis.current == null) {
       if (Math.abs(ddx) < 8 && Math.abs(ddy) < 8) return;
       axis.current = Math.abs(ddx) > Math.abs(ddy) ? "h" : "v";
-      clearTimeout(timer.current); // ogni movimento annulla la pressione lunga
       if (axis.current === "h") {
         try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
       }
@@ -66,10 +60,9 @@ function ShoppingRow({ it, onSelect, onLongEdit, onDelete }) {
     if (axis.current === "h") setDx(clamp(ddx));
   }
   function up(e) {
-    clearTimeout(timer.current);
     const wasH = axis.current === "h";
     const ddx = start.current ? e.clientX - start.current.x : 0;
-    const wasTap = start.current && axis.current == null && !longFired.current;
+    const wasTap = start.current && axis.current == null;
     start.current = null;
     setDragging(false);
     if (wasH) {
@@ -79,14 +72,13 @@ function ShoppingRow({ it, onSelect, onLongEdit, onDelete }) {
         setTimeout(() => onDelete(it.id), 200);
         return;
       }
-      if (ddx >= THRESHOLD) { setDx(0); onLongEdit(it); return; } // swipe → : modifica
+      if (ddx >= THRESHOLD) { setDx(0); onEdit(it); return; } // swipe → : modifica
       setDx(0); // sotto soglia: torna a posto
       return;
     }
     if (wasTap) onSelect(it);
   }
   function cancel() {
-    clearTimeout(timer.current);
     start.current = null;
     axis.current = null;
     setDragging(false);
@@ -98,12 +90,13 @@ function ShoppingRow({ it, onSelect, onLongEdit, onDelete }) {
 
   return (
     <li className="relative overflow-hidden">
-      {/* Sfondi azione, rivelati dallo scorrimento: modifica (sx) / elimina (dx) */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-between text-sm font-bold text-tomato">
-        <span className={`flex items-center gap-1.5 pl-3 transition-opacity ${dx > 4 ? "opacity-100" : "opacity-0"}`}>
-          <Pencil className="h-4 w-4" /> Modifica
+      {/* Sfondi azione, rivelati dallo scorrimento: modifica (sx, arancione
+          acceso) / elimina (dx, rosso pomodoro) */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-between text-sm">
+        <span className={`flex items-center gap-1.5 pl-3 font-extrabold text-orange-500 transition-opacity ${dx > 4 ? "opacity-100" : "opacity-0"}`}>
+          <Pencil className="h-4 w-4" strokeWidth={2.4} /> Modifica
         </span>
-        <span className={`flex items-center gap-1.5 pr-3 transition-opacity ${dx < -4 ? "opacity-100" : "opacity-0"}`}>
+        <span className={`flex items-center gap-1.5 pr-3 font-bold text-tomato transition-opacity ${dx < -4 ? "opacity-100" : "opacity-0"}`}>
           Elimina <Trash2 className="h-4 w-4" />
         </span>
       </div>
@@ -139,7 +132,7 @@ function ShoppingRow({ it, onSelect, onLongEdit, onDelete }) {
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onLongEdit(it); }}
+          onClick={(e) => { e.stopPropagation(); onEdit(it); }}
           aria-label="Modifica prodotto"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-ink"
         >
@@ -222,7 +215,7 @@ export default function ShoppingTab({
   shopping,
   onAdd, onToggle, onDelete, onToggleAll, onMoveChecked, onClearChecked,
   movingChecked, byAisle, setByAisle,
-  catFor, onAutoSave, onOpenVoice, onNotify, historyNames, pantryNames,
+  catFor, onAutoSave, onOpenVoice, onNotify,
 }) {
   const [name, setName] = useState(""); // campo di inserimento in linea
   const inputRef = useRef(null);
@@ -440,24 +433,6 @@ export default function ShoppingTab({
   }
 
   // --- Inserimento in linea ---
-  const pool = useMemo(() => {
-    const seen = new Set();
-    const out = [];
-    for (const n of [...(historyNames || []), ...(pantryNames || [])]) {
-      const k = norm(n);
-      if (!k || seen.has(k)) continue;
-      seen.add(k);
-      out.push(n);
-    }
-    return out;
-  }, [historyNames, pantryNames]);
-
-  const q = norm(name);
-  const listSet = useMemo(() => new Set(shopping.map((x) => norm(x.name))), [shopping]);
-  const suggestions = q
-    ? pool.filter((n) => norm(n).includes(q) && norm(n) !== q).slice(0, 5)
-    : (historyNames || []).filter((n) => !listSet.has(norm(n))).slice(0, 4);
-
   async function add(n) {
     const clean = String(n ?? name).trim();
     if (!clean) return;
@@ -487,7 +462,7 @@ export default function ShoppingTab({
     list.map((it) =>
       editId === it.id
         ? renderEditPanel(it)
-        : <ShoppingRow key={it.id} it={it} onSelect={selectItem} onLongEdit={openEdit} onDelete={onDelete} />
+        : <ShoppingRow key={it.id} it={it} onSelect={selectItem} onEdit={openEdit} onDelete={onDelete} />
     );
 
   return (
@@ -546,20 +521,6 @@ export default function ShoppingTab({
             <Mic className="h-[22px] w-[22px]" />
           </button>
         </div>
-
-        {suggestions.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {suggestions.map((n) => (
-              <button
-                key={n}
-                onPointerDown={(e) => { e.preventDefault(); add(n); }}
-                className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
-              >
-                {q ? n : `+ ${n}`}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Controlli sempre in alto, sotto la barra di testo. */}
         {shopping.length > 0 && (
