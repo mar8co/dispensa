@@ -59,7 +59,7 @@ export const RECIPE_CONTEXTS = [
   { id: "caldo", icon: "🍲", label: "Caldo", hint: "il piatto deve essere caldo e confortante" },
   { id: "leggero", icon: "🪶", label: "Leggero", hint: "il piatto deve essere leggero e digeribile" },
   { id: "sostanzioso", icon: "💪", label: "Sostanzioso", hint: "il piatto deve essere sostanzioso e saziante" },
-  { id: "piccante", icon: "🌶️", label: "Piccante", hint: "il piatto deve avere una nota piccante" },
+  { id: "goloso", icon: "🤤", label: "Goloso", hint: "il piatto deve essere goloso e sfizioso, una vera coccola" },
   { id: "proteico", icon: "🍗", label: "Proteico", hint: "il piatto deve essere ricco di proteine" },
 ];
 
