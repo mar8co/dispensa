@@ -53,15 +53,19 @@ export function useRecipes({
   // Le pill scelte dall'utente sono override espliciti; la stagione (dalla data)
   // è la base sempre attiva, così d'estate le proposte sono già fresche/leggere.
   const [recipeContext, setRecipeContext] = useState([]); // id delle pill attive
-  // Coppie di pill che si escludono a vicenda: selezionarne una deseleziona
-  // l'altra (Fresco vs Caldo). Le altre restano liberamente combinabili.
-  const CONTEXT_EXCLUSIVE = { fresco: "caldo", caldo: "fresco" };
+  // Pill in conflitto: selezionarne una deseleziona quelle incompatibili.
+  // "Caldo" esclude sia "Fresco" sia "Senza cottura"; Fresco e Senza cottura
+  // invece convivono (es. insalata fredda). Le altre restano libere.
+  const CONTEXT_CONFLICTS = {
+    fresco: ["caldo"],
+    caldo: ["fresco", "senzacottura"],
+    senzacottura: ["caldo"],
+  };
   function toggleRecipeContext(id) {
     setRecipeContext((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
-      const opposite = CONTEXT_EXCLUSIVE[id];
-      const base = opposite ? prev.filter((x) => x !== opposite) : prev;
-      return [...base, id];
+      const conflicts = CONTEXT_CONFLICTS[id] || [];
+      return [...prev.filter((x) => !conflicts.includes(x)), id];
     });
   }
   function currentSeason() {
