@@ -282,7 +282,7 @@ export default function RecipesTab({
           </div>
 
           {ideas.length > 0 && !loadingIdeas && (
-            <Button variant="cook" full className="mt-4" onClick={onRegenerate}>
+            <Button variant="cook" full className="mt-4 mb-8" onClick={onRegenerate}>
               <RefreshCw className="h-4 w-4" /> Altre idee
             </Button>
           )}
@@ -409,13 +409,10 @@ export default function RecipesTab({
                 {missing.length} {missing.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista della spesa.
               </p>
             ) : (
-              <button
-                onClick={addMissing}
-                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-tomato/40 bg-tomato/5 px-3 py-2.5 text-xs font-semibold text-tomato transition hover:bg-tomato/10"
-              >
+              <Button variant="cook" size="sm" full className="mt-3" onClick={addMissing}>
                 <ShoppingCart className="h-3.5 w-3.5" />
                 Aggiungi {missing.length} {missing.length === 1 ? "mancante" : "mancanti"} alla spesa
-              </button>
+              </Button>
             )
           )}
 

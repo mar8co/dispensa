@@ -591,7 +591,7 @@ export default function PantryTab({
                       {/* "Cosa ci cucino?": apre le Ricette con proposte basate su
                           questo prodotto (come scriverlo nel box "Cosa ti va?"). */}
                       <Button variant="cook" full className="mt-2.5" data-tour="cook-with" onClick={() => onCookWith(it.name)}>
-                        <Sparkles className="h-4 w-4" /> Cucina con questo
+                        <Sparkles className="h-4 w-4" /> Cucina con questo prodotto
                       </Button>
                     </li>
                   );
