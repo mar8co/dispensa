@@ -59,6 +59,12 @@
 - **Icone categoria = emoji** da `CAT_ICON` (constants.js), **identiche** tra
   Dispensa e Spesa. Non sostituirle con icone lineari.
 - **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
+- **Bottoni d'azione**: usa `Button.jsx` (varianti per funzione: `primary` pieno
+  tomato = conferma/commit · `secondary` outline = alternativa/Annulla · `cook`
+  tinta tomato = genera/cucina · `danger` = elimina). Non creare bottoni ad-hoc
+  con classi inline per le azioni standard. Il **primario è tomato** (non ink).
+  Restano bespoke solo i casi speciali (FAB, otturatore fotocamera, navbar,
+  stepper ±, chip/pill, strisce dentro i banner).
 - **Toast** (`Toast.jsx`): `bottom-32` (appena sopra il FAB "+") su tutte le
   schede; **eccezione** `bottom-44` solo sulla Spesa quando c'è la barra "Sposta
   in dispensa" (carrello non vuoto), per non coprirla. La condizione vive in
