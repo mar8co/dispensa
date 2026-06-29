@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
+import Button from "./Button.jsx";
 import StepTimer from "./StepTimer.jsx";
 import CookingMode from "./CookingMode.jsx";
 
@@ -281,12 +282,9 @@ export default function RecipesTab({
           </div>
 
           {ideas.length > 0 && !loadingIdeas && (
-            <button
-              onClick={onRegenerate}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-ink py-3 text-sm font-bold text-ink transition hover:bg-ink hover:text-white"
-            >
-              <RefreshCw className="h-4 w-4 text-tomato" /> Altre idee
-            </button>
+            <Button variant="cook" full className="mt-4" onClick={onRegenerate}>
+              <RefreshCw className="h-4 w-4" /> Altre idee
+            </Button>
           )}
         </>
       )}
@@ -422,12 +420,9 @@ export default function RecipesTab({
           )}
 
           {/* Modalità cucina: schermo intero, un passaggio alla volta */}
-          <button
-            onClick={() => setCooking(true)}
-            className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-ink py-3 text-sm font-bold text-ink transition hover:bg-ink hover:text-white"
-          >
+          <Button variant="secondary" full className="mt-7" onClick={() => setCooking(true)}>
             <ChefHat className="h-4 w-4 text-tomato" /> Modalità cucina
-          </button>
+          </Button>
 
           <h3 className="mb-4 mt-7 font-display text-base font-bold uppercase tracking-wide text-ink">Procedimento</h3>
           <ol className="space-y-5">
@@ -451,12 +446,9 @@ export default function RecipesTab({
             })}
           </ol>
 
-          <button
-            onClick={openCookModal}
-            className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl bg-tomato px-4 py-3.5 text-sm font-semibold text-[#fff] transition hover:bg-tomato-700"
-          >
+          <Button variant="primary" size="lg" full className="mt-7" onClick={openCookModal}>
             <Utensils className="h-4 w-4" /> Ho cucinato questa ricetta
-          </button>
+          </Button>
           {cookDone && <p className="mt-2 text-center text-xs font-semibold text-stone-500">{cookDone}</p>}
 
           {cooking && <CookingMode recipe={recipe} onClose={() => setCooking(false)} />}

@@ -10,6 +10,7 @@ import {
 import { CATEGORIES, PICKER_CATS, CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, isLow } from "../lib/pantry.js";
 import { tourSignal } from "../lib/tour.js";
+import Button from "./Button.jsx";
 
 const EXP_STYLE = {
   scaduto: "bg-tomato text-[#fff] ring-2 ring-tomato/30",
@@ -589,13 +590,9 @@ export default function PantryTab({
 
                       {/* "Cosa ci cucino?": apre le Ricette con proposte basate su
                           questo prodotto (come scriverlo nel box "Cosa ti va?"). */}
-                      <button
-                        data-tour="cook-with"
-                        onClick={() => onCookWith(it.name)}
-                        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-tomato/50 px-3 py-2.5 text-sm font-semibold text-tomato transition hover:bg-tomato/5"
-                      >
+                      <Button variant="cook" full className="mt-2.5" data-tour="cook-with" onClick={() => onCookWith(it.name)}>
                         <Sparkles className="h-4 w-4" /> Cucina con questo
-                      </button>
+                      </Button>
                     </li>
                   );
                 }

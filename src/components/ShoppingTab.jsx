@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { PICKER_CATS, AISLE_ORDER, CAT_ICON } from "../constants.js";
 import { atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
+import Button from "./Button.jsx";
 
 const editCls =
   "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -190,15 +191,11 @@ function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
       style={{ paddingBottom: "calc(76px + env(safe-area-inset-bottom))" }}
     >
       <div className="mx-auto flex max-w-md items-center gap-2 px-5 py-2">
-        <button
-          onClick={onMove}
-          disabled={moving}
-          className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-tomato px-3 text-sm font-bold text-[#fff] transition hover:bg-tomato-700 active:scale-[0.99] disabled:opacity-60"
-        >
+        <Button variant="primary" className="h-11 flex-1" onClick={onMove} disabled={moving}>
           {moving
             ? <Loader2 className="h-4 w-4 animate-spin" />
             : <><PackagePlus className="h-4 w-4" /> {allInCart ? "Sposta tutto in dispensa" : `Sposta ${cartCount} in dispensa`}</>}
-        </button>
+        </Button>
         <button
           onClick={onRemove}
           aria-label="Rimuovi dal carrello"
