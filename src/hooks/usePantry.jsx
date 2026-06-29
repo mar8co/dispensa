@@ -234,18 +234,22 @@ export function usePantry({
       if (!name) continue;
       const qty = normalizeWeight(String(raw.qty || "1").trim());
       const cat = CATEGORIES.includes(raw.category) ? raw.category : "Altro";
+      const expiry = raw.expiry || null;
       const idx = working.findIndex((x) => matchKey(x.name) === matchKey(name));
       if (idx >= 0) {
         const merged = normalizeWeight(mergeQty(working[idx].qty, qty));
-        working[idx] = { ...working[idx], qty: merged };
-        toUpdate.push({ id: working[idx].id, qty: merged });
+        const fields = { qty: merged };
+        if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
+        working[idx] = { ...working[idx], ...fields };
+        toUpdate.push({ id: working[idx].id, fields });
       } else {
-        toInsert.push({ name, qty, category: cat });
-        working.push({ name, qty, category: cat });
+        const row = { name, qty, category: cat, expiry };
+        toInsert.push(row);
+        working.push(row);
       }
     }
     try {
-      for (const u of toUpdate) await updateItem(u.id, { qty: u.qty });
+      for (const u of toUpdate) await updateItem(u.id, u.fields);
       if (toInsert.length) await insertMany(toInsert);
       const rows = await fetchPantry();
       setItems(rows);

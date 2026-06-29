@@ -3,7 +3,7 @@
 // possono cambiare nome, quantità (stepper −/+) e categoria, o rimuoverlo.
 // Solo alla conferma i prodotti vengono aggiunti alla dispensa.
 import { useState } from "react";
-import { X, Check, Plus, Minus } from "lucide-react";
+import { X, Check, Plus, Minus, Calendar } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
@@ -23,6 +23,7 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
       name: String(it.name || "").trim(),
       qty: String(it.qty || "1").trim() || "1",
       category: CATEGORIES.includes(it.category) ? it.category : "Altro",
+      expiry: it.expiry || "",
     }))
   );
 
@@ -146,6 +147,28 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
                             <option key={c} value={c}>{CAT_ICON[c]} {c}</option>
                           ))}
                         </select>
+
+                        {/* Scadenza opzionale (utile soprattutto dopo il barcode) */}
+                        <div className="mt-2 flex items-center gap-2 rounded-lg border border-hair bg-paper px-2.5 py-2">
+                          <Calendar className="h-4 w-4 shrink-0 text-stone-400" />
+                          <input
+                            type="date"
+                            value={it.expiry}
+                            onChange={(e) => update(it.id, "expiry", e.target.value)}
+                            className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none"
+                            aria-label="Data di scadenza (opzionale)"
+                          />
+                          {it.expiry && (
+                            <button
+                              type="button"
+                              onClick={() => update(it.id, "expiry", "")}
+                              className="shrink-0 rounded p-0.5 text-stone-400 transition hover:text-tomato"
+                              aria-label="Rimuovi scadenza"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>
