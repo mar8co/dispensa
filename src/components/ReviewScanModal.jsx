@@ -6,6 +6,7 @@ import { useState } from "react";
 import { X, Check, Plus, Minus } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import Sheet from "./Sheet.jsx";
+import Button from "./Button.jsx";
 import { adjustQty, atMinQty, formatQtyDisplay } from "../lib/pantry.js";
 
 function tmpId() {
@@ -155,22 +156,15 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
         </div>
 
         <div className="flex gap-2 border-t border-hair px-5 py-3">
-          <button
-            onClick={close}
-            className="flex-1 rounded-xl border border-hair py-3 text-sm font-semibold text-stone-500 transition hover:bg-stone-50"
-          >
+          <Button variant="secondary" className="flex-1" onClick={close}>
             Annulla
-          </button>
-          <button
-            onClick={() => onConfirm(items)}
-            disabled={items.length === 0}
-            className="flex flex-[2] items-center justify-center gap-1.5 rounded-xl bg-tomato py-3 text-sm font-bold text-white transition hover:bg-tomato-700 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="primary" className="flex-[2]" onClick={() => onConfirm(items)} disabled={items.length === 0}>
             <Check className="h-4 w-4" />
             {items.length > 0
               ? `Aggiungi ${items.length} ${items.length === 1 ? "prodotto" : "prodotti"}`
               : "Aggiungi"}
-          </button>
+          </Button>
         </div>
       </>
       )}

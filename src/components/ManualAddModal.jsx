@@ -5,6 +5,7 @@
 import { useMemo, useState } from "react";
 import { Plus, Minus, Loader2, CalendarPlus, X, Check } from "lucide-react";
 import Sheet from "./Sheet.jsx";
+import Button from "./Button.jsx";
 import { norm, correctName, guessCategory } from "../lib/pantry.js";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 
@@ -181,13 +182,9 @@ export default function ManualAddModal({
             />
           </label>
 
-          <button
-            onClick={submit}
-            disabled={adding || !newName.trim()}
-            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink px-3 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-          >
+          <Button variant="primary" className="min-w-0 flex-1" onClick={submit} disabled={adding || !newName.trim()}>
             {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
-          </button>
+          </Button>
         </div>
 
         {/* Unità: pezzi di default, oppure peso/volume — aiuta le ricette

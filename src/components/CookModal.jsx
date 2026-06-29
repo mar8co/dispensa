@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { X, Check, ShoppingCart } from "lucide-react";
 import Sheet from "./Sheet.jsx";
+import Button from "./Button.jsx";
 import { adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 
 const TAGS = {
@@ -117,19 +118,12 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
           </div>
 
           <div className="flex gap-2 border-t border-hair px-4 py-3">
-            <button
-              onClick={close}
-              className="flex-1 rounded-xl border border-stone-300 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
-            >
+            <Button variant="secondary" className="flex-1" onClick={close}>
               Annulla
-            </button>
-            <button
-              onClick={onApply}
-              disabled={rows.length === 0}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ink py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-            >
+            </Button>
+            <Button variant="primary" className="flex-1" onClick={onApply} disabled={rows.length === 0}>
               <Check className="h-4 w-4" /> Conferma
-            </button>
+            </Button>
           </div>
         </>
       )}
