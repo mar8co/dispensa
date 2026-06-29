@@ -26,8 +26,10 @@ import { loadCache, saveCache } from "./lib/cache.js";
 import { sortedNames } from "./lib/history.js";
 
 import PantryTab from "./components/PantryTab.jsx";
-import RecipesTab from "./components/RecipesTab.jsx";
-import ShoppingTab from "./components/ShoppingTab.jsx";
+// Schede non di default in lazy: alleggeriscono il bundle iniziale (caricano
+// alla prima apertura della scheda). PantryTab resta eager (è la home).
+const RecipesTab = lazy(() => import("./components/RecipesTab.jsx"));
+const ShoppingTab = lazy(() => import("./components/ShoppingTab.jsx"));
 import BottomNav from "./components/BottomNav.jsx";
 import AddFab from "./components/AddFab.jsx";
 import ManualAddModal from "./components/ManualAddModal.jsx";
@@ -760,6 +762,7 @@ export default function Dispensa({ session }) {
         )}
 
         {view === "ricette" && (
+          <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-tomato" /></div>}>
           <RecipesTab
             orderedModes={orderedModes} mode={mode} modeCardRefs={modeCardRefs}
             dragMode={dragMode} onModeDragStart={onModeDragStart} onModeDragMove={onModeDragMove}
@@ -778,9 +781,11 @@ export default function Dispensa({ session }) {
             isSaved={!!(recipe && savedByTitle(recipe.title)?.saved)}
             onToggleSave={toggleSaveRecipe}
           />
+          </Suspense>
         )}
 
         {view === "spesa" && (
+          <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-tomato" /></div>}>
           <ShoppingTab
             shopping={shopping}
             onAdd={addShoppingItem}
@@ -799,6 +804,7 @@ export default function Dispensa({ session }) {
             historyNames={sortedNames(shopHist)}
             pantryNames={items.map((i) => i.name)}
           />
+          </Suspense>
         )}
 
       </div>
