@@ -315,12 +315,11 @@ export default function PantryTab({
             </span>
           </button>
           {expFilter && (
-            <button
-              onClick={onCookExpiring}
-              className="flex w-full items-center justify-center gap-1.5 border-t border-amber-700/20 bg-tomato px-3 py-2.5 text-xs font-bold text-[#fff] transition hover:bg-tomato-700"
-            >
-              <Sparkles className="h-4 w-4" /> Cucina con {expiredCount + expiringSoonCount === 1 ? "questo prodotto" : "questi prodotti"}
-            </button>
+            <div className="border-t border-amber-700/20 p-2.5">
+              <Button variant="cook" size="sm" full onClick={onCookExpiring}>
+                <Sparkles className="h-4 w-4" /> Cucina con {expiredCount + expiringSoonCount === 1 ? "questo prodotto" : "questi prodotti"}
+              </Button>
+            </div>
           )}
         </div>
       )}
