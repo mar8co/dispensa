@@ -42,7 +42,7 @@ export async function createHousehold(name = "La mia dispensa") {
   if (error) throw error;
   const { error: mErr } = await supabase
     .from("household_members")
-    .insert({ household_id: id, user_id: userId, role: "owner" });
+    .insert({ household_id: id, user_id: userId, role: "owner", email: s?.session?.user?.email ?? null });
   if (mErr) throw mErr;
   return { id, name, created_by: userId, created_at: new Date().toISOString() };
 }
@@ -53,6 +53,58 @@ export async function ensurePersonalHousehold() {
   const existing = await fetchHouseholds();
   if (existing.length) return existing;
   return [await createHousehold("La mia dispensa")];
+}
+
+// --- Inviti e membri (fase 4) ---
+
+// Genera un codice invito breve per il nucleo (valido 7 giorni, vedi DB).
+export async function createInvite(householdId) {
+  const raw = (crypto?.randomUUID?.() ?? `${Date.now()}${Math.random()}`).replace(/[^a-z0-9]/gi, "");
+  const code = raw.slice(0, 8).toUpperCase();
+  const { error } = await supabase
+    .from("household_invites")
+    .insert({ code, household_id: householdId });
+  if (error) throw error;
+  return code;
+}
+
+// Accetta un invito tramite codice (RPC security definer). Ritorna l'id del
+// nucleo a cui ti sei unito, oppure null se il codice non è valido/scaduto.
+export async function acceptInvite(code) {
+  const { data, error } = await supabase.rpc("accept_invite", { invite_code: String(code || "").trim() });
+  if (error) throw error;
+  return data || null;
+}
+
+export async function fetchMembers(householdId) {
+  const { data, error } = await supabase
+    .from("household_members")
+    .select("user_id, role, email, joined_at")
+    .eq("household_id", householdId)
+    .order("joined_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Esce dal nucleo (rimuove la propria appartenenza).
+export async function leaveHousehold(householdId) {
+  const { data: s } = await supabase.auth.getSession();
+  const userId = s?.session?.user?.id;
+  if (!userId) throw new Error("Non autenticato.");
+  const { error } = await supabase
+    .from("household_members")
+    .delete()
+    .eq("household_id", householdId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function renameHousehold(householdId, name) {
+  const { error } = await supabase
+    .from("households")
+    .update({ name })
+    .eq("id", householdId);
+  if (error) throw error;
 }
 
 // ---------- Prodotti dispensa ----------
