@@ -1,16 +1,11 @@
 -- ============================================================
 --  Migration 6 — Dispensa familiare (multi-household) · FASE 1
---  Schema + colonne + backfill. NON cambia ancora le RLS dei dati:
---  l'app continua a funzionare con le policy attuali (auth.uid() = user_id),
---  quindi questa fase e' a rischio zero e reversibile.
---  Esegui nel SQL Editor di Supabase (una volta). Idempotente.
+--  Schema + colonne + backfill. NON cambia le RLS dei dati: l'app continua a
+--  funzionare con le policy attuali (auth.uid() = user_id). Rischio zero,
+--  reversibile, IDEMPOTENTE (puoi rieseguirla). Esegui nel SQL Editor.
 --
---  Fasi successive (in app + migration-7):
---   - l'app imposta household_id sugli insert e filtra per "household attivo"
---     (salvato in user_settings) — siamo multi-household;
---   - il Realtime passa al filtro household_id;
---   - SOLO ALLA FINE si cambiano le RLS dei dati a is_household_member()
---     (con test a due account) e household_id diventa NOT NULL.
+--  Robusta alle tabelle mancanti: se `saved_recipes` non esiste (ricettario
+--  ancora solo in locale) viene semplicemente saltata.
 -- ============================================================
 
 -- ---------- 1) Nuclei (household) e membri ----------
@@ -49,21 +44,25 @@ as $$
 $$;
 
 -- ---------- 3) Colonna household_id sui dati condivisi ----------
--- Nullable per ora: il backfill la riempie; diventera' NOT NULL solo quando
--- l'app la imposta su tutti gli insert (fase successiva).
+-- pantry_items e shopping_items esistono di sicuro; saved_recipes solo se creata.
 alter table public.pantry_items   add column if not exists household_id uuid references public.households (id) on delete cascade;
 alter table public.shopping_items add column if not exists household_id uuid references public.households (id) on delete cascade;
-alter table public.saved_recipes  add column if not exists household_id uuid references public.households (id) on delete cascade;
 
 create index if not exists pantry_items_household_idx   on public.pantry_items   (household_id);
 create index if not exists shopping_items_household_idx on public.shopping_items (household_id);
-create index if not exists saved_recipes_household_idx  on public.saved_recipes  (household_id);
+
+do $$
+begin
+  if to_regclass('public.saved_recipes') is not null then
+    execute 'alter table public.saved_recipes add column if not exists household_id uuid references public.households (id) on delete cascade';
+    execute 'create index if not exists saved_recipes_household_idx on public.saved_recipes (household_id)';
+  end if;
+end $$;
 
 -- ---------- 4) RLS sulle NUOVE tabelle (households / membri) ----------
 alter table public.households        enable row level security;
 alter table public.household_members enable row level security;
 
--- households: vedi/aggiorni solo i nuclei di cui sei membro; crei solo a tuo nome.
 drop policy if exists "households_select_member" on public.households;
 create policy "households_select_member" on public.households
   for select using (public.is_household_member(id));
@@ -76,8 +75,6 @@ drop policy if exists "households_update_member" on public.households;
 create policy "households_update_member" on public.households
   for update using (public.is_household_member(id)) with check (public.is_household_member(id));
 
--- household_members: vedi i membri dei tuoi nuclei; aggiungi/togli SOLO te stesso
--- (l'accettazione di un invito inserisce la TUA riga).
 drop policy if exists "members_select_same" on public.household_members;
 create policy "members_select_same" on public.household_members
   for select using (public.is_household_member(household_id));
@@ -91,8 +88,8 @@ create policy "members_delete_self" on public.household_members
   for delete using (user_id = auth.uid());
 
 -- ---------- 5) Backfill: un household "personale" per ogni utente esistente ----------
--- Crea un nucleo per ogni utente che ha gia' dati, lo rende owner, e assegna
--- household_id a tutte le sue righe ancora senza nucleo. Idempotente.
+-- Utenti presi da pantry_items + shopping_items; aggiorna household_id sulle
+-- righe ancora senza nucleo. saved_recipes solo se la tabella esiste. Idempotente.
 do $$
 declare
   u   record;
@@ -102,10 +99,8 @@ begin
     select distinct user_id from (
       select user_id from public.pantry_items
       union select user_id from public.shopping_items
-      union select user_id from public.saved_recipes
     ) s where user_id is not null
   loop
-    -- household personale gia' creato da un run precedente?
     select h.id into hid
       from public.households h
       join public.household_members m on m.household_id = h.id
@@ -125,10 +120,14 @@ begin
 
     update public.pantry_items   set household_id = hid where user_id = u.user_id and household_id is null;
     update public.shopping_items set household_id = hid where user_id = u.user_id and household_id is null;
-    update public.saved_recipes  set household_id = hid where user_id = u.user_id and household_id is null;
+
+    if to_regclass('public.saved_recipes') is not null then
+      execute format('update public.saved_recipes set household_id = %L where user_id = %L and household_id is null', hid, u.user_id);
+    end if;
   end loop;
 end $$;
 
--- Verifica rapida (esegui a parte se vuoi):
---   select count(*) from public.households;
---   select count(*) from public.pantry_items where household_id is null;  -- atteso: 0
+-- Verifica rapida:
+--   select count(*) from public.households;                                   -- atteso: >= 1
+--   select count(*) from public.pantry_items   where household_id is null;    -- atteso: 0
+--   select count(*) from public.shopping_items where household_id is null;    -- atteso: 0
