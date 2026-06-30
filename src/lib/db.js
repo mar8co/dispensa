@@ -7,6 +7,54 @@
 
 import { supabase } from "./supabase.js";
 
+// ---------- Household attivo (dispensa familiare) ----------
+// Il nucleo attivo della sessione viene iniettato come household_id su tutti
+// gli inserimenti di dati condivisi (dispensa/spesa). Impostato all'avvio dopo
+// aver risolto il nucleo dell'utente. Finché è null, gli insert restano come
+// prima (nessun household_id): l'app funziona comunque, la RLS è ancora
+// per-utente. Il filtro delle query e lo switch RLS arrivano nella fase 3.
+let activeHouseholdId = null;
+export function setActiveHousehold(id) { activeHouseholdId = id || null; }
+export function getActiveHousehold() { return activeHouseholdId; }
+const withHousehold = () => (activeHouseholdId ? { household_id: activeHouseholdId } : {});
+
+const HOUSEHOLD_COLS = "id, name, created_by, created_at";
+
+export async function fetchHouseholds() {
+  const { data, error } = await supabase
+    .from("households")
+    .select(HOUSEHOLD_COLS)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Crea un nuovo nucleo e rende l'utente corrente owner (usato all'occorrenza
+// e, in futuro, dalla UI "crea/invita"). L'id è generato lato client (uuid):
+// così non serve il returning select dell'insert, che la RLS nasconderebbe
+// (l'appartenenza viene creata subito DOPO).
+export async function createHousehold(name = "La mia dispensa") {
+  const { data: s } = await supabase.auth.getSession();
+  const userId = s?.session?.user?.id;
+  if (!userId) throw new Error("Non autenticato.");
+  const id = (crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const { error } = await supabase.from("households").insert({ id, name });
+  if (error) throw error;
+  const { error: mErr } = await supabase
+    .from("household_members")
+    .insert({ household_id: id, user_id: userId, role: "owner" });
+  if (mErr) throw mErr;
+  return { id, name, created_by: userId, created_at: new Date().toISOString() };
+}
+
+// Garantisce che l'utente abbia almeno un nucleo (per i nuovi iscritti, che
+// non sono coperti dal backfill della migrazione).
+export async function ensurePersonalHousehold() {
+  const existing = await fetchHouseholds();
+  if (existing.length) return existing;
+  return [await createHousehold("La mia dispensa")];
+}
+
 // ---------- Prodotti dispensa ----------
 
 const PANTRY_COLS = "id, name, qty, category, expiry, created_at";
@@ -23,7 +71,7 @@ export async function fetchPantry() {
 export async function insertItem({ name, qty, category, expiry = null }) {
   const { data, error } = await supabase
     .from("pantry_items")
-    .insert({ name, qty, category, expiry: expiry || null })
+    .insert({ name, qty, category, expiry: expiry || null, ...withHousehold() })
     .select(PANTRY_COLS)
     .single();
   if (error) throw error;
@@ -35,7 +83,7 @@ export async function insertMany(rows) {
   if (!rows.length) return [];
   const { data, error } = await supabase
     .from("pantry_items")
-    .insert(rows.map(({ name, qty, category, expiry = null }) => ({ name, qty, category, expiry: expiry || null })))
+    .insert(rows.map(({ name, qty, category, expiry = null }) => ({ name, qty, category, expiry: expiry || null, ...withHousehold() })))
     .select(PANTRY_COLS);
   if (error) throw error;
   return data || [];
@@ -148,7 +196,7 @@ export async function fetchShopping() {
 export async function insertShopping({ name, qty = "1" }) {
   const { data, error } = await supabase
     .from("shopping_items")
-    .insert({ name, qty })
+    .insert({ name, qty, ...withHousehold() })
     .select(SHOPPING_COLS)
     .single();
   if (error) throw error;
@@ -159,7 +207,7 @@ export async function insertManyShopping(rows) {
   if (!rows.length) return [];
   const { data, error } = await supabase
     .from("shopping_items")
-    .insert(rows.map(({ name, qty = "1", checked = false }) => ({ name, qty, checked })))
+    .insert(rows.map(({ name, qty = "1", checked = false }) => ({ name, qty, checked, ...withHousehold() })))
     .select(SHOPPING_COLS);
   if (error) throw error;
   return data || [];

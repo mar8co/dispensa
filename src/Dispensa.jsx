@@ -19,6 +19,7 @@ import {
   fetchSettings, saveSettings,
   fetchShopping, deleteShoppingItems,
   fetchSavedRecipes, deleteSavedRecipe,
+  ensurePersonalHousehold, setActiveHousehold,
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
 
@@ -206,6 +207,16 @@ export default function Dispensa({ session }) {
     }
     (async () => {
       try {
+        // Risolvi il nucleo (household) dell'utente e rendilo attivo PRIMA di
+        // qualsiasi insert (incluso il seed demo), così i dati vi finiscono
+        // dentro. Best-effort: se fallisce, gli insert restano senza
+        // household_id e l'app continua a funzionare (RLS ancora per-utente).
+        try {
+          const hs = await ensurePersonalHousehold();
+          if (hs.length) setActiveHousehold(hs[0].id);
+        } catch (e) {
+          console.warn("Household non disponibile (resto su per-utente).", e?.message || e);
+        }
         let rows = await fetchPantry();
         // Primissimo accesso (nessuna cache + DB vuoto): popola i prodotti
         // demo e avvia l'onboarding, che alla fine li svuota per partire
