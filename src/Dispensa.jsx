@@ -307,18 +307,22 @@ export default function Dispensa({ session }) {
       const id = payload.old?.id;
       if (id) setFn((prev) => prev.filter((x) => x.id !== id));
     };
+    // Filtra per nucleo attivo (household); finché non è risolto, fallback per
+    // utente. Col nucleo, dopo lo switch RLS (fase 5) ricevi anche gli eventi
+    // dei familiari. Si ri-sottoscrive quando cambia il nucleo attivo.
+    const filter = activeHouseholdId ? `household_id=eq.${activeHouseholdId}` : `user_id=eq.${uid}`;
     const channel = supabase
       .channel("realtime-dispensa")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "pantry_items", filter: `user_id=eq.${uid}` }, upsert(setItems))
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "pantry_items", filter: `user_id=eq.${uid}` }, upsert(setItems))
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "pantry_items", filter: `user_id=eq.${uid}` }, remove(setItems))
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "shopping_items", filter: `user_id=eq.${uid}` }, upsert(setShopping))
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "shopping_items", filter: `user_id=eq.${uid}` }, upsert(setShopping))
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "shopping_items", filter: `user_id=eq.${uid}` }, remove(setShopping))
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "pantry_items", filter }, upsert(setItems))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "pantry_items", filter }, upsert(setItems))
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "pantry_items", filter }, remove(setItems))
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "shopping_items", filter }, upsert(setShopping))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "shopping_items", filter }, upsert(setShopping))
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "shopping_items", filter }, remove(setShopping))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeHouseholdId]);
 
   // Pulisce il timer del toast allo smontaggio.
   useEffect(() => () => clearTimeout(toastTimer.current), []);
