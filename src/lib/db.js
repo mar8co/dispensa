@@ -60,10 +60,14 @@ export async function ensurePersonalHousehold() {
 const PANTRY_COLS = "id, name, qty, category, expiry, created_at";
 
 export async function fetchPantry() {
-  const { data, error } = await supabase
+  let q = supabase
     .from("pantry_items")
     .select(PANTRY_COLS)
     .order("created_at", { ascending: true });
+  // Filtro per nucleo attivo SOLO se risolto (altrimenti nessun filtro: la RLS
+  // per-utente scopa comunque alle righe dell'utente). Guardato = sicuro.
+  if (activeHouseholdId) q = q.eq("household_id", activeHouseholdId);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
@@ -185,10 +189,12 @@ const SHOPPING_COLS = "id, name, qty, checked, created_at";
 
 export async function fetchShopping() {
   // Più recenti in cima: i nuovi inserimenti appaiono in alto nella lista.
-  const { data, error } = await supabase
+  let q = supabase
     .from("shopping_items")
     .select(SHOPPING_COLS)
     .order("created_at", { ascending: false });
+  if (activeHouseholdId) q = q.eq("household_id", activeHouseholdId);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
