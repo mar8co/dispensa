@@ -130,7 +130,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/components/Button.jsx` | **Bottone d'azione condiviso**: varianti `primary`/`secondary`/`cook`/`danger`. Stile unico per funzione (primario = tomato). |
 | `src/constants.js` | Categorie, ordini reparto, **emoji categorie (`CAT_ICON`)**, prompt AI, seed/demo. |
 | `src/index.css` | **Palette** (variabili CSS, light + blocchi dark) e CSS PWA/Vaul. |
-| `supabase/schema.sql` + `migration-2..5.sql` | Schema DB completo (vedi ARCHITECTURE). |
+| `supabase/schema.sql` + `migration-2..6.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6` = **dispensa familiare multi-household, FASE 1** (schema+colonna+backfill, RLS dati ancora invariata). |
 
 ---
 
