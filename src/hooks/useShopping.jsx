@@ -8,8 +8,9 @@
 // setMovingChecked) insieme a mergeItems della dispensa. I reparti corretti a
 // mano (shopCats) e la vista per reparto (byAisle) restano impostazioni in
 // Dispensa e sono passati qui dove servono.
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { callClaude } from "../lib/claude.js";
+import { enqueue, flush } from "../lib/outbox.js";
 import {
   norm, normalizeWeight, mergeQty, correctName, adjustQty, guessCategory,
 } from "../lib/pantry.js";
@@ -39,6 +40,26 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
       return next;
     });
   }
+
+  // --- Scrittura resiliente all'offline (outbox) ---
+  // Lo stato locale è già ottimistico; qui ci assicuriamo che la scrittura sul
+  // DB avvenga, e se fallisce (offline) la mettiamo in coda per rigiocarla al
+  // ritorno online. v1: solo UPDATE di articoli esistenti (spunta/qty/nome).
+  function applyOp(op) {
+    if (op.type === "update") return updateShopping(op.id, op.fields);
+    return Promise.resolve();
+  }
+  function persistUpdate(id, fields) {
+    updateShopping(id, fields).catch(() => enqueue(uid, { type: "update", id, fields }));
+  }
+  // Rigioca la coda al ritorno online (e una volta all'avvio, se c'è roba).
+  useEffect(() => {
+    const onOnline = () => { flush(uid, applyOp); };
+    window.addEventListener("online", onOnline);
+    flush(uid, applyOp);
+    return () => window.removeEventListener("online", onOnline);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Reparto di un articolo: correzione manuale (per nome) o stima automatica.
   // Le correzioni che puntano a categorie non più esistenti vengono ignorate.
@@ -93,7 +114,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     const { category, ...rowFields } = fields;
     if (Object.keys(rowFields).length) {
       setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...rowFields } : x)));
-      try { await updateShopping(it.id, rowFields); } catch (e) { console.error("Errore salvataggio spesa:", e); }
+      persistUpdate(it.id, rowFields);
     }
     if (CATEGORIES.includes(category)) {
       setShopCats((prev) => ({ ...prev, [norm(rowFields.name ?? it.name)]: category }));
@@ -133,8 +154,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
       if (it) showToast(<><strong>{it.name}</strong> spostato nel carrello</>, undefined, undefined, undefined, 3500);
     }
     setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
-    try { await updateShopping(id, { checked }); }
-    catch (e) { console.error("Errore aggiornamento spesa:", e); }
+    persistUpdate(id, { checked });
   }
   async function removeShoppingItem(id) {
     const it = shopping.find((x) => x.id === id);
@@ -158,9 +178,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     const target = !shopping.every((x) => x.checked);
     const toChange = shopping.filter((x) => x.checked !== target);
     setShopping((prev) => prev.map((x) => ({ ...x, checked: target })));
-    try {
-      await Promise.all(toChange.map((x) => updateShopping(x.id, { checked: target })));
-    } catch (e) { console.error("Errore selezione totale spesa:", e); }
+    toChange.forEach((x) => persistUpdate(x.id, { checked: target }));
   }
   async function adjustShoppingQty(it, delta) {
     const next = adjustQty(it.qty, delta);
@@ -169,8 +187,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     const m = String(next).replace(",", ".").match(/-?\d+(\.\d+)?/);
     if (delta < 0 && m && parseFloat(m[0]) <= 0) return;
     setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: next } : x)));
-    try { await updateShopping(it.id, { qty: next }); }
-    catch (e) { console.error("Errore aggiornamento quantità spesa:", e); }
+    persistUpdate(it.id, { qty: next });
   }
   // Rimuove i barrati, con possibilità di Annulla (li re-inserisce barrati).
   async function clearCheckedShopping() {
