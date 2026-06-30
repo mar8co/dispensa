@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap, Loader2 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
+import HouseholdSection from "./HouseholdSection.jsx";
 import { getTheme, setTheme } from "../lib/theme.js";
 
 const THEMES = [
@@ -15,6 +16,7 @@ const THEMES = [
 export default function ProfileSheet({
   email, itemCount, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout, onReplayTour,
   onDeleteAccount, onOpenPrivacy,
+  households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
 }) {
   const [theme, setThemeState] = useState(getTheme());
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -99,6 +101,15 @@ export default function ProfileSheet({
             className="w-full resize-none rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
           />
           <p className="mt-1.5 text-xs text-stone-400">Le ricette proposte ne terranno sempre conto.</p>
+
+          {/* Dispensa familiare (household) */}
+          <HouseholdSection
+            households={households}
+            activeHouseholdId={activeHouseholdId}
+            email={email}
+            onSwitch={onSwitchHousehold}
+            onChanged={onHouseholdsChanged}
+          />
 
           {/* Azioni */}
           <div className="mt-6 space-y-2">

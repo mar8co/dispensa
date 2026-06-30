@@ -19,7 +19,7 @@ import {
   fetchSettings, saveSettings,
   fetchShopping, deleteShoppingItems,
   fetchSavedRecipes, deleteSavedRecipe,
-  ensurePersonalHousehold, setActiveHousehold,
+  ensurePersonalHousehold, setActiveHousehold, fetchHouseholds,
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
 
@@ -102,6 +102,10 @@ export default function Dispensa({ session }) {
   // vivono in useShopping)
   const [byAisle, setByAisle] = useState(true); // vista "per reparto" (persistita)
   const [shopCats, setShopCats] = useState({}); // reparti corretti a mano (per nome, persistiti)
+
+  // nucleo familiare (household): elenco + nucleo attivo
+  const [households, setHouseholds] = useState([]);
+  const [activeHouseholdId, setActiveHouseholdId] = useState(null);
 
   // toast / undo
   const [toast, setToast] = useState(null); // { message, onUndo? }
@@ -213,7 +217,14 @@ export default function Dispensa({ session }) {
         // household_id e l'app continua a funzionare (RLS ancora per-utente).
         try {
           const hs = await ensurePersonalHousehold();
-          if (hs.length) setActiveHousehold(hs[0].id);
+          setHouseholds(hs);
+          // Nucleo attivo: l'ultimo scelto su questo dispositivo, se ancora
+          // valido; altrimenti il primo (personale).
+          let activeId = null;
+          try { activeId = localStorage.getItem(`dispensa-active-household-${uid}`); } catch { /* */ }
+          if (!activeId || !hs.some((h) => h.id === activeId)) activeId = hs[0]?.id || null;
+          setActiveHousehold(activeId);
+          setActiveHouseholdId(activeId);
         } catch (e) {
           console.warn("Household non disponibile (resto su per-utente).", e?.message || e);
         }
@@ -374,6 +385,19 @@ export default function Dispensa({ session }) {
       `Input: "${raw}". ` +
       `Rispondi SOLO con JSON valido senza markdown: {"name":"...","category":"..."}`;
     return callClaude([{ type: "text", text: prompt }], 256, { schema: NAME_SCHEMA, temperature: 0.1 });
+  }
+
+  // --- Nucleo familiare: cambia nucleo attivo (ricarica i dati) / aggiorna elenco ---
+  async function switchHousehold(hid) {
+    if (!hid || hid === activeHouseholdId) return;
+    setActiveHousehold(hid);
+    setActiveHouseholdId(hid);
+    try { localStorage.setItem(`dispensa-active-household-${session.user.id}`, hid); } catch { /* */ }
+    try { setItems(await fetchPantry()); } catch (e) { console.error(e); }
+    try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
+  }
+  async function refreshHouseholds() {
+    try { setHouseholds(await fetchHouseholds()); } catch (e) { console.error(e); }
   }
 
   // --- Operazioni dispensa: CRUD e derivati estratti in hooks/usePantry.jsx ---
@@ -900,6 +924,10 @@ export default function Dispensa({ session }) {
         <ProfileSheet
           email={session.user.email}
           itemCount={items.length}
+          households={households}
+          activeHouseholdId={activeHouseholdId}
+          onSwitchHousehold={switchHousehold}
+          onHouseholdsChanged={refreshHouseholds}
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
           onClose={() => setProfileOpen(false)}
