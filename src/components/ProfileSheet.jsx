@@ -74,7 +74,7 @@ export default function ProfileSheet({
           />
 
           {/* Impostazioni: righe espandibili in-linea */}
-          <p className="mb-2 mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Impostazioni</p>
+          <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Impostazioni</p>
           <div className="overflow-hidden rounded-xl border border-hair bg-paper">
             {/* Preferenze alimentari (prima di Aspetto) */}
             <button
@@ -136,7 +136,7 @@ export default function ProfileSheet({
           </div>
 
           {/* Azioni */}
-          <div className="mt-4 overflow-hidden rounded-xl border border-hair bg-paper">
+          <div className="mt-3 overflow-hidden rounded-xl border border-hair bg-paper">
             <button
               data-tour="clear-pantry"
               onClick={() => { close(); onClearPantry(); }}
@@ -177,7 +177,7 @@ export default function ProfileSheet({
 
           {/* Footer discreto: privacy e cancellazione account */}
           {!confirmDelete ? (
-            <div className="mt-5 flex items-center justify-center gap-2.5 text-[11px] text-stone-400">
+            <div className="mt-3 flex items-center justify-center gap-2.5 text-[11px] text-stone-400">
               {onOpenPrivacy && (
                 <>
                   <button onClick={() => { close(); onOpenPrivacy(); }} className="transition hover:text-stone-600 hover:underline">
@@ -191,7 +191,7 @@ export default function ProfileSheet({
               </button>
             </div>
           ) : (
-            <div className="mt-5 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
+            <div className="mt-3 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
               <p className="text-xs text-stone-600">Eliminare account e tutti i dati? L'azione è definitiva e non recuperabile.</p>
               {delErr && <p className="mt-1.5 text-xs font-semibold text-tomato">{delErr}</p>}
               <div className="mt-2.5 flex gap-2">

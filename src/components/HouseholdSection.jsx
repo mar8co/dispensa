@@ -3,7 +3,7 @@
 // cambiano il nucleo attivo (e quindi ricaricano i dati) passano da Dispensa
 // via props (onSwitch / onChanged); le altre chiamano db.js direttamente.
 import { useState, useEffect } from "react";
-import { Users, Copy, Check, Share2, LogOut, Loader2, UserPlus, DoorOpen } from "lucide-react";
+import { Users, Copy, Check, Share2, LogOut, Loader2, UserPlus, Key } from "lucide-react";
 import Button from "./Button.jsx";
 import { createInvite, acceptInvite, fetchMembers, leaveHousehold } from "../lib/db.js";
 
@@ -75,7 +75,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
 
   return (
     <>
-      <p className="mb-2 mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Condivisa</p>
+      <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Dispensa condivisa</p>
 
       {/* Nucleo attivo + membri */}
       <div className="rounded-xl border border-hair bg-paper p-3.5">
@@ -114,11 +114,21 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         </div>
       )}
 
-      {/* Invito */}
-      {code ? (
-        <div className="mt-2 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
+      {/* Invita + Entra: sulla stessa riga, mezza larghezza ciascuno */}
+      <div className="mt-2 flex gap-2">
+        <Button variant="cook" size="sm" className="flex-1" onClick={invite} disabled={busy === "invite"}>
+          {busy === "invite" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invita</>}
+        </Button>
+        <Button variant="secondary" size="sm" className="flex-1" onClick={() => { setJoinOpen((o) => !o); setCode(""); setMsg(""); }}>
+          <Key className="h-4 w-4" /> Entra con codice
+        </Button>
+      </div>
+
+      {/* Codice invito appena generato */}
+      {code && (
+        <div className="mt-2 rounded-xl border border-tomato/30 bg-tomato/5 p-2.5 text-center">
           <p className="text-[11px] font-semibold text-stone-500">Codice invito (valido 7 giorni)</p>
-          <p className="my-1 font-display text-2xl font-extrabold tracking-[0.2em] text-tomato">{code}</p>
+          <p className="my-1 font-display text-xl font-extrabold tracking-[0.2em] text-tomato">{code}</p>
           <div className="flex justify-center gap-2">
             <Button variant="secondary" size="sm" onClick={copyCode}>
               {copied ? <><Check className="h-4 w-4" /> Copiato</> : <><Copy className="h-4 w-4" /> Copia</>}
@@ -126,14 +136,10 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
             <Button variant="cook" size="sm" onClick={shareCode}><Share2 className="h-4 w-4" /> Condividi</Button>
           </div>
         </div>
-      ) : (
-        <Button variant="cook" full size="sm" className="mt-2" onClick={invite} disabled={busy === "invite"}>
-          {busy === "invite" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invita in famiglia</>}
-        </Button>
       )}
 
-      {/* Entra con codice */}
-      {joinOpen ? (
+      {/* Entra: campo codice */}
+      {joinOpen && (
         <div className="mt-2 flex gap-2">
           <input
             value={joinCode}
@@ -145,13 +151,6 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
             {busy === "join" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entra"}
           </Button>
         </div>
-      ) : (
-        <button
-          onClick={() => { setJoinOpen(true); setMsg(""); }}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-hair px-4 py-2.5 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
-        >
-          <DoorOpen className="h-4 w-4 text-stone-400" /> Entra in un nucleo con un codice
-        </button>
       )}
 
       {msg && <p className="mt-1.5 text-center text-xs font-semibold text-tomato">{msg}</p>}
