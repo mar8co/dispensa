@@ -106,7 +106,7 @@ export default function ProfileSheet({
               <input
                 defaultValue={foodPrefs}
                 onBlur={(e) => onSaveFoodPrefs(e.target.value.trim())}
-                placeholder="Preferenze: es. vegetariano, niente fritti…"
+                placeholder="Preferenze per le ricette: es. vegetariano, niente fritti…"
                 aria-label="Preferenze alimentari"
                 title="Le ricette proposte ne terranno sempre conto"
                 className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-stone-400"

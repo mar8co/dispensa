@@ -114,11 +114,13 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
                 <li key={m.user_id} className="flex items-center gap-2 text-xs text-stone-600">
                   <span className="min-w-0 truncate">{memberName(m)}{isMe ? " (tu)" : ""}</span>
                   {isOwner ? (
-                    <Crown className="ml-auto h-3.5 w-3.5 shrink-0 text-tomato" aria-label="Creatore" />
+                    <span className="ml-auto flex w-16 shrink-0 justify-center">
+                      <Crown className="h-3.5 w-3.5 text-tomato" aria-label="Creatore" />
+                    </span>
                   ) : amOwner ? (
                     <button
                       onClick={() => setConfirmRemove(m)}
-                      className="ml-auto shrink-0 rounded-md bg-stone-100 px-2.5 py-1 text-[10px] font-semibold text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+                      className="ml-auto w-16 shrink-0 rounded-md bg-stone-100 py-1 text-center text-[10px] font-semibold text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
                     >
                       Rimuovi
                     </button>
