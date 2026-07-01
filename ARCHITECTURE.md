@@ -54,7 +54,10 @@ dispensa/
 │  ├─ migration-2.sql       # expiry + shopping_items
 │  ├─ migration-3.sql       # Realtime (replica identity + publication)
 │  ├─ migration-4.sql       # saved_recipes (ricettario)
-│  └─ migration-5.sql       # ai_usage + funzione bump_ai_usage (rate-limit)
+│  ├─ migration-5.sql       # ai_usage + funzione bump_ai_usage (rate-limit)
+│  ├─ migration-6.sql       # dispensa familiare: households + household_id + backfill
+│  ├─ migration-7.sql       # inviti (household_invites) + accept_invite
+│  └─ migration-8.sql       # switch RLS dati a is_household_member (il "flip")
 ├─ src/
 │  ├─ main.jsx              # entry (monta App, registra SW/tema)
 │  ├─ App.jsx               # gate auth (spinner / login / app)
@@ -94,9 +97,15 @@ dispensa/
 
 ## 3. Database e relazioni
 
-Postgres su Supabase. **Tutte** le tabelle utente hanno `user_id uuid default
-auth.uid()` e **RLS** con policy `auth.uid() = user_id` (select/insert/update/
-delete). L'unico legame è verso `auth.users(id)` con `on delete cascade`.
+Postgres su Supabase. **Dispensa familiare (multi-household)** attiva: i dati
+condivisi (`pantry_items`, `shopping_items`, `saved_recipes`) hanno una colonna
+`household_id` e la **RLS** è basata sull'appartenenza al nucleo
+(`is_household_member(household_id)`), con un ripiego difensivo
+`household_id is null and auth.uid() = user_id` per non nascondere righe non
+taggate. `user_id` resta come audit. Le tabelle **personali** (`user_settings`,
+`ai_usage`) restano con RLS `auth.uid() = user_id`. Tabelle nucleo:
+`households`, `household_members`, `household_invites` (vedi migration-6/7/8).
+Legami verso `auth.users(id)` con `on delete cascade`.
 
 ```
 auth.users (gestita da Supabase)

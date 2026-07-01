@@ -130,7 +130,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/components/Button.jsx` | **Bottone d'azione condiviso**: varianti `primary`/`secondary`/`cook`/`danger`. Stile unico per funzione (primario = tomato). |
 | `src/constants.js` | Categorie, ordini reparto, **emoji categorie (`CAT_ICON`)**, prompt AI, seed/demo. |
 | `src/index.css` | **Palette** (variabili CSS, light + blocchi dark) e CSS PWA/Vaul. |
-| `supabase/schema.sql` + `migration-2..6.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6` = **dispensa familiare multi-household, FASE 1** (schema+colonna+backfill, RLS dati ancora invariata). |
+| `supabase/schema.sql` + `migration-2..8.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6/7/8` = **dispensa familiare multi-household** (schema, inviti, switch RLS a household). |
 
 ---
 
@@ -146,8 +146,14 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 - **Chiavi server-only**: `GEMINI_API_KEY`, `PEXELS_API_KEY`,
   `SUPABASE_SERVICE_ROLE_KEY` **mai** nel bundle. Solo `VITE_SUPABASE_URL` e
   `VITE_SUPABASE_ANON_KEY` sono pubbliche (protette da RLS).
-- **RLS ovunque**: ogni tabella ha policy `auth.uid() = user_id`; `user_id`
-  default `auth.uid()`.
+- **Dispensa familiare (multi-household)** — COMPLETA (migration-6/7/8 eseguite).
+  I dati condivisi (`pantry_items`/`shopping_items`/`saved_recipes`) hanno
+  `household_id` e RLS `is_household_member(household_id)` (ripiego difensivo
+  `household_id is null and auth.uid() = user_id`). `user_settings`/`ai_usage`
+  restano per-utente. Nucleo attivo in `localStorage` (`dispensa-active-household-*`),
+  iniettato negli insert e nel filtro query da `db.js` (`setActiveHousehold`);
+  UI in `HouseholdSection.jsx`; inviti via `accept_invite` (security definer).
+  Realtime filtra per `household_id`.
 - **Realtime** su `pantry_items` e `shopping_items` (replica identity full);
   `user_settings` sincronizzato a parte.
 - **Bottom sheet unico (Vaul)**: `Sheet.jsx` montato già aperto (`open=true`) così
