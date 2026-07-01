@@ -3,7 +3,7 @@
 // cambiano il nucleo attivo (e quindi ricaricano i dati) passano da Dispensa
 // via props (onSwitch / onChanged); le altre chiamano db.js direttamente.
 import { useState, useEffect } from "react";
-import { Users, Copy, Check, Share2, LogOut, Loader2, UserPlus, Key } from "lucide-react";
+import { Users, Copy, Check, Share2, LogOut, Loader2, UserPlus, DoorOpen } from "lucide-react";
 import Button from "./Button.jsx";
 import { createInvite, acceptInvite, fetchMembers, leaveHousehold } from "../lib/db.js";
 
@@ -120,7 +120,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
           {busy === "invite" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invita</>}
         </Button>
         <Button variant="secondary" size="sm" className="flex-1" onClick={() => { setJoinOpen((o) => !o); setCode(""); setMsg(""); }}>
-          <Key className="h-4 w-4" /> Entra con codice
+          <DoorOpen className="h-4 w-4" /> Entra con codice
         </Button>
       </div>
 
