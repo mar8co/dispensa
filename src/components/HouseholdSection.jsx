@@ -75,7 +75,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
 
   return (
     <>
-      <p className="mb-2 mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Dispensa familiare</p>
+      <p className="mb-2 mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Condivisa</p>
 
       {/* Nucleo attivo + membri */}
       <div className="rounded-xl border border-hair bg-paper p-3.5">
@@ -163,7 +163,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
           disabled={busy === "leave"}
           className="mt-2 flex w-full items-center justify-center gap-2 text-xs font-semibold text-stone-400 transition hover:text-tomato disabled:opacity-60"
         >
-          <LogOut className="h-3.5 w-3.5" /> Esci dal nucleo
+          <LogOut className="h-3.5 w-3.5" /> Esci
         </button>
       )}
     </>
