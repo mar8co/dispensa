@@ -175,13 +175,13 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         </div>
       )}
 
-      {/* Invita + Entra: sulla stessa riga, mezza larghezza ciascuno */}
+      {/* Entra + Invita: sulla stessa riga, mezza larghezza ciascuno */}
       <div className="mt-2 flex gap-2">
-        <Button variant="cook" size="sm" className="flex-1" onClick={invite} disabled={busy === "invite"}>
-          {busy === "invite" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invita</>}
-        </Button>
         <Button variant="secondary" size="sm" className="flex-1" onClick={() => { setJoinOpen((o) => !o); setCode(""); setMsg(""); }}>
           <DoorOpen className="h-4 w-4" /> Entra con codice
+        </Button>
+        <Button variant="cook" size="sm" className="flex-1" onClick={invite} disabled={busy === "invite"}>
+          {busy === "invite" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invita</>}
         </Button>
       </div>
 
