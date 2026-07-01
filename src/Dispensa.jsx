@@ -19,7 +19,7 @@ import {
   fetchSettings, saveSettings,
   fetchShopping, deleteShoppingItems,
   fetchSavedRecipes, deleteSavedRecipe,
-  ensurePersonalHousehold, setActiveHousehold, fetchHouseholds,
+  ensurePersonalHousehold, setActiveHousehold, fetchHouseholds, fetchMembers,
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
 
@@ -103,9 +103,10 @@ export default function Dispensa({ session }) {
   const [byAisle, setByAisle] = useState(true); // vista "per reparto" (persistita)
   const [shopCats, setShopCats] = useState({}); // reparti corretti a mano (per nome, persistiti)
 
-  // nucleo familiare (household): elenco + nucleo attivo
+  // nucleo familiare (household): elenco + nucleo attivo + se condiviso (>1 membro)
   const [households, setHouseholds] = useState([]);
   const [activeHouseholdId, setActiveHouseholdId] = useState(null);
+  const [sharedHousehold, setSharedHousehold] = useState(false);
 
   // toast / undo
   const [toast, setToast] = useState(null); // { message, onUndo? }
@@ -225,6 +226,9 @@ export default function Dispensa({ session }) {
           if (!activeId || !hs.some((h) => h.id === activeId)) activeId = hs[0]?.id || null;
           setActiveHousehold(activeId);
           setActiveHouseholdId(activeId);
+          if (activeId) {
+            try { const m = await fetchMembers(activeId); setSharedHousehold((m?.length || 0) > 1); } catch { /* */ }
+          }
         } catch (e) {
           console.warn("Household non disponibile (resto su per-utente).", e?.message || e);
         }
@@ -397,6 +401,7 @@ export default function Dispensa({ session }) {
     setActiveHousehold(hid);
     setActiveHouseholdId(hid);
     try { localStorage.setItem(`dispensa-active-household-${session.user.id}`, hid); } catch { /* */ }
+    try { const m = await fetchMembers(hid); setSharedHousehold((m?.length || 0) > 1); } catch { /* */ }
     try { setItems(await fetchPantry()); } catch (e) { console.error(e); }
     try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
   }
@@ -790,6 +795,7 @@ export default function Dispensa({ session }) {
       <div className="mx-auto max-w-md px-5 pt-7 pb-28">
         {view === "dispensa" && (
           <PantryTab
+            shared={sharedHousehold}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} cardRefs={cardRefs}
             onMoveCat={moveCategory}
@@ -826,6 +832,7 @@ export default function Dispensa({ session }) {
         {view === "spesa" && (
           <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-tomato" /></div>}>
           <ShoppingTab
+            shared={sharedHousehold}
             shopping={shopping}
             onAdd={addShoppingItem}
             onToggle={toggleShoppingItem}
@@ -928,6 +935,7 @@ export default function Dispensa({ session }) {
         <ProfileSheet
           email={session.user.email}
           itemCount={items.length}
+          shared={sharedHousehold}
           households={households}
           activeHouseholdId={activeHouseholdId}
           onSwitchHousehold={switchHousehold}

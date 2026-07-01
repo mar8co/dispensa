@@ -209,6 +209,7 @@ function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
 }
 
 export default function ShoppingTab({
+  shared = false,
   shopping,
   onAdd, onToggle, onDelete, onToggleAll, onMoveChecked, onClearChecked,
   movingChecked, byAisle, setByAisle,
@@ -498,7 +499,7 @@ export default function ShoppingTab({
 
       {/* Occhiello + inserimento: bloccati in alto durante lo scroll. */}
       <div className="sticky top-0 z-20 -mx-5 mt-2 bg-cream/95 px-5 pb-1.5 pt-2.5 backdrop-blur">
-        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua lista</div>
+        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">{shared ? "La nostra lista" : "La tua lista"}</div>
         <div data-tour="shopping-input" className="relative">
           <Pencil className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
           <input

@@ -81,7 +81,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
       <div className="rounded-xl border border-hair bg-paper p-3.5">
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-tomato" />
-          <span className="min-w-0 truncate text-sm font-semibold text-ink">{active.name}</span>
+          <span className="min-w-0 truncate text-sm font-semibold text-ink">{members.length > 1 ? "La nostra dispensa" : "La tua dispensa"}</span>
           <span className="ml-auto shrink-0 text-xs text-stone-400">{members.length} {members.length === 1 ? "membro" : "membri"}</span>
         </div>
         {members.length > 0 && (
@@ -163,7 +163,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
           disabled={busy === "leave"}
           className="mt-2 flex w-full items-center justify-center gap-2 text-xs font-semibold text-stone-400 transition hover:text-tomato disabled:opacity-60"
         >
-          <LogOut className="h-3.5 w-3.5" /> Esci da “{active.name}”
+          <LogOut className="h-3.5 w-3.5" /> Esci dal nucleo
         </button>
       )}
     </>

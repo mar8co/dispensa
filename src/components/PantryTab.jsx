@@ -55,6 +55,7 @@ const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}
 
 
 export default function PantryTab({
+  shared = false,
   search, setSearch, sort, setSort,
   grouped, cardRefs,
   onMoveCat, onAutoSave, onSetExpiry, removeItem,
@@ -240,7 +241,7 @@ export default function PantryTab({
       {/* Occhiello rosso + ricerca: bloccati insieme in alto durante lo scroll
           (con l'ordinamento dietro l'icona). */}
       <div className="sticky top-0 z-30 -mx-5 mt-4 bg-cream/95 px-5 pb-1.5 pt-2 backdrop-blur">
-      <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">La tua dispensa</div>
+      <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">{shared ? "La nostra dispensa" : "La tua dispensa"}</div>
       <div className="relative">
         <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
         <input
