@@ -100,16 +100,17 @@ export default function ProfileSheet({
           {/* Impostazioni: righe espandibili in-linea */}
           <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Impostazioni</p>
           <div className="overflow-hidden rounded-xl border border-hair bg-paper">
-            {/* Preferenze alimentari: sempre visibile, su una sola riga */}
-            <div className="flex items-center gap-3 px-3.5 py-2.5">
-              <Leaf className="h-[18px] w-[18px] shrink-0 text-stone-400" />
-              <input
+            {/* Esigenze alimentari: sempre visibile, box da 2 righe */}
+            <div className="flex items-start gap-3 px-3.5 py-2.5">
+              <Leaf className="mt-0.5 h-[18px] w-[18px] shrink-0 text-stone-400" />
+              <textarea
                 defaultValue={foodPrefs}
                 onBlur={(e) => onSaveFoodPrefs(e.target.value.trim())}
-                placeholder="Preferenze per le ricette: es. vegetariano, niente fritti…"
-                aria-label="Preferenze alimentari"
+                rows={2}
+                placeholder="Esigenze alimentari: no frutta secca, pochi fritti, vegetariano, allergie."
+                aria-label="Esigenze alimentari"
                 title="Le ricette proposte ne terranno sempre conto"
-                className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-stone-400"
+                className="min-w-0 flex-1 resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-stone-400"
               />
             </div>
 
