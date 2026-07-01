@@ -57,7 +57,8 @@ dispensa/
 │  ├─ migration-5.sql       # ai_usage + funzione bump_ai_usage (rate-limit)
 │  ├─ migration-6.sql       # dispensa familiare: households + household_id + backfill
 │  ├─ migration-7.sql       # inviti (household_invites) + accept_invite
-│  └─ migration-8.sql       # switch RLS dati a is_household_member (il "flip")
+│  ├─ migration-8.sql       # switch RLS dati a is_household_member (il "flip")
+│  └─ migration-9.sql       # username membri + espulsione (set_username, remove_member)
 ├─ src/
 │  ├─ main.jsx              # entry (monta App, registra SW/tema)
 │  ├─ App.jsx               # gate auth (spinner / login / app)
@@ -104,8 +105,17 @@ condivisi (`pantry_items`, `shopping_items`, `saved_recipes`) hanno una colonna
 `household_id is null and auth.uid() = user_id` per non nascondere righe non
 taggate. `user_id` resta come audit. Le tabelle **personali** (`user_settings`,
 `ai_usage`) restano con RLS `auth.uid() = user_id`. Tabelle nucleo:
-`households`, `household_members`, `household_invites` (vedi migration-6/7/8).
+`households`, `household_members` (con `email` + `username` denormalizzati e
+`role` `owner`/`member`), `household_invites` (vedi migration-6/7/8/9).
 Legami verso `auth.users(id)` con `on delete cascade`.
+
+**Funzioni SECURITY DEFINER del nucleo** (bypassano la RLS in modo controllato):
+`is_household_member(hid)` (appartenenza, evita ricorsione nelle policy),
+`accept_invite(code)` (l'invitato non è ancora membro; valida il codice, si
+aggiunge e **eredita lo username** già scelto), `set_username(name)` (aggiorna il
+proprio `username` su tutte le membership; non esiste una policy UPDATE),
+`remove_member(household_id, target)` (solo l'**owner** può togliere **altri**
+membri: la policy `members_delete_self` permette di rimuovere solo se stessi).
 
 ```
 auth.users (gestita da Supabase)
@@ -273,7 +283,8 @@ applica `upsert`/`remove` agli stati locali.
 | `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. |
 | `ManualAddModal.jsx` / `VoiceAddModal.jsx` | Aggiunta manuale / a voce. |
 | `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | FAB "+", menu aggiunta, navigazione. |
-| `ProfileSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo, tema, logout, privacy. |
+| `ProfileSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo (Nome/username al posto della mail, Esigenze alimentari in box 2 righe, tema, logout, privacy). |
+| `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
 | `Auth.jsx` | Login (magic-link, Google, Apple). |
 | `Toast.jsx` | Toast/undo, posizione adattiva (`raised` su Spesa). |
 | `TourCoach.jsx` | Tutorial guidato (`tour.js`). |
@@ -304,16 +315,18 @@ applica `upsert`/`remove` agli stati locali.
 
 ## 10. Scalabilità futura (considerazioni)
 
-- **Multi-utenza reale**: l'impianto (Auth + RLS + `user_id`) è già pronto; per una
-  condivisione tra utenti (es. dispensa familiare) servirebbe un modello di
-  ownership a gruppi (tabella `households` + join) e policy aggiornate.
+- **Multi-utenza reale**: **fatta** — dispensa familiare con `households` +
+  `household_members` + RLS `is_household_member`, inviti, username ed espulsione
+  (migration-6/7/8/9). Estensioni possibili: ruoli più granulari, cronologia "chi
+  ha aggiunto cosa", trasferimento della proprietà del nucleo.
 - **Costi/quota AI**: già presenti tetto `max_tokens`, tetto payload e rate-limit
   per utente/giorno (`ai_usage`). Per crescere: cache dei suggerimenti, batch,
   modelli più economici per task semplici.
 - **Bundle**: il chunk principale supera i 500 kB (warning Vite) e ZXing è già
   lazy-loaded. Margini: code-split per scheda, `manualChunks`.
-- **Offline write**: oggi l'offline è solo "shell"; una coda di mutazioni
-  (outbox) + replay al ritorno online renderebbe robusta la scrittura offline.
+- **Offline write**: esiste una **outbox v1** (`src/lib/outbox.js`) per le mutazioni
+  della **spesa** con replay al ritorno online; da estendere a dispensa/ricette e
+  rendere idempotente su tutti i tipi di operazione.
 - **Migrazioni DB**: sono file SQL numerati da eseguire a mano nel SQL Editor;
   crescendo conviene adottare le migrazioni gestite della Supabase CLI.
 - **Test**: oggi coprono `pantry.js`. Estendere a `recipes.js`, agli hook (con

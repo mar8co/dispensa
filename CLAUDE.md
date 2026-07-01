@@ -17,7 +17,8 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (46/46), `npm run build`. Se tocchi `pantry.js`, aggiorna `pantry.test.js`.
+   (68/68), `npm run build`. Se tocchi `pantry.js`/`history.js`, aggiorna i
+   rispettivi test (`pantry.test.js` / `history.test.js`).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`.
 6. **Refactor incrementali, mai big-bang.** Un cambiamento coerente per commit.

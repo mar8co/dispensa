@@ -38,7 +38,7 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 | Bottom sheet | **Vaul** 1.1.2 (drag-to-dismiss) + `@radix-ui/react-dialog` (transitiva) |
 | Icone | `lucide-react` + emoji per le categorie |
 | Hosting | Vercel (serverless functions in `api/`) |
-| Test | Vitest (su `src/lib/pantry.js`, 46 test) |
+| Test | Vitest (`src/lib/pantry.js` + `src/lib/history.js`, **68 test**) |
 | Lint | ESLint flat config (`eslint.config.js`) |
 | Generazione icone | `sharp` (`scripts/generate-icons.mjs`) |
 
@@ -67,6 +67,15 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   (q.b. non scalato / a confezione / calcolo esatto).
 - **Sync multi-dispositivo** via Supabase Realtime (pantry + shopping) e
   `user_settings` (jsonb).
+- **Dispensa condivisa (multi-household)** — completa: nuclei, inviti con codice
+  (7 gg), entra-con-codice, switch del nucleo attivo, esci. Ogni membro ha un
+  **Nome (username)** impostabile dal Profilo (mostrato al posto della mail); il
+  **creatore** è marcato con l'icona **corona** e può **far uscire** i membri con
+  popup di conferma. Vedi `HouseholdSection.jsx` + migration-6/7/8/9.
+- **Scrittura offline (outbox v1)** — coda di mutazioni della **spesa** in
+  `src/lib/outbox.js` con replay al ritorno online.
+- **Code-split per scheda** — le schede/scanner pesanti sono `React.lazy` in
+  `Dispensa.jsx` (ZXing e affini caricati on-demand).
 - **PWA**: installabile, offline shell, tema chiaro/scuro/auto (per-dispositivo).
 - **Tutorial** guidato (TourCoach).
 - **Privacy Policy** (sheet, link nel login e nel Profilo).
@@ -130,7 +139,9 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/components/Button.jsx` | **Bottone d'azione condiviso**: varianti `primary`/`secondary`/`cook`/`danger`. Stile unico per funzione (primario = tomato). |
 | `src/constants.js` | Categorie, ordini reparto, **emoji categorie (`CAT_ICON`)**, prompt AI, seed/demo. |
 | `src/index.css` | **Palette** (variabili CSS, light + blocchi dark) e CSS PWA/Vaul. |
-| `supabase/schema.sql` + `migration-2..8.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6/7/8` = **dispensa familiare multi-household** (schema, inviti, switch RLS a household). |
+| `src/components/HouseholdSection.jsx` | UI **Dispensa condivisa** nel Profilo: membri (username + corona sul creatore + "Rimuovi"), inviti, entra-con-codice, switch nucleo, esci, popup conferma espulsione. |
+| `src/components/ProfileSheet.jsx` | Foglio Profilo (ibrido): **Nome (username)** al posto della mail, **Esigenze alimentari** (box 2 righe sempre visibile), `HouseholdSection`, Impostazioni (tema), azioni, privacy/elimina account. |
+| `supabase/schema.sql` + `migration-2..9.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6/7/8` = **dispensa familiare** (schema, inviti, switch RLS a household); `migration-9` = **username + espulsione** (colonna `username`, `set_username`/`remove_member` security definer, `accept_invite` eredita lo username). |
 
 ---
 
@@ -146,7 +157,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 - **Chiavi server-only**: `GEMINI_API_KEY`, `PEXELS_API_KEY`,
   `SUPABASE_SERVICE_ROLE_KEY` **mai** nel bundle. Solo `VITE_SUPABASE_URL` e
   `VITE_SUPABASE_ANON_KEY` sono pubbliche (protette da RLS).
-- **Dispensa familiare (multi-household)** — COMPLETA (migration-6/7/8 eseguite).
+- **Dispensa familiare (multi-household)** — COMPLETA (migration-6/7/8/9 eseguite).
   I dati condivisi (`pantry_items`/`shopping_items`/`saved_recipes`) hanno
   `household_id` e RLS `is_household_member(household_id)` (ripiego difensivo
   `household_id is null and auth.uid() = user_id`). `user_settings`/`ai_usage`
@@ -154,6 +165,15 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   iniettato negli insert e nel filtro query da `db.js` (`setActiveHousehold`);
   UI in `HouseholdSection.jsx`; inviti via `accept_invite` (security definer).
   Realtime filtra per `household_id`.
+  - **Username**: colonna `household_members.username` (denormalizzata su tutte le
+    righe dell'utente). `set_username` (security definer) la scrive; `getMyUsername`
+    la legge; `accept_invite` la eredita nei nuovi nuclei. In UI si mostra
+    `username || email` con fallback.
+  - **Espulsione (solo owner)**: `remove_member(household_id, target)` security
+    definer (la policy `members_delete_self` permette di togliere solo se stessi);
+    verifica che il chiamante sia `owner`, vieta auto-rimozione e rimozione di un
+    altro owner. Popup di conferma "Vuoi far uscire **Nome** dalla Dispensa
+    condivisa?".
 - **Realtime** su `pantry_items` e `shopping_items` (replica identity full);
   `user_settings` sincronizzato a parte.
 - **Bottom sheet unico (Vaul)**: `Sheet.jsx` montato già aperto (`open=true`) così
@@ -178,11 +198,14 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Todo prioritari
 
-1. **Verificare sul telefono**: (a) scatto scontrino dalla **fotocamera nativa**
-   `<input capture>` su uno scontrino lungo reale; (b) fix camera barcode (Vaul
-   callback-ref); (c) torcia barcode dove supportata.
+1. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,
+   niente fotocamera nativa — scelta UX dell'utente) su uno scontrino lungo reale;
+   (b) fix camera barcode (Vaul callback-ref); (c) torcia barcode dove supportata;
+   (d) **username + espulsione membri** con più account condivisi (migration-9 già
+   eseguita, feature confermata funzionante dall'utente il 2026-07-01).
 2. **Configurare Apple Sign-In** (Apple Developer + Supabase) — guida sotto.
 3. **Decidere il placeholder ricerca ricette** e applicarlo (1 riga, no a-capo).
+   *(Nota: distinto dal placeholder "Esigenze alimentari" nel Profilo, già fatto.)*
 4. Eventuali rifiniture UX su Spesa (altezze barra/nav sul dispositivo reale).
 
 ---
