@@ -49,8 +49,10 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Funzionalità completate
 
-- **Auth** Supabase: magic-link (email), Google OAuth, Apple OAuth (vedi "in
-  sviluppo" per Apple). Gate in `src/App.jsx`; logout dal Profilo.
+- **Auth** Supabase: magic-link (email), Google OAuth, Apple OAuth, telefono via
+  SMS/OTP (vedi "in sviluppo" per Apple e SMS). Login ridisegnato: header con
+  logo su griglia tomato, riga di 3 provider a icona (Apple/Google/telefono),
+  "OPPURE", email in basso. Gate in `src/App.jsx`; logout dal Profilo.
 - **Dispensa**: lista prodotti per categoria (collassabili), ricerca, ordinamento
   (persistito per-utente), stepper quantità con **mezzo pezzo (½)**, scadenze con
   banner ("scaduti" vs "in scadenza entro 7 gg", su due righe se entrambi),
@@ -89,7 +91,11 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 1. **"Continua con Apple"** — il codice è pronto (`Auth.jsx → signInApple`), ma
    richiede **configurazione esterna** (Apple Developer + Supabase). Vedi guida in
    fondo. Finché non è configurato, il pulsante dà errore "provider not enabled".
-2. **Placeholder ricerca ricette** — l'utente vuole un testo che comunichi che la
+2. **Accesso via telefono (SMS)** — il codice è pronto (`Auth.jsx → sendSmsCode` /
+   `verifySmsCode`, flusso numero → OTP), ma richiede un **provider SMS
+   configurato su Supabase** (Twilio o simile, a pagamento). Vedi guida in fondo.
+   Finché non è configurato, il pulsante dà errore all'invio del codice.
+3. **Placeholder ricerca ricette** — l'utente vuole un testo che comunichi che la
    ricerca accetta "voglie/umore" e non solo ingredienti, in **una sola riga**
    senza andare a capo. **Decisione aperta**. Candidato consigliato:
    `Cosa ti va? fresco, veloce, coi funghi…`.
@@ -267,3 +273,32 @@ Prerequisito: **Apple Developer Program (99 $/anno)**. Callback Supabase:
    Redirect URLs = `https://<dominio>/**` e `http://localhost:5173/**`.
 6. Il codice non va toccato (`signInWithOAuth({ provider: "apple" })` è già
    corretto, con `redirectTo: window.location.origin`).
+
+---
+
+## Appendice — Configurare l'accesso via telefono (SMS)
+
+Prerequisito: un **provider SMS** (Supabase non invia SMS da solo). Il più comune
+è **Twilio** (a consumo, pochi centesimi/SMS); in alternativa MessageBird,
+Vonage, Textlocal. Serve un account presso il provider con credenziali API.
+
+1. **Provider SMS** (es. Twilio): crea l'account, ottieni un **numero mittente**
+   abilitato (o un *Messaging Service SID*) e le credenziali (**Account SID** +
+   **Auth Token**). Per Twilio conviene usare **Verify** (gestione OTP integrata)
+   oppure il *Messaging Service*.
+2. **Supabase → Authentication → Providers → Phone**: *enable*, scegli il provider
+   (Twilio / Twilio Verify / MessageBird / Vonage), incolla le credenziali e il
+   numero/Service SID. Salva.
+3. **SMS OTP**: verifica in *Authentication → Providers → Phone* che la durata e
+   la lunghezza del codice siano adeguate (default 6 cifre, 60 s). Il template del
+   messaggio contiene `{{ .Code }}`.
+4. **Rate limit**: in *Authentication → Rate Limits* c'è un tetto SMS/ora
+   (default basso, per contenere i costi): alzalo solo se serve davvero.
+5. Il codice non va toccato: `signInWithOtp({ phone })` invia l'SMS e
+   `verifyOtp({ phone, token, type: "sms" })` completa l'accesso (già in
+   `Auth.jsx`). Il numero va in **formato E.164** (`+39...`), già gestito dalla UI
+   (prefisso `+39` precompilato, spazi rimossi prima dell'invio).
+
+> Nota costi: gli SMS sono a pagamento e soggetti ad abusi (SMS-pumping). Se
+> l'accesso via telefono non serve, lasciarlo disabilitato: il pulsante mostrerà
+> un errore gestito, senza rompere il resto del login.
