@@ -61,36 +61,31 @@ export default function ProfileSheet({
             </button>
           </div>
 
-          {/* Account */}
+          {/* Account: il Nome (username) prende il posto della mail */}
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-tomato/10 text-tomato">
               <User className="h-6 w-6" />
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">{email}</p>
+            <div className="min-w-0 flex-1">
+              <input
+                defaultValue={username}
+                onBlur={(e) => commitUsername(e.target.value)}
+                maxLength={24}
+                placeholder="Il tuo nome"
+                aria-label="Il tuo nome"
+                className={`w-full truncate bg-transparent text-sm font-semibold text-ink outline-none placeholder:font-medium ${
+                  shared && !username ? "placeholder:text-tomato" : "placeholder:text-stone-400"
+                }`}
+              />
               <p className="flex items-center gap-1.5 text-xs text-stone-500">
                 {shared && <Users className="h-3.5 w-3.5 shrink-0" />}
                 {shared ? "La nostra dispensa · " : ""}{itemCount} {itemCount === 1 ? "prodotto" : "prodotti"}
               </p>
             </div>
           </div>
-
-          {/* Nome (username): come ti vedono gli altri nella dispensa condivisa */}
-          <div className="mt-3">
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Nome</label>
-            <input
-              defaultValue={username}
-              onBlur={(e) => commitUsername(e.target.value)}
-              maxLength={24}
-              placeholder="Come ti vedono gli altri"
-              className={`w-full rounded-xl border bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-stone-400 focus:ring-2 focus:ring-tomato/15 ${
-                shared && !username ? "border-tomato/40 ring-2 ring-tomato/15" : "border-hair"
-              }`}
-            />
-            {shared && !username && (
-              <p className="mt-1 text-xs font-medium text-tomato">Aggiungi un nome così gli altri ti riconoscono nella dispensa.</p>
-            )}
-          </div>
+          {shared && !username && (
+            <p className="mt-1.5 text-xs font-medium text-tomato">Aggiungi il tuo nome così gli altri ti riconoscono nella dispensa.</p>
+          )}
 
           {/* Dispensa familiare: sempre aperta */}
           <HouseholdSection
@@ -105,28 +100,18 @@ export default function ProfileSheet({
           {/* Impostazioni: righe espandibili in-linea */}
           <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Impostazioni</p>
           <div className="overflow-hidden rounded-xl border border-hair bg-paper">
-            {/* Preferenze alimentari (prima di Aspetto) */}
-            <button
-              onClick={() => toggle("prefs")}
-              className="flex w-full items-center gap-3 px-3.5 py-3 text-left"
-              aria-expanded={open === "prefs"}
-            >
-              <Leaf className="h-[18px] w-[18px] text-stone-400" />
-              <span className="flex-1 text-sm text-ink">Preferenze alimentari</span>
-              <ChevronDown className={`h-4 w-4 text-stone-400 transition-transform ${open === "prefs" ? "rotate-180" : ""}`} />
-            </button>
-            {open === "prefs" && (
-              <div className="border-t border-hair px-3.5 pb-3.5 pt-2">
-                <textarea
-                  defaultValue={foodPrefs}
-                  onBlur={(e) => onSaveFoodPrefs(e.target.value.trim())}
-                  rows={2}
-                  placeholder="Es. vegetariano · niente fritti · pochi latticini"
-                  className="w-full resize-none rounded-lg border border-hair bg-cream px-3 py-2.5 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                />
-                <p className="mt-1.5 text-xs text-stone-400">Le ricette proposte ne terranno sempre conto.</p>
-              </div>
-            )}
+            {/* Preferenze alimentari: sempre visibile, su una sola riga */}
+            <div className="flex items-center gap-3 px-3.5 py-2.5">
+              <Leaf className="h-[18px] w-[18px] shrink-0 text-stone-400" />
+              <input
+                defaultValue={foodPrefs}
+                onBlur={(e) => onSaveFoodPrefs(e.target.value.trim())}
+                placeholder="Preferenze: es. vegetariano, niente fritti…"
+                aria-label="Preferenze alimentari"
+                title="Le ricette proposte ne terranno sempre conto"
+                className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-stone-400"
+              />
+            </div>
 
             {/* Aspetto (tema) */}
             <button

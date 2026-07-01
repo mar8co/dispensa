@@ -118,10 +118,9 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
                   ) : amOwner ? (
                     <button
                       onClick={() => setConfirmRemove(m)}
-                      className="ml-auto shrink-0 rounded-full p-1 text-stone-300 transition hover:bg-tomato/10 hover:text-tomato"
-                      aria-label={`Fai uscire ${memberName(m)}`}
+                      className="ml-auto shrink-0 rounded-md bg-stone-100 px-2.5 py-1 text-[10px] font-semibold text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
                     >
-                      <UserMinus className="h-3.5 w-3.5" />
+                      Rimuovi
                     </button>
                   ) : null}
                 </li>
@@ -141,7 +140,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
             <button
               onClick={() => setConfirmRemove(null)}
               disabled={busy === "remove"}
-              className="flex-1 rounded-lg border border-hair px-3 py-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-50 disabled:opacity-60"
+              className="flex-1 rounded-lg border-2 border-stone-300 px-3 py-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-50 disabled:opacity-60"
             >
               Annulla
             </button>
@@ -150,7 +149,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
               disabled={busy === "remove"}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-tomato px-3 py-2 text-xs font-semibold text-[#fff] transition hover:bg-tomato-700 disabled:opacity-60"
             >
-              {busy === "remove" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><UserMinus className="h-3.5 w-3.5" /> Fai uscire</>}
+              {busy === "remove" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><UserMinus className="h-3.5 w-3.5" /> Rimuovi</>}
             </button>
           </div>
         </div>
