@@ -3,19 +3,29 @@
 // cambiano il nucleo attivo (e quindi ricaricano i dati) passano da Dispensa
 // via props (onSwitch / onChanged); le altre chiamano db.js direttamente.
 import { useState, useEffect } from "react";
-import { Users, Copy, Check, Share2, LogOut, Loader2, UserPlus, DoorOpen } from "lucide-react";
+import { Users, Copy, Check, Share2, LogOut, Loader2, UserPlus, DoorOpen, Crown, UserMinus } from "lucide-react";
 import Button from "./Button.jsx";
-import { createInvite, acceptInvite, fetchMembers, leaveHousehold } from "../lib/db.js";
+import { createInvite, acceptInvite, fetchMembers, leaveHousehold, removeMember } from "../lib/db.js";
 
-export default function HouseholdSection({ households = [], activeHouseholdId, email, onSwitch, onChanged }) {
+export default function HouseholdSection({ households = [], activeHouseholdId, email, refreshKey, onSwitch, onChanged }) {
   const active = households.find((h) => h.id === activeHouseholdId) || households[0] || null;
   const [members, setMembers] = useState([]);
   const [code, setCode] = useState("");      // codice invito appena generato
   const [copied, setCopied] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinCode, setJoinCode] = useState("");
-  const [busy, setBusy] = useState("");      // "invite" | "join" | "leave"
+  const [busy, setBusy] = useState("");      // "invite" | "join" | "leave" | "remove"
+  const [confirmRemove, setConfirmRemove] = useState(null); // membro da far uscire
   const [msg, setMsg] = useState("");
+
+  const memberName = (m) => m.username || m.email || "—";
+  const me = members.find((m) => m.email && m.email === email) || null;
+  const amOwner = me?.role === "owner";
+
+  function reloadMembers() {
+    if (!active) { setMembers([]); return; }
+    fetchMembers(active.id).then(setMembers).catch(() => {});
+  }
 
   useEffect(() => {
     let off = false;
@@ -25,7 +35,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
     } else setMembers([]);
     return () => { off = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeHouseholdId]);
+  }, [activeHouseholdId, refreshKey]);
 
   async function invite() {
     if (!active) return;
@@ -70,6 +80,17 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
     } catch { setMsg("Non sono riuscito a uscire dal nucleo."); }
     setBusy("");
   }
+  async function kick() {
+    const target = confirmRemove;
+    if (!active || !target) return;
+    setBusy("remove"); setMsg("");
+    try {
+      await removeMember(active.id, target.user_id);
+      setConfirmRemove(null);
+      reloadMembers();
+    } catch { setMsg("Non sono riuscito a far uscire il membro."); }
+    setBusy("");
+  }
 
   if (!active) return null;
 
@@ -86,15 +107,54 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         </div>
         {members.length > 0 && (
           <ul className="mt-2 space-y-1">
-            {members.map((m) => (
-              <li key={m.user_id} className="flex items-center gap-2 text-xs text-stone-600">
-                <span className="min-w-0 truncate">{m.email || "—"}{m.email && m.email === email ? " (tu)" : ""}</span>
-                {m.role === "owner" && <span className="ml-auto shrink-0 rounded-full bg-tomato/10 px-2 py-0.5 text-[10px] font-bold text-tomato">creatore</span>}
-              </li>
-            ))}
+            {members.map((m) => {
+              const isMe = m.email && m.email === email;
+              const isOwner = m.role === "owner";
+              return (
+                <li key={m.user_id} className="flex items-center gap-2 text-xs text-stone-600">
+                  <span className="min-w-0 truncate">{memberName(m)}{isMe ? " (tu)" : ""}</span>
+                  {isOwner ? (
+                    <Crown className="ml-auto h-3.5 w-3.5 shrink-0 text-tomato" aria-label="Creatore" />
+                  ) : amOwner ? (
+                    <button
+                      onClick={() => setConfirmRemove(m)}
+                      className="ml-auto shrink-0 rounded-full p-1 text-stone-300 transition hover:bg-tomato/10 hover:text-tomato"
+                      aria-label={`Fai uscire ${memberName(m)}`}
+                    >
+                      <UserMinus className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
+
+      {/* Conferma: far uscire un membro */}
+      {confirmRemove && (
+        <div className="mt-2 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
+          <p className="text-xs text-stone-600">
+            Vuoi far uscire <span className="font-bold text-ink">{memberName(confirmRemove)}</span> dalla Dispensa condivisa?
+          </p>
+          <div className="mt-2.5 flex gap-2">
+            <button
+              onClick={() => setConfirmRemove(null)}
+              disabled={busy === "remove"}
+              className="flex-1 rounded-lg border border-hair px-3 py-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-50 disabled:opacity-60"
+            >
+              Annulla
+            </button>
+            <button
+              onClick={kick}
+              disabled={busy === "remove"}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-tomato px-3 py-2 text-xs font-semibold text-[#fff] transition hover:bg-tomato-700 disabled:opacity-60"
+            >
+              {busy === "remove" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><UserMinus className="h-3.5 w-3.5" /> Fai uscire</>}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Cambia nucleo attivo (solo con più di un nucleo) */}
       {households.length > 1 && (

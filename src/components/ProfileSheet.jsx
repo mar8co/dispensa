@@ -2,7 +2,7 @@
 // account, poi la "Dispensa familiare" sempre aperta (HouseholdSection), quindi
 // le Impostazioni in lista (righe espandibili: Preferenze alimentari, Aspetto) e
 // infine le azioni. "La nostra/tua" secondo `shared` (nucleo con più membri).
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap, Loader2,
   Leaf, Palette, ChevronDown, Users,
@@ -10,6 +10,7 @@ import {
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
 import { getTheme, setTheme } from "../lib/theme.js";
+import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
 
 const THEMES = [
   { id: "auto", label: "Auto", icon: SunMoon },
@@ -29,9 +30,19 @@ export default function ProfileSheet({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [delErr, setDelErr] = useState("");
+  const [username, setUsernameState] = useState("");
+  const [membersKey, setMembersKey] = useState(0);  // forza il refresh della lista membri
+
+  useEffect(() => { getMyUsername().then(setUsernameState).catch(() => {}); }, []);
 
   function chooseTheme(id) { setTheme(id); setThemeState(id); }
   const toggle = (id) => setOpen((o) => (o === id ? "" : id));
+  async function commitUsername(v) {
+    const name = v.trim();
+    if (name === username.trim()) return;
+    setUsernameState(name);
+    try { await saveUsername(name); setMembersKey((k) => k + 1); } catch { /* silenzioso */ }
+  }
 
   async function runDelete() {
     setDeleting(true); setDelErr("");
@@ -64,11 +75,29 @@ export default function ProfileSheet({
             </div>
           </div>
 
+          {/* Nome (username): come ti vedono gli altri nella dispensa condivisa */}
+          <div className="mt-3">
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Nome</label>
+            <input
+              defaultValue={username}
+              onBlur={(e) => commitUsername(e.target.value)}
+              maxLength={24}
+              placeholder="Come ti vedono gli altri"
+              className={`w-full rounded-xl border bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-stone-400 focus:ring-2 focus:ring-tomato/15 ${
+                shared && !username ? "border-tomato/40 ring-2 ring-tomato/15" : "border-hair"
+              }`}
+            />
+            {shared && !username && (
+              <p className="mt-1 text-xs font-medium text-tomato">Aggiungi un nome così gli altri ti riconoscono nella dispensa.</p>
+            )}
+          </div>
+
           {/* Dispensa familiare: sempre aperta */}
           <HouseholdSection
             households={households}
             activeHouseholdId={activeHouseholdId}
             email={email}
+            refreshKey={membersKey}
             onSwitch={onSwitchHousehold}
             onChanged={onHouseholdsChanged}
           />

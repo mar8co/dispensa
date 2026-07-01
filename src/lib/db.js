@@ -79,11 +79,43 @@ export async function acceptInvite(code) {
 export async function fetchMembers(householdId) {
   const { data, error } = await supabase
     .from("household_members")
-    .select("user_id, role, email, joined_at")
+    .select("user_id, role, email, username, joined_at")
     .eq("household_id", householdId)
     .order("joined_at", { ascending: true });
   if (error) throw error;
   return data || [];
+}
+
+// Il mio nome (username) scelto nel Profilo. Denormalizzato su ogni membership,
+// quindi ne basta una qualsiasi.
+export async function getMyUsername() {
+  const { data: s } = await supabase.auth.getSession();
+  const userId = s?.session?.user?.id;
+  if (!userId) return "";
+  const { data, error } = await supabase
+    .from("household_members")
+    .select("username")
+    .eq("user_id", userId)
+    .not("username", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.username || "";
+}
+
+// Imposta il mio nome su tutte le mie membership (via funzione SECURITY DEFINER).
+export async function setUsername(name) {
+  const { error } = await supabase.rpc("set_username", { new_username: String(name || "") });
+  if (error) throw error;
+}
+
+// Il creatore fa uscire un membro dal nucleo (via funzione SECURITY DEFINER).
+export async function removeMember(householdId, targetUserId) {
+  const { error } = await supabase.rpc("remove_member", {
+    p_household_id: householdId,
+    p_target: targetUserId,
+  });
+  if (error) throw error;
 }
 
 // Esce dal nucleo (rimuove la propria appartenenza).
