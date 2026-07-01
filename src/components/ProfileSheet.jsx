@@ -107,7 +107,7 @@ export default function ProfileSheet({
                 defaultValue={foodPrefs}
                 onBlur={(e) => onSaveFoodPrefs(e.target.value.trim())}
                 rows={2}
-                placeholder="Esigenze alimentari: allergie, vegetariano, pochi fritti… Le ricette ne terranno sempre conto."
+                placeholder="Esigenze alimentari: allergie, vegano, pochi fritti… Le ricette ne terranno sempre conto."
                 aria-label="Esigenze alimentari"
                 title="Le ricette proposte ne terranno sempre conto"
                 className="min-w-0 flex-1 resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-stone-400"
