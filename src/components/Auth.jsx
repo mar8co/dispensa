@@ -1,8 +1,9 @@
-// Schermata di accesso: 3 provider rapidi (Apple, Google, telefono via SMS) in
-// alto, poi accesso via email con link magico. Stile coerente con l'app
-// (palette cream/paper/ink/tomato, card arrotondate).
+// Schermata di accesso a pagina intera: 3 provider rapidi (Apple, Google,
+// telefono via SMS) in alto, poi accesso via email con link magico. Stile
+// coerente con l'app (palette cream/paper/ink/tomato) e con il tema attivo
+// (chiaro/scuro): niente card centrata, il contenuto riempie lo schermo.
 import { useState } from "react";
-import { Loader2, Mail, Check, Smartphone, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, Check, MessageSquareMore, ArrowLeft } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
 import PrivacySheet from "./PrivacySheet.jsx";
 
@@ -11,11 +12,11 @@ import PrivacySheet from "./PrivacySheet.jsx";
 // coerente anche in dark mode.
 const GRID_STYLE = {
   backgroundImage:
-    "linear-gradient(rgb(var(--tomato) / 0.14) 1px, transparent 1px)," +
-    "linear-gradient(90deg, rgb(var(--tomato) / 0.14) 1px, transparent 1px)",
-  backgroundSize: "24px 24px",
-  maskImage: "radial-gradient(115% 78% at 50% -8%, #000 22%, transparent 70%)",
-  WebkitMaskImage: "radial-gradient(115% 78% at 50% -8%, #000 22%, transparent 70%)",
+    "linear-gradient(rgb(var(--tomato) / 0.12) 1px, transparent 1px)," +
+    "linear-gradient(90deg, rgb(var(--tomato) / 0.12) 1px, transparent 1px)",
+  backgroundSize: "26px 26px",
+  maskImage: "radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 66%)",
+  WebkitMaskImage: "radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 66%)",
 };
 // Alone caldo dietro il logo.
 const GLOW_STYLE = {
@@ -131,166 +132,162 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-cream px-5">
-      <div className="w-full max-w-sm">
-        <div className="overflow-hidden rounded-3xl border border-hair bg-paper shadow-xl shadow-black/5">
-          {/* Header: logo su griglia tomato sfumata + titolo (sempre visibile) */}
-          <div className="relative overflow-hidden px-6 pb-7 pt-10 text-center">
-            <div aria-hidden className="pointer-events-none absolute inset-0" style={GRID_STYLE} />
-            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40" style={GLOW_STYLE} />
-            <div className="relative">
-              <img
-                src="/icon.svg"
-                alt="Dispensa"
-                className="mx-auto mb-4 h-16 w-16 rounded-[22%] shadow-lg shadow-black/10"
-              />
-              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Dispensa</div>
-              <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Bentornato 👋</h1>
-              <p className="mx-auto mt-2 max-w-[16rem] text-sm text-stone-500">
-                Accedi per ritrovare la tua dispensa ovunque.
-              </p>
-            </div>
-          </div>
+    <div className="flex min-h-[100svh] flex-col bg-cream px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]">
+      {/* Header: logo su griglia tomato sfumata + titolo (sempre visibile) */}
+      <div className="relative mx-auto w-full max-w-sm pt-2 text-center">
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={GRID_STYLE} />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40" style={GLOW_STYLE} />
+        <div className="relative">
+          <img
+            src="/icon.svg"
+            alt="Dispensa"
+            className="mx-auto mb-4 h-16 w-16 rounded-[22%] shadow-lg shadow-black/10"
+          />
+          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Dispensa</div>
+          <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Bentornato 👋</h1>
+          <p className="mx-auto mt-2 max-w-[16rem] text-sm text-stone-500">
+            Accedi per ritrovare la tua dispensa ovunque.
+          </p>
+        </div>
+      </div>
 
-          {/* Corpo: flusso telefono oppure schermata principale */}
-          {view === "phone" ? (
-            <div className="px-6 pb-7">
-              <button
-                onClick={backToMain}
-                className="-ml-1 mb-3 flex items-center gap-1 text-xs font-medium text-stone-400 transition hover:text-ink"
-              >
-                <ArrowLeft className="h-4 w-4" /> Indietro
-              </button>
+      {/* Corpo: flusso telefono oppure schermata principale */}
+      <div className="mx-auto mt-8 w-full max-w-sm">
+        {view === "phone" ? (
+          <>
+            <button
+              onClick={backToMain}
+              className="-ml-1 mb-3 flex items-center gap-1 text-xs font-medium text-stone-400 transition hover:text-ink"
+            >
+              <ArrowLeft className="h-4 w-4" /> Indietro
+            </button>
 
-              {phoneSent ? (
-                // Step 2: inserimento del codice ricevuto via SMS
-                <form onSubmit={verifySmsCode}>
-                  <label className="mb-1.5 block text-sm font-semibold text-ink">Codice ricevuto via SMS</label>
-                  <input
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    required
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    placeholder="123456"
-                    className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-center text-lg tracking-[0.3em] text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                  />
-                  <button
-                    type="submit"
-                    disabled={sending}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-                  >
-                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    Verifica e accedi
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setPhoneSent(false); setOtp(""); setErr(""); }}
-                    className="mt-3 block w-full text-center text-xs text-stone-400 transition hover:text-ink"
-                  >
-                    Cambia numero
-                  </button>
-                </form>
-              ) : (
-                // Step 1: inserimento del numero di telefono
-                <form onSubmit={sendSmsCode}>
-                  <label className="mb-1.5 block text-sm font-semibold text-ink">Numero di telefono</label>
-                  <input
-                    type="tel"
-                    autoComplete="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+39 333 123 4567"
-                    className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                  />
-                  <p className="mt-1.5 text-xs text-stone-400">Ti invieremo un codice via SMS. Includi il prefisso (+39).</p>
-                  <button
-                    type="submit"
-                    disabled={sending}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-                  >
-                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
-                    Invia codice via SMS
-                  </button>
-                </form>
-              )}
-
-              {err && <p className="mt-3 text-center text-xs font-semibold text-tomato">{err}</p>}
-            </div>
-          ) : sent ? (
-            // Conferma link email inviato
-            <div className="px-6 pb-7">
-              <div className="flex flex-col items-center gap-2 py-2 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tomato/10">
-                  <Check className="h-6 w-6 text-tomato" />
-                </div>
-                <p className="text-sm font-semibold text-ink">Controlla la tua email</p>
-                <p className="text-sm text-stone-500">
-                  Ti ho inviato un link di accesso a <span className="font-semibold text-ink">{email}</span>.
-                  Aprilo da questo dispositivo per entrare.
-                </p>
-                <button
-                  onClick={() => { setSent(false); setEmail(""); }}
-                  className="mt-2 text-xs text-stone-400 transition hover:text-ink"
-                >
-                  Usa un'altra email
-                </button>
-              </div>
-            </div>
-          ) : (
-            // Schermata principale: 3 provider rapidi + OPPURE + email
-            <div className="px-6 pb-7">
-              <div className="grid grid-cols-3 gap-2.5">
-                <SocialButton label="Continua con Apple" onClick={signInApple}>
-                  <AppleIcon />
-                </SocialButton>
-                <SocialButton label="Continua con Google" onClick={signInGoogle}>
-                  <GoogleIcon />
-                </SocialButton>
-                <SocialButton label="Accedi con il numero di telefono" onClick={openPhone}>
-                  <Smartphone className="h-[22px] w-[22px] text-ink" />
-                </SocialButton>
-              </div>
-
-              <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-stone-400">
-                <div className="h-px flex-1 bg-hair" /> OPPURE <div className="h-px flex-1 bg-hair" />
-              </div>
-
-              <form onSubmit={sendMagicLink}>
-                <label className="mb-1.5 block text-sm font-semibold text-ink">Email</label>
+            {phoneSent ? (
+              // Step 2: inserimento del codice ricevuto via SMS
+              <form onSubmit={verifySmsCode}>
+                <label className="mb-1.5 block text-sm font-semibold text-ink">Codice ricevuto via SMS</label>
                 <input
-                  type="email"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nome@email.it"
-                  className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-center text-lg tracking-[0.3em] text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
                 />
                 <button
                   type="submit"
                   disabled={sending}
                   className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
                 >
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  Invia link di accesso
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  Verifica e accedi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPhoneSent(false); setOtp(""); setErr(""); }}
+                  className="mt-3 block w-full text-center text-xs text-stone-400 transition hover:text-ink"
+                >
+                  Cambia numero
                 </button>
               </form>
+            ) : (
+              // Step 1: inserimento del numero di telefono
+              <form onSubmit={sendSmsCode}>
+                <label className="mb-1.5 block text-sm font-semibold text-ink">Numero di telefono</label>
+                <input
+                  type="tel"
+                  autoComplete="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+39 333 123 4567"
+                  className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+                />
+                <p className="mt-1.5 text-xs text-stone-400">Ti invieremo un codice via SMS. Includi il prefisso (+39).</p>
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+                >
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquareMore className="h-4 w-4" />}
+                  Invia codice via SMS
+                </button>
+              </form>
+            )}
 
-              {err && <p className="mt-3 text-center text-xs font-semibold text-tomato">{err}</p>}
+            {err && <p className="mt-3 text-center text-xs font-semibold text-tomato">{err}</p>}
+          </>
+        ) : sent ? (
+          // Conferma link email inviato
+          <div className="flex flex-col items-center gap-2 py-2 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tomato/10">
+              <Check className="h-6 w-6 text-tomato" />
             </div>
-          )}
-        </div>
+            <p className="text-sm font-semibold text-ink">Controlla la tua email</p>
+            <p className="text-sm text-stone-500">
+              Ti ho inviato un link di accesso a <span className="font-semibold text-ink">{email}</span>.
+              Aprilo da questo dispositivo per entrare.
+            </p>
+            <button
+              onClick={() => { setSent(false); setEmail(""); }}
+              className="mt-2 text-xs text-stone-400 transition hover:text-ink"
+            >
+              Usa un'altra email
+            </button>
+          </div>
+        ) : (
+          // Schermata principale: 3 provider rapidi + OPPURE + email
+          <>
+            <div className="grid grid-cols-3 gap-2.5">
+              <SocialButton label="Continua con Apple" onClick={signInApple}>
+                <AppleIcon />
+              </SocialButton>
+              <SocialButton label="Continua con Google" onClick={signInGoogle}>
+                <GoogleIcon />
+              </SocialButton>
+              <SocialButton label="Accedi con un codice via SMS" onClick={openPhone}>
+                <MessageSquareMore className="h-[22px] w-[22px] text-ink" />
+              </SocialButton>
+            </div>
 
-        {/* Link discreto all'informativa privacy, come nel Profilo */}
-        <div className="mt-5 text-center">
-          <button
-            onClick={() => setPrivacyOpen(true)}
-            className="text-[11px] text-stone-400 transition hover:text-stone-600 hover:underline"
-          >
-            Privacy Policy
-          </button>
-        </div>
+            <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-stone-400">
+              <div className="h-px flex-1 bg-hair" /> OPPURE <div className="h-px flex-1 bg-hair" />
+            </div>
+
+            <form onSubmit={sendMagicLink}>
+              <label className="mb-1.5 block text-sm font-semibold text-ink">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="latua@email.it"
+                className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+              />
+              <button
+                type="submit"
+                disabled={sending}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                Invia link di accesso
+              </button>
+            </form>
+
+            {err && <p className="mt-3 text-center text-xs font-semibold text-tomato">{err}</p>}
+          </>
+        )}
+      </div>
+
+      {/* Link discreto all'informativa privacy, ancorato in fondo alla pagina */}
+      <div className="mx-auto mt-auto w-full max-w-sm pt-8 text-center">
+        <button
+          onClick={() => setPrivacyOpen(true)}
+          className="text-[11px] text-stone-400 transition hover:text-stone-600 hover:underline"
+        >
+          Privacy Policy
+        </button>
       </div>
 
       {privacyOpen && <PrivacySheet onClose={() => setPrivacyOpen(false)} />}
@@ -298,7 +295,7 @@ export default function Auth() {
   );
 }
 
-// Bottone-provider quadrato con la sola icona (riga da 3 in alto).
+// Bottone-provider con la sola icona (riga da 3 in alto).
 function SocialButton({ onClick, label, children }) {
   return (
     <button
@@ -306,7 +303,7 @@ function SocialButton({ onClick, label, children }) {
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="flex h-14 items-center justify-center rounded-2xl border border-hair bg-paper transition hover:bg-stone-50 active:scale-[0.98]"
+      className="flex h-12 items-center justify-center rounded-2xl border border-hair bg-paper transition hover:bg-stone-50 active:scale-[0.98]"
     >
       {children}
     </button>
