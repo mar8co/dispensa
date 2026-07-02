@@ -13,6 +13,14 @@ import FaceIdIcon from "./FaceIdIcon.jsx";
 const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
 
 export default function Auth() {
+  // Il pulsante Face ID compare SOLO se su questo dispositivo è stata
+  // registrata una passkey (flag scritto dal Profilo alla registrazione):
+  // un pulsante che fallisce al primo tocco per chi non l'ha mai attivata
+  // è peggio di nessun pulsante. Letto al mount: il login si monta fresco.
+  const [hasDevicePasskey] = useState(() => {
+    try { return localStorage.getItem("dispensa-passkey-device") === "1"; } catch { return false; }
+  });
+  const showPasskey = CAN_USE_PASSKEY && hasDevicePasskey;
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false); // link email inviato
@@ -126,14 +134,14 @@ export default function Auth() {
         ) : (
           // Schermata principale: provider rapidi + OPPURE + email
           <>
-            <div className={`grid gap-2.5 ${CAN_USE_PASSKEY ? "grid-cols-3" : "grid-cols-2"}`}>
+            <div className={`grid gap-2.5 ${showPasskey ? "grid-cols-3" : "grid-cols-2"}`}>
               <SocialButton label="Continua con Apple" onClick={signInApple}>
                 <AppleIcon />
               </SocialButton>
               <SocialButton label="Continua con Google" onClick={signInGoogle}>
                 <GoogleIcon />
               </SocialButton>
-              {CAN_USE_PASSKEY && (
+              {showPasskey && (
                 <SocialButton label="Accedi con Face ID" onClick={signInPasskey} busy={passkeyBusy}>
                   <FaceIdIcon className="h-[23px] w-[23px] text-ink" />
                 </SocialButton>

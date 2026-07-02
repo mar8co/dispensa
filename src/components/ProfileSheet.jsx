@@ -67,6 +67,10 @@ export default function ProfileSheet({
       const { error } = await supabase.auth.registerPasskey();
       if (error) throw error;
       if (uid) localStorage.setItem(`dispensa-passkey-${uid}`, "1");
+      // Flag a livello DISPOSITIVO (non per-utente): il login lo usa per
+      // mostrare il pulsante Face ID solo dove una passkey esiste davvero,
+      // invece di un pulsante che fallisce al primo tocco.
+      localStorage.setItem("dispensa-passkey-device", "1");
       setPasskeyActive(true);
     } catch (e) {
       // Prompt di sistema annullato dall'utente: nessun errore da mostrare.
