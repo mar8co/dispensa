@@ -6,11 +6,16 @@ import { subscribeTimers, activeTimers } from "../lib/timers.js";
 
 export default function TimerBar({ onTap, bottom }) {
   const [, force] = useState(0);
+  const hasTimers = activeTimers().length > 0;
   useEffect(() => {
+    // La subscription risveglia il componente quando un timer parte/finisce;
+    // il tick al secondo serve SOLO col countdown a schermo: senza timer
+    // attivi niente re-render inutili (l'app resta aperta a lungo su iPhone).
     const unsub = subscribeTimers(() => force((x) => x + 1));
+    if (!hasTimers) return unsub;
     const int = setInterval(() => force((x) => x + 1), 1000);
     return () => { unsub(); clearInterval(int); };
-  }, []);
+  }, [hasTimers]);
 
   const list = activeTimers().sort((a, b) => a.endTime - b.endTime);
   if (!list.length) return null;

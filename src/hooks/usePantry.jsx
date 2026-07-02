@@ -241,7 +241,15 @@ export function usePantry({
         const fields = { qty: merged };
         if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
         working[idx] = { ...working[idx], ...fields };
-        toUpdate.push({ id: working[idx].id, fields });
+        if (working[idx].id) {
+          toUpdate.push({ id: working[idx].id, fields });
+        } else {
+          // Match su una riga NUOVA di questo stesso batch (es. due voci della
+          // revisione rinominate allo stesso nome): la quantità si fonde
+          // nell'insert in sospeso — updateItem(undefined) farebbe fallire tutto.
+          const pending = toInsert.find((r) => matchKey(r.name) === matchKey(working[idx].name));
+          if (pending) { pending.qty = merged; if (expiry) pending.expiry = expiry; }
+        }
       } else {
         const row = { name, qty, category: cat, expiry };
         toInsert.push(row);
