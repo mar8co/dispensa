@@ -7,22 +7,6 @@ import { Loader2, Mail, Check, MessageSquareMore, ArrowLeft } from "lucide-react
 import { supabase } from "../lib/supabase.js";
 import PrivacySheet from "./PrivacySheet.jsx";
 
-// Griglia sottile che sfuma verso il basso (tinta tomato) dietro il logo:
-// richiama il mockup di riferimento. Usa le variabili CSS così resta
-// coerente anche in dark mode.
-const GRID_STYLE = {
-  backgroundImage:
-    "linear-gradient(rgb(var(--tomato) / 0.12) 1px, transparent 1px)," +
-    "linear-gradient(90deg, rgb(var(--tomato) / 0.12) 1px, transparent 1px)",
-  backgroundSize: "26px 26px",
-  maskImage: "radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 66%)",
-  WebkitMaskImage: "radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 66%)",
-};
-// Alone caldo dietro il logo.
-const GLOW_STYLE = {
-  background: "radial-gradient(60% 100% at 50% 0%, rgb(var(--tomato) / 0.12), transparent 70%)",
-};
-
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -132,18 +116,9 @@ export default function Auth() {
   }
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col bg-cream px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]">
-      {/* Griglia + alone tomato: partono dal bordo superiore della pagina e
-          sfumano attorno al logo (larghezza allineata al contenuto, max-w-sm). */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 flex justify-center px-6">
-        <div className="relative w-full max-w-sm">
-          <div className="absolute inset-x-0 top-0 h-72" style={GRID_STYLE} />
-          <div className="absolute inset-x-0 top-0 h-52" style={GLOW_STYLE} />
-        </div>
-      </div>
-
+    <div className="flex min-h-[100svh] flex-col bg-cream px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]">
       {/* Header: logo + titolo */}
-      <div className="relative z-10 mx-auto w-full max-w-sm pt-2 text-center">
+      <div className="mx-auto w-full max-w-sm pt-2 text-center">
         <img
           src="/icon.svg"
           alt="Dispensa"
@@ -157,7 +132,7 @@ export default function Auth() {
       </div>
 
       {/* Corpo: flusso telefono oppure schermata principale */}
-      <div className="relative z-10 mx-auto mt-8 w-full max-w-sm">
+      <div className="mx-auto mt-8 w-full max-w-sm">
         {view === "phone" ? (
           <>
             <button
@@ -286,7 +261,7 @@ export default function Auth() {
       </div>
 
       {/* Link discreto all'informativa privacy, ancorato in fondo alla pagina */}
-      <div className="relative z-10 mx-auto mt-auto w-full max-w-sm pt-8 text-center">
+      <div className="mx-auto mt-auto w-full max-w-sm pt-8 text-center">
         <button
           onClick={() => setPrivacyOpen(true)}
           className="text-[11px] text-stone-400 transition hover:text-stone-600 hover:underline"
