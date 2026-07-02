@@ -169,11 +169,14 @@ function TopControls({ byAisle, setByAisle, allSelected, onSelectAll }) {
         <Store className="h-4 w-4" /> Per reparto
       </button>
       {/* Azione testuale (niente box): grigio come il testo di "Per reparto" */}
+      {/* "Rimetti in lista" (deseleziona, reversibile) e NON "Svuota
+          carrello": quella dicitura si confondeva col cestino della barra in
+          basso, che invece ELIMINA i prodotti presi. */}
       <button
         onClick={onSelectAll}
         className="flex h-9 items-center gap-1.5 px-2 text-sm font-semibold text-stone-600 transition hover:text-ink"
       >
-        <ListChecks className="h-4 w-4" /> {allSelected ? "Svuota carrello" : "Seleziona tutto"}
+        <ListChecks className="h-4 w-4" /> {allSelected ? "Rimetti in lista" : "Seleziona tutto"}
       </button>
     </div>
   );
