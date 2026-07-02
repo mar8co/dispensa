@@ -106,7 +106,7 @@ export default function ManualAddModal({
         {/* Categoria riconosciuta: visibile e correggibile prima di aggiungere */}
         {newName.trim() && (
           <div className="mt-2 flex items-center gap-2">
-            <span className="shrink-0 text-xs text-stone-400">Categoria</span>
+            <span className="shrink-0 text-xs text-stone-500">Categoria</span>
             <select
               value={effCat}
               onChange={(e) => setNewCat(e.target.value)}
@@ -122,7 +122,7 @@ export default function ManualAddModal({
             {CATEGORIES.includes(newCat) && (
               <button
                 onClick={() => setNewCat("")}
-                className="shrink-0 text-[11px] font-semibold text-stone-400 underline hover:text-ink"
+                className="shrink-0 text-[11px] font-semibold text-stone-500 underline hover:text-ink"
                 title="Torna alla categoria automatica"
               >
                 auto
@@ -190,7 +190,7 @@ export default function ManualAddModal({
         {/* Unità: pezzi di default, oppure peso/volume — aiuta le ricette
             a scalare le quantità con precisione */}
         <div className="mt-2.5 flex items-center gap-1.5">
-          <span className="text-xs text-stone-400">Unità:</span>
+          <span className="text-xs text-stone-500">Unità:</span>
           {UNITS.map(([value, label]) => (
             <button
               key={label}

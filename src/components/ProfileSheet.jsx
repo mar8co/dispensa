@@ -145,7 +145,7 @@ export default function ProfileSheet({
           />
 
           {/* Impostazioni: righe espandibili in-linea */}
-          <p className="mb-2 mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Impostazioni</p>
+          <p className="mb-2 mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Impostazioni</p>
           <div className="overflow-hidden rounded-xl border border-hair bg-paper">
             {/* Esigenze alimentari: sempre visibile, box da 2 righe */}
             <div className="flex items-start gap-3 px-3.5 py-2.5">
@@ -172,7 +172,7 @@ export default function ProfileSheet({
                 <FaceIdIcon className={`h-[19px] w-[19px] shrink-0 ${passkeyActive ? "text-stone-400" : "text-tomato"}`} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm text-ink">Face ID</span>
-                  <span className="block text-xs text-stone-400">
+                  <span className="block text-xs text-stone-500">
                     {passkeyActive ? "Attivo su questo dispositivo" : "Accesso rapido su questo dispositivo"}
                   </span>
                 </span>
@@ -195,7 +195,7 @@ export default function ProfileSheet({
             >
               <Palette className="h-[18px] w-[18px] text-stone-400" />
               <span className="flex-1 text-sm text-ink">Aspetto</span>
-              <span className="text-xs text-stone-400">{THEME_LABEL[theme]}</span>
+              <span className="text-xs text-stone-500">{THEME_LABEL[theme]}</span>
               <ChevronDown className={`h-4 w-4 text-stone-400 transition-transform ${open === "theme" ? "rotate-180" : ""}`} />
             </button>
             {open === "theme" && (
@@ -218,7 +218,7 @@ export default function ProfileSheet({
                     );
                   })}
                 </div>
-                {theme === "auto" && <p className="mt-2 text-xs text-stone-400">Segue le impostazioni del telefono.</p>}
+                {theme === "auto" && <p className="mt-2 text-xs text-stone-500">Segue le impostazioni del telefono.</p>}
               </div>
             )}
           </div>
@@ -265,7 +265,7 @@ export default function ProfileSheet({
 
           {/* Footer discreto: privacy e cancellazione account */}
           {!confirmDelete ? (
-            <div className="mt-2 flex items-center justify-center gap-2.5 text-[11px] text-stone-400">
+            <div className="mt-2 flex items-center justify-center gap-2.5 text-[11px] text-stone-500">
               {onOpenPrivacy && (
                 <>
                   <button onClick={() => { close(); onOpenPrivacy(); }} className="transition hover:text-stone-600 hover:underline">

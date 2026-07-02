@@ -126,7 +126,7 @@ export default function Auth() {
             </p>
             <button
               onClick={() => { setSent(false); setEmail(""); }}
-              className="mt-2 text-xs text-stone-400 transition hover:text-ink"
+              className="mt-2 text-xs text-stone-500 transition hover:text-ink"
             >
               Usa un'altra email
             </button>
@@ -148,7 +148,7 @@ export default function Auth() {
               )}
             </div>
 
-            <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-stone-400">
+            <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-stone-500">
               <div className="h-px flex-1 bg-hair" /> OPPURE <div className="h-px flex-1 bg-hair" />
             </div>
 
@@ -181,7 +181,7 @@ export default function Auth() {
       <div className="mx-auto mt-auto w-full max-w-sm pt-8 text-center">
         <button
           onClick={() => setPrivacyOpen(true)}
-          className="text-[11px] text-stone-400 transition hover:text-stone-600 hover:underline"
+          className="text-[11px] text-stone-500 transition hover:text-ink hover:underline"
         >
           Privacy Policy
         </button>

@@ -375,7 +375,7 @@ export default function PantryTab({
       )}
 
       {grouped.length === 0 && (
-        <p className="py-12 text-center text-sm text-stone-400">
+        <p className="py-12 text-center text-sm text-stone-500">
           {searchActive ? "Nessun prodotto trovato." : expFilter ? "Niente in scadenza. 🎉" : "Dispensa vuota. Tocca + per aggiungere."}
         </p>
       )}
@@ -501,7 +501,7 @@ export default function PantryTab({
                         }`}
                       >
                         <div className="pt-3">
-                          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+                          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500">
                             <Calendar className="h-3.5 w-3.5" /> Data di scadenza
                           </div>
                           <div className="flex items-center gap-2">
@@ -609,7 +609,7 @@ export default function PantryTab({
                       <ExpiryBadge date={it.expiry} />
                       {out && <span className="shrink-0 text-[11px] font-bold text-tomato">finito</span>}
                       <span aria-hidden="true" className="border-b border-dotted border-stone-300" style={{ flex: "1 0 12px" }} />
-                      <span className="shrink-0 text-xs font-medium text-stone-400">{qtyLabel(it.qty)}</span>
+                      <span className="shrink-0 text-xs font-medium text-stone-500">{qtyLabel(it.qty)}</span>
                     </button>
                   </li>
                 );

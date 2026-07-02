@@ -96,14 +96,14 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
 
   return (
     <>
-      <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Dispensa condivisa</p>
+      <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Dispensa condivisa</p>
 
       {/* Nucleo attivo + membri */}
       <div className="rounded-xl border border-hair bg-paper p-3.5">
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-tomato" />
           <span className="min-w-0 truncate text-sm font-semibold text-ink">{members.length > 1 ? "La nostra dispensa" : "La tua dispensa"}</span>
-          <span className="ml-auto shrink-0 text-xs text-stone-400">{members.length} {members.length === 1 ? "membro" : "membri"}</span>
+          <span className="ml-auto shrink-0 text-xs text-stone-500">{members.length} {members.length === 1 ? "membro" : "membri"}</span>
         </div>
         {members.length > 0 && (
           <ul className="mt-2 space-y-1">
@@ -221,7 +221,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         <button
           onClick={leave}
           disabled={busy === "leave"}
-          className="mt-2 flex w-full items-center justify-center gap-2 text-xs font-semibold text-stone-400 transition hover:text-tomato disabled:opacity-60"
+          className="mt-2 flex w-full items-center justify-center gap-2 text-xs font-semibold text-stone-500 transition hover:text-tomato disabled:opacity-60"
         >
           <LogOut className="h-3.5 w-3.5" /> Esci
         </button>

@@ -6,9 +6,9 @@ function Tab({ active, onClick, icon: Icon, label, badge, tourId }) {
   return (
     <button onClick={onClick} data-tour={tourId} className="relative flex flex-1 flex-col items-center gap-0.5 py-1">
       <span className={`flex items-center justify-center rounded-full px-3 py-1 transition ${active ? "bg-tomato/10" : ""}`}>
-        <Icon className={`h-[21px] w-[21px] ${active ? "text-tomato" : "text-stone-400"}`} strokeWidth={active ? 2.3 : 1.9} />
+        <Icon className={`h-[21px] w-[21px] ${active ? "text-tomato" : "text-stone-500"}`} strokeWidth={active ? 2.3 : 1.9} />
       </span>
-      <span className={`text-[10px] font-semibold tracking-wide ${active ? "text-tomato" : "text-stone-400"}`}>
+      <span className={`text-[10px] font-semibold tracking-wide ${active ? "text-tomato" : "text-stone-500"}`}>
         {label}
       </span>
       {badge > 0 && (

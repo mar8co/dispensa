@@ -26,7 +26,7 @@ export default function PrivacySheet({ onClose }) {
               <X className="h-5 w-5" />
             </button>
           </div>
-          <p className="text-xs text-stone-400">Come tratto i tuoi dati in Dispensa.</p>
+          <p className="text-xs text-stone-500">Come tratto i tuoi dati in Dispensa.</p>
 
           <Section title="Quali dati tratto">
             <p>• <strong className="text-ink">Account</strong>: il tuo indirizzo email (per l'accesso).</p>

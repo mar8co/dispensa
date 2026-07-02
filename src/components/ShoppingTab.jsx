@@ -536,7 +536,7 @@ export default function ShoppingTab({
       </div>
 
       {shopping.length === 0 && (
-        <p className="py-12 text-center text-sm text-stone-400">
+        <p className="py-12 text-center text-sm text-stone-500">
           La lista è vuota. Scrivi qui sopra cosa ti manca, dettalo col microfono
           o aggiungi i mancanti da una ricetta.
         </p>
@@ -566,7 +566,7 @@ export default function ShoppingTab({
 
             {/* Tutto preso: messaggio al centro dov'erano i prodotti. */}
             {todo.length === 0 && cart.length > 0 && (
-              <p className="py-6 text-center text-sm text-stone-400">Hai preso tutto! 🎉</p>
+              <p className="py-6 text-center text-sm text-stone-500">Hai preso tutto! 🎉</p>
             )}
 
             {/* Reparto "Nel carrello": gli articoli presi, barrati. */}

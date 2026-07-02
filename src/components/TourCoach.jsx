@@ -67,7 +67,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   const ExitBtn = (
     <button
       onClick={exit}
-      className="flex items-center gap-1 text-[11px] font-semibold text-stone-400 transition hover:text-ink"
+      className="flex items-center gap-1 text-[11px] font-semibold text-stone-500 transition hover:text-ink"
     >
       Esci dal tutorial <X className="h-3.5 w-3.5" />
     </button>
@@ -86,7 +86,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
       )}
       {step.hint ? (
         step.noSkip ? null : (
-          <button onClick={primary} className="shrink-0 text-[11px] font-semibold text-stone-400 underline transition hover:text-ink">
+          <button onClick={primary} className="shrink-0 text-[11px] font-semibold text-stone-500 underline transition hover:text-ink">
             salta
           </button>
         )
@@ -123,7 +123,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
                 <ArrowRight className="h-4 w-4 text-stone-400" />
                 <ScanLine className="h-4 w-4 text-tomato" />
               </div>
-              <div className="mb-2 text-center text-[11px] font-bold uppercase tracking-wide text-stone-400">
+              <div className="mb-2 text-center text-[11px] font-bold uppercase tracking-wide text-stone-500">
                 Alimenti riconosciuti
               </div>
               <ul className="divide-y divide-hair">
@@ -132,7 +132,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
                     <span className="flex items-center gap-2 font-semibold text-ink">
                       <span>{p.emoji}</span> {p.name}
                     </span>
-                    <span className="text-xs font-medium text-stone-400">{p.qty}</span>
+                    <span className="text-xs font-medium text-stone-500">{p.qty}</span>
                   </li>
                 ))}
               </ul>

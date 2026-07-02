@@ -110,7 +110,7 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
                     );
                   })}
                 </ul>
-                <p className="mt-3 text-xs text-stone-400">
+                <p className="mt-3 text-xs text-stone-500">
                   Lascia vuoto o 0 per togliere un prodotto dalla dispensa.
                 </p>
               </>

@@ -135,7 +135,7 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
               : <span className="font-sans text-sm font-normal italic text-stone-400">Es: «pane, un pacco di pasta, il latte e sei uova»</span>}
           </p>
         )}
-        <p className="mt-0.5 h-4 text-xs text-stone-400">
+        <p className="mt-0.5 h-4 text-xs text-stone-500">
           {!error && listening ? `Quando hai finito, tocca “${confirmLabel}”` : ""}
         </p>
 

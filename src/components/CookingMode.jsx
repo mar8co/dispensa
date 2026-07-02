@@ -71,7 +71,7 @@ export default function CookingMode({ recipe, onClose, onFinish }) {
             <StepTimer minutes={Number(s.timer)} id={`${recipe.title}-${i}`} label={recipe.title} />
           </div>
         ) : null}
-        <p className="mt-6 text-xs text-stone-400">Passaggio {i + 1} di {steps.length}</p>
+        <p className="mt-6 text-xs text-stone-500">Passaggio {i + 1} di {steps.length}</p>
       </div>
 
       {/* Comandi grandi, a portata di pollice. All'ultimo passaggio la CTA
@@ -106,7 +106,7 @@ export default function CookingMode({ recipe, onClose, onFinish }) {
         {last && (
           <button
             onClick={onClose}
-            className="mt-2 block w-full py-1.5 text-center text-xs font-semibold text-stone-400 transition hover:text-ink"
+            className="mt-2 block w-full py-1.5 text-center text-xs font-semibold text-stone-500 transition hover:text-ink"
           >
             Salta, non aggiornare
           </button>
