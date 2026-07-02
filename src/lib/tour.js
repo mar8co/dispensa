@@ -111,7 +111,7 @@ export const STEPS = [
   },
   {
     id: "spesa-info", view: "spesa", overlay: "banner",
-    title: "La tua spesa", text: "Qui hai la lista di cosa ti manca: scrivila o dettala a voce. Quando fai la spesa spunta i prodotti che prendi, poi tocca “Sposta in dispensa” per salvarli.",
+    title: "La tua spesa", text: "Qui hai la lista di cosa ti manca: scrivila o dettala a voce. Occhio: qui il tocco su una riga la mette nel carrello (in Dispensa invece la apre per modificarla); per modificare un articolo usa la matita. Quando hai preso tutto, tocca “Sposta in dispensa” per salvarlo.",
     advance: "next",
   },
   {
