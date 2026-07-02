@@ -12,7 +12,7 @@
 // API invariata rispetto a prima: i figli ricevono `close` (chiusura animata)
 // da usare nei pulsanti interni; `locked` blocca ogni chiusura (es. durante
 // un'elaborazione); `panelClass`/`handleClass` per il tema (es. scuro).
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Drawer } from "vaul";
 
 export default function Sheet({ onClose, locked = false, panelClass = "bg-cream", handleClass = "bg-stone-300", children }) {
@@ -24,6 +24,25 @@ export default function Sheet({ onClose, locked = false, panelClass = "bg-cream"
   // dopo l'animazione di chiusura (onAnimationEnd con open=false).
   const [open, setOpen] = useState(true);
   const close = () => { if (!locked) setOpen(false); };
+
+  // Invariante anti-freeze: quando l'ULTIMO drawer lascia il DOM, il body non
+  // deve restare con pointer-events:none (= tutta l'app sorda ai tocchi).
+  // Radix lo imposta all'apertura e lo ripristina a un valore salvato in una
+  // variabile condivisa tra tutti i layer; Vaul ci scrive sopra "auto" con
+  // timer propri. Con smontaggi fuori sequenza (foglio rimosso mentre è ancora
+  // aperto: analisi scontrino/barcode/voce, chiusure forzate del tutorial) o
+  // fogli sovrapposti (Profilo+Privacy) il ripristino può saltare. Il timeout
+  // rimanda il controllo a dopo i cleanup di Radix e gli eventuali mount di
+  // fogli successivi nello stesso tick: se un altro drawer esiste ancora, non
+  // si tocca nulla (ci penserà il suo smontaggio).
+  useEffect(() => () => {
+    setTimeout(() => {
+      if (!document.querySelector("[data-vaul-drawer]") &&
+          document.body.style.pointerEvents === "none") {
+        document.body.style.pointerEvents = "";
+      }
+    }, 0);
+  }, []);
 
   return (
     <Drawer.Root

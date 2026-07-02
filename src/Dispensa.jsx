@@ -66,9 +66,17 @@ const ReceiptScanModal = lazy(() => import("./components/ReceiptScanModal.jsx"))
 // tutorial) su iOS Safari può lasciare lo snapshot della transizione
 // "congelato" sopra la pagina, che intercetta i tocchi e blocca tutto. Se una
 // transizione è già in corso, applichiamo subito lo stato senza animare.
+// Due protezioni in più contro lo snapshot congelato (bug noti di Safari):
+//  - niente animazione se la pagina non è visibile (transizione avviata
+//    andando in background = snapshot che può non completarsi mai);
+//  - watchdog: se la transizione non termina entro un tempo massimo,
+//    skipTransition() rimuove d'ufficio l'overlay che intercetta i tocchi.
 let viewTransitionPending = false;
 function animateUI(fn) {
-  if (!document.startViewTransition || viewTransitionPending) { fn(); return; }
+  if (!document.startViewTransition || viewTransitionPending || document.visibilityState !== "visible") {
+    fn();
+    return;
+  }
   viewTransitionPending = true;
   let t;
   try {
@@ -78,7 +86,11 @@ function animateUI(fn) {
     fn();
     return;
   }
-  t.finished.catch(() => {}).finally(() => { viewTransitionPending = false; });
+  const watchdog = setTimeout(() => { try { t.skipTransition(); } catch { /* già finita */ } }, 1500);
+  t.finished.catch(() => {}).finally(() => {
+    clearTimeout(watchdog);
+    viewTransitionPending = false;
+  });
 }
 
 export default function Dispensa({ session }) {
