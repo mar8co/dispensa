@@ -599,13 +599,17 @@ export default function Dispensa({ session }) {
     let name = raw;
     let aiCategory = null;
     if (raw) {
+      // Overlay di analisi anche qui: la pulizia AI del nome può richiedere
+      // qualche secondo e senza feedback l'app sembrava bloccata.
+      setProcessing(true);
       try {
         const parsed = await aiCleanName(raw);
         if (parsed && parsed.name) {
           name = String(parsed.name).trim();
           aiCategory = parsed.category;
         }
-      } catch (e) { console.error(e); }
+      } catch (e) { console.error(e); /* non fatale: si tiene il nome grezzo */ }
+      finally { setProcessing(false); }
     }
     name = name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
     // Dizionario-first: le varianti note finiscono nella categoria giusta;

@@ -69,8 +69,12 @@ function offCategory(tags) {
 }
 
 async function lookupProduct(code) {
+  // Timeout esplicito: senza, una rete lenta lascia "Cerco il prodotto…"
+  // appeso per sempre (il fallimento è gestito: si prosegue come non trovato).
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`, { signal: controller.signal });
     const data = await res.json();
     if (data && data.status === 1 && data.product) {
       const p = data.product;
@@ -79,7 +83,9 @@ async function lookupProduct(code) {
       return { found: !!name, barcode: code, name, qty, category: offCategory(p.categories_tags) };
     }
   } catch {
-    // rete assente o errore: trattiamo come "non trovato"
+    // rete assente, timeout o errore: trattiamo come "non trovato"
+  } finally {
+    clearTimeout(timer);
   }
   return { found: false, barcode: code, name: "", qty: "1", category: null };
 }

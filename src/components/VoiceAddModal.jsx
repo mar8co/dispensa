@@ -19,6 +19,7 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
   const recRef = useRef(null);
   const finalRef = useRef("");
   const keepRef = useRef(false);
+  const sentRef = useRef(false); // anti doppio-invio: un solo onResult per apertura
 
   function begin() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -92,10 +93,11 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
   }, []);
 
   function confirm() {
+    if (sentRef.current) return; // il tap doppio non deve avviare due elaborazioni
     keepRef.current = false;
     try { recRef.current?.stop(); } catch { /* ignora */ }
     const t = transcript.trim();
-    if (t) onResult(t);
+    if (t) { sentRef.current = true; onResult(t); }
   }
 
   return (

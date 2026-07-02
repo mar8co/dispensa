@@ -106,10 +106,11 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
   }, [error]);
 
   function emitFromVideo() {
+    if (busy) return; // anti doppio-scatto: un solo onCapture per apertura
     const v = videoRef.current;
     if (!v || !v.videoWidth) return;
     const data64 = videoFrameToBase64(v); // frame reale, ridimensionato a 2000px
-    if (data64) onCapture(data64, "image/jpeg");
+    if (data64) { setBusy(true); onCapture(data64, "image/jpeg"); }
   }
 
   async function onPickFile(e) {
