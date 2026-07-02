@@ -129,6 +129,7 @@ export default function Dispensa({ session }) {
 
   // scontrino
   const [processing, setProcessing] = useState(false);
+  const processAbortRef = useRef(null); // "Annulla" sull'overlay di analisi AI
   const [receiptOpen, setReceiptOpen] = useState(false); // fotocamera integrata scontrino
   const [scanOpen, setScanOpen] = useState(false);
   const [scanItems, setScanItems] = useState([]);
@@ -397,14 +398,26 @@ export default function Dispensa({ session }) {
   });
 
   // Pulisce/genericizza un nome alimento via AI -> { name, category }.
-  async function aiCleanName(raw) {
+  async function aiCleanName(raw, signal) {
     const prompt =
       `Sei un assistente per una dispensa italiana. Dall'input dell'utente ricava il nome dell'alimento. ` +
       `${NAME_RULES} ` +
       `Assegna anche la categoria corretta seguendo queste istruzioni:\n${CATEGORY_PROMPT}\n` +
       `Input: "${raw}". ` +
       `Rispondi SOLO con JSON valido senza markdown: {"name":"...","category":"..."}`;
-    return callClaude([{ type: "text", text: prompt }], 256, { schema: NAME_SCHEMA, temperature: 0.1 });
+    return callClaude([{ type: "text", text: prompt }], 256, { schema: NAME_SCHEMA, temperature: 0.1, signal });
+  }
+
+  // Apre l'overlay di analisi con un AbortController fresco; ritorna il signal.
+  function beginProcessing() {
+    const ctrl = new AbortController();
+    processAbortRef.current = ctrl;
+    setProcessing(true);
+    return ctrl.signal;
+  }
+  function endProcessing() {
+    processAbortRef.current = null;
+    setProcessing(false);
   }
 
   // --- Nucleo familiare: cambia nucleo attivo (ricarica i dati) / aggiorna elenco ---
@@ -553,12 +566,12 @@ export default function Dispensa({ session }) {
   async function analyzeReceipt(data64, mediaType) {
     setReceiptOpen(false);
     if (!data64) return;
-    setProcessing(true);
+    const signal = beginProcessing();
     try {
       const parsed = await callClaude([
         { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: data64 } },
         { type: "text", text: RECEIPT_PROMPT },
-      ], 2048, { schema: ITEMS_SCHEMA, temperature: 0.1 });
+      ], 2048, { schema: ITEMS_SCHEMA, temperature: 0.1, signal });
       const raw = Array.isArray(parsed.items) ? parsed.items : [];
       // Rete di sicurezza: anche se l'AI non aggrega, uniamo qui i prodotti
       // con lo stesso nome sommando le quantità compatibili (mergeQty).
@@ -585,10 +598,13 @@ export default function Dispensa({ session }) {
         setScanOpen(true);
       }
     } catch (err) {
-      console.error(err);
-      showToast(aiErrorMessage(err, "Impossibile leggere l'immagine. Riprova con una foto più nitida."));
+      // Annullata dall'utente: si torna indietro in silenzio, niente toast.
+      if (err?.code !== "cancelled") {
+        console.error(err);
+        showToast(aiErrorMessage(err, "Impossibile leggere l'immagine. Riprova con una foto più nitida."));
+      }
     } finally {
-      setProcessing(false);
+      endProcessing();
     }
   }
 
@@ -601,15 +617,19 @@ export default function Dispensa({ session }) {
     if (raw) {
       // Overlay di analisi anche qui: la pulizia AI del nome può richiedere
       // qualche secondo e senza feedback l'app sembrava bloccata.
-      setProcessing(true);
+      const signal = beginProcessing();
       try {
-        const parsed = await aiCleanName(raw);
+        const parsed = await aiCleanName(raw, signal);
         if (parsed && parsed.name) {
           name = String(parsed.name).trim();
           aiCategory = parsed.category;
         }
-      } catch (e) { console.error(e); /* non fatale: si tiene il nome grezzo */ }
-      finally { setProcessing(false); }
+      } catch (e) {
+        // Annullata: si interrompe il flusso (niente revisione).
+        if (e?.code === "cancelled") { endProcessing(); return; }
+        console.error(e); // non fatale: si tiene il nome grezzo
+      }
+      finally { endProcessing(); }
     }
     name = name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
     // Dizionario-first: le varianti note finiscono nella categoria giusta;
@@ -928,7 +948,8 @@ export default function Dispensa({ session }) {
         </Suspense>
       )}
 
-      {/* Overlay di analisi: copre il momento di attesa dell'AI */}
+      {/* Overlay di analisi: copre il momento di attesa dell'AI. "Annulla"
+          aborta la richiesta (mai più di qualche secondo in ostaggio). */}
       {processing && (
         <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-5 bg-cream/95 px-10 text-center backdrop-blur">
           <img src="/analisi-spesa.png" alt="" className="h-auto w-[140px]" />
@@ -939,6 +960,12 @@ export default function Dispensa({ session }) {
               Identifico i prodotti e li aggiungo alla dispensa.
             </p>
           </div>
+          <button
+            onClick={() => processAbortRef.current?.abort()}
+            className="rounded-xl border border-hair bg-paper px-5 py-2.5 text-sm font-semibold text-stone-600 transition hover:bg-stone-50 active:scale-[0.98]"
+          >
+            Annulla
+          </button>
         </div>
       )}
 
