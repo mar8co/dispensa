@@ -1,24 +1,23 @@
 // Schermata di accesso a pagina intera: 3 provider rapidi (Apple, Google,
-// telefono via SMS) in alto, poi accesso via email con link magico. Stile
+// Face ID/passkey) in alto, poi accesso via email con link magico. Stile
 // coerente con l'app (palette cream/paper/ink/tomato) e con il tema attivo
 // (chiaro/scuro): niente card centrata, il contenuto riempie lo schermo.
 import { useState } from "react";
-import { Loader2, Mail, Check, MessageSquareMore, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, Check, ScanFace } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
 import PrivacySheet from "./PrivacySheet.jsx";
+
+// WebAuthn/passkey disponibile solo su contesti sicuri con l'API credenziali
+// (iPhone Safari/PWA la supporta). Se manca, nascondiamo il pulsante Face ID.
+const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false); // link email inviato
+  const [passkeyBusy, setPasskeyBusy] = useState(false); // ceremony Face ID in corso
   const [err, setErr] = useState("");
   const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
-
-  // Accesso via SMS: "main" (email + provider) oppure "phone" (numero → codice).
-  const [view, setView] = useState("main");
-  const [phone, setPhone] = useState("+39 ");
-  const [otp, setOtp] = useState("");
-  const [phoneSent, setPhoneSent] = useState(false); // codice SMS inviato
 
   async function sendMagicLink(e) {
     e.preventDefault();
@@ -68,50 +67,22 @@ export default function Auth() {
     }
   }
 
-  // Apre il flusso telefono (azzera lo stato precedente).
-  function openPhone() {
-    setErr(""); setPhoneSent(false); setOtp("");
-    setView("phone");
-  }
-  // Torna alla schermata principale (email + provider).
-  function backToMain() {
-    setErr("");
-    setView("main");
-  }
-
-  // Step 1: invia il codice OTP via SMS al numero (formato E.164, es. +39...).
-  async function sendSmsCode(e) {
-    e.preventDefault();
-    const num = phone.replace(/\s/g, "");
-    if (!num || num.length < 8 || sending) return;
-    setSending(true); setErr("");
+  // Accesso con Face ID/Touch ID (passkey già registrata dal Profilo su questo
+  // dispositivo). Il prompt lo mostra il sistema; al successo l'auth listener
+  // dell'app monta la schermata principale.
+  async function signInPasskey() {
+    if (passkeyBusy) return;
+    setErr(""); setPasskeyBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ phone: num });
-      if (error) throw error;
-      setPhoneSent(true);
-    } catch (e2) {
-      console.error(e2);
-      setErr("Invio SMS non riuscito o accesso via telefono non ancora configurato.");
-    } finally {
-      setSending(false);
-    }
-  }
-
-  // Step 2: verifica il codice ricevuto → l'auth listener dell'app fa entrare.
-  async function verifySmsCode(e) {
-    e.preventDefault();
-    const num = phone.replace(/\s/g, "");
-    const token = otp.trim();
-    if (!token || sending) return;
-    setSending(true); setErr("");
-    try {
-      const { error } = await supabase.auth.verifyOtp({ phone: num, token, type: "sms" });
+      const { error } = await supabase.auth.signInWithPasskey();
       if (error) throw error;
     } catch (e2) {
+      // L'utente ha annullato il prompt di sistema: niente da segnalare.
+      if (e2?.name === "NotAllowedError" || e2?.name === "AbortError") return;
       console.error(e2);
-      setErr("Codice non valido o scaduto. Riprova.");
+      setErr("Nessun Face ID su questo dispositivo. Accedi con email o Google, poi attivalo dal Profilo.");
     } finally {
-      setSending(false);
+      setPasskeyBusy(false);
     }
   }
 
@@ -131,74 +102,9 @@ export default function Auth() {
         </p>
       </div>
 
-      {/* Corpo: flusso telefono oppure schermata principale */}
+      {/* Corpo: conferma email inviata oppure schermata principale */}
       <div className="mx-auto mt-8 w-full max-w-sm">
-        {view === "phone" ? (
-          <>
-            <button
-              onClick={backToMain}
-              className="-ml-1 mb-3 flex items-center gap-1 text-xs font-medium text-stone-400 transition hover:text-ink"
-            >
-              <ArrowLeft className="h-4 w-4" /> Indietro
-            </button>
-
-            {phoneSent ? (
-              // Step 2: inserimento del codice ricevuto via SMS
-              <form onSubmit={verifySmsCode}>
-                <label className="mb-1.5 block text-sm font-semibold text-ink">Codice ricevuto via SMS</label>
-                <input
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  required
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                  placeholder="123456"
-                  className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-center text-lg tracking-[0.3em] text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                />
-                <button
-                  type="submit"
-                  disabled={sending}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-                >
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  Verifica e accedi
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setPhoneSent(false); setOtp(""); setErr(""); }}
-                  className="mt-3 block w-full text-center text-xs text-stone-400 transition hover:text-ink"
-                >
-                  Cambia numero
-                </button>
-              </form>
-            ) : (
-              // Step 1: inserimento del numero di telefono
-              <form onSubmit={sendSmsCode}>
-                <label className="mb-1.5 block text-sm font-semibold text-ink">Numero di telefono</label>
-                <input
-                  type="tel"
-                  autoComplete="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+39 333 123 4567"
-                  className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
-                />
-                <p className="mt-1.5 text-xs text-stone-400">Ti invieremo un codice via SMS. Includi il prefisso (+39).</p>
-                <button
-                  type="submit"
-                  disabled={sending}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-                >
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquareMore className="h-4 w-4" />}
-                  Invia codice via SMS
-                </button>
-              </form>
-            )}
-
-            {err && <p className="mt-3 text-center text-xs font-semibold text-tomato">{err}</p>}
-          </>
-        ) : sent ? (
+        {sent ? (
           // Conferma link email inviato
           <div className="flex flex-col items-center gap-2 py-2 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tomato/10">
@@ -217,18 +123,20 @@ export default function Auth() {
             </button>
           </div>
         ) : (
-          // Schermata principale: 3 provider rapidi + OPPURE + email
+          // Schermata principale: provider rapidi + OPPURE + email
           <>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className={`grid gap-2.5 ${CAN_USE_PASSKEY ? "grid-cols-3" : "grid-cols-2"}`}>
               <SocialButton label="Continua con Apple" onClick={signInApple}>
                 <AppleIcon />
               </SocialButton>
               <SocialButton label="Continua con Google" onClick={signInGoogle}>
                 <GoogleIcon />
               </SocialButton>
-              <SocialButton label="Accedi con un codice via SMS" onClick={openPhone}>
-                <MessageSquareMore className="h-[22px] w-[22px] text-ink" />
-              </SocialButton>
+              {CAN_USE_PASSKEY && (
+                <SocialButton label="Accedi con Face ID" onClick={signInPasskey} busy={passkeyBusy}>
+                  <ScanFace className="h-[22px] w-[22px] text-ink" />
+                </SocialButton>
+              )}
             </div>
 
             <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-stone-400">
@@ -275,17 +183,18 @@ export default function Auth() {
   );
 }
 
-// Bottone-provider con la sola icona (riga da 3 in alto).
-function SocialButton({ onClick, label, children }) {
+// Bottone-provider con la sola icona (riga in alto). `busy` mostra lo spinner.
+function SocialButton({ onClick, label, children, busy = false }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={busy}
       aria-label={label}
       title={label}
-      className="flex h-12 items-center justify-center rounded-2xl border border-hair bg-paper transition hover:bg-stone-50 active:scale-[0.98]"
+      className="flex h-12 items-center justify-center rounded-2xl border border-hair bg-paper transition hover:bg-stone-50 active:scale-[0.98] disabled:opacity-60"
     >
-      {children}
+      {busy ? <Loader2 className="h-[22px] w-[22px] animate-spin text-stone-400" /> : children}
     </button>
   );
 }

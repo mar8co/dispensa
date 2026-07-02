@@ -5,12 +5,17 @@
 import { useState, useEffect } from "react";
 import {
   X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap, Loader2,
-  Leaf, Palette, ChevronDown, Users,
+  Leaf, Palette, ChevronDown, Users, ScanFace, Check,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
+import { supabase } from "../lib/supabase.js";
 import { getTheme, setTheme } from "../lib/theme.js";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
+
+// WebAuthn/passkey disponibile solo dove esiste l'API credenziali (iPhone
+// Safari/PWA la supporta). Se manca, la riga Face ID non compare.
+const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
 
 const THEMES = [
   { id: "auto", label: "Auto", icon: SunMoon },
@@ -32,8 +37,45 @@ export default function ProfileSheet({
   const [delErr, setDelErr] = useState("");
   const [username, setUsernameState] = useState("");
   const [membersKey, setMembersKey] = useState(0);  // forza il refresh della lista membri
+  const [uid, setUid] = useState(null);              // id utente (chiave localStorage passkey)
+  const [passkeyActive, setPasskeyActive] = useState(false); // Face ID attivo su questo device
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [passkeyErr, setPasskeyErr] = useState("");
 
   useEffect(() => { getMyUsername().then(setUsernameState).catch(() => {}); }, []);
+
+  // Recupera l'uid e legge se il Face ID è già stato attivato su questo
+  // dispositivo (flag locale per-utente scritto al momento della registrazione).
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const id = data?.user?.id;
+      if (!id) return;
+      setUid(id);
+      setPasskeyActive(localStorage.getItem(`dispensa-passkey-${id}`) === "1");
+    }).catch(() => {});
+  }, []);
+
+  // Registra una passkey (Face ID/Touch ID) per l'utente loggato: richiede una
+  // sessione attiva, ed è per questo che l'attivazione vive nel Profilo e non
+  // nel login. Al successo salviamo il flag locale così il login mostrerà il
+  // pulsante "Accedi con Face ID" su questo dispositivo.
+  async function activatePasskey() {
+    if (passkeyBusy) return;
+    setPasskeyErr(""); setPasskeyBusy(true);
+    try {
+      const { error } = await supabase.auth.registerPasskey();
+      if (error) throw error;
+      if (uid) localStorage.setItem(`dispensa-passkey-${uid}`, "1");
+      setPasskeyActive(true);
+    } catch (e) {
+      // Prompt di sistema annullato dall'utente: nessun errore da mostrare.
+      if (e?.name === "NotAllowedError" || e?.name === "AbortError") return;
+      console.error(e);
+      setPasskeyErr("Attivazione non riuscita. Riprova.");
+    } finally {
+      setPasskeyBusy(false);
+    }
+  }
 
   function chooseTheme(id) { setTheme(id); setThemeState(id); }
   const toggle = (id) => setOpen((o) => (o === id ? "" : id));
@@ -113,6 +155,32 @@ export default function ProfileSheet({
                 className="min-w-0 flex-1 resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-stone-400"
               />
             </div>
+
+            {/* Face ID / passkey: attivazione dell'accesso rapido su questo
+                dispositivo (visibile solo dove WebAuthn è supportato) */}
+            {CAN_USE_PASSKEY && (
+              <button
+                onClick={activatePasskey}
+                disabled={passkeyBusy}
+                className="flex w-full items-center gap-3 border-t border-hair px-3.5 py-3 text-left transition hover:bg-stone-50 disabled:hover:bg-transparent"
+              >
+                <ScanFace className={`h-[18px] w-[18px] shrink-0 ${passkeyActive ? "text-stone-400" : "text-tomato"}`} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-ink">Face ID</span>
+                  <span className="block text-xs text-stone-400">
+                    {passkeyActive ? "Attivo su questo dispositivo" : "Accesso rapido su questo dispositivo"}
+                  </span>
+                </span>
+                {passkeyBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-stone-400" />
+                ) : passkeyActive ? (
+                  <Check className="h-[18px] w-[18px] text-emerald-600" />
+                ) : (
+                  <span className="rounded-lg border border-tomato/40 px-2.5 py-1 text-xs font-semibold text-tomato">Attiva</span>
+                )}
+              </button>
+            )}
+            {passkeyErr && <p className="border-t border-hair px-3.5 py-2 text-xs font-semibold text-tomato">{passkeyErr}</p>}
 
             {/* Aspetto (tema) */}
             <button

@@ -19,5 +19,9 @@ export const supabase = createClient(url, anonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    // Abilita le API passkey/WebAuthn (Face ID/Touch ID): signInWithPasskey e
+    // registerPasskey. È una feature ancora sperimentale di Supabase: senza
+    // questo flag i metodi passkey lanciano un errore descrittivo.
+    experimental: { passkey: true },
   },
 });

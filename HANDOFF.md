@@ -49,10 +49,13 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Funzionalità completate
 
-- **Auth** Supabase: magic-link (email), Google OAuth, Apple OAuth, telefono via
-  SMS/OTP (vedi "in sviluppo" per Apple e SMS). Login ridisegnato: header con
-  logo su griglia tomato, riga di 3 provider a icona (Apple/Google/telefono),
-  "OPPURE", email in basso. Gate in `src/App.jsx`; logout dal Profilo.
+- **Auth** Supabase: magic-link (email), Google OAuth, Apple OAuth, **Face ID/
+  passkey** (WebAuthn, vedi "in sviluppo" per Apple e passkey). Login **a pagina
+  intera** (niente card): logo, riga di 3 provider a icona
+  (Apple/Google/**Face ID**), "OPPURE", email in basso. Il pulsante Face ID chiama
+  `signInWithPasskey()`; l'attivazione della passkey vive nel **Profilo**
+  (`registerPasskey()`, richiede sessione attiva). Gate in `src/App.jsx`; logout
+  dal Profilo.
 - **Dispensa**: lista prodotti per categoria (collassabili), ricerca, ordinamento
   (persistito per-utente), stepper quantità con **mezzo pezzo (½)**, scadenze con
   banner ("scaduti" vs "in scadenza entro 7 gg", su due righe se entrambi),
@@ -91,10 +94,14 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 1. **"Continua con Apple"** — il codice è pronto (`Auth.jsx → signInApple`), ma
    richiede **configurazione esterna** (Apple Developer + Supabase). Vedi guida in
    fondo. Finché non è configurato, il pulsante dà errore "provider not enabled".
-2. **Accesso via telefono (SMS)** — il codice è pronto (`Auth.jsx → sendSmsCode` /
-   `verifySmsCode`, flusso numero → OTP), ma richiede un **provider SMS
-   configurato su Supabase** (Twilio o simile, a pagamento). Vedi guida in fondo.
-   Finché non è configurato, il pulsante dà errore all'invio del codice.
+2. **Face ID / passkey (WebAuthn)** — codice pronto e **gratuito** (nessun servizio
+   esterno): opt-in `experimental: { passkey: true }` in `src/lib/supabase.js`,
+   pulsante "Accedi con Face ID" nel login (`signInWithPasskey()`) e riga di
+   attivazione nel Profilo (`registerPasskey()`). Manca solo l'**abilitazione dal
+   dashboard Supabase** (Authentication → Passkeys) — vedi guida in fondo. È una
+   feature **beta** di Supabase (l'API può cambiare). Nota UX: la registrazione
+   richiede una sessione attiva, quindi la prima volta si entra con email/Google e
+   si attiva il Face ID dal Profilo; dagli accessi successivi il pulsante funziona.
 3. **Placeholder ricerca ricette** — l'utente vuole un testo che comunichi che la
    ricerca accetta "voglie/umore" e non solo ingredienti, in **una sola riga**
    senza andare a capo. **Decisione aperta**. Candidato consigliato:
@@ -276,29 +283,36 @@ Prerequisito: **Apple Developer Program (99 $/anno)**. Callback Supabase:
 
 ---
 
-## Appendice — Configurare l'accesso via telefono (SMS)
+## Appendice — Configurare l'accesso con Face ID (passkey/WebAuthn)
 
-Prerequisito: un **provider SMS** (Supabase non invia SMS da solo). Il più comune
-è **Twilio** (a consumo, pochi centesimi/SMS); in alternativa MessageBird,
-Vonage, Textlocal. Serve un account presso il provider con credenziali API.
+**Gratuito**: nessun servizio esterno né costi. Le passkey (Face ID/Touch ID)
+sono uno standard WebAuthn gestito da Supabase + dispositivo. È una feature
+**beta** di Supabase (`experimental: { passkey: true }`, già impostato in
+`src/lib/supabase.js`): l'API può cambiare senza preavviso.
 
-1. **Provider SMS** (es. Twilio): crea l'account, ottieni un **numero mittente**
-   abilitato (o un *Messaging Service SID*) e le credenziali (**Account SID** +
-   **Auth Token**). Per Twilio conviene usare **Verify** (gestione OTP integrata)
-   oppure il *Messaging Service*.
-2. **Supabase → Authentication → Providers → Phone**: *enable*, scegli il provider
-   (Twilio / Twilio Verify / MessageBird / Vonage), incolla le credenziali e il
-   numero/Service SID. Salva.
-3. **SMS OTP**: verifica in *Authentication → Providers → Phone* che la durata e
-   la lunghezza del codice siano adeguate (default 6 cifre, 60 s). Il template del
-   messaggio contiene `{{ .Code }}`.
-4. **Rate limit**: in *Authentication → Rate Limits* c'è un tetto SMS/ora
-   (default basso, per contenere i costi): alzalo solo se serve davvero.
-5. Il codice non va toccato: `signInWithOtp({ phone })` invia l'SMS e
-   `verifyOtp({ phone, token, type: "sms" })` completa l'accesso (già in
-   `Auth.jsx`). Il numero va in **formato E.164** (`+39...`), già gestito dalla UI
-   (prefisso `+39` precompilato, spazi rimossi prima dell'invio).
+Serve solo abilitarla dal dashboard:
 
-> Nota costi: gli SMS sono a pagamento e soggetti ad abusi (SMS-pumping). Se
-> l'accesso via telefono non serve, lasciarlo disabilitato: il pulsante mostrerà
-> un errore gestito, senza rompere il resto del login.
+1. **Supabase → Authentication → Passkeys**: attiva *Enable Passkey
+   authentication*.
+2. Compila i **Relying Party** (il dashboard li precompila da Site URL e nome
+   progetto — di solito basta confermare):
+   - **Display Name**: nome mostrato nel prompt (es. `Dispensa`).
+   - **RP ID**: il **dominio nudo** dell'app (es. `dispensa.vercel.app`), senza
+     schema/porta/path. In locale è `localhost`.
+   - **Origins**: fino a 5 origini permesse (es. `https://dispensa.vercel.app`,
+     `http://localhost:5173`).
+3. Salva. Requisito lato client: `@supabase/supabase-js` ≥ 2.105 (ok, in repo).
+
+Flusso (nessun codice da toccare):
+- **Attivazione** (una volta per dispositivo): l'utente entra con email/Google →
+  Profilo → **Impostazioni → Face ID → "Attiva"** → `registerPasskey()` (richiede
+  sessione attiva). Al successo si scrive il flag locale `dispensa-passkey-<uid>`.
+- **Accesso**: nel login il pulsante **Face ID** chiama `signInWithPasskey()`
+  (l'utente sceglie l'account dal prompt di sistema; non serve digitare l'email).
+
+> Note: la passkey si sincronizza via **iCloud Keychain** tra i dispositivi Apple
+> dell'utente. Il flag `dispensa-passkey-<uid>` è solo un indicatore UX locale
+> (per-dispositivo): se non c'è passkey registrata, `signInWithPasskey()` dà un
+> errore gestito e restano email/Google/Apple. La riga Face ID nel Profilo e il
+> pulsante nel login compaiono solo dove **WebAuthn è supportato**
+> (`window.PublicKeyCredential`).
