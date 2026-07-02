@@ -16,8 +16,10 @@ import {
 } from "../lib/pantry.js";
 import { CATEGORIES } from "../constants.js";
 import {
-  insertItem, insertMany, updateItem, deleteItem, deleteAllPantry, fetchPantry,
+  insertItem, insertMany, updateItem, deleteItem, deleteAllPantry,
 } from "../lib/db.js";
+import { enqueue } from "../lib/outbox.js";
+import { newLocalId } from "../lib/sync.js";
 import { tourSignal } from "../lib/tour.js";
 
 export function usePantry({
@@ -29,7 +31,20 @@ export function usePantry({
   bumpShopHistory,
   addToShoppingMerged,
 }) {
+  const uid = session.user.id;
   const [items, setItems] = useState([]);
+
+  // --- Persistenza resiliente (outbox v2) ---
+  // Lo stato locale si aggiorna SUBITO (optimistic, con id client-side
+  // definitivo); la scrittura sul DB parte in background e, se fallisce
+  // (offline), finisce nell'outbox per il replay al ritorno online. Niente
+  // più fallimenti silenziosi: aggiunte/eliminazioni funzionano anche offline.
+  const persistInsert = (row) =>
+    insertItem(row).catch(() => enqueue(uid, { table: "pantry", type: "insert", id: row.id, row }));
+  const persistUpdate = (id, fields) =>
+    updateItem(id, fields).catch(() => enqueue(uid, { table: "pantry", type: "update", id, fields }));
+  const persistDelete = (id) =>
+    deleteItem(id).catch(() => enqueue(uid, { table: "pantry", type: "delete", id }));
 
   // form aggiunta
   const [newName, setNewName] = useState("");
@@ -121,25 +136,22 @@ export function usePantry({
       ? newCat
       : (guessCategory(name) || "Altro");
     const expiry = newExpiry || null;
-    let result = null;
-    try {
-      const existing = items.find((x) => matchKey(x.name) === matchKey(name));
-      if (existing) {
-        const merged = normalizeWeight(mergeQty(existing.qty, qty));
-        const fields = { qty: merged };
-        if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
-        await updateItem(existing.id, fields);
-        setItems((prev) => prev.map((x) => (x.id === existing.id ? { ...x, ...fields } : x)));
-        result = { name: existing.name, merged: true, category: existing.category };
-      } else {
-        const row = await insertItem({ name, qty, category, expiry });
-        setItems((prev) => [...prev, row]);
-        result = { name, merged: false, category };
-      }
-      bumpShopHistory([name]);
-    } catch (e) {
-      console.error("Errore aggiunta prodotto:", e);
+    let result;
+    const existing = items.find((x) => matchKey(x.name) === matchKey(name));
+    if (existing) {
+      const merged = normalizeWeight(mergeQty(existing.qty, qty));
+      const fields = { qty: merged };
+      if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
+      setItems((prev) => prev.map((x) => (x.id === existing.id ? { ...x, ...fields } : x)));
+      persistUpdate(existing.id, fields);
+      result = { name: existing.name, merged: true, category: existing.category };
+    } else {
+      const row = { id: newLocalId(), name, qty, category, expiry };
+      setItems((prev) => [...prev, { ...row, created_at: new Date().toISOString() }]);
+      persistInsert(row);
+      result = { name, merged: false, category };
     }
+    bumpShopHistory([name]);
     setNewName(""); setNewQty("1"); setNewUnit(""); setNewCat(""); setNewExpiry(""); setAdding(false);
     if (result) tourSignal("product-added");
     return result;
@@ -152,23 +164,18 @@ export function usePantry({
     return addManual();
   }
 
-  // Elimina con possibilità di Annulla (re-inserisce il prodotto).
+  // Elimina con possibilità di Annulla (re-inserisce il prodotto con un
+  // nuovo id: se la delete è ancora in coda offline, il replay resta corretto
+  // — prima cancella il vecchio id, poi inserisce il nuovo).
   async function removeItem(it) {
-    try {
-      await deleteItem(it.id);
-      setItems((prev) => prev.filter((x) => x.id !== it.id));
-      showToast(<><strong>{it.name}</strong> eliminato</>, async () => {
-        try {
-          const row = await insertItem({
-            name: it.name, qty: it.qty, category: it.category, expiry: it.expiry,
-          });
-          setItems((prev) => [...prev, row]);
-          dismissToast();
-        } catch (e) { console.error("Errore ripristino:", e); }
-      });
-    } catch (e) {
-      console.error("Errore eliminazione:", e);
-    }
+    setItems((prev) => prev.filter((x) => x.id !== it.id));
+    persistDelete(it.id);
+    showToast(<><strong>{it.name}</strong> eliminato</>, () => {
+      const row = { id: newLocalId(), name: it.name, qty: it.qty, category: it.category, expiry: it.expiry };
+      setItems((prev) => [...prev, { ...row, created_at: new Date().toISOString() }]);
+      persistInsert(row);
+      dismissToast();
+    });
   }
 
   // Svuota tutto con possibilità di Annulla (re-inserisce l'intera dispensa).
@@ -176,32 +183,26 @@ export function usePantry({
     setConfirmClear(false);
     const backup = items;
     if (!backup.length) return;
-    try {
-      await deleteAllPantry();
-      setItems([]);
-      showToast(`Dispensa svuotata (${backup.length} prodotti)`, async () => {
-        try {
-          await insertMany(
-            backup.map(({ name, qty, category, expiry }) => ({ name, qty, category, expiry }))
-          );
-          setItems(await fetchPantry());
-          dismissToast();
-        } catch (e) { console.error("Errore ripristino dispensa:", e); }
+    setItems([]);
+    deleteAllPantry().catch(() => {
+      for (const x of backup) enqueue(uid, { table: "pantry", type: "delete", id: x.id });
+    });
+    showToast(`Dispensa svuotata (${backup.length} prodotti)`, () => {
+      const rows = backup.map(({ name, qty, category, expiry }) =>
+        ({ id: newLocalId(), name, qty, category, expiry }));
+      setItems(rows.map((r) => ({ ...r, created_at: new Date().toISOString() })));
+      insertMany(rows).catch(() => {
+        for (const r of rows) enqueue(uid, { table: "pantry", type: "insert", id: r.id, row: r });
       });
-    } catch (e) {
-      console.error("Errore svuotamento dispensa:", e);
-    }
+      dismissToast();
+    });
   }
 
   // Salvataggio automatico dal pannello prodotto: aggiorna subito e mostra
   // il toast "Modifica salvata" con Annulla (ripristina i valori di apertura).
   async function autoSaveItem(it, fields, restore) {
     setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...fields } : x)));
-    try {
-      await updateItem(it.id, fields);
-    } catch (e) {
-      console.error("Errore salvataggio modifica:", e);
-    }
+    persistUpdate(it.id, fields);
     // Quantità arrivata a zero: proponi la lista invece del semplice "salvata".
     const m = fields.qty != null ? String(fields.qty).replace(",", ".").match(/-?\d+(\.\d+)?/) : null;
     if (m && parseFloat(m[0]) === 0) {
@@ -213,7 +214,7 @@ export function usePantry({
     }
     showToast(<strong>Modifica salvata</strong>, async () => {
       setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...restore } : x)));
-      try { await updateItem(it.id, restore); } catch (e) { console.error("Errore ripristino:", e); }
+      persistUpdate(it.id, restore);
       dismissToast();
     }, "Annulla", "ink");
   }
@@ -223,8 +224,9 @@ export function usePantry({
     await autoSaveItem(it, { expiry: expiry || null }, { expiry: it.expiry || null });
   }
 
-  // Unisce prodotti in arrivo (scontrino) gestendo il merge per nome, poi
-  // ricarica la dispensa dal DB per avere gli id reali delle nuove righe.
+  // Unisce prodotti in arrivo (scontrino/voce/barcode) gestendo il merge per
+  // nome. Le righe nuove nascono con l'id client-side definitivo: lo stato si
+  // aggiorna subito (niente refetch) e la persistenza è resiliente all'offline.
   async function mergeItems(incoming) {
     const working = [...items];
     const toInsert = [];
@@ -241,28 +243,24 @@ export function usePantry({
         const fields = { qty: merged };
         if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
         working[idx] = { ...working[idx], ...fields };
-        if (working[idx].id) {
-          toUpdate.push({ id: working[idx].id, fields });
-        } else {
-          // Match su una riga NUOVA di questo stesso batch (es. due voci della
-          // revisione rinominate allo stesso nome): la quantità si fonde
-          // nell'insert in sospeso — updateItem(undefined) farebbe fallire tutto.
-          const pending = toInsert.find((r) => matchKey(r.name) === matchKey(working[idx].name));
-          if (pending) { pending.qty = merged; if (expiry) pending.expiry = expiry; }
-        }
+        // Match su una riga NUOVA di questo stesso batch (es. due voci della
+        // revisione rinominate allo stesso nome): la quantità si fonde
+        // nell'insert in sospeso, NON in un update (la riga non è ancora sul DB).
+        const pending = toInsert.find((r) => r.id === working[idx].id);
+        if (pending) { pending.qty = merged; if (expiry) pending.expiry = expiry; }
+        else toUpdate.push({ id: working[idx].id, fields });
       } else {
-        const row = { name, qty, category: cat, expiry };
+        const row = { id: newLocalId(), name, qty, category: cat, expiry };
         toInsert.push(row);
-        working.push(row);
+        working.push({ ...row, created_at: new Date().toISOString() });
       }
     }
-    try {
-      for (const u of toUpdate) await updateItem(u.id, u.fields);
-      if (toInsert.length) await insertMany(toInsert);
-      const rows = await fetchPantry();
-      setItems(rows);
-    } catch (e) {
-      console.error("Errore aggiornamento da scontrino:", e);
+    setItems(working);
+    for (const u of toUpdate) persistUpdate(u.id, u.fields);
+    if (toInsert.length) {
+      insertMany(toInsert).catch(() => {
+        for (const r of toInsert) enqueue(uid, { table: "pantry", type: "insert", id: r.id, row: r });
+      });
     }
   }
 

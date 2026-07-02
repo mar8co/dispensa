@@ -25,6 +25,8 @@ import { stopAlarm } from "./lib/timers.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
 import { sortedNames } from "./lib/history.js";
+import { enqueue, flush } from "./lib/outbox.js";
+import { applyOp } from "./lib/sync.js";
 
 import PantryTab from "./components/PantryTab.jsx";
 // Schede non di default in lazy: alleggeriscono il bundle iniziale (caricano
@@ -215,6 +217,7 @@ export default function Dispensa({ session }) {
   //     poi aggiorna dalla rete; se la rete manca si tiene la cache. ---
   useEffect(() => {
     const uid = session.user.id;
+    let onOnline = null; // replay outbox al ritorno online (registrato sotto)
     const cached = loadCache(uid);
     const cachedTs = cached?.ts || 0;
     if (cached) {
@@ -245,6 +248,12 @@ export default function Dispensa({ session }) {
         } catch (e) {
           console.warn("Household non disponibile (resto su per-utente).", e?.message || e);
         }
+        // Replay dell'outbox (scritture rimaste in coda offline): DOPO la
+        // risoluzione del nucleo, così gli insert rigiocati ricevono
+        // l'household_id giusto da db.js. Poi anche a ogni ritorno online.
+        onOnline = () => { flush(uid, applyOp); };
+        window.addEventListener("online", onOnline);
+        flush(uid, applyOp);
         let rows = await fetchPantry();
         // Primissimo accesso (nessuna cache + DB vuoto): popola i prodotti
         // demo e avvia l'onboarding, che alla fine li svuota per partire
@@ -294,6 +303,7 @@ export default function Dispensa({ session }) {
         setLoaded(true);
       }
     })();
+    return () => { if (onOnline) window.removeEventListener("online", onOnline); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -511,13 +521,18 @@ export default function Dispensa({ session }) {
     if (!checked.length) return;
     setMovingChecked(true);
     try {
+      // mergeItems è ottimistico e resiliente (outbox); la rimozione dalla
+      // lista segue lo stesso schema: subito a schermo, coda se offline.
       await mergeItems(checked.map((x) => ({ name: x.name, qty: x.qty })));
-      await deleteShoppingItems(checked.map((x) => x.id));
       setShopping((prev) => prev.filter((x) => !x.checked));
+      deleteShoppingItems(checked.map((x) => x.id)).catch(() => {
+        for (const x of checked) enqueue(session.user.id, { table: "shopping", type: "delete", id: x.id });
+      });
       bumpShopHistory(checked.map((x) => x.name)); // acquisti completati
       showToast(`${checked.length} ${checked.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`);
-    } catch (e) { console.error("Errore spostamento in dispensa:", e); }
-    setMovingChecked(false);
+    } finally {
+      setMovingChecked(false);
+    }
   }
   // --- Riordino generico (categorie e occasioni) ---
   function moveInOrder(setOrder, dragged, target) {

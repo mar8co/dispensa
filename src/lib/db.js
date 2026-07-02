@@ -156,10 +156,12 @@ export async function fetchPantry() {
   return data || [];
 }
 
-export async function insertItem({ name, qty, category, expiry = null }) {
+// `id` opzionale: le scritture ottimistiche/offline lo generano lato client
+// (uuid) così la riga locale ha già l'id definitivo (vedi lib/sync.js).
+export async function insertItem({ id = undefined, name, qty, category, expiry = null }) {
   const { data, error } = await supabase
     .from("pantry_items")
-    .insert({ name, qty, category, expiry: expiry || null, ...withHousehold() })
+    .insert({ ...(id ? { id } : {}), name, qty, category, expiry: expiry || null, ...withHousehold() })
     .select(PANTRY_COLS)
     .single();
   if (error) throw error;
@@ -171,7 +173,8 @@ export async function insertMany(rows) {
   if (!rows.length) return [];
   const { data, error } = await supabase
     .from("pantry_items")
-    .insert(rows.map(({ name, qty, category, expiry = null }) => ({ name, qty, category, expiry: expiry || null, ...withHousehold() })))
+    .insert(rows.map(({ id = undefined, name, qty, category, expiry = null }) =>
+      ({ ...(id ? { id } : {}), name, qty, category, expiry: expiry || null, ...withHousehold() })))
     .select(PANTRY_COLS);
   if (error) throw error;
   return data || [];
@@ -283,10 +286,12 @@ export async function fetchShopping() {
   return data || [];
 }
 
-export async function insertShopping({ name, qty = "1" }) {
+// `id` opzionale come per la dispensa; `checked` serve al replay dell'undo
+// "rimuovi i presi" (le righe tornano già barrate).
+export async function insertShopping({ id = undefined, name, qty = "1", checked = false }) {
   const { data, error } = await supabase
     .from("shopping_items")
-    .insert({ name, qty, ...withHousehold() })
+    .insert({ ...(id ? { id } : {}), name, qty, checked, ...withHousehold() })
     .select(SHOPPING_COLS)
     .single();
   if (error) throw error;
@@ -297,7 +302,8 @@ export async function insertManyShopping(rows) {
   if (!rows.length) return [];
   const { data, error } = await supabase
     .from("shopping_items")
-    .insert(rows.map(({ name, qty = "1", checked = false }) => ({ name, qty, checked, ...withHousehold() })))
+    .insert(rows.map(({ id = undefined, name, qty = "1", checked = false }) =>
+      ({ ...(id ? { id } : {}), name, qty, checked, ...withHousehold() })))
     .select(SHOPPING_COLS);
   if (error) throw error;
   return data || [];

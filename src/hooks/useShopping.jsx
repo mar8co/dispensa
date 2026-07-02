@@ -8,9 +8,10 @@
 // setMovingChecked) insieme a mergeItems della dispensa. I reparti corretti a
 // mano (shopCats) e la vista per reparto (byAisle) restano impostazioni in
 // Dispensa e sono passati qui dove servono.
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { callClaude, aiErrorMessage } from "../lib/claude.js";
-import { enqueue, flush } from "../lib/outbox.js";
+import { enqueue } from "../lib/outbox.js";
+import { newLocalId } from "../lib/sync.js";
 import {
   norm, normalizeWeight, mergeQty, correctName, adjustQty, guessCategory,
 } from "../lib/pantry.js";
@@ -41,25 +42,21 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     });
   }
 
-  // --- Scrittura resiliente all'offline (outbox) ---
-  // Lo stato locale è già ottimistico; qui ci assicuriamo che la scrittura sul
-  // DB avvenga, e se fallisce (offline) la mettiamo in coda per rigiocarla al
-  // ritorno online. v1: solo UPDATE di articoli esistenti (spunta/qty/nome).
-  function applyOp(op) {
-    if (op.type === "update") return updateShopping(op.id, op.fields);
-    return Promise.resolve();
-  }
+  // --- Scrittura resiliente all'offline (outbox v2) ---
+  // Lo stato locale è già ottimistico; la scrittura sul DB parte in background
+  // e, se fallisce (offline), finisce nell'outbox. Il replay vive in
+  // Dispensa.jsx (dopo la risoluzione del nucleo) via lib/sync.js → applyOp.
   function persistUpdate(id, fields) {
-    updateShopping(id, fields).catch(() => enqueue(uid, { type: "update", id, fields }));
+    updateShopping(id, fields).catch(() => enqueue(uid, { table: "shopping", type: "update", id, fields }));
   }
-  // Rigioca la coda al ritorno online (e una volta all'avvio, se c'è roba).
-  useEffect(() => {
-    const onOnline = () => { flush(uid, applyOp); };
-    window.addEventListener("online", onOnline);
-    flush(uid, applyOp);
-    return () => window.removeEventListener("online", onOnline);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  function persistDelete(id) {
+    deleteShopping(id).catch(() => enqueue(uid, { table: "shopping", type: "delete", id }));
+  }
+  function persistInsertMany(rows) {
+    insertManyShopping(rows).catch(() => {
+      for (const r of rows) enqueue(uid, { table: "shopping", type: "insert", id: r.id, row: r });
+    });
+  }
 
   // Reparto di un articolo: correzione manuale (per nome) o stima automatica.
   // Le correzioni che puntano a categorie non più esistenti vengono ignorate.
@@ -84,17 +81,16 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
       else if (inserts.has(k)) inserts.get(k).qty = normalizeWeight(mergeQty(inserts.get(k).qty, qty));
       else inserts.set(k, { name, qty });
     }
-    let newRows = [];
-    try {
-      for (const [id, qty] of updates) await updateShopping(id, { qty });
-      if (inserts.size) newRows = await insertManyShopping([...inserts.values()]);
-    } catch (e) { console.error("Errore aggiunta spesa:", e); }
-    // I nuovi inserimenti vanno in cima; i duplicati restano dove sono
-    // (si aggiorna solo la quantità).
+    // Righe nuove con id client-side definitivo: stato aggiornato SUBITO
+    // (in cima; i duplicati restano dove sono, cambia solo la quantità),
+    // persistenza in background resiliente all'offline.
+    const newRows = [...inserts.values()].map((e) => ({ id: newLocalId(), name: e.name, qty: e.qty }));
     setShopping((prev) => [
-      ...newRows,
+      ...newRows.map((r) => ({ ...r, checked: false, created_at: new Date().toISOString() })),
       ...prev.map((x) => (updates.has(x.id) ? { ...x, qty: updates.get(x.id) } : x)),
     ]);
+    for (const [id, qty] of updates) persistUpdate(id, { qty });
+    if (newRows.length) persistInsertMany(newRows);
     bumpShopHistory((entries || []).map((e) => e.name));
     return { added: newRows.length, merged: updates.size };
   }
@@ -158,19 +154,18 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   }
   async function removeShoppingItem(id) {
     const it = shopping.find((x) => x.id === id);
-    try {
-      await deleteShopping(id);
-      setShopping((prev) => prev.filter((x) => x.id !== id));
-      if (it) {
-        showToast(<><strong>{it.name}</strong> rimosso dalla lista</>, async () => {
-          try {
-            const row = await insertShopping({ name: it.name, qty: it.qty });
-            setShopping((prev) => [row, ...prev]);
-            dismissToast();
-          } catch (e) { console.error("Errore ripristino spesa:", e); }
-        });
-      }
-    } catch (e) { console.error("Errore rimozione spesa:", e); }
+    setShopping((prev) => prev.filter((x) => x.id !== id));
+    persistDelete(id);
+    if (it) {
+      // Undo con id NUOVO: se la delete è ancora in coda offline, il replay
+      // resta corretto (prima cancella il vecchio id, poi inserisce il nuovo).
+      showToast(<><strong>{it.name}</strong> rimosso dalla lista</>, () => {
+        const row = { id: newLocalId(), name: it.name, qty: it.qty };
+        setShopping((prev) => [{ ...row, checked: false, created_at: new Date().toISOString() }, ...prev]);
+        insertShopping(row).catch(() => enqueue(uid, { table: "shopping", type: "insert", id: row.id, row }));
+        dismissToast();
+      });
+    }
   }
   // Seleziona/deseleziona tutti gli articoli della spesa.
   async function toggleAllShopping() {
@@ -193,22 +188,22 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   async function clearCheckedShopping() {
     const checked = shopping.filter((x) => x.checked);
     if (!checked.length) return;
-    try {
-      await deleteShoppingItems(checked.map((x) => x.id));
-      setShopping((prev) => prev.filter((x) => !x.checked));
-      showToast(
-        `${checked.length} ${checked.length === 1 ? "articolo rimosso" : "articoli rimossi"} dalla lista`,
-        async () => {
-          try {
-            const rows = await insertManyShopping(
-              checked.map(({ name, qty }) => ({ name, qty, checked: true }))
-            );
-            setShopping((prev) => [...rows, ...prev]);
-            dismissToast();
-          } catch (e) { console.error("Errore ripristino lista:", e); }
-        }
-      );
-    } catch (e) { console.error("Errore rimozione barrati:", e); }
+    setShopping((prev) => prev.filter((x) => !x.checked));
+    deleteShoppingItems(checked.map((x) => x.id)).catch(() => {
+      for (const x of checked) enqueue(uid, { table: "shopping", type: "delete", id: x.id });
+    });
+    showToast(
+      `${checked.length} ${checked.length === 1 ? "articolo rimosso" : "articoli rimossi"} dalla lista`,
+      () => {
+        const rows = checked.map(({ name, qty }) => ({ id: newLocalId(), name, qty, checked: true }));
+        setShopping((prev) => [
+          ...rows.map((r) => ({ ...r, created_at: new Date().toISOString() })),
+          ...prev,
+        ]);
+        persistInsertMany(rows);
+        dismissToast();
+      }
+    );
   }
   // Aggiunge alla lista spesa gli ingredienti mancanti (chi è già in lista
   // viene saltato, senza toccarne la quantità).

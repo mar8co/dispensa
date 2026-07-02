@@ -1,11 +1,14 @@
-// Coda di scritture in attesa per la Lista della spesa: se una scrittura
+// Coda di scritture in attesa (dispensa + lista spesa): se una scrittura
 // fallisce (tipicamente perché sei offline), la mettiamo qui e la rigiochiamo
 // al ritorno online. Persistita in localStorage, per-utente.
 //
-// v1: contiene solo UPDATE di articoli ESISTENTI (spunta, quantità, nome,
-// reparto). Sono idempotenti per id, quindi il replay è sicuro e il Realtime
-// riconcilia da solo. L'aggiunta/eliminazione offline di articoli nuovi
-// richiede id generati lato client: sarà la v2.
+// v2: insert / update / delete su entrambe le tabelle, con id generati lato
+// client (uuid, vedi lib/sync.js → newLocalId): la riga ottimistica locale ha
+// già l'id definitivo, quindi il replay è idempotente (duplicato di insert =
+// successo; update/delete su riga assente = no-op) e il Realtime riconcilia.
+// Il formato op è { table, type, id, row?/fields? } — applicato da
+// lib/sync.js → applyOp; il replay parte da Dispensa.jsx dopo la risoluzione
+// del nucleo (così gli insert ricevono l'household_id giusto).
 const KEY = (uid) => `dispensa-outbox-${uid}`;
 
 function load(uid) {
