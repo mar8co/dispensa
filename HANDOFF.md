@@ -129,8 +129,16 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   viene sovrascritta dal DB **solo se il DB ha righe** (non si azzera il locale su
   fetch vuota transitoria). Tenere d'occhio.
 - **View Transition congelata** su iOS (tutorial / tap rapidi) — mitigato
-  serializzando le transizioni (`animateUI`, una alla volta). Se ricompare un
-  "freeze" dopo nuove animazioni, è quasi sempre lì.
+  serializzando le transizioni (`animateUI`, una alla volta) e, dal 2026-07-02,
+  **blindato**: niente animazione a pagina non visibile + watchdog che forza
+  `skipTransition()` dopo 1,5 s (lo snapshot congelato non può più intercettare
+  i tocchi all'infinito).
+- **Pulsanti che smettevano di rispondere** (navbar + metodi di inserimento,
+  intermittente dopo apertura/chiusura di fogli) — root cause individuata nel
+  `pointer-events: none` residuo sul body (race Radix/Vaul con smontaggi bruschi
+  dei drawer e fogli sovrapposti). Fix in `Sheet.jsx`: invariante allo
+  smontaggio — quando l'ultimo drawer lascia il DOM, il blocco viene rimosso.
+  **Da confermare sul telefono con uso prolungato.**
 
 ---
 
