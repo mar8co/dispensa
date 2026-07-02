@@ -623,38 +623,55 @@ export default function Dispensa({ session }) {
     }
   }
 
-  // Risultato della scansione barcode: genericizza il nome trovato e apre la revisione.
-  async function handleBarcodeResult(item) {
+  // Risultato della raffica barcode (array dal vassoio): genericizza i nomi
+  // trovati (AI in parallelo, con Annulla) e apre la revisione unica.
+  async function handleBarcodeResult(items) {
     setBarcodeOpen(false);
-    const raw = String(item?.name || "").trim();
-    let name = raw;
-    let aiCategory = null;
-    if (raw) {
-      // Overlay di analisi anche qui: la pulizia AI del nome può richiedere
-      // qualche secondo e senza feedback l'app sembrava bloccata.
-      const signal = beginProcessing();
-      try {
-        const parsed = await aiCleanName(raw, signal);
-        if (parsed && parsed.name) {
-          name = String(parsed.name).trim();
-          aiCategory = parsed.category;
+    const batch = Array.isArray(items) ? items : [items];
+    if (!batch.length) return;
+    const signal = beginProcessing();
+    try {
+      const cleaned = await Promise.all(batch.map(async (item) => {
+        const raw = String(item?.name || "").trim();
+        let name = raw;
+        let aiCategory = null;
+        if (raw) {
+          try {
+            const parsed = await aiCleanName(raw, signal);
+            if (parsed && parsed.name) {
+              name = String(parsed.name).trim();
+              aiCategory = parsed.category;
+            }
+          } catch (e) {
+            if (e?.code === "cancelled") throw e; // interrompe tutto il batch
+            console.error(e); // non fatale: si tiene il nome grezzo
+          }
         }
-      } catch (e) {
-        // Annullata: si interrompe il flusso (niente revisione).
-        if (e?.code === "cancelled") { endProcessing(); return; }
-        console.error(e); // non fatale: si tiene il nome grezzo
+        name = name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
+        // Dizionario-first: le varianti note finiscono nella categoria giusta;
+        // come fallback l'AI, poi la categoria dedotta dai tag Open Food Facts
+        // (gratis, già nel risultato del lookup) quando l'AI non ha una categoria.
+        return {
+          name,
+          qty: normalizeWeight(String(item?.qty || "1")),
+          category: categorize(name, aiCategory || item?.category),
+          found: !!item?.found,
+        };
+      }));
+      setScanItems(cleaned.map(({ name, qty, category }) => ({ name, qty, category })));
+      setScanOpen(true);
+      const missing = cleaned.filter((x) => !x.found).length;
+      if (missing) {
+        showToast(missing === 1
+          ? "Un codice non trovato: inserisci il nome del prodotto."
+          : `${missing} codici non trovati: inserisci i nomi.`);
       }
-      finally { endProcessing(); }
+    } catch (e) {
+      // Annullata dall'utente: niente revisione, nessun toast.
+      if (e?.code !== "cancelled") console.error(e);
+    } finally {
+      endProcessing();
     }
-    name = name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
-    // Dizionario-first: le varianti note finiscono nella categoria giusta;
-    // come fallback l'AI, poi la categoria dedotta dai tag Open Food Facts
-    // (gratis, già nel risultato del lookup) quando l'AI non ha una categoria.
-    const category = categorize(name, aiCategory || item?.category);
-    const qty = normalizeWeight(String(item?.qty || "1"));
-    setScanItems([{ name, qty, category }]);
-    setScanOpen(true);
-    if (!item?.found) showToast("Codice non trovato: inserisci il nome del prodotto.");
   }
 
   // Aggiunta a voce: la frase trascritta viene passata all'AI che estrae e

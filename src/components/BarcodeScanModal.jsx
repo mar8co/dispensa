@@ -1,13 +1,16 @@
-// Scansione codice a barre con la fotocamera (ZXing) + lookup su Open Food Facts.
-// Al primo codice letto cerca il prodotto e richiama onResult con i dati trovati
-// ({ found, barcode, name, qty }); poi il chiamante apre la modale di revisione.
+// Scansione codice a barre in RAFFICA (ZXing) + lookup su Open Food Facts.
+// Lo scanner resta acceso: ogni codice letto si accumula in un "vassoio"
+// visibile (chips con nome e conteggio; ri-scansione dello stesso prodotto =
+// quantità +1; tocco sulla chip = rimuovi). "Fatto (N)" consegna tutto al
+// chiamante (onResult riceve un ARRAY), che apre la revisione unica.
 //
 // Note iOS: limitiamo i formati ai codici prodotto (EAN/UPC) + TRY_HARDER per
 // una lettura molto più affidabile su Safari. C'è anche l'inserimento manuale.
 import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { DecodeHintType, BarcodeFormat } from "@zxing/library";
-import { ScanBarcode, Loader2, Keyboard, Search, Flashlight, FlashlightOff } from "lucide-react";
+import { ScanBarcode, Loader2, Keyboard, Search, Flashlight, FlashlightOff, Check, X } from "lucide-react";
+import { scaleQty, normalizeWeight } from "../lib/pantry.js";
 import CameraScanShell from "./CameraScanShell.jsx";
 
 // Messaggio d'errore fotocamera in base alla causa reale (err.name), così
@@ -97,7 +100,6 @@ export default function BarcodeScanModal({ onClose, onResult }) {
   // camera nera).
   const [videoEl, setVideoEl] = useState(null);
   const controlsRef = useRef(null);
-  const handledRef = useRef(false);
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
 
@@ -107,6 +109,60 @@ export default function BarcodeScanModal({ onClose, onResult }) {
   const [manualCode, setManualCode] = useState("");
   const [torchAvailable, setTorchAvailable] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
+
+  // --- Vassoio della raffica ---
+  // Ogni voce: { code, count, baseQty, name, category, found, status }.
+  // La quantità finale è baseQty × count (ri-scansioni dello stesso codice).
+  const [tray, setTray] = useState([]);
+  const trayRef = useRef(tray);
+  trayRef.current = tray;
+  const lastSeenRef = useRef(new Map()); // code → ts ultima lettura (cooldown)
+  const doneRef = useRef(false);         // "Fatto" già consegnato
+
+  // Un codice letto (dalla camera o a mano). ZXing in continuo riconsegna lo
+  // stesso codice a ogni frame: un cooldown per-codice distingue la raffica di
+  // frame (ignorata) dalla ri-scansione VOLUTA dello stesso prodotto (count+1).
+  function handleCode(code) {
+    const now = Date.now();
+    const last = lastSeenRef.current.get(code) || 0;
+    if (now - last < 2500) return;
+    lastSeenRef.current.set(code, now);
+    const existing = trayRef.current.find((t) => t.code === code);
+    if (existing) {
+      setTray((prev) => prev.map((t) => (t.code === code ? { ...t, count: t.count + 1 } : t)));
+      setStatus(`Ancora ${existing.name || "lo stesso codice"} · ×${existing.count + 1}`);
+      return;
+    }
+    setTray((prev) => [...prev, { code, count: 1, baseQty: "1", name: "", category: null, found: false, status: "loading" }]);
+    setStatus("Cerco il prodotto…");
+    lookupProduct(code).then((item) => {
+      setTray((prev) => prev.map((t) =>
+        t.code === code ? { ...t, name: item.name, baseQty: item.qty || "1", category: item.category, found: item.found, status: "ready" } : t
+      ));
+      setStatus(item.found ? `✓ ${item.name}` : "Codice non trovato: sistemi il nome dopo");
+    });
+  }
+
+  // Tocco su una chip: toglie il prodotto dal vassoio (scansione sbagliata).
+  function removeFromTray(code) {
+    setTray((prev) => prev.filter((t) => t.code !== code));
+    lastSeenRef.current.delete(code);
+  }
+
+  // "Fatto (N)": ferma lo scanner e consegna il vassoio al chiamante.
+  const anyLoading = tray.some((t) => t.status === "loading");
+  function finish() {
+    if (doneRef.current || anyLoading || !trayRef.current.length) return;
+    doneRef.current = true;
+    try { controlsRef.current?.stop(); } catch { /* ignora */ }
+    onResultRef.current(trayRef.current.map((t) => ({
+      barcode: t.code,
+      name: t.name,
+      qty: t.count > 1 ? normalizeWeight(scaleQty(t.baseQty || "1", t.count)) : (t.baseQty || "1"),
+      category: t.category,
+      found: t.found,
+    })));
+  }
 
   // Torcia: i controlli ZXing espongono switchTorch solo se il dispositivo la
   // supporta (di norma Android/Chrome; iOS Safari non la espone). Utile per i
@@ -118,15 +174,6 @@ export default function BarcodeScanModal({ onClose, onResult }) {
       await c.switchTorch(!torchOn);
       setTorchOn((v) => !v);
     } catch { /* non supportata davvero: ignora */ }
-  }
-
-  async function handleCode(code) {
-    if (handledRef.current) return;
-    handledRef.current = true;
-    try { controlsRef.current?.stop(); } catch { /* ignora */ }
-    setStatus("Cerco il prodotto…");
-    const item = await lookupProduct(code);
-    onResultRef.current(item);
   }
 
   useEffect(() => {
@@ -164,18 +211,54 @@ export default function BarcodeScanModal({ onClose, onResult }) {
   function submitManual(e) {
     e?.preventDefault();
     const code = manualCode.trim();
-    if (code) handleCode(code);
+    if (code) { handleCode(code); setManualCode(""); }
   }
 
   return (
     <CameraScanShell
       icon={ScanBarcode}
       title="Codice a barre"
-      subtitle="Inquadra il codice a barre del prodotto da aggiungere"
+      subtitle="Inquadra i codici uno dopo l'altro: li raccolgo qui sotto"
       onClose={onClose}
       previewClass="h-[38vh]"
       footer={
         <div className="w-full">
+          {/* Vassoio della raffica: una chip per prodotto (tocca per togliere) */}
+          {tray.length > 0 && (
+            <div className="no-scrollbar mb-2.5 flex gap-1.5 overflow-x-auto">
+              {tray.map((t) => (
+                <button
+                  key={t.code}
+                  onClick={() => removeFromTray(t.code)}
+                  aria-label={`Togli ${t.name || t.code}`}
+                  title="Togli dal vassoio"
+                  className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#fff]/15 px-2.5 py-1.5 text-xs font-semibold text-[#fff] transition active:scale-95"
+                >
+                  {t.status === "loading"
+                    ? <Loader2 className="h-3 w-3 animate-spin" />
+                    : <X className="h-3 w-3 text-[#fff]/60" />}
+                  <span className="max-w-[9rem] truncate">
+                    {t.name || (t.status === "loading" ? "…" : "Sconosciuto")}
+                  </span>
+                  {t.count > 1 && <span className="text-[#fff]/70">×{t.count}</span>}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Consegna: apre la revisione unica di tutti i prodotti raccolti */}
+          {tray.length > 0 && (
+            <button
+              onClick={finish}
+              disabled={anyLoading}
+              className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-tomato py-3 text-sm font-bold text-[#fff] transition active:scale-[0.99] disabled:opacity-60"
+            >
+              {anyLoading
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Cerco gli ultimi…</>
+                : <><Check className="h-4 w-4" /> Fatto ({tray.length})</>}
+            </button>
+          )}
+
           {manualMode && (
             <form onSubmit={submitManual} className="mb-3 flex items-center gap-2">
               <input
@@ -186,7 +269,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
                 placeholder="Es. 8001234567890"
                 className="flex-1 rounded-xl border border-[#fff]/30 bg-black/40 px-3 py-2.5 text-sm text-[#fff] placeholder-[#fff]/50 outline-none backdrop-blur focus:border-[#fff]/70"
               />
-              <button type="submit" aria-label="Cerca" className="flex items-center justify-center rounded-xl bg-[#fff] px-4 py-2.5 text-black transition active:scale-95">
+              <button type="submit" aria-label="Aggiungi al vassoio" className="flex items-center justify-center rounded-xl bg-[#fff] px-4 py-2.5 text-black transition active:scale-95">
                 <Search className="h-4 w-4" />
               </button>
             </form>
