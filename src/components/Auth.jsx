@@ -25,6 +25,12 @@ export default function Auth() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false); // link email inviato
   const [passkeyBusy, setPasskeyBusy] = useState(false); // ceremony Face ID in corso
+  // Spinner sul provider premuto: OAuth reindirizza la pagina, quindi al
+  // successo lo spinner resta acceso fino al redirect (si azzera solo su errore).
+  const [oauthBusy, setOauthBusy] = useState(null); // "apple" | "google" | null
+  // Errori separati per vicinanza al punto d'azione: quelli dei provider
+  // compaiono sotto la loro riga, quelli dell'email sotto il form.
+  const [provErr, setProvErr] = useState("");
   const [err, setErr] = useState("");
   const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
 
@@ -49,30 +55,36 @@ export default function Auth() {
   }
 
   async function signInGoogle() {
-    setErr("");
+    if (oauthBusy) return;
+    setProvErr(""); setOauthBusy("google");
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: window.location.origin },
       });
       if (error) throw error;
+      // Successo: parte il redirect, lo spinner resta acceso fino al cambio pagina.
     } catch (e2) {
       console.error(e2);
-      setErr("Accesso con Google non riuscito o non ancora configurato.");
+      setOauthBusy(null);
+      setProvErr("Accesso con Google non riuscito o non ancora configurato.");
     }
   }
 
   async function signInApple() {
-    setErr("");
+    if (oauthBusy) return;
+    setProvErr(""); setOauthBusy("apple");
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "apple",
         options: { redirectTo: window.location.origin },
       });
       if (error) throw error;
+      // Successo: parte il redirect, lo spinner resta acceso fino al cambio pagina.
     } catch (e2) {
       console.error(e2);
-      setErr("Accesso con Apple non riuscito o non ancora configurato.");
+      setOauthBusy(null);
+      setProvErr("Accesso con Apple non riuscito o non ancora configurato.");
     }
   }
 
@@ -81,7 +93,7 @@ export default function Auth() {
   // dell'app monta la schermata principale.
   async function signInPasskey() {
     if (passkeyBusy) return;
-    setErr(""); setPasskeyBusy(true);
+    setProvErr(""); setPasskeyBusy(true);
     try {
       const { error } = await supabase.auth.signInWithPasskey();
       if (error) throw error;
@@ -89,7 +101,7 @@ export default function Auth() {
       // L'utente ha annullato il prompt di sistema: niente da segnalare.
       if (e2?.name === "NotAllowedError" || e2?.name === "AbortError") return;
       console.error(e2);
-      setErr("Nessun Face ID su questo dispositivo. Accedi con email o Google, poi attivalo dal Profilo.");
+      setProvErr("Accesso con Face ID non riuscito. Entra con email o Google, poi riattivalo dal Profilo.");
     } finally {
       setPasskeyBusy(false);
     }
@@ -135,10 +147,10 @@ export default function Auth() {
           // Schermata principale: provider rapidi + OPPURE + email
           <>
             <div className={`grid gap-2.5 ${showPasskey ? "grid-cols-3" : "grid-cols-2"}`}>
-              <SocialButton label="Continua con Apple" onClick={signInApple}>
+              <SocialButton label="Continua con Apple" onClick={signInApple} busy={oauthBusy === "apple"}>
                 <AppleIcon />
               </SocialButton>
-              <SocialButton label="Continua con Google" onClick={signInGoogle}>
+              <SocialButton label="Continua con Google" onClick={signInGoogle} busy={oauthBusy === "google"}>
                 <GoogleIcon />
               </SocialButton>
               {showPasskey && (
@@ -147,6 +159,8 @@ export default function Auth() {
                 </SocialButton>
               )}
             </div>
+            {/* Errore dei provider: adiacente ai pulsanti, non in fondo pagina */}
+            {provErr && <p className="mt-3 text-center text-xs font-semibold text-tomato">{provErr}</p>}
 
             <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-stone-500">
               <div className="h-px flex-1 bg-hair" /> OPPURE <div className="h-px flex-1 bg-hair" />
