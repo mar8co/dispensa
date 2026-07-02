@@ -5,10 +5,11 @@
 import { useState, useEffect } from "react";
 import {
   X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap, Loader2,
-  Leaf, Palette, ChevronDown, Users, ScanFace, Check,
+  Leaf, Palette, ChevronDown, Users, Check,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
+import FaceIdIcon from "./FaceIdIcon.jsx";
 import { supabase } from "../lib/supabase.js";
 import { getTheme, setTheme } from "../lib/theme.js";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
@@ -96,7 +97,7 @@ export default function ProfileSheet({
     <Sheet onClose={onClose}>
       {(close) => (
         <div className="px-5 pb-3 pt-1">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between">
             <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Profilo</h3>
             <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
               <X className="h-5 w-5" />
@@ -140,7 +141,7 @@ export default function ProfileSheet({
           />
 
           {/* Impostazioni: righe espandibili in-linea */}
-          <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Impostazioni</p>
+          <p className="mb-2 mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">Impostazioni</p>
           <div className="overflow-hidden rounded-xl border border-hair bg-paper">
             {/* Esigenze alimentari: sempre visibile, box da 2 righe */}
             <div className="flex items-start gap-3 px-3.5 py-2.5">
@@ -164,7 +165,7 @@ export default function ProfileSheet({
                 disabled={passkeyBusy}
                 className="flex w-full items-center gap-3 border-t border-hair px-3.5 py-3 text-left transition hover:bg-stone-50 disabled:hover:bg-transparent"
               >
-                <ScanFace className={`h-[18px] w-[18px] shrink-0 ${passkeyActive ? "text-stone-400" : "text-tomato"}`} />
+                <FaceIdIcon className={`h-[19px] w-[19px] shrink-0 ${passkeyActive ? "text-stone-400" : "text-tomato"}`} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm text-ink">Face ID</span>
                   <span className="block text-xs text-stone-400">
@@ -219,7 +220,7 @@ export default function ProfileSheet({
           </div>
 
           {/* Azioni */}
-          <div className="mt-3 overflow-hidden rounded-xl border border-hair bg-paper">
+          <div className="mt-2 overflow-hidden rounded-xl border border-hair bg-paper">
             <button
               data-tour="clear-pantry"
               onClick={() => { close(); onClearPantry(); }}
@@ -260,7 +261,7 @@ export default function ProfileSheet({
 
           {/* Footer discreto: privacy e cancellazione account */}
           {!confirmDelete ? (
-            <div className="mt-3 flex items-center justify-center gap-2.5 text-[11px] text-stone-400">
+            <div className="mt-2 flex items-center justify-center gap-2.5 text-[11px] text-stone-400">
               {onOpenPrivacy && (
                 <>
                   <button onClick={() => { close(); onOpenPrivacy(); }} className="transition hover:text-stone-600 hover:underline">
@@ -274,7 +275,7 @@ export default function ProfileSheet({
               </button>
             </div>
           ) : (
-            <div className="mt-3 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
+            <div className="mt-2 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
               <p className="text-xs text-stone-600">Eliminare account e tutti i dati? L'azione è definitiva e non recuperabile.</p>
               {delErr && <p className="mt-1.5 text-xs font-semibold text-tomato">{delErr}</p>}
               <div className="mt-2.5 flex gap-2">

@@ -3,9 +3,10 @@
 // coerente con l'app (palette cream/paper/ink/tomato) e con il tema attivo
 // (chiaro/scuro): niente card centrata, il contenuto riempie lo schermo.
 import { useState } from "react";
-import { Loader2, Mail, Check, ScanFace } from "lucide-react";
+import { Loader2, Mail, Check } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
 import PrivacySheet from "./PrivacySheet.jsx";
+import FaceIdIcon from "./FaceIdIcon.jsx";
 
 // WebAuthn/passkey disponibile solo su contesti sicuri con l'API credenziali
 // (iPhone Safari/PWA la supporta). Se manca, nascondiamo il pulsante Face ID.
@@ -134,7 +135,7 @@ export default function Auth() {
               </SocialButton>
               {CAN_USE_PASSKEY && (
                 <SocialButton label="Accedi con Face ID" onClick={signInPasskey} busy={passkeyBusy}>
-                  <ScanFace className="h-[22px] w-[22px] text-ink" />
+                  <FaceIdIcon className="h-[23px] w-[23px] text-ink" />
                 </SocialButton>
               )}
             </div>
