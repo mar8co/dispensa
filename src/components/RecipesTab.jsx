@@ -53,7 +53,7 @@ export default function RecipesTab({
   servings, setServings, factor, backToIdeas,
   openCookModal, cookDone,
   hasIngredient, onAddMissing,
-  onRegenerate, onCustomAsk,
+  onRegenerate, onRetry, onCustomAsk,
   recipeContext = [], onToggleContext,
   savedRecipes, onOpenSaved, onDeleteSaved, isSaved, onToggleSave,
 }) {
@@ -128,6 +128,13 @@ export default function RecipesTab({
               );
             })}
           </div>
+          {/* Feedback: le pill agiscono sulle proposte FUTURE — senza questa
+              riga il toggle sembrava non fare nulla. */}
+          {recipeContext.length > 0 && (
+            <p className="animate-fade-in mt-2 text-xs font-medium text-stone-500">
+              Ne terrò conto nelle prossime proposte ✨
+            </p>
+          )}
 
           <div className="mt-5 grid grid-cols-2 gap-3">
             {orderedModes.map((m) => (
@@ -242,7 +249,9 @@ export default function RecipesTab({
           {recipeErr && !loadingIdeas && (
             <div className="rounded-xl border border-tomato/30 bg-tomato/5 p-4 text-center text-sm text-tomato">
               {recipeErr}
-              <button onClick={() => chooseMode(mode)} className="mt-2 block w-full rounded-lg bg-tomato py-2 font-semibold text-white">Riprova</button>
+              {/* Riprova ripete l'AZIONE fallita (ricetta o proposte), non
+                  rigenera a caso le idee dell'occasione. */}
+              <button onClick={onRetry} className="mt-2 block w-full rounded-lg bg-tomato py-2 font-semibold text-white">Riprova</button>
             </div>
           )}
 

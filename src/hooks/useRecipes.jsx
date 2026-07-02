@@ -53,6 +53,18 @@ export function useRecipes({
   const newGen = () => ++genRef.current;
   const isCurrent = (g) => g === genRef.current;
 
+  // Ultima azione AI fallita: "Riprova" deve ripetere QUELLA (la ricetta che
+  // stavi aprendo o le proposte che stavi generando), non rigenerare a caso
+  // le idee dell'occasione corrente.
+  const retryRef = useRef(null);
+  const retryLast = () => retryRef.current?.();
+
+  // Cache di sessione delle ricette generate (per titolo normalizzato):
+  // riaprire la STESSA idea deve dare la STESSA ricetta (e foto), non una
+  // rigenerazione diversa da quella che la card prometteva. In più: zero
+  // attesa e zero quota AI alla seconda apertura.
+  const recipeCacheRef = useRef({});
+
   // Riga di preferenze alimentari iniettata in tutti i prompt di cucina.
   const prefLine = foodPrefs.trim()
     ? `Preferenze alimentari dell'utente, da rispettare SEMPRE: ${foodPrefs.trim()}. `
@@ -168,6 +180,7 @@ export function useRecipes({
     } catch (err) {
       console.error(err);
       if (!isCurrent(gen)) return;
+      retryRef.current = () => chooseMode(m, force);
       setRecipeErr(aiErrorMessage(err, "Errore nel generare le proposte. Riprova."));
       setLoadingIdeas(false);
     }
@@ -217,6 +230,15 @@ export function useRecipes({
       });
       return;
     }
+    // Già generata in questa sessione: si riapre identica, senza AI.
+    const cached = recipeCacheRef.current[norm(title)];
+    if (cached) {
+      animateUI(() => {
+        setRecipe(cached); setServings(initialServings(cached));
+        setRecipeErr(""); setLoadingRecipe(false); setCookDone("");
+      });
+      return;
+    }
     animateUI(() => {
       setRecipe(null); setRecipeErr(""); setLoadingRecipe(true); setCookDone("");
     });
@@ -250,16 +272,20 @@ export function useRecipes({
         ...parsed,
         ingredients: parsed.ingredients.map((ing) => ({ ...ing, name: stripParens(ing?.name) })),
       };
+      recipeCacheRef.current[norm(title)] = clean; // stessa idea → stessa ricetta
       if (!isCurrent(gen)) return; // l'utente ha già cambiato vista
       animateUI(() => { setRecipe(clean); setServings(initialServings(clean)); setLoadingRecipe(false); });
       fetchPhotos([parsed.imageQuery || parsed.title]).then((urls) => {
-        if (urls[0] && isCurrent(gen)) {
+        if (!urls[0]) return;
+        recipeCacheRef.current[norm(title)] = { ...clean, image: urls[0] }; // cache con la foto
+        if (isCurrent(gen)) {
           setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
         }
       });
     } catch (err) {
       console.error(err);
       if (!isCurrent(gen)) return;
+      retryRef.current = () => openRecipe(title);
       setRecipeErr(aiErrorMessage(err, "Errore nel generare la ricetta. Riprova."));
       setLoadingRecipe(false);
     }
@@ -391,7 +417,7 @@ export function useRecipes({
     // contesto/umore (pill) delle proposte
     recipeContext, toggleRecipeContext,
     // funzioni
-    chooseMode, askCustom,
+    chooseMode, askCustom, retryLast,
     initialServings, changeServings,
     savedByTitle,
     openRecipe, openSavedRecipe,

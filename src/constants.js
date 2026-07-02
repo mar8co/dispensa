@@ -57,7 +57,6 @@ export const MODES = [
 export const RECIPE_CONTEXTS = [
   { id: "fresco", icon: "🥒", label: "Fresco", hint: "il piatto deve essere fresco, anche freddo o a temperatura ambiente" },
   { id: "caldo", icon: "🍜", label: "Caldo", hint: "il piatto deve essere caldo e confortante" },
-  { id: "piccante", icon: "🌶️", label: "Piccante", hint: "il piatto deve avere una nota piccante" },
   { id: "sostanzioso", icon: "🔋", label: "Sostanzioso", hint: "il piatto deve essere sostanzioso e saziante" },
   { id: "senzacottura", icon: "🌯", label: "Senza cottura", hint: "la ricetta NON deve richiedere alcuna cottura, né fornelli né forno: solo ingredienti crudi o già pronti da assemblare (insalate, piatti freddi, ecc.)" },
   { id: "proteico", icon: "🏋️", label: "Proteico", hint: "il piatto deve essere ricco di proteine" },
