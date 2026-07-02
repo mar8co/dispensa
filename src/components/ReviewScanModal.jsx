@@ -26,6 +26,12 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
       expiry: it.expiry || "",
     }))
   );
+  // Conferma prima di scartare: dopo un OCR riuscito, un tocco sulla X (o un
+  // drag involontario) non deve buttare via tutti i prodotti riconosciuti.
+  // Col foglio "pieno" il drag-to-dismiss è bloccato (locked) e X/Annulla
+  // aprono questa conferma; a foglio vuoto si chiude normalmente.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const dirty = items.length > 0;
 
   function update(id, field, val) {
     setItems((arr) => arr.map((x) => (x.id === id ? { ...x, [field]: val } : x)));
@@ -42,7 +48,7 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
     .filter((g) => g.list.length > 0);
 
   return (
-    <Sheet onClose={onCancel}>
+    <Sheet onClose={onCancel} locked={dirty}>
       {(close) => (
       <>
         <div className="flex items-start justify-between px-5 pb-3 pt-1">
@@ -51,7 +57,11 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
             <h3 className="mt-0.5 font-display text-xl font-extrabold tracking-tight text-ink">Prodotti riconosciuti</h3>
             <p className="mt-0.5 text-xs text-stone-500">Controlla nome, quantità e categoria, poi conferma.</p>
           </div>
-          <button onClick={close} className="-mr-1 rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
+          <button
+            onClick={() => (dirty ? setConfirmDiscard(true) : close())}
+            className="-mr-1 rounded-lg p-1.5 text-stone-400 hover:bg-stone-100"
+            aria-label="Chiudi"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -178,17 +188,35 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
           )}
         </div>
 
-        <div className="flex gap-2 border-t border-hair px-5 py-3">
-          <Button variant="secondary" className="flex-1" onClick={close}>
-            Annulla
-          </Button>
-          <Button variant="primary" className="flex-[2]" onClick={() => onConfirm(items)} disabled={items.length === 0}>
-            <Check className="h-4 w-4" />
-            {items.length > 0
-              ? `Aggiungi ${items.length} ${items.length === 1 ? "prodotto" : "prodotti"}`
-              : "Aggiungi"}
-          </Button>
-        </div>
+        {confirmDiscard ? (
+          <div className="border-t border-tomato/30 bg-tomato/5 px-5 py-3">
+            <p className="text-center text-xs font-semibold text-stone-600">
+              Scartare {items.length === 1 ? "il prodotto riconosciuto" : `i ${items.length} prodotti riconosciuti`}?
+            </p>
+            <div className="mt-2.5 flex gap-2">
+              <Button variant="secondary" className="flex-1" onClick={() => setConfirmDiscard(false)}>
+                Continua a modificare
+              </Button>
+              {/* onCancel diretto: smonta senza animazione (sicuro: vedi
+                  l'invariante in Sheet.jsx), close() qui è bloccato da locked. */}
+              <Button variant="danger" className="flex-1" onClick={onCancel}>
+                Scarta tutto
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-2 border-t border-hair px-5 py-3">
+            <Button variant="secondary" className="flex-1" onClick={() => (dirty ? setConfirmDiscard(true) : close())}>
+              Annulla
+            </Button>
+            <Button variant="primary" className="flex-[2]" onClick={() => onConfirm(items)} disabled={items.length === 0}>
+              <Check className="h-4 w-4" />
+              {items.length > 0
+                ? `Aggiungi ${items.length} ${items.length === 1 ? "prodotto" : "prodotti"}`
+                : "Aggiungi"}
+            </Button>
+          </div>
+        )}
       </>
       )}
     </Sheet>
