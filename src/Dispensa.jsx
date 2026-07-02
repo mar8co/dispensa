@@ -129,6 +129,17 @@ export default function Dispensa({ session }) {
   // stato connessione (per indicatore offline)
   const online = useOnline();
 
+  // Anti-"pulsante morto" sui fogli (Vaul chiude un foglio in ~500ms di
+  // animazione PRIMA di avvisare l'app che è chiuso davvero — vedi
+  // Sheet.jsx). Se l'utente ritocca lo stesso pulsante d'apertura durante
+  // quella finestra, lo stato booleano (es. `manualOpen`) è ancora `true`:
+  // React vede lo stesso valore e non riapre nulla, lasciando il foglio
+  // agganciato alla vecchia animazione di chiusura. Un contatore per foglio,
+  // usato come `key`, forza React a montare un'istanza FRESCA ogni volta che
+  // il foglio viene aperto, indipendentemente da quale stato avesse prima.
+  const modalEpoch = useRef({});
+  function bumpModal(name) { modalEpoch.current[name] = (modalEpoch.current[name] || 0) + 1; }
+
   // scontrino
   const [processing, setProcessing] = useState(false);
   const processAbortRef = useRef(null); // "Annulla" sull'overlay di analisi AI
@@ -610,6 +621,7 @@ export default function Dispensa({ session }) {
       else {
         // Non aggiunge subito: apre la modale di revisione per nome/categoria.
         setScanItems(list);
+        bumpModal("scan");
         setScanOpen(true);
       }
     } catch (err) {
@@ -659,6 +671,7 @@ export default function Dispensa({ session }) {
         };
       }));
       setScanItems(cleaned.map(({ name, qty, category }) => ({ name, qty, category })));
+      bumpModal("scan");
       setScanOpen(true);
       const missing = cleaned.filter((x) => !x.found).length;
       if (missing) {
@@ -702,6 +715,7 @@ export default function Dispensa({ session }) {
       setVoiceOpen(false);
       if (!list.length) { showToast("Non ho riconosciuto alimenti. Riprova."); return; }
       setScanItems(list);
+      bumpModal("scan");
       setScanOpen(true);
     } catch (e) {
       console.error(e);
@@ -796,6 +810,7 @@ export default function Dispensa({ session }) {
         : { itemId: match.id, name: match.name, used, before: match.qty, after: match.qty, kind: "pack" });
     }
     setCookRows(rows);
+    bumpModal("cook");
     setCookOpen(true);
   }
   function setRowAfter(idx, val) {
@@ -916,7 +931,7 @@ export default function Dispensa({ session }) {
             byAisle={byAisle} setByAisle={setByAisle}
             catFor={catForShopping}
             onAutoSave={autoSaveShopping}
-            onOpenVoice={() => setShopVoiceOpen(true)}
+            onOpenVoice={() => { bumpModal("shopVoice"); setShopVoiceOpen(true); }}
             onNotify={showToast}
             historyNames={sortedNames(shopHist)}
             pantryNames={items.map((i) => i.name)}
@@ -956,24 +971,28 @@ export default function Dispensa({ session }) {
       <BottomNav
         view={view}
         setView={changeView}
-        onProfile={() => { setProfileOpen(true); tourSignal("profile-opened"); }}
+        onProfile={() => { bumpModal("profile"); setProfileOpen(true); tourSignal("profile-opened"); }}
         shoppingCount={shopping.filter((s) => !s.checked).length}
         addSlot={view === "dispensa" && (
           <AddFab
             menuOpen={addMenuOpen}
             setMenuOpen={setAddMenuOpen}
-            onManual={() => setManualOpen(true)}
-            onPhoto={() => setReceiptOpen(true)}
-            onBarcode={() => setBarcodeOpen(true)}
-            onVoice={() => setVoiceOpen(true)}
+            onManual={() => { bumpModal("manual"); setManualOpen(true); }}
+            onPhoto={() => { bumpModal("receipt"); setReceiptOpen(true); }}
+            onBarcode={() => { bumpModal("barcode"); setBarcodeOpen(true); }}
+            onVoice={() => { bumpModal("voice"); setVoiceOpen(true); }}
           />
         )}
       />
 
-      {/* Fotocamera integrata per lo scontrino (anteprima live + galleria) */}
+      {/* Fotocamera integrata per lo scontrino (anteprima live + galleria).
+          key: forza un'istanza fresca del foglio a ogni apertura, anche se il
+          precedente sta ancora eseguendo l'animazione di chiusura di Vaul
+          (altrimenti il pulsante che lo riapre resterebbe senza effetto). */}
       {receiptOpen && (
         <Suspense fallback={null}>
           <ReceiptScanModal
+            key={modalEpoch.current.receipt}
             onClose={() => setReceiptOpen(false)}
             onCapture={analyzeReceipt}
           />
@@ -1003,6 +1022,7 @@ export default function Dispensa({ session }) {
 
       {manualOpen && (
         <ManualAddModal
+          key={modalEpoch.current.manual}
           newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
           unit={newUnit} setUnit={setNewUnit} newCat={newCat} setNewCat={setNewCat}
           newExpiry={newExpiry} setNewExpiry={setNewExpiry}
@@ -1014,6 +1034,7 @@ export default function Dispensa({ session }) {
 
       {profileOpen && (
         <ProfileSheet
+          key={modalEpoch.current.profile}
           email={session.user.email}
           itemCount={items.length}
           shared={sharedHousehold}
@@ -1028,23 +1049,24 @@ export default function Dispensa({ session }) {
             // Durante il tutorial lo svuotamento è guidato e immediato (niente
             // conferma): cancella i dati demo e avanza al passo finale.
             if (tour.active) { tourEmptyDemo(); tourSignal("pantry-cleared"); }
-            else setConfirmClear(true);
+            else { bumpModal("confirmClear"); setConfirmClear(true); }
           }}
           onLogout={logout}
           onReplayTour={replayTour}
           onDeleteAccount={deleteAccount}
-          onOpenPrivacy={() => setPrivacyOpen(true)}
+          onOpenPrivacy={() => { bumpModal("privacy"); setPrivacyOpen(true); }}
         />
       )}
 
-      {privacyOpen && <PrivacySheet onClose={() => setPrivacyOpen(false)} />}
+      {privacyOpen && <PrivacySheet key={modalEpoch.current.privacy} onClose={() => setPrivacyOpen(false)} />}
 
       {confirmClear && (
-        <ConfirmClearModal onCancel={() => setConfirmClear(false)} onConfirm={clearPantry} />
+        <ConfirmClearModal key={modalEpoch.current.confirmClear} onCancel={() => setConfirmClear(false)} onConfirm={clearPantry} />
       )}
 
       {cookOpen && (
         <CookModal
+          key={modalEpoch.current.cook}
           rows={cookRows}
           onClose={() => setCookOpen(false)}
           onSetAfter={setRowAfter}
@@ -1059,6 +1081,7 @@ export default function Dispensa({ session }) {
 
       {scanOpen && (
         <ReviewScanModal
+          key={modalEpoch.current.scan}
           initialItems={scanItems}
           onCancel={() => { setScanOpen(false); setScanItems([]); }}
           onConfirm={confirmScan}
@@ -1068,6 +1091,7 @@ export default function Dispensa({ session }) {
       {barcodeOpen && (
         <Suspense fallback={null}>
           <BarcodeScanModal
+            key={modalEpoch.current.barcode}
             onClose={() => setBarcodeOpen(false)}
             onResult={handleBarcodeResult}
           />
@@ -1076,6 +1100,7 @@ export default function Dispensa({ session }) {
 
       {voiceOpen && (
         <VoiceAddModal
+          key={modalEpoch.current.voice}
           processing={voiceProcessing}
           onCancel={() => { if (!voiceProcessing) setVoiceOpen(false); }}
           onResult={handleVoiceResult}
@@ -1085,6 +1110,7 @@ export default function Dispensa({ session }) {
       {/* Aggiunta a voce per la lista della spesa */}
       {shopVoiceOpen && (
         <VoiceAddModal
+          key={modalEpoch.current.shopVoice}
           processing={shopVoiceProcessing}
           onCancel={() => { if (!shopVoiceProcessing) setShopVoiceOpen(false); }}
           onResult={handleShoppingVoice}
