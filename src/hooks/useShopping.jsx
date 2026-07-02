@@ -9,7 +9,7 @@
 // mano (shopCats) e la vista per reparto (byAisle) restano impostazioni in
 // Dispensa e sono passati qui dove servono.
 import { useState, useEffect } from "react";
-import { callClaude } from "../lib/claude.js";
+import { callClaude, aiErrorMessage } from "../lib/claude.js";
 import { enqueue, flush } from "../lib/outbox.js";
 import {
   norm, normalizeWeight, mergeQty, correctName, adjustQty, guessCategory,
@@ -145,7 +145,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
       console.error(e);
       setShopVoiceProcessing(false);
       setShopVoiceOpen(false);
-      showToast("Errore nell'elaborare la voce. Riprova.");
+      showToast(aiErrorMessage(e, "Errore nell'elaborare la voce. Riprova."));
     }
   }
   async function toggleShoppingItem(id, checked) {

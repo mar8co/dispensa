@@ -11,8 +11,8 @@
 // stringa dispensa per i prompt, helper UI) e restituisce stato + setter +
 // funzioni, così l'orchestrazione del tutorial e il CookModal possono ancora
 // leggere/scrivere lo stato ricette.
-import { useState } from "react";
-import { callClaude, fetchPhotos } from "../lib/claude.js";
+import { useState, useRef } from "react";
+import { callClaude, fetchPhotos, aiErrorMessage } from "../lib/claude.js";
 import { RECIPES_SCHEMA, RECIPE_CONTEXTS } from "../constants.js";
 import { norm, stripParens } from "../lib/pantry.js";
 import { upsertSavedRecipe, updateSavedRecipe, deleteSavedRecipe } from "../lib/db.js";
@@ -43,6 +43,15 @@ export function useRecipes({
   const [loadingRecipe, setLoadingRecipe] = useState(false);
   const [recipeErr, setRecipeErr] = useState("");
   const [savedRecipes, setSavedRecipes] = useState(() => loadSavedRecipes(uid) || []); // ricettario (salvate + cucinate)
+
+  // Contatore di "generazione" della vista ricette: ogni navigazione (nuova
+  // occasione, apertura ricetta, indietro) lo incrementa. Le risposte asincrone
+  // (AI e foto) committano SOLO se il loro id è ancora quello corrente: così
+  // una risposta lenta di una richiesta vecchia non sovrascrive mai ciò che
+  // l'utente sta guardando ora (race classica dei tap rapidi).
+  const genRef = useRef(0);
+  const newGen = () => ++genRef.current;
+  const isCurrent = (g) => g === genRef.current;
 
   // Riga di preferenze alimentari iniettata in tutti i prompt di cucina.
   const prefLine = foodPrefs.trim()
@@ -112,6 +121,7 @@ export function useRecipes({
   }
 
   async function chooseMode(m, force = false) {
+    const gen = newGen(); // invalida le richieste precedenti ancora in volo
     scrollToTop(); // le 5 proposte partono sempre dall'alto
     // Richiesta libera ("Cosa ti va?"): niente cache, sempre fresca.
     if (!force && !m.custom) {
@@ -142,21 +152,23 @@ export function useRecipes({
       // Schema strutturato per blindare la forma; niente temperature bassa qui:
       // per le proposte serve varietà (default creativo del modello).
       const parsed = await callClaude([{ type: "text", text: prompt }], 1500, { schema: RECIPES_SCHEMA });
-      const list = Array.isArray(parsed.recipes) ? parsed.recipes : [];
+      // Validazione: si tengono solo le proposte con un titolo reale (una
+      // risposta parzialmente malformata non deve produrre card vuote).
+      const list = (Array.isArray(parsed?.recipes) ? parsed.recipes : [])
+        .filter((r) => r && typeof r.title === "string" && r.title.trim());
+      if (!isCurrent(gen)) return; // l'utente ha già cambiato vista
       animateUI(() => { setIdeas(list); setLoadingIdeas(false); });
-      if (!m.custom && list.length) saveIdeasCache(ideasCacheKey(m), list);
-      if (list.length) {
-        fetchPhotos(list.map((r) => r.imageQuery || r.title)).then((urls) => {
-          const withPhotos = list.map((r, i) => (urls[i] ? { ...r, image: urls[i] } : r));
-          setIdeas(withPhotos);
-          if (!m.custom) saveIdeasCache(ideasCacheKey(m), withPhotos);
-        });
-      }
+      if (!list.length) { setRecipeErr("Nessuna proposta generata. Riprova."); return; }
+      if (!m.custom) saveIdeasCache(ideasCacheKey(m), list);
+      fetchPhotos(list.map((r) => r.imageQuery || r.title)).then((urls) => {
+        const withPhotos = list.map((r, i) => (urls[i] ? { ...r, image: urls[i] } : r));
+        if (!m.custom) saveIdeasCache(ideasCacheKey(m), withPhotos); // la cache resta utile anche se la vista è cambiata
+        if (isCurrent(gen)) setIdeas(withPhotos);
+      });
     } catch (err) {
       console.error(err);
-      setRecipeErr(err?.status === 429
-        ? "Limite di richieste AI raggiunto. Attendi qualche secondo e riprova."
-        : "Errore nel generare le proposte. Riprova.");
+      if (!isCurrent(gen)) return;
+      setRecipeErr(aiErrorMessage(err, "Errore nel generare le proposte. Riprova."));
       setLoadingIdeas(false);
     }
   }
@@ -183,6 +195,7 @@ export function useRecipes({
     savedRecipes.find((r) => norm(r.title) === norm(String(title || "")));
 
   async function openRecipe(title) {
+    const gen = newGen(); // invalida le richieste precedenti ancora in volo
     // Durante il tutorial la ricetta d'esempio è precaricata (niente AI).
     if (tourActive && norm(title) === norm(TOUR_RECIPE.title)) {
       scrollToTop();
@@ -220,20 +233,34 @@ export function useRecipes({
     try {
       // Spazio abbondante: le ricette lunghe troncavano il JSON (errore 502).
       const parsed = await callClaude([{ type: "text", text: prompt }], 2500);
+      // Validazione strutturale PRIMA dell'uso: una ricetta senza ingredienti
+      // o senza passaggi non è renderizzabile né cucinabile — meglio l'errore
+      // pulito (con "Riprova") che una schermata mezza vuota.
+      const valid = parsed && typeof parsed.title === "string" && parsed.title.trim() &&
+        Array.isArray(parsed.ingredients) && parsed.ingredients.length &&
+        Array.isArray(parsed.steps) && parsed.steps.length;
+      if (!valid) {
+        const err = new Error("Ricetta AI incompleta");
+        err.status = 502;
+        throw err;
+      }
       // Rete di sicurezza: se l'AI mette comunque parentesi nei nomi degli
       // ingredienti, le togliamo (altrimenti vengono troncate e confondono).
-      const clean = Array.isArray(parsed?.ingredients)
-        ? { ...parsed, ingredients: parsed.ingredients.map((ing) => ({ ...ing, name: stripParens(ing?.name) })) }
-        : parsed;
+      const clean = {
+        ...parsed,
+        ingredients: parsed.ingredients.map((ing) => ({ ...ing, name: stripParens(ing?.name) })),
+      };
+      if (!isCurrent(gen)) return; // l'utente ha già cambiato vista
       animateUI(() => { setRecipe(clean); setServings(initialServings(clean)); setLoadingRecipe(false); });
       fetchPhotos([parsed.imageQuery || parsed.title]).then((urls) => {
-        if (urls[0]) setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
+        if (urls[0] && isCurrent(gen)) {
+          setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
+        }
       });
     } catch (err) {
       console.error(err);
-      setRecipeErr(err?.status === 429
-        ? "Limite di richieste AI raggiunto. Attendi qualche secondo e riprova."
-        : "Errore nel generare la ricetta. Riprova.");
+      if (!isCurrent(gen)) return;
+      setRecipeErr(aiErrorMessage(err, "Errore nel generare la ricetta. Riprova."));
       setLoadingRecipe(false);
     }
   }
@@ -243,6 +270,7 @@ export function useRecipes({
   // Apre una ricetta del ricettario (nessuna chiamata AI).
   function openSavedRecipe(row) {
     if (!row?.data) return;
+    newGen(); // le risposte in volo di richieste precedenti non devono più committare
     animateUI(() => {
       setMode(null); setIdeas([]); setRecipeErr(""); setCookDone(""); setLoadingRecipe(false);
       setRecipe({ ...row.data, image: row.data.image || row.image || undefined });
@@ -340,10 +368,12 @@ export function useRecipes({
   }
 
   function backToModes() {
+    newGen(); // niente commit tardivi sulla vista delle occasioni
     animateUI(() => { setMode(null); setIdeas([]); setRecipe(null); setRecipeErr(""); setCookDone(""); });
     scrollToTop();
   }
   function backToIdeas() {
+    newGen(); // niente commit tardivi sulla lista delle proposte
     animateUI(() => { setRecipe(null); setRecipeErr(""); setCookDone(""); });
     scrollToTop();
   }

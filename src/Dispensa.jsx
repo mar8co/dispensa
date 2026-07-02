@@ -11,7 +11,7 @@ import {
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
   norm, matchKey, isStapleQb, isQbQty, isSpoonQty,
 } from "./lib/pantry.js";
-import { callClaude } from "./lib/claude.js";
+import { callClaude, aiErrorMessage } from "./lib/claude.js";
 import { supabase } from "./lib/supabase.js";
 import {
   fetchPantry, insertMany, updateItem,
@@ -586,7 +586,7 @@ export default function Dispensa({ session }) {
       }
     } catch (err) {
       console.error(err);
-      showToast("Impossibile leggere l'immagine. Riprova con una foto più nitida.");
+      showToast(aiErrorMessage(err, "Impossibile leggere l'immagine. Riprova con una foto più nitida."));
     } finally {
       setProcessing(false);
     }
@@ -651,7 +651,7 @@ export default function Dispensa({ session }) {
       console.error(e);
       setVoiceProcessing(false);
       setVoiceOpen(false);
-      showToast("Errore nell'elaborare la voce. Riprova.");
+      showToast(aiErrorMessage(e, "Errore nell'elaborare la voce. Riprova."));
     }
   }
 
