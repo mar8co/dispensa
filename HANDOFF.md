@@ -61,7 +61,12 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   banner ("scaduti" vs "in scadenza entro 7 gg", su due righe se entrambi),
   suggerimento "sta finendo" (solo nel pannello prodotto), "Cucina con questo".
 - **Aggiunta prodotti**: manuale, a voce (dettatura → AI estrae prodotti),
-  **scontrino** (foto → AI), **codice a barre** (ZXing + Open Food Facts).
+  **scontrino** (foto → AI), **codice a barre in raffica** (ZXing + Open Food
+  Facts): lo scanner resta acceso, ogni bip accumula in un vassoio di chips
+  (ri-scansione = quantità +1, tocco sulla chip = togli), "Fatto (N)" apre la
+  revisione unica. Il FAB "+" compare **solo nella Dispensa** (nella Spesa c'è
+  il campo inline; destinazioni diverse = niente ambiguità). L'overlay "Sto
+  analizzando…" ha **Annulla** (aborta la richiesta AI).
 - **Lista della spesa**: aggiunta manuale/voce, merge duplicati, vista "per
   reparto" o piatta, **carrello** (campo `checked`) con reparto "Nel carrello",
   "Sposta in dispensa", condivisione lista, wake-lock ("schermo sempre acceso").
@@ -77,8 +82,13 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   **Nome (username)** impostabile dal Profilo (mostrato al posto della mail); il
   **creatore** è marcato con l'icona **corona** e può **far uscire** i membri con
   popup di conferma. Vedi `HouseholdSection.jsx` + migration-6/7/8/9.
-- **Scrittura offline (outbox v1)** — coda di mutazioni della **spesa** in
-  `src/lib/outbox.js` con replay al ritorno online.
+- **Scrittura offline (outbox v2)** — coda di mutazioni per **dispensa e
+  spesa** (`src/lib/outbox.js` + `src/lib/sync.js`): insert/update/delete con
+  **id uuid generati lato client** (`newLocalId`), stato ottimistico immediato
+  e replay idempotente al ritorno online (`applyOp`; duplicato di insert =
+  successo). Il replay parte da `Dispensa.jsx` dopo la risoluzione del nucleo,
+  così gli insert rigiocati ricevono l'`household_id` giusto. Niente più
+  fallimenti silenziosi: aggiunte/eliminazioni funzionano anche offline.
 - **Code-split per scheda** — le schede/scanner pesanti sono `React.lazy` in
   `Dispensa.jsx` (ZXing e affini caricati on-demand).
 - **PWA**: installabile, offline shell, tema chiaro/scuro/auto (per-dispositivo).
@@ -221,8 +231,11 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 1. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,
    niente fotocamera nativa — scelta UX dell'utente) su uno scontrino lungo reale;
-   (b) fix camera barcode (Vaul callback-ref); (c) torcia barcode dove supportata;
-   (d) **username + espulsione membri** con più account condivisi (migration-9 già
+   (b) **barcode in raffica** (vassoio, ri-scansione ×2, Fatto (N)) con prodotti
+   reali; (c) torcia barcode dove supportata; (d) **offline end-to-end**
+   (aggiungi/elimina in aereo → riaccendi la rete → replay outbox v2);
+   (e) fix anti-freeze (uso prolungato con entra/esci da fotocamera/voce/profilo);
+   (f) **username + espulsione membri** con più account condivisi (migration-9 già
    eseguita, feature confermata funzionante dall'utente il 2026-07-01).
 2. **Configurare Apple Sign-In** (Apple Developer + Supabase) — guida sotto.
 3. **Decidere il placeholder ricerca ricette** e applicarlo (1 riga, no a-capo).

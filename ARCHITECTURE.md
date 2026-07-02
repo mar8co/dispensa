@@ -80,6 +80,8 @@ dispensa/
 │  │  ├─ pantry.test.js     # 46 test Vitest
 │  │  ├─ recipes.js         # helper ricette
 │  │  ├─ history.js         # storico acquisti (suggerimenti)
+│  │  ├─ outbox.js          # coda scritture offline (v2: insert/update/delete)
+│  │  ├─ sync.js            # replay idempotente della coda + id client (uuid)
 │  │  ├─ cache.js           # cache locale (snapshot iniziale veloce)
 │  │  ├─ timers.js          # timer cottura + allarme
 │  │  ├─ theme.js           # tema chiaro/scuro/auto (localStorage)
@@ -324,9 +326,10 @@ applica `upsert`/`remove` agli stati locali.
   modelli più economici per task semplici.
 - **Bundle**: il chunk principale supera i 500 kB (warning Vite) e ZXing è già
   lazy-loaded. Margini: code-split per scheda, `manualChunks`.
-- **Offline write**: esiste una **outbox v1** (`src/lib/outbox.js`) per le mutazioni
-  della **spesa** con replay al ritorno online; da estendere a dispensa/ricette e
-  rendere idempotente su tutti i tipi di operazione.
+- **Offline write**: **outbox v2** (`src/lib/outbox.js` + `src/lib/sync.js`) —
+  insert/update/delete per **dispensa e spesa** con id uuid client-side
+  (`newLocalId`), replay idempotente (`applyOp`) avviato da `Dispensa.jsx` dopo
+  la risoluzione del nucleo. Estensione possibile: ricettario e impostazioni.
 - **Migrazioni DB**: sono file SQL numerati da eseguire a mano nel SQL Editor;
   crescendo conviene adottare le migrazioni gestite della Supabase CLI.
 - **Test**: oggi coprono `pantry.js`. Estendere a `recipes.js`, agli hook (con
