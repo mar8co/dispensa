@@ -1,10 +1,12 @@
 // Modalità cucina: schermo intero, un passaggio alla volta a caratteri
 // grandi, timer integrato e schermo sempre acceso (Wake Lock) finché aperta.
+// All'ultimo passaggio la CTA porta dritto ad aggiornare la dispensa
+// (onFinish → CookModal): è il momento di massima intenzione, non va sprecato.
 import { useState, useEffect, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Utensils } from "lucide-react";
 import StepTimer from "./StepTimer.jsx";
 
-export default function CookingMode({ recipe, onClose }) {
+export default function CookingMode({ recipe, onClose, onFinish }) {
   const steps = recipe.steps || [];
   const [i, setI] = useState(0);
   const wakeRef = useRef(null);
@@ -72,29 +74,41 @@ export default function CookingMode({ recipe, onClose }) {
         <p className="mt-6 text-xs text-stone-400">Passaggio {i + 1} di {steps.length}</p>
       </div>
 
-      {/* Comandi grandi, a portata di pollice */}
-      <div className="flex gap-2 px-5 pt-2" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}>
-        <button
-          onClick={() => setI((v) => Math.max(0, v - 1))}
-          disabled={i === 0}
-          className="flex h-14 w-20 items-center justify-center rounded-2xl border border-hair text-ink transition hover:bg-stone-50 disabled:opacity-30"
-          aria-label="Passaggio precedente"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        {last ? (
+      {/* Comandi grandi, a portata di pollice. All'ultimo passaggio la CTA
+          apre "Aggiorna la dispensa" (CookModal); "Salta" discreto per chi
+          non vuole aggiornare le scorte. */}
+      <div className="px-5 pt-2" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setI((v) => Math.max(0, v - 1))}
+            disabled={i === 0}
+            className="flex h-14 w-20 items-center justify-center rounded-2xl border border-hair text-ink transition hover:bg-stone-50 disabled:opacity-30"
+            aria-label="Passaggio precedente"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          {last ? (
+            <button
+              onClick={() => { onClose(); onFinish?.(); }}
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-tomato text-base font-bold text-white transition hover:bg-tomato-700"
+            >
+              <Utensils className="h-5 w-5" /> Aggiorna la dispensa
+            </button>
+          ) : (
+            <button
+              onClick={() => setI((v) => Math.min(steps.length - 1, v + 1))}
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-ink text-base font-bold text-white transition hover:opacity-90"
+            >
+              Avanti <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+        {last && (
           <button
             onClick={onClose}
-            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-tomato text-base font-bold text-white transition hover:bg-tomato-700"
+            className="mt-2 block w-full py-1.5 text-center text-xs font-semibold text-stone-400 transition hover:text-ink"
           >
-            <Check className="h-5 w-5" /> Ho finito!
-          </button>
-        ) : (
-          <button
-            onClick={() => setI((v) => Math.min(steps.length - 1, v + 1))}
-            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-ink text-base font-bold text-white transition hover:opacity-90"
-          >
-            Avanti <ChevronRight className="h-5 w-5" />
+            Salta, non aggiornare
           </button>
         )}
       </div>

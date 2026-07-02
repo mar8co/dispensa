@@ -448,7 +448,13 @@ export default function RecipesTab({
           </Button>
           {cookDone && <p className="mt-2 text-center text-xs font-semibold text-stone-500">{cookDone}</p>}
 
-          {cooking && <CookingMode recipe={recipe} onClose={() => setCooking(false)} />}
+          {cooking && (
+            <CookingMode
+              recipe={recipe}
+              onClose={() => setCooking(false)}
+              onFinish={openCookModal}
+            />
+          )}
         </>
       )}
     </div>
