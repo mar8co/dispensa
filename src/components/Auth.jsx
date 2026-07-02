@@ -132,27 +132,32 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex min-h-[100svh] flex-col bg-cream px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]">
-      {/* Header: logo su griglia tomato sfumata + titolo (sempre visibile) */}
-      <div className="relative mx-auto w-full max-w-sm pt-2 text-center">
-        <div aria-hidden className="pointer-events-none absolute inset-0" style={GRID_STYLE} />
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40" style={GLOW_STYLE} />
-        <div className="relative">
-          <img
-            src="/icon.svg"
-            alt="Dispensa"
-            className="mx-auto mb-4 h-16 w-16 rounded-[22%] shadow-lg shadow-black/10"
-          />
-          <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Dispensa</div>
-          <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Bentornato 👋</h1>
-          <p className="mx-auto mt-2 max-w-[16rem] text-sm text-stone-500">
-            Accedi per ritrovare la tua dispensa ovunque.
-          </p>
+    <div className="relative flex min-h-[100svh] flex-col bg-cream px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]">
+      {/* Griglia + alone tomato: partono dal bordo superiore della pagina e
+          sfumano attorno al logo (larghezza allineata al contenuto, max-w-sm). */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 flex justify-center px-6">
+        <div className="relative w-full max-w-sm">
+          <div className="absolute inset-x-0 top-0 h-72" style={GRID_STYLE} />
+          <div className="absolute inset-x-0 top-0 h-52" style={GLOW_STYLE} />
         </div>
       </div>
 
+      {/* Header: logo + titolo */}
+      <div className="relative z-10 mx-auto w-full max-w-sm pt-2 text-center">
+        <img
+          src="/icon.svg"
+          alt="Dispensa"
+          className="mx-auto mb-4 h-16 w-16 rounded-[22%] shadow-lg shadow-black/10"
+        />
+        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Dispensa</div>
+        <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Bentornato 👋</h1>
+        <p className="mx-auto mt-2 max-w-[16rem] text-sm text-stone-500">
+          Accedi per ritrovare la tua dispensa ovunque.
+        </p>
+      </div>
+
       {/* Corpo: flusso telefono oppure schermata principale */}
-      <div className="mx-auto mt-8 w-full max-w-sm">
+      <div className="relative z-10 mx-auto mt-8 w-full max-w-sm">
         {view === "phone" ? (
           <>
             <button
@@ -281,7 +286,7 @@ export default function Auth() {
       </div>
 
       {/* Link discreto all'informativa privacy, ancorato in fondo alla pagina */}
-      <div className="mx-auto mt-auto w-full max-w-sm pt-8 text-center">
+      <div className="relative z-10 mx-auto mt-auto w-full max-w-sm pt-8 text-center">
         <button
           onClick={() => setPrivacyOpen(true)}
           className="text-[11px] text-stone-400 transition hover:text-stone-600 hover:underline"
