@@ -682,8 +682,11 @@ export default function Dispensa({ session }) {
     requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
   }
 
-  // Cambio scheda con dissolvenza (View Transition).
+  // Cambio scheda con dissolvenza (View Transition). Il menù del "+" si
+  // chiude sempre: fuori dalla Dispensa il FAB non è montato e un menù
+  // rimasto "aperto" lascerebbe l'overlay scuro senza le opzioni.
   function changeView(v) {
+    setAddMenuOpen(false);
     if (v !== view) { animateUI(() => setView(v)); scrollToTop(); }
     tourSignal(`view-${v}`);
   }
@@ -893,14 +896,17 @@ export default function Dispensa({ session }) {
         }`}
       />
 
-      {/* Navbar: Dispensa · Spesa · [+] · Ricette · Profilo. Il "+" è centrale
-          e globale (aggiunge un prodotto da qualunque scheda). */}
+      {/* Navbar: Dispensa · Spesa · [+] · Ricette · Profilo. Il "+" aggiunge
+          ALLA DISPENSA, quindi compare solo lì: nella Spesa c'è già il campo
+          inline + microfono (destinazione diversa, niente ambiguità) e nelle
+          Ricette non ha un ruolo. Lo spazio centrale resta riservato, così le
+          tab non si spostano cambiando scheda. */}
       <BottomNav
         view={view}
         setView={changeView}
         onProfile={() => { setProfileOpen(true); tourSignal("profile-opened"); }}
         shoppingCount={shopping.filter((s) => !s.checked).length}
-        addSlot={
+        addSlot={view === "dispensa" && (
           <AddFab
             menuOpen={addMenuOpen}
             setMenuOpen={setAddMenuOpen}
@@ -909,7 +915,7 @@ export default function Dispensa({ session }) {
             onBarcode={() => setBarcodeOpen(true)}
             onVoice={() => setVoiceOpen(true)}
           />
-        }
+        )}
       />
 
       {/* Fotocamera integrata per lo scontrino (anteprima live + galleria) */}
