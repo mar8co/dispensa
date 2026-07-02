@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth.js";
 import Auth from "./components/Auth.jsx";
 import Dispensa from "./Dispensa.jsx";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function App() {
   const { session, authLoading } = useAuth();
@@ -19,5 +20,10 @@ export default function App() {
   if (!session) return <Auth />;
 
   // key={user.id} -> rimonta l'app pulita a ogni cambio utente.
-  return <Dispensa key={session.user.id} session={session} />;
+  return (
+    <>
+      <Dispensa key={session.user.id} session={session} />
+      <Analytics />
+    </>
+  );
 }
