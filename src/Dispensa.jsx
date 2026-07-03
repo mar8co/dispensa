@@ -974,6 +974,7 @@ export default function Dispensa({ session }) {
         setView={changeView}
         onProfile={() => { bumpModal("profile"); setProfileOpen(true); tourSignal("profile-opened"); }}
         shoppingCount={shopping.filter((s) => !s.checked).length}
+        expiredCount={expiredCount}
         addSlot={view === "dispensa" && (
           <AddFab
             menuOpen={addMenuOpen}

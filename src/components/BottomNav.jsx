@@ -20,16 +20,17 @@ function Tab({ active, onClick, icon: Icon, label, badge, tourId }) {
   );
 }
 
-export default function BottomNav({ view, setView, onProfile, shoppingCount, addSlot }) {
+export default function BottomNav({ view, setView, onProfile, shoppingCount, expiredCount = 0, addSlot }) {
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3"
       style={{ paddingBottom: "max(4px, calc(env(safe-area-inset-bottom) - 12px))" }}
     >
       <div className="relative w-full max-w-md">
-        {/* Barra: 2 tab · spazio centrale · 2 tab */}
+        {/* Barra: 2 tab · spazio centrale · 2 tab. Il badge sulla Dispensa
+            conta i prodotti GIÀ scaduti (richiamo a rientrare nell'app). */}
         <div className="flex items-stretch rounded-[26px] border border-hair bg-cream/80 px-1.5 py-1.5 shadow-[0_4px_22px_rgba(0,0,0,0.12)] backdrop-blur-md">
-          <Tab active={view === "dispensa"} onClick={() => setView("dispensa")} icon={Package} label="Dispensa" tourId="tab-dispensa" />
+          <Tab active={view === "dispensa"} onClick={() => setView("dispensa")} icon={Package} label="Dispensa" badge={expiredCount} tourId="tab-dispensa" />
           <Tab active={view === "spesa"} onClick={() => setView("spesa")} icon={ShoppingCart} label="Spesa" badge={shoppingCount} tourId="tab-spesa" />
           <div className="w-14 shrink-0" aria-hidden="true" />
           <Tab active={view === "ricette"} onClick={() => setView("ricette")} icon={ChefHat} label="Ricette" tourId="tab-ricette" />
