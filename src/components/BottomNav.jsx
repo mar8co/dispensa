@@ -23,6 +23,7 @@ function Tab({ active, onClick, icon: Icon, label, badge, tourId }) {
 export default function BottomNav({ view, setView, onProfile, shoppingCount, expiredCount = 0, addSlot }) {
   return (
     <div
+      data-navbar
       className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3"
       style={{ paddingBottom: "max(4px, calc(env(safe-area-inset-bottom) - 12px))" }}
     >
