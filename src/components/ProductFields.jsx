@@ -17,6 +17,7 @@ import { Calendar, Trash2, X } from "lucide-react";
 import { PICKER_CATS, CAT_ICON } from "../constants.js";
 import { formatExpiry } from "../lib/pantry.js";
 import { tourSignal } from "../lib/tour.js";
+import ExpiryCalendar from "./ExpiryCalendar.jsx";
 
 const inputCls =
   "min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
@@ -34,6 +35,7 @@ export default function ProductFields({
   children,
 }) {
   const [catOpen, setCatOpen] = useState(false);
+  const [expOpen, setExpOpen] = useState(false); // calendario scadenza aperto
 
   function pickCategory(c) {
     setCatOpen(false);
@@ -116,52 +118,57 @@ export default function ProductFields({
 
       {children}
 
-      {/* Riga 2 (zona quantità, separata da una riga sottile):
-          scadenza · stepper stretto · unità */}
-      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-2 border-t border-hair pt-2">
+      {/* Riga 2 (zona quantità, separata da una riga sottile): scadenza ·
+          stepper in pill · unità. flex-nowrap: la riga non si spezza MAI; se lo
+          spazio è pochissimo cede solo il box scadenza (min-w-0 + testo
+          troncato), mentre stepper e unità (shrink-0) restano sempre interi. */}
+      <div className="mt-2.5 flex items-center justify-between gap-x-1.5 border-t border-hair pt-2">
         {showExpiry && (
-          <label
-            data-tour="expiry-field"
-            onClick={() => tourSignal("expiry-opened")}
-            title="Scadenza"
-            className={`relative flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition ${
+          <div
+            className={`flex h-9 min-w-0 items-center rounded-lg border text-xs font-semibold transition ${
               expiry ? "border-tomato/40 bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-500"
             }`}
           >
-            <Calendar className="h-4 w-4 shrink-0" />
-            {expiry ? formatExpiry(expiry) : "Scadenza"}
-            <input
-              type="date"
-              value={expiry}
-              onChange={(e) => onExpiry(e.target.value)}
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              aria-label="Data di scadenza"
-            />
+            {/* Tocco sul box = apre/chiude il calendario in-app (niente picker
+                nativo: vedi ExpiryCalendar). */}
+            <button
+              type="button"
+              data-tour="expiry-field"
+              onClick={() => { setExpOpen((o) => !o); tourSignal("expiry-opened"); }}
+              title="Scadenza"
+              aria-haspopup="dialog"
+              aria-expanded={expOpen}
+              className="flex h-full min-w-0 items-center gap-1.5 pl-2.5 pr-1.5"
+            >
+              <Calendar className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 truncate">{expiry ? formatExpiry(expiry) : "Scadenza"}</span>
+            </button>
             {expiry && (
               <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onExpiry(""); }}
-                className="relative z-[1] -mr-1 rounded p-0.5"
+                onClick={() => { onExpiry(""); setExpOpen(false); }}
+                className="flex h-full shrink-0 items-center pl-0.5 pr-2"
                 aria-label="Rimuovi scadenza"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
-          </label>
+          </div>
         )}
 
-        {/* Stepper stretto: glifi piccoli, bersagli alti 44px */}
-        <div data-tour="qty-stepper" className="flex items-center">
+        {/* Stepper in pill (bordo + divisori tra − valore +): legge come un
+            unico controllo, coerente con le pillole delle unità. */}
+        <div data-tour="qty-stepper" className="flex h-9 shrink-0 items-center overflow-hidden rounded-lg border border-hair bg-paper">
           <button
             type="button"
             onClick={onMinus}
             disabled={minusDisabled}
-            className="flex h-11 w-9 items-center justify-center text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
+            className="flex h-full w-8 items-center justify-center text-lg leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
             aria-label="Diminuisci"
           >−</button>
           <input
             inputMode="decimal"
-            className="w-10 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
+            className="h-full w-9 border-x border-hair bg-transparent text-center text-[15px] font-bold text-ink outline-none"
             value={qtyValue}
             onChange={(e) => onQtyInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && onEnter) onEnter(); }}
@@ -170,12 +177,12 @@ export default function ProductFields({
           <button
             type="button"
             onClick={onPlus}
-            className="flex h-11 w-9 items-center justify-center text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
+            className="flex h-full w-8 items-center justify-center text-lg leading-none text-stone-500 transition hover:text-tomato active:scale-90"
             aria-label="Aumenta"
           >+</button>
         </div>
 
-        <div data-tour="unit-chips" className="flex gap-1">
+        <div data-tour="unit-chips" className="flex shrink-0 gap-0.5">
           {["", "g", "kg", "l"].map((u) => {
             const active = u === "" ? unitActive === "" : unitActive === u;
             return (
@@ -184,7 +191,7 @@ export default function ProductFields({
                 type="button"
                 onClick={() => onUnit(u)}
                 aria-pressed={active}
-                className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
+                className={`flex h-9 items-center rounded-lg border px-1.5 text-xs font-bold transition ${
                   active ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
                 }`}
               >
@@ -194,6 +201,14 @@ export default function ProductFields({
           })}
         </div>
       </div>
+
+      {/* Calendario in-app: si apre sotto la riga, con niente preselezionato. */}
+      {showExpiry && expOpen && (
+        <ExpiryCalendar
+          value={expiry}
+          onPick={(iso) => { onExpiry(iso); setExpOpen(false); }}
+        />
+      )}
     </>
   );
 }
