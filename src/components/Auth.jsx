@@ -109,18 +109,30 @@ export default function Auth() {
 
   return (
     <div className="flex min-h-[100svh] flex-col bg-cream px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]">
-      {/* Header: logo + titolo */}
-      <div className="mx-auto w-full max-w-sm pt-2 text-center">
-        <img
-          src="/icon.svg"
-          alt="Dispensa"
-          className="mx-auto mb-4 h-16 w-16 rounded-[22%] shadow-lg shadow-black/10"
-        />
-        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Dispensa</div>
-        {/* "Ciao!" e non "Bentornato": neutro anche per chi entra la prima volta. */}
-        <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Ciao! 👋</h1>
-        <p className="mx-auto mt-2 max-w-[16rem] text-sm text-stone-500">
-          Accedi per ritrovare la tua dispensa ovunque.
+      {/* Header "manifesto": la domanda del brand + due mensole di
+          emoji-categoria (le stesse di CAT_ICON) con uno slot "+" tratteggiato
+          — il posto che aspetta i prodotti di chi entra. */}
+      <div className="mx-auto w-full max-w-sm pt-2">
+        <h1 className="font-display text-[32px] font-extrabold leading-tight tracking-tight text-ink">
+          Cosa c&rsquo;è in{" "}
+          <span className="underline decoration-tomato decoration-wavy decoration-[2.5px] underline-offset-[6px]">dispensa</span>?
+        </h1>
+
+        <div className="mt-7" aria-hidden="true">
+          <div className="flex items-end justify-around text-2xl">
+            <span>🥬</span><span>🍎</span><span>🥩</span><span>🐟</span>
+          </div>
+          <div className="mt-1.5 h-1 rounded-full bg-stone-300" />
+          <div className="mt-5 flex items-end justify-around text-2xl">
+            <span>🧀</span><span>🍞</span><span>🥫</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg border-[1.5px] border-dashed border-tomato text-[17px] font-bold leading-none text-tomato">+</span>
+          </div>
+          <div className="mt-1.5 h-1 rounded-full bg-stone-300" />
+        </div>
+
+        {/* Sottotitolo funzionale: le tre cose che l'app fa davvero. */}
+        <p className="mt-5 text-sm leading-relaxed text-stone-500">
+          Scadenze sotto controllo, spesa condivisa e ricette con quello che hai.
         </p>
       </div>
 
@@ -168,13 +180,15 @@ export default function Auth() {
             </div>
 
             <form onSubmit={sendMagicLink}>
-              <label className="mb-1.5 block text-sm font-semibold text-ink">Email</label>
+              {/* Niente label: il placeholder fa da esempio, l'aria-label
+                  copre gli screen reader (design "manifesto", meno rumore). */}
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="latua@mail.it"
+                aria-label="Email"
                 className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
               />
               <button
@@ -183,7 +197,7 @@ export default function Auth() {
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                Invia link di accesso
+                Invia il link di accesso
               </button>
             </form>
 
