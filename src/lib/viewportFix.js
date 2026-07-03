@@ -11,14 +11,24 @@
 //     forza un reflow completo del body. Il reflow "duro" (con micro-lampeggio)
 //     scatta quindi soltanto quando il bug è effettivamente presente.
 
-// La navbar dovrebbe toccare (quasi) il fondo del viewport: se il suo bordo
-// inferiore è ben sopra il fondo dello schermo, è ancorata a un viewport vecchio.
+// Altezza del viewport VISIBILE. Fondamentale usare `visualViewport` e non
+// `window.innerHeight`: al resume iOS lascia stale il viewport di LAYOUT, quindi
+// `innerHeight` e il rect della navbar risultano "vecchi" INSIEME e la loro
+// differenza resta ~0 → il bug non veniva mai rilevato. `visualViewport.height`
+// riflette invece l'area davvero visibile, così lo scarto emerge.
+function visibleHeight() {
+  const vv = window.visualViewport;
+  return vv ? vv.height : window.innerHeight;
+}
+
+// La navbar dovrebbe toccare (quasi) il fondo del viewport visibile: se il suo
+// bordo inferiore è ben sopra, è ancorata a un viewport vecchio.
 function isNavbarMisplaced() {
   const el = document.querySelector("[data-navbar]");
   if (!el) return false;
   const r = el.getBoundingClientRect();
   if (r.height === 0) return false;
-  return window.innerHeight - r.bottom > 60;
+  return visibleHeight() - r.bottom > 60;
 }
 
 // Nudge di scroll: forza iOS a riallineare gli elementi fixed al viewport
@@ -77,4 +87,10 @@ export function installViewportFix() {
     if (document.visibilityState === "visible") onResume();
   });
   window.addEventListener("resize", onResize);
+  // Il viewport visibile iOS si assesta dopo il resume emettendo eventi su
+  // visualViewport: agganciarli coglie il momento in cui la navbar va corretta.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", onResize);
+    window.visualViewport.addEventListener("scroll", onResize);
+  }
 }
