@@ -21,13 +21,12 @@ import Button from "./Button.jsx";
 const editCls =
   "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
-// --- Riga prodotto. Gesti:
-// • tap = mette/toglie dal carrello;
+// --- Riga prodotto. Gesti (stesso modello della Dispensa: tap = modifica):
+// • tap sul nome = apre la modifica;
+// • tap sul quadratino a destra = mette/toglie dal carrello;
 // • swipe ← (verso sinistra) = elimina;
-// • swipe → (verso destra) = apre la modifica;
-// • matita visibile = apre la modifica.
-// (Niente pressione lunga: la modifica passa solo da swipe o matita.)
-// Accessibile (role=button, tastiera). ---
+// • swipe → (verso destra) = apre la modifica.
+// Accessibile (role=button, tastiera; il quadratino è un bottone reale). ---
 function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
   const selected = !!it.checked;
   const [dx, setDx] = useState(0);
@@ -77,7 +76,7 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
       setDx(0); // sotto soglia: torna a posto
       return;
     }
-    if (wasTap) onSelect(it);
+    if (wasTap) onEdit(it);
   }
   function cancel() {
     start.current = null;
@@ -86,7 +85,7 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
     setDx(0);
   }
   function onKey(e) {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(it); }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(it); }
   }
 
   return (
@@ -102,11 +101,11 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
         </span>
       </div>
 
-      {/* Riga in primo piano, traslata dallo swipe (sfondo opaco = copre gli hint) */}
+      {/* Riga in primo piano, traslata dallo swipe (sfondo opaco = copre gli
+          hint). Il tap sulla riga apre la MODIFICA (come in Dispensa). */}
       <div
         role="button"
         tabIndex={0}
-        aria-pressed={selected}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
@@ -128,26 +127,26 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
             {formatQtyDisplay(it.qty)}
           </span>
         )}
-        {/* Matita: apre la modifica. stopPropagation così il tocco NON mette
-            la riga nel carrello e non avvia lo swipe. */}
+        {/* Quadratino carrello: bottone REALE (area di tocco 44px, riquadro
+            26px centrato). stopPropagation così il tocco non apre la modifica
+            e non avvia lo swipe. */}
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onEdit(it); }}
-          aria-label="Modifica prodotto"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-ink"
+          onClick={(e) => { e.stopPropagation(); onSelect(it); }}
+          aria-pressed={selected}
+          aria-label={selected ? "Rimetti in lista" : "Metti nel carrello"}
+          className="-mr-[9px] flex h-11 w-11 shrink-0 items-center justify-center"
         >
-          <Pencil className="h-[18px] w-[18px]" />
+          <span
+            aria-hidden="true"
+            className={`flex h-[26px] w-[26px] items-center justify-center rounded-md border transition ${
+              selected ? "border-tomato bg-tomato text-[#fff]" : "border-stone-300 bg-paper text-transparent"
+            }`}
+          >
+            <Check className="h-4 w-4" />
+          </span>
         </button>
-        {/* Checkbox: arancione pieno con spunta bianca quando selezionata */}
-        <span
-          aria-hidden="true"
-          className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md border transition ${
-            selected ? "border-tomato bg-tomato text-[#fff]" : "border-stone-300 bg-paper text-transparent"
-          }`}
-        >
-          <Check className="h-4 w-4" />
-        </span>
       </div>
     </li>
   );
