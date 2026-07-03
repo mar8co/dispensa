@@ -384,7 +384,7 @@ export default function RecipesTab({
           {/* Ingredienti: raccolti in un "foglio" */}
           <div className="mb-2 mt-6 flex items-baseline justify-between">
             <h3 className="font-display text-base font-bold uppercase tracking-wide text-ink">Ingredienti</h3>
-            <span className="flex items-center gap-1 text-[11px] text-stone-500"><CheckCircle2 className="h-3.5 w-3.5 text-ink" /> ce l'hai · <Circle className="h-3.5 w-3.5 text-tomato" /> manca</span>
+            <span className="flex items-center gap-1 text-[11px] text-stone-500"><CheckCircle2 className="h-3.5 w-3.5 text-ink" /> ce l'hai · <Circle className="h-3.5 w-3.5 text-tomato" /> manca · tocca e depenni</span>
           </div>
           <div className="rounded-2xl border border-hair bg-stone-50/70 px-4 py-1.5">
             <ul className="divide-y divide-hair">

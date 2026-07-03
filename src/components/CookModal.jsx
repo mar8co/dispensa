@@ -12,9 +12,12 @@ import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 
+// Etichette "parlate" delle 3 corsie (i nomi tecnici exact/pack/qb restano
+// nel codice): "sottratto per te" = matematica fatta dall'app, "quanto
+// resta?" = lo dice l'utente con lo stepper, "q.b." = scorta non toccata.
 const TAGS = {
-  exact: { label: "calcolo esatto", cls: "bg-stone-100 text-stone-500" },
-  pack: { label: "a confezione", cls: "bg-tomato/10 text-tomato" },
+  exact: { label: "sottratto per te", cls: "bg-stone-100 text-stone-500" },
+  pack: { label: "quanto resta?", cls: "bg-tomato/10 text-tomato" },
   qb: { label: "q.b.", cls: "bg-amber-100 text-amber-700" },
 };
 
