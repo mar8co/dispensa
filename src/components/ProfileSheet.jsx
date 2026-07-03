@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import {
   X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap, Loader2,
-  Leaf, Palette, ChevronDown, Users, Check,
+  Leaf, Palette, ChevronDown, Users,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
@@ -42,7 +42,6 @@ export default function ProfileSheet({
   const [passkeyActive, setPasskeyActive] = useState(false); // Face ID attivo su questo device
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [passkeyErr, setPasskeyErr] = useState("");
-  const [confirmPasskeyOff, setConfirmPasskeyOff] = useState(false); // conferma disattivazione
 
   useEffect(() => { getMyUsername().then(setUsernameState).catch(() => {}); }, []);
 
@@ -53,7 +52,12 @@ export default function ProfileSheet({
       const id = data?.user?.id;
       if (!id) return;
       setUid(id);
-      setPasskeyActive(localStorage.getItem(`dispensa-passkey-${id}`) === "1");
+      const active = localStorage.getItem(`dispensa-passkey-${id}`) === "1";
+      setPasskeyActive(active);
+      // Auto-riparazione: chi ha attivato Face ID PRIMA dell'introduzione del
+      // flag di dispositivo ha solo quello per-utente — senza questo riallineo
+      // il pulsante "Accedi con Face ID" non comparirebbe mai nel login.
+      if (active) { try { localStorage.setItem("dispensa-passkey-device", "1"); } catch { /* */ } }
     }).catch(() => {});
   }, []);
 
@@ -85,14 +89,14 @@ export default function ProfileSheet({
 
   // Disattiva il Face ID su QUESTO dispositivo: rimuove i flag locali, così il
   // pulsante sparisce dal login. La passkey resta nel portachiavi (innocua);
-  // riattivando, iOS riusa o aggiorna la credenziale esistente.
+  // riattivando, iOS riusa o aggiorna la credenziale esistente. Azione
+  // reversibile con un tap: niente conferma.
   function deactivatePasskey() {
     try {
       if (uid) localStorage.removeItem(`dispensa-passkey-${uid}`);
       localStorage.removeItem("dispensa-passkey-device");
     } catch { /* */ }
     setPasskeyActive(false);
-    setConfirmPasskeyOff(false);
   }
 
   function chooseTheme(id) { setTheme(id); setThemeState(id); }
@@ -177,48 +181,31 @@ export default function ProfileSheet({
             {/* Face ID / passkey: attivazione dell'accesso rapido su questo
                 dispositivo (visibile solo dove WebAuthn è supportato) */}
             {CAN_USE_PASSKEY && (
-              <button
-                onClick={() => (passkeyActive ? setConfirmPasskeyOff((v) => !v) : activatePasskey())}
-                disabled={passkeyBusy}
-                className="flex w-full items-center gap-3 border-t border-hair px-3.5 py-3 text-left transition hover:bg-stone-50 disabled:hover:bg-transparent"
-              >
+              <div className="flex w-full items-center gap-3 border-t border-hair px-3.5 py-3">
                 <FaceIdIcon className={`h-[19px] w-[19px] shrink-0 ${passkeyActive ? "text-stone-400" : "text-tomato"}`} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm text-ink">Face ID</span>
                   <span className="block text-xs text-stone-500">
-                    {passkeyActive ? "Attivo su questo dispositivo · tocca per disattivare" : "Accesso rapido su questo dispositivo"}
+                    {passkeyActive ? "Attivo su questo dispositivo" : "Accesso rapido su questo dispositivo"}
                   </span>
                 </span>
                 {passkeyBusy ? (
                   <Loader2 className="h-4 w-4 animate-spin text-stone-400" />
                 ) : passkeyActive ? (
-                  <Check className="h-[18px] w-[18px] text-emerald-600" />
-                ) : (
-                  <span className="rounded-lg border border-tomato/40 px-2.5 py-1 text-xs font-semibold text-tomato">Attiva</span>
-                )}
-              </button>
-            )}
-            {/* Conferma disattivazione: solo i flag locali — il pulsante
-                sparisce dal login di questo dispositivo. */}
-            {confirmPasskeyOff && (
-              <div className="border-t border-hair px-3.5 py-2.5">
-                <p className="text-xs text-stone-600">
-                  Face ID non comparirà più nella schermata di accesso su questo dispositivo.
-                </p>
-                <div className="mt-2 flex gap-2">
-                  <button
-                    onClick={() => setConfirmPasskeyOff(false)}
-                    className="flex-1 rounded-lg border border-hair py-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-50"
-                  >
-                    Annulla
-                  </button>
                   <button
                     onClick={deactivatePasskey}
-                    className="flex-1 rounded-lg bg-tomato py-2 text-xs font-semibold text-[#fff] transition hover:bg-tomato-700"
+                    className="rounded-lg border border-hair px-2.5 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-50"
                   >
                     Disattiva
                   </button>
-                </div>
+                ) : (
+                  <button
+                    onClick={activatePasskey}
+                    className="rounded-lg border border-tomato/40 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
+                  >
+                    Attiva
+                  </button>
+                )}
               </div>
             )}
             {passkeyErr && <p className="border-t border-hair px-3.5 py-2 text-xs font-semibold text-tomato">{passkeyErr}</p>}
