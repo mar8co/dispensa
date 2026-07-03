@@ -231,6 +231,20 @@ export default function ShoppingTab({
 
   // Wake Lock: tiene lo schermo acceso mentre fai la spesa (se supportato).
   const wakeSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
+
+  // La lampadina è icona-sola e il suo significato non si scopre da soli:
+  // UNA volta per dispositivo, alla prima lista non vuota, un toast spiega
+  // a cosa serve. Il flag si scrive solo quando l'hint viene mostrato.
+  const hasItems = shopping.length > 0;
+  useEffect(() => {
+    if (!wakeSupported || !hasItems) return;
+    try {
+      if (localStorage.getItem("dispensa-wake-hint")) return;
+      localStorage.setItem("dispensa-wake-hint", "1");
+      onNotify("💡 Tocca la lampadina in alto per tenere lo schermo acceso mentre fai la spesa");
+    } catch { /* niente hint */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasItems]);
   useEffect(() => {
     if (!awake) {
       wakeRef.current?.release?.().catch(() => {});
@@ -391,24 +405,26 @@ export default function ShoppingTab({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-3 px-1">
+        {/* Zona quantità separata da una riga sottile; bersagli −/+ da 44px
+            (h-11): glifo piccolo, area di tocco piena. */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hair pt-2">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => scheduleQty(adjustQty(qtyDraft, -1))}
               disabled={atMinQty(qtyDraft)}
-              className="text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
+              className="flex h-11 w-11 items-center justify-center text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
               aria-label="Diminuisci"
             >−</button>
             <input
               inputMode="decimal"
-              className="w-16 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
+              className="w-14 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
               value={formatQtyDisplay(qtyDraft)}
               onChange={(e) => scheduleQty(e.target.value.replace("½", "0,5"))}
               aria-label="Quantità"
             />
             <button
               onClick={() => scheduleQty(adjustQty(qtyDraft, 1))}
-              className="text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
+              className="flex h-11 w-11 items-center justify-center text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
               aria-label="Aumenta"
             >+</button>
           </div>
