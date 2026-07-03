@@ -1,23 +1,16 @@
-// Foglio di aggiunta manuale (dal menù "+"): nome con suggerimenti, quantità
-// con contatore, toggle grammi, scadenza opzionale. Resta aperto dopo ogni
+// Foglio di aggiunta manuale (dal menù "+"): usa la vista prodotto STANDARD
+// (ProductFields, la stessa di Dispensa/Spesa/Revisione) con in più i
+// suggerimenti dallo storico e il pulsante "Aggiungi". Resta aperto dopo ogni
 // aggiunta (con conferma), così si inseriscono più prodotti di fila.
 // La pulizia del nome è locale: istantanea e senza consumare quota AI.
 import { useMemo, useState } from "react";
-import { Plus, Minus, Loader2, CalendarPlus, X, Check } from "lucide-react";
+import { Plus, Loader2, X, Check } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
+import ProductFields from "./ProductFields.jsx";
 import { norm, correctName, guessCategory } from "../lib/pantry.js";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 
-function formatDateIt(d) {
-  if (!d) return "";
-  const dt = new Date(`${d}T00:00:00`);
-  return isNaN(dt.getTime()) ? d : dt.toLocaleDateString("it-IT");
-}
-
-const UNITS = [
-  ["", "pz"], ["g", "g"], ["kg", "kg"], ["l", "l"],
-];
 // Passi del contatore per unità: pz ±1, g ±50, kg/l ±0,25.
 const STEPS = { "": 1, g: 50, kg: 0.25, l: 0.25 };
 const parseV = (v) => parseFloat(String(v).replace(",", ".")) || 0;
@@ -33,7 +26,8 @@ export default function ManualAddModal({
   // Categoria mostrata: la scelta manuale vince, altrimenti la stima
   // automatica che si aggiorna mentre scrivi.
   const guessed = newName.trim() ? (guessCategory(correctName(newName)) || "Altro") : "Altro";
-  const effCat = CATEGORIES.includes(newCat) ? newCat : guessed;
+  const isAuto = !CATEGORIES.includes(newCat);
+  const effCat = isAuto ? guessed : newCat;
 
   // Contatore a passi: pz 1,2,3… · g 50,100,150… · kg/l 0,25 0,5 0,75…
   const step = STEPS[unit] ?? 1;
@@ -51,9 +45,6 @@ export default function ManualAddModal({
     setUnit(u);
     setNewQty(u === "g" ? "100" : "1");
   }
-
-  const inputCls =
-    "w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
   // Candidati per i suggerimenti: storico acquisti + nomi già in dispensa.
   const pool = useMemo(() => {
@@ -74,6 +65,7 @@ export default function ManualAddModal({
     : [];
 
   async function submit() {
+    if (!newName.trim() || adding) return;
     const res = await onSubmit();
     if (res) setLastAdded(res);
   }
@@ -88,133 +80,53 @@ export default function ManualAddModal({
       <div className="px-5 pb-7 pt-1">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-display text-xl font-semibold text-ink">Aggiungi a mano</h3>
-          <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
+          <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100" aria-label="Chiudi">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <input
+        {/* Vista prodotto standard; i suggerimenti entrano nello slot. */}
+        <ProductFields
+          name={newName}
+          onName={setNewName}
+          onEnter={submit}
+          namePlaceholder="Cosa hai in dispensa?"
           autoFocus
-          data-tour="manual-add"
-          className={inputCls}
-          placeholder="Cosa hai in dispensa?"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-        />
-
-        {/* Categoria riconosciuta: visibile e correggibile prima di aggiungere */}
-        {newName.trim() && (
-          <div className="mt-2 flex items-center gap-2">
-            <span className="shrink-0 text-xs text-stone-500">Categoria</span>
-            <select
-              value={effCat}
-              onChange={(e) => setNewCat(e.target.value)}
-              className={`min-w-0 flex-1 rounded-lg border bg-paper px-2.5 py-2 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15 ${
-                CATEGORIES.includes(newCat) ? "border-tomato/40 text-ink" : "border-hair text-ink"
-              }`}
-              aria-label="Categoria"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{CAT_ICON[c]} {c}</option>
+          category={effCat}
+          onCategory={setNewCat}
+          allowAuto
+          isAuto={isAuto}
+          qtyValue={newQty}
+          onQtyInput={(v) => setNewQty(v.replace(/[^0-9.,]/g, ""))}
+          onMinus={() => bumpQty(-1)}
+          onPlus={() => bumpQty(1)}
+          minusDisabled={parseV(newQty) <= step}
+          unitActive={unit}
+          onUnit={chooseUnit}
+          showExpiry
+          expiry={newExpiry || ""}
+          onExpiry={setNewExpiry}
+        >
+          {/* Completamenti: un tap e il prodotto è dentro */}
+          {suggestions.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {suggestions.map((n) => (
+                <button
+                  key={n}
+                  // pointerdown: funziona anche con la tastiera iOS aperta
+                  onPointerDown={(e) => { e.preventDefault(); quickAdd(n); }}
+                  className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                >
+                  {n}
+                </button>
               ))}
-            </select>
-            {CATEGORIES.includes(newCat) && (
-              <button
-                onClick={() => setNewCat("")}
-                className="shrink-0 text-[11px] font-semibold text-stone-500 underline hover:text-ink"
-                title="Torna alla categoria automatica"
-              >
-                auto
-              </button>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </ProductFields>
 
-        {/* Completamenti: un tap e il prodotto è dentro */}
-        {suggestions.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {suggestions.map((n) => (
-              <button
-                key={n}
-                // pointerdown: funziona anche con la tastiera iOS aperta
-                onPointerDown={(e) => { e.preventDefault(); quickAdd(n); }}
-                className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-2.5 flex items-center gap-1.5">
-          <div className="flex shrink-0 items-center rounded-xl border border-hair bg-paper">
-            <button
-              onClick={() => bumpQty(-1)}
-              disabled={parseV(newQty) <= step}
-              className="flex h-11 w-9 items-center justify-center rounded-l-xl text-stone-500 hover:bg-stone-100 disabled:opacity-30"
-              aria-label="Meno"
-            ><Minus className="h-4 w-4" /></button>
-            <input
-              type="text" inputMode="decimal" value={newQty}
-              onChange={(e) => setNewQty(e.target.value.replace(/[^0-9.,]/g, ""))}
-              onFocus={(e) => e.target.select()}
-              onKeyDown={(e) => e.key === "Enter" && submit()}
-              className="w-12 border-0 bg-transparent text-center text-base font-bold text-ink outline-none"
-            />
-            <button
-              onClick={() => bumpQty(1)}
-              className="flex h-11 w-9 items-center justify-center rounded-r-xl text-stone-500 hover:bg-stone-100"
-              aria-label="Più"
-            ><Plus className="h-4 w-4" /></button>
-          </div>
-
-          <label
-            title="Scadenza"
-            className={`relative flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-3.5 transition ${newExpiry ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-tomato hover:bg-tomato/5"}`}
-          >
-            <CalendarPlus className="h-5 w-5" />
-            <input
-              type="date" value={newExpiry || ""}
-              onChange={(e) => setNewExpiry(e.target.value)}
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              aria-label="Scadenza"
-            />
-          </label>
-
-          <Button variant="primary" className="min-w-0 flex-1" onClick={submit} disabled={adding || !newName.trim()}>
-            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
-          </Button>
-        </div>
-
-        {/* Unità: pezzi di default, oppure peso/volume — aiuta le ricette
-            a scalare le quantità con precisione */}
-        <div className="mt-2.5 flex items-center gap-1.5">
-          <span className="text-xs text-stone-500">Unità:</span>
-          {UNITS.map(([value, label]) => (
-            <button
-              key={label}
-              onClick={() => chooseUnit(value)}
-              aria-pressed={unit === value}
-              className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition ${
-                unit === value ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {newExpiry && (
-          <div className="mt-2.5 flex items-center gap-2 text-xs">
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-tomato/10 px-2 py-1 font-semibold text-tomato">
-              <CalendarPlus className="h-3.5 w-3.5" /> Scade il {formatDateIt(newExpiry)}
-            </span>
-            <button onClick={() => setNewExpiry("")} className="rounded-lg p-1 text-stone-400 hover:bg-stone-100" aria-label="Rimuovi scadenza">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+        <Button variant="primary" full className="mt-3" onClick={submit} disabled={adding || !newName.trim()}>
+          {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
+        </Button>
 
         {/* Conferma dell'ultimo inserimento: il foglio resta aperto */}
         {lastAdded && (

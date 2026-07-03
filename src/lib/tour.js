@@ -86,7 +86,7 @@ export const STEPS = [
   },
   {
     id: "expiry-open", view: "dispensa", overlay: "spotlight", target: '[data-tour="expiry-field"]',
-    title: "Imposta la scadenza", text: "Tocca l'icona calendario per aggiungere una data di scadenza.",
+    title: "Imposta la scadenza", text: "Tocca “Scadenza” per aggiungere una data.",
     advance: "expiry-opened", hint: true,
   },
   {

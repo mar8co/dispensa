@@ -14,12 +14,10 @@ import {
   Pencil, Mic, Check, Trash2, PackagePlus, Loader2, ListChecks, Store,
   Share2, Lightbulb,
 } from "lucide-react";
-import { PICKER_CATS, AISLE_ORDER, CAT_ICON } from "../constants.js";
+import { AISLE_ORDER, CAT_ICON } from "../constants.js";
 import { atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 import Button from "./Button.jsx";
-
-const editCls =
-  "w-full rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
+import ProductFields from "./ProductFields.jsx";
 
 // --- Riga prodotto. Gesti (stesso modello della Dispensa: tap = modifica):
 // • tap sul nome = apre la modifica;
@@ -267,11 +265,10 @@ export default function ShoppingTab({
   // Tocco sulla riga: mette nel carrello / rimette in lista.
   const selectItem = (it) => onToggle(it.id, !it.checked);
 
-  // --- Pannello di modifica (apre con pressione lunga; senza scadenze) ---
+  // --- Pannello di modifica (si apre col tap sul nome; senza scadenze) ---
   const [editId, setEditId] = useState(null);
   const [draftName, setDraftName] = useState("");
   const [qtyDraft, setQtyDraft] = useState("");
-  const [catPickerOpen, setCatPickerOpen] = useState(false);
   const panelRef = useRef(null);
   const openItemRef = useRef(null);
   const snapRef = useRef({});
@@ -314,7 +311,6 @@ export default function ShoppingTab({
     lastRef.current = { name: it.name, qty: it.qty };
     setDraftName(it.name);
     setQtyDraft(it.qty);
-    setCatPickerOpen(false);
     // Porta il pannello in vista appena sopra il FAB (block:"nearest" = scroll
     // minimo; lo scroll-margin-bottom del pannello riserva lo spazio per
     // navbar/FAB/barra azioni). Niente centratura: evita il vuoto sotto.
@@ -327,11 +323,9 @@ export default function ShoppingTab({
     clearTimeout(qtyTimer.current);
     setEditId(null);
     openItemRef.current = null;
-    setCatPickerOpen(false);
   }
   function chooseCategory(c) {
     const it = openItemRef.current;
-    setCatPickerOpen(false);
     if (!it || c === catFor(it.name)) return;
     onAutoSave(it, { category: c }, { category: snapRef.current.category });
   }
@@ -357,94 +351,24 @@ export default function ShoppingTab({
   function renderEditPanel(it) {
     const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
     return (
-      <li key={it.id} ref={panelRef} className="-mx-1 my-1 scroll-mb-[150px] space-y-2.5 rounded-xl bg-stone-50 p-3">
-        <div className="flex items-center gap-1.5">
-          <input
-            className={`${editCls} min-w-0 flex-1`}
-            value={draftName}
-            onChange={(e) => setDraftName(e.target.value)}
-            onBlur={commitNameNow}
-            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            aria-label="Nome prodotto"
-          />
-          <button
-            onClick={() => setCatPickerOpen((v) => !v)}
-            aria-label="Reparto"
-            title="Reparto"
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition ${
-              catPickerOpen ? "border-tomato bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-600"
-            }`}
-          >
-            <span className="text-[17px] leading-none">{CAT_ICON[catFor(it.name)]}</span>
-          </button>
-          <button
-            onClick={() => { closeEdit(false); onDelete(it.id); }}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
-            aria-label="Elimina"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
-
-        {catPickerOpen && (
-          <div className="animate-fade-in flex flex-wrap gap-1.5">
-            {PICKER_CATS.map((c) => (
-              <button
-                key={c}
-                onClick={() => chooseCategory(c)}
-                className={`flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-semibold transition ${
-                  c === catFor(it.name)
-                    ? "border-tomato bg-tomato text-[#fff]"
-                    : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
-                }`}
-              >
-                {CAT_ICON[c]} {c}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Zona quantità separata da una riga sottile; bersagli −/+ da 44px
-            (h-11): glifo piccolo, area di tocco piena. */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hair pt-2">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => scheduleQty(adjustQty(qtyDraft, -1))}
-              disabled={atMinQty(qtyDraft)}
-              className="flex h-11 w-11 items-center justify-center text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
-              aria-label="Diminuisci"
-            >−</button>
-            <input
-              inputMode="decimal"
-              className="w-14 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
-              value={formatQtyDisplay(qtyDraft)}
-              onChange={(e) => scheduleQty(e.target.value.replace("½", "0,5"))}
-              aria-label="Quantità"
-            />
-            <button
-              onClick={() => scheduleQty(adjustQty(qtyDraft, 1))}
-              className="flex h-11 w-11 items-center justify-center text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
-              aria-label="Aumenta"
-            >+</button>
-          </div>
-          <div className="flex gap-1">
-            {["", "g", "kg", "l"].map((u) => {
-              const active = u === "" ? curUnit === "" : curUnit === u;
-              return (
-                <button
-                  key={u || "pz"}
-                  onClick={() => applyUnit(u)}
-                  aria-pressed={active}
-                  className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
-                    active ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-                  }`}
-                >
-                  {u || "pz"}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <li key={it.id} ref={panelRef} className="-mx-1 my-1 scroll-mb-[150px] rounded-xl bg-stone-50 p-3">
+        {/* Vista prodotto standard (ProductFields), come Dispensa/Aggiungi/
+            Revisione. Qui niente scadenza: è una lista della spesa. */}
+        <ProductFields
+          name={draftName}
+          onName={setDraftName}
+          onNameBlur={commitNameNow}
+          category={catFor(it.name)}
+          onCategory={chooseCategory}
+          onDelete={() => { closeEdit(false); onDelete(it.id); }}
+          qtyValue={formatQtyDisplay(qtyDraft)}
+          onQtyInput={(v) => scheduleQty(v.replace("½", "0,5"))}
+          onMinus={() => scheduleQty(adjustQty(qtyDraft, -1))}
+          onPlus={() => scheduleQty(adjustQty(qtyDraft, 1))}
+          minusDisabled={atMinQty(qtyDraft)}
+          unitActive={curUnit}
+          onUnit={applyUnit}
+        />
       </li>
     );
   }

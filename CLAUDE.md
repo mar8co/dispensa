@@ -60,6 +60,9 @@
 - **Icone categoria = emoji** da `CAT_ICON` (constants.js), **identiche** tra
   Dispensa e Spesa. Non sostituirle con icone lineari.
 - **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
+- **Vista prodotto**: sempre via `ProductFields.jsx` (nome · categoria-emoji →
+  pillole · elimina / scadenza-box · stepper · unità) ovunque si mostri o
+  modifichi un prodotto. Non ricreare quei campi a mano.
 - **Bottoni d'azione**: usa `Button.jsx` (varianti per funzione: `primary` pieno
   tomato = conferma/commit · `secondary` outline = alternativa/Annulla · `cook`
   tinta tomato = genera/cucina · `danger` = elimina). Non creare bottoni ad-hoc

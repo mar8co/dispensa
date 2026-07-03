@@ -3,18 +3,16 @@
 // possono cambiare nome, quantità (stepper −/+) e categoria, o rimuoverlo.
 // Solo alla conferma i prodotti vengono aggiunti alla dispensa.
 import { useState } from "react";
-import { X, Check, Plus, Minus, Calendar } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
+import ProductFields from "./ProductFields.jsx";
 import { adjustQty, atMinQty, formatQtyDisplay } from "../lib/pantry.js";
 
 function tmpId() {
   return Math.random().toString(36).slice(2, 10);
 }
-
-const fieldCls =
-  "rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
 
 export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
   const [items, setItems] = useState(() =>
@@ -83,102 +81,25 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
                   <ul className="space-y-2">
                     {list.map((it) => (
                       <li key={it.id} className="rounded-xl border border-hair bg-paper p-2.5">
-                        <div className="flex items-center gap-2">
-                          <input
-                            className={`${fieldCls} min-w-0 flex-1 font-semibold`}
-                            value={it.name}
-                            onChange={(e) => update(it.id, "name", e.target.value)}
-                            placeholder="Nome"
-                          />
-                          <button
-                            onClick={() => remove(it.id)}
-                            className="shrink-0 rounded-lg p-1.5 text-stone-300 transition hover:bg-tomato/10 hover:text-tomato"
-                            aria-label="Rimuovi"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <div className="mt-2 flex items-center gap-2">
-                          {/* Quantità: −/+ rapidi, campo libero per pesi tipo "500 g" */}
-                          <div className="flex shrink-0 items-center gap-1">
-                            <button
-                              onClick={() => update(it.id, "qty", adjustQty(it.qty, -1))}
-                              disabled={atMin(it.qty)}
-                              className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
-                                atMin(it.qty)
-                                  ? "border-hair text-stone-300"
-                                  : "border-stone-300 text-stone-600 hover:border-ink hover:text-ink active:scale-95"
-                              }`}
-                              aria-label="Diminuisci"
-                            >
-                              <Minus className="h-3.5 w-3.5" />
-                            </button>
-                            <input
-                              inputMode="decimal"
-                              className="w-12 border-0 bg-transparent text-center text-sm font-bold tabular-nums text-ink outline-none"
-                              value={formatQtyDisplay(it.qty)}
-                              onChange={(e) => update(it.id, "qty", e.target.value.replace("½", "0,5"))}
-                              aria-label="Quantità"
-                            />
-                            <button
-                              onClick={() => update(it.id, "qty", adjustQty(it.qty, 1))}
-                              className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-tomato hover:text-tomato active:scale-95"
-                              aria-label="Aumenta"
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                          {/* Unità: come nel resto dell'app (cambio = reset al default) */}
-                          <div className="flex shrink-0 gap-1">
-                            {["", "g", "kg", "l"].map((u) => {
-                              const cur = String(it.qty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
-                              const active = u === "" ? cur === "" : cur === u;
-                              return (
-                                <button
-                                  key={u || "pz"}
-                                  onClick={() => update(it.id, "qty", { "": "1", g: "100 g", kg: "1 kg", l: "1 l" }[u])}
-                                  aria-pressed={active}
-                                  className={`rounded-lg border px-2 py-1.5 text-xs font-bold transition ${
-                                    active ? "border-tomato bg-tomato text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-                                  }`}
-                                >
-                                  {u || "pz"}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <select
-                          className={`${fieldCls} mt-2 w-full`}
-                          value={it.category}
-                          onChange={(e) => update(it.id, "category", e.target.value)}
-                        >
-                          {CATEGORIES.map((c) => (
-                            <option key={c} value={c}>{CAT_ICON[c]} {c}</option>
-                          ))}
-                        </select>
-
-                        {/* Scadenza opzionale (utile soprattutto dopo il barcode) */}
-                        <div className="mt-2 flex items-center gap-2 rounded-lg border border-hair bg-paper px-2.5 py-2">
-                          <Calendar className="h-4 w-4 shrink-0 text-stone-400" />
-                          <input
-                            type="date"
-                            value={it.expiry}
-                            onChange={(e) => update(it.id, "expiry", e.target.value)}
-                            className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none"
-                            aria-label="Data di scadenza (opzionale)"
-                          />
-                          {it.expiry && (
-                            <button
-                              type="button"
-                              onClick={() => update(it.id, "expiry", "")}
-                              className="shrink-0 rounded p-0.5 text-stone-400 transition hover:text-tomato"
-                              aria-label="Rimuovi scadenza"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
+                        {/* Vista prodotto standard (ProductFields): identica a
+                            Dispensa/Spesa/Aggiungi a mano. */}
+                        <ProductFields
+                          name={it.name}
+                          onName={(v) => update(it.id, "name", v)}
+                          category={it.category}
+                          onCategory={(c) => update(it.id, "category", c)}
+                          onDelete={() => remove(it.id)}
+                          qtyValue={formatQtyDisplay(it.qty)}
+                          onQtyInput={(v) => update(it.id, "qty", v.replace("½", "0,5"))}
+                          onMinus={() => update(it.id, "qty", adjustQty(it.qty, -1))}
+                          onPlus={() => update(it.id, "qty", adjustQty(it.qty, 1))}
+                          minusDisabled={atMin(it.qty)}
+                          unitActive={String(it.qty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase()}
+                          onUnit={(u) => update(it.id, "qty", { "": "1", g: "100 g", kg: "1 kg", l: "1 l" }[u])}
+                          showExpiry
+                          expiry={it.expiry}
+                          onExpiry={(v) => update(it.id, "expiry", v)}
+                        />
                       </li>
                     ))}
                   </ul>
