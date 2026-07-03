@@ -76,7 +76,7 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
                           >
                             {isAdded
                               ? <><Check className="h-3.5 w-3.5" /> in lista</>
-                              : <><ShoppingCart className="h-3.5 w-3.5" /> sta finendo? mettilo in lista</>}
+                              : <><ShoppingCart className="h-3.5 w-3.5" /> Sta finendo? Mettilo in lista</>}
                           </button>
                         ) : (
                           <div className="mt-2 flex items-center gap-2">
