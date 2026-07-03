@@ -209,6 +209,11 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   dei drawer e fogli sovrapposti). Fix in `Sheet.jsx`: invariante allo
   smontaggio — quando l'ultimo drawer lascia il DOM, il blocco viene rimosso.
   **Da confermare sul telefono con uso prolungato.**
+- **Navbar a metà schermo** dopo chiudi/riapri la PWA (iOS standalone),
+  segnalato dall'utente il 2026-07-03 — **risolto**: `src/lib/viewportFix.js`
+  ripara la posizione al ritorno in foreground (nudge di scroll invisibile +,
+  solo se non basta, un reflow completo del body gated dalla rilevazione
+  reale della navbar fuori posto). **Da confermare sul telefono.**
 
 ---
 
@@ -222,6 +227,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/lib/supabase.js` | Client Supabase (anon key pubblica, protetta da RLS). |
 | `src/lib/claude.js` | Client AI lato browser → `/api/claude` e `/api/photo`. `callClaude(content, maxTokens, opts)` con `opts.schema` (responseSchema), `opts.temperature`, timeout (AbortController) e retry. |
 | `src/lib/image.js` | Ridimensiona la foto scontrino a 2000px (JPEG) prima dell'OCR AI: `videoFrameToBase64` (frame anteprima live) e `fileToResizedBase64` (galleria). |
+| `src/lib/viewportFix.js` | Ripara la navbar (e altri `position: fixed`) quando iOS li lascia ancorati a un viewport vecchio al ritorno in foreground della PWA. Installato in `main.jsx`. |
 | `server/claude.js` | **Core del proxy AI** (Gemini), condiviso da Vercel e dev locale; verifica token, rate-limit, traduzione Anthropic↔Gemini, **responseSchema + temperature**. |
 | `vite.config.js` | Plugin React, **proxy `/api/*` in dev**, config PWA/manifest. |
 | `src/hooks/usePantry.jsx`, `useShopping.jsx`, `useRecipes.jsx` | Stato + logica dei tre domini. |
@@ -285,6 +291,13 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   su iOS.
 - **Icone categoria = emoji** (`CAT_ICON`), identiche tra Dispensa e Spesa (scelta
   esplicita dell'utente: niente icone lineari).
+- **Viewport fix al resume** (`src/lib/viewportFix.js`): su iOS standalone il
+  ritorno in foreground può lasciare i `position: fixed` (navbar) ancorati a
+  un viewport vecchio. Approccio a due tempi per non avere effetti collaterali
+  nel caso normale: nudge di scroll invisibile, poi (solo se la navbar risulta
+  ancora fuori posto, misurata via `[data-navbar]`) un reflow completo
+  gated dalla rilevazione. Ascolta `pageshow`/`focus`/`visibilitychange`/
+  `orientationchange`/`resize`.
 
 ---
 
@@ -299,11 +312,13 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
    reali; (c) torcia barcode dove supportata; (d) **offline end-to-end**
    (aggiungi/elimina in aereo → riaccendi la rete → replay outbox v2);
    (e) fix anti-freeze (uso prolungato con entra/esci da fotocamera/voce/profilo);
-   (f) **bug navbar a metà schermo** dopo chiudi/riapri la PWA (screenshot
-   dell'utente il 2026-07-03): sospetto iOS che al ritorno in foreground
-   calcola per un istante un viewport più corto e il `position: fixed;
-   bottom: 0` della navbar resta ancorato a quello finché non c'è un
-   reflow — **diagnosticato ma non ancora corretto**, nessun codice scritto;
+   (f) **bug navbar a metà schermo** dopo chiudi/riapri la PWA (segnalato
+   dall'utente il 2026-07-03 con screenshot) — **risolto**: `src/lib/
+   viewportFix.js` (installato in `main.jsx`) ripara la navbar al ritorno in
+   foreground con un nudge di scroll invisibile e, solo se non basta, un
+   reflow completo gated dalla rilevazione della posizione reale (vedi
+   "Decisioni tecniche prese"). **Da confermare sul telefono** con l'uso
+   reale (chiudi/riapri più volte, sfondo/primo piano, rotazione);
    (g) **username + espulsione membri** con più account condivisi (migration-9 già
    eseguita, feature confermata funzionante dall'utente il 2026-07-01).
 3. **Configurare Apple Sign-In** (Apple Developer + Supabase) — guida sotto.
