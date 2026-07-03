@@ -117,7 +117,8 @@ export default function Auth() {
           className="mx-auto mb-4 h-16 w-16 rounded-[22%] shadow-lg shadow-black/10"
         />
         <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Dispensa</div>
-        <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Bentornato 👋</h1>
+        {/* "Ciao!" e non "Bentornato": neutro anche per chi entra la prima volta. */}
+        <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-ink">Ciao! 👋</h1>
         <p className="mx-auto mt-2 max-w-[16rem] text-sm text-stone-500">
           Accedi per ritrovare la tua dispensa ovunque.
         </p>
