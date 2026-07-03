@@ -112,10 +112,12 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 - **Auth** Supabase: magic-link (email), Google OAuth, Apple OAuth, **Face ID/
   passkey** (WebAuthn, vedi "in sviluppo" per Apple e passkey). Login **a pagina
   intera** (niente card), redesign "manifesto" del 2026-07-03: headline
-  "Cosa c'è in dispensa?" con sottolineatura wavy tomato, **due mensole di
-  emoji-categoria** (da `CAT_ICON`) con slot "+" tratteggiato, sottotitolo
-  funzionale, riga di provider a icona (Apple/Google/**Face ID**), "OPPURE",
-  email con CTA nero pieno. Il pulsante Face ID chiama
+  "La tua cucina, in tasca." con sottolineatura wavy tomato su "cucina",
+  **due mensole di emoji-categoria** (da `CAT_ICON`) con slot "+" tratteggiato,
+  sottotitolo "**Meno sprechi.** Zero pensieri." ("Meno sprechi" in verde
+  brand fisso `#43A047`, non tematizzato), riga di provider a icona
+  (Apple/Google/**Face ID**), "OPPURE", email con CTA nero pieno. Il pulsante
+  Face ID chiama
   `signInWithPasskey()`; l'attivazione della passkey vive nel **Profilo**
   (`registerPasskey()`, richiede sessione attiva). Gate in `src/App.jsx`; logout
   dal Profilo.

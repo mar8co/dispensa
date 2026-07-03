@@ -289,7 +289,7 @@ applica `upsert`/`remove` agli stati locali.
 | `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | FAB "+", menu aggiunta, navigazione. |
 | `ProfileSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo (Nome/username al posto della mail, Esigenze alimentari in box 2 righe, tema, logout, privacy). |
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
-| `Auth.jsx` | Login a pagina intera (magic-link, Google, Apple, Face ID/passkey), stile "manifesto": headline con wavy underline tomato + mensole di emoji-categoria con slot "+". |
+| `Auth.jsx` | Login a pagina intera (magic-link, Google, Apple, Face ID/passkey), stile "manifesto": headline "La tua cucina, in tasca." con wavy underline tomato su "cucina" + mensole di emoji-categoria con slot "+" + sottotitolo "Meno sprechi" (verde fisso `#43A047`) "Zero pensieri". |
 | `Toast.jsx` | Toast/undo, posizione adattiva (`raised` su Spesa). |
 | `TourCoach.jsx` | Tutorial guidato (`tour.js`). |
 
