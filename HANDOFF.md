@@ -210,10 +210,14 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   smontaggio — quando l'ultimo drawer lascia il DOM, il blocco viene rimosso.
   **Da confermare sul telefono con uso prolungato.**
 - **Navbar a metà schermo** dopo chiudi/riapri la PWA (iOS standalone),
-  segnalato dall'utente il 2026-07-03 — **risolto**: `src/lib/viewportFix.js`
-  ripara la posizione al ritorno in foreground (nudge di scroll invisibile +,
-  solo se non basta, un reflow completo del body gated dalla rilevazione
-  reale della navbar fuori posto). **Da confermare sul telefono.**
+  segnalato dall'utente il 2026-07-03 — `src/lib/viewportFix.js` ripara la
+  posizione al ritorno in foreground (nudge di scroll invisibile +, solo se non
+  basta, un reflow completo del body gated dalla rilevazione). Il primo giro
+  usava `window.innerHeight` per la rilevazione, ma al resume è stale insieme
+  al rect della navbar (scarto ~0) → il reflow non scattava e il bug **persisteva**.
+  **Migliorato**: la rilevazione ora usa `visualViewport.height` (viewport
+  davvero visibile) + aggancio agli eventi `resize`/`scroll` di `visualViewport`.
+  **Da riconfermare sul telefono.**
 
 ---
 
@@ -234,7 +238,8 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/hooks/useOnline.js`, `useTimersTicker.js`, `useAuth.js` | Hook di supporto. |
 | `src/components/Sheet.jsx` | **Bottom sheet condiviso (Vaul)**: cambiarlo cambia il drag di TUTTI i fogli. |
 | `src/components/Button.jsx` | **Bottone d'azione condiviso**: varianti `primary`/`secondary`/`cook`/`danger`. Stile unico per funzione (primario = tomato). |
-| `src/components/ProductFields.jsx` | **Vista prodotto condivisa** (nome · categoria-emoji→pillole · elimina / scadenza-box · stepper · unità): usata da pannello Dispensa, modifica Spesa, Aggiungi a mano e Revisione scansione. Presentazionale: la logica resta nei chiamanti. |
+| `src/components/ProductFields.jsx` | **Vista prodotto condivisa** (nome · categoria-emoji→pillole · elimina / box scadenza→`ExpiryCalendar` · stepper in pill · unità): usata da pannello Dispensa, modifica Spesa, Aggiungi a mano e Revisione scansione. Riga quantità `flex-nowrap` (mai a capo). Presentazionale: la logica resta nei chiamanti. |
+| `src/components/ExpiryCalendar.jsx` | **Calendario scadenza in-app** (rimpiazza il date picker nativo iOS): niente preselezione, scorciatoie Oggi/Domani/Tra 3 gg, navigazione mese, in-flow (funziona anche nei bottom sheet). |
 | `src/constants.js` | Categorie, ordini reparto, **emoji categorie (`CAT_ICON`)**, prompt AI, seed/demo. |
 | `src/index.css` | **Palette** (variabili CSS, light + blocchi dark) e CSS PWA/Vaul. |
 | `src/components/HouseholdSection.jsx` | UI **Dispensa condivisa** nel Profilo: membri (username + corona sul creatore + "Rimuovi"), inviti, entra-con-codice, switch nucleo, esci, popup conferma espulsione. |

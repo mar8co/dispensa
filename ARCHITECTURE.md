@@ -280,7 +280,8 @@ applica `upsert`/`remove` agli stati locali.
 | `CookModal.jsx` | "Ho cucinato": 3 corsie di scalatura della dispensa. |
 | `CookingMode.jsx`, `StepTimer.jsx`, `TimerBar.jsx` | Modalità cucina passo-passo + timer. |
 | `Sheet.jsx` | Bottom sheet condiviso (Vaul) — base di TUTTI i fogli. |
-| `ProductFields.jsx` | Vista prodotto condivisa (nome/categoria/scadenza/quantità/unità), usata ovunque si mostri o modifichi un prodotto. |
+| `ProductFields.jsx` | Vista prodotto condivisa (nome/categoria/scadenza/quantità/unità), usata ovunque si mostri o modifichi un prodotto. Riga quantità `flex-nowrap` (stepper in pill); il box scadenza apre `ExpiryCalendar`. |
+| `ExpiryCalendar.jsx` | Calendario scadenza **in-app** (rimpiazza il date picker nativo iOS): niente preselezione, scorciatoie Oggi/Domani/Tra 3 gg, in-flow. Usato da `ProductFields`. |
 | `CameraScanShell.jsx` | Guscio comune alle due fotocamere (barcode/scontrino). |
 | `BarcodeScanModal.jsx` / `ReceiptScanModal.jsx` | Scanner (lazy-loaded). |
 | `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. |

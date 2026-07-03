@@ -61,8 +61,10 @@
   Dispensa e Spesa. Non sostituirle con icone lineari.
 - **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
 - **Vista prodotto**: sempre via `ProductFields.jsx` (nome · categoria-emoji →
-  pillole · elimina / scadenza-box · stepper · unità) ovunque si mostri o
-  modifichi un prodotto. Non ricreare quei campi a mano.
+  pillole · elimina / box scadenza → `ExpiryCalendar` in-app · stepper in pill ·
+  unità) ovunque si mostri o modifichi un prodotto. La riga quantità è
+  `flex-nowrap` (mai a capo: cede solo il box scadenza, troncato). Non ricreare
+  quei campi a mano.
 - **Bottoni d'azione**: usa `Button.jsx` (varianti per funzione: `primary` pieno
   tomato = conferma/commit · `secondary` outline = alternativa/Annulla · `cook`
   tinta tomato = genera/cucina · `danger` = elimina). Non creare bottoni ad-hoc
