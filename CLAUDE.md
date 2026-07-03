@@ -161,3 +161,10 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
 - Il provider AI è **Gemini**, ma l'interfaccia è "stile Anthropic" per
   portabilità: ragiona sui prompt, non sul provider.
 - L'utente lavora da **iPhone**: la prova finale è sul telefono, non nel preview.
+- **Prossimo obiettivo strategico**: trasformare l'app in **nativa iOS (poi
+  Android) con monetizzazione** (pubblicità + abbonamenti) — sezione dedicata
+  in `HANDOFF.md` → "Prossimo obiettivo". È **pianificazione**, nessun codice
+  scritto: le decisioni tecniche (wrapper vs rewrite, feature free/Pro,
+  provider ads, modello abbonamenti) vanno **prese con l'utente** prima di
+  toccare codice. **Non confondere con "Cambusa"**, repo separato (competitor
+  nativo RN/Expo di Dispensa): questa iniziativa converte *questo* codice.

@@ -24,6 +24,66 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 
 ---
 
+## Prossimo obiettivo: app nativa (iOS, poi Android) + monetizzazione
+
+> **Stato: solo pianificazione — nessuna riga di codice scritta per questo.**
+> Le prossime chat su questo repo (`dispensa`) ripartono da qui.
+
+**Traguardo**: trasformare **questa PWA** in una vera **app nativa pubblicata
+sull'App Store** (e più avanti su Google Play), introducendo la
+**monetizzazione**: **pubblicità** e **abbonamenti**. Oggi Dispensa è gratuita,
+personale/familiare, senza pubblicità né livelli a pagamento — questa
+iniziativa cambierà entrambe le cose.
+
+**Non è "Cambusa"**: esiste un repo **separato**, `cambusa`, che è un
+tentativo nativo (Expo/React Native) pensato da zero come concorrente di
+Dispensa per l'App Store. **Questa iniziativa è diversa**: riguarda la
+conversione diretta di **questo** codice (React/Vite/Tailwind/Supabase) in app
+nativa, non lo sviluppo di Cambusa. Se in una chat futura non è chiaro su
+quale dei due repo si sta lavorando, chiedilo prima di agire.
+
+### Decisioni aperte (da affrontare CON l'utente a inizio della prossima chat)
+
+Nessuna di queste è ancora decisa — vanno proposte con opzioni + una
+raccomandazione (regola generale in `CLAUDE.md`), mai assunte in autonomia:
+
+1. **Come "impacchettare" l'app nativa.** Lo stack attuale (React + Vite +
+   Tailwind, già PWA) si presta a un **wrapper** (es. Capacitor) che riusa
+   quasi tutto il codice esistente, alternativa a un rewrite nativo
+   (Swift/Kotlin o React Native, come Cambusa). È la strada più rapida e
+   coerente col resto del progetto, ma **va confermata con l'utente**, non
+   assunta a priori.
+2. **Cosa resta gratuito vs cosa diventa a pagamento** (feature-split
+   free/Pro): condivisione nucleo familiare? tetto AI più alto (oggi
+   `ai_usage`/`AI_DAILY_LIMIT`)? niente pubblicità per gli abbonati? Va deciso
+   prima di disegnare qualunque paywall.
+3. **Pubblicità**: quale network (es. AdMob), dove mostrarla (banner? tra le
+   ricette?) senza rompere la cura UX già presente, e gestione
+   dell'**App Tracking Transparency** (obbligatoria su iOS se si traccia per
+   ads personalizzate).
+4. **Abbonamenti**: Apple **richiede StoreKit/In-App Purchase** per contenuti
+   digitali sbloccati dentro l'app — non si può fatturare con Stripe/altro
+   bypassando IAP (rischio concreto di rifiuto in review, linea guida 3.1.1).
+   Va deciso il prezzo, cosa sblocca, e come sincronizzare lo stato
+   "abbonato" col backend Supabase (tabella entitlements + verifica ricevute,
+   es. App Store Server Notifications).
+5. **Account sviluppatore**: serve comunque l'**Apple Developer Program** (99
+   $/anno) per pubblicare — lo stesso già citato nell'appendice "Continua con
+   Apple" più sotto. Se non ancora attivo, è un prerequisito.
+
+### Vincoli noti da rispettare da subito
+
+- Niente **pagamento diretto** (Stripe ecc.) per sbloccare funzioni dentro
+  l'app iOS: viola le linee guida Apple e fa rifiutare l'app in review. Gli
+  abbonamenti passano SEMPRE da IAP/StoreKit.
+- **Chiavi/API mai nel client** (regola già in CLAUDE.md) vale a maggior
+  ragione per le chiavi ads/IAP.
+- Mantenere lo **stile UX curato** già presente: la pubblicità non deve
+  rompere i pattern esistenti (`Sheet.jsx`, `ProductFields.jsx`, `Button.jsx`,
+  palette).
+
+---
+
 ## Stack tecnologico
 
 | Area | Tecnologia |
@@ -230,18 +290,27 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Todo prioritari
 
-1. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,
+1. **App nativa + monetizzazione** — punto di partenza della prossima chat:
+   vedi la sezione dedicata "Prossimo obiettivo" in cima a questo documento.
+   Prima si allineano le decisioni aperte con l'utente, poi si parte.
+2. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,
    niente fotocamera nativa — scelta UX dell'utente) su uno scontrino lungo reale;
    (b) **barcode in raffica** (vassoio, ri-scansione ×2, Fatto (N)) con prodotti
    reali; (c) torcia barcode dove supportata; (d) **offline end-to-end**
    (aggiungi/elimina in aereo → riaccendi la rete → replay outbox v2);
    (e) fix anti-freeze (uso prolungato con entra/esci da fotocamera/voce/profilo);
-   (f) **username + espulsione membri** con più account condivisi (migration-9 già
+   (f) **bug navbar a metà schermo** dopo chiudi/riapri la PWA (screenshot
+   dell'utente il 2026-07-03): sospetto iOS che al ritorno in foreground
+   calcola per un istante un viewport più corto e il `position: fixed;
+   bottom: 0` della navbar resta ancorato a quello finché non c'è un
+   reflow — **diagnosticato ma non ancora corretto**, nessun codice scritto;
+   (g) **username + espulsione membri** con più account condivisi (migration-9 già
    eseguita, feature confermata funzionante dall'utente il 2026-07-01).
-2. **Configurare Apple Sign-In** (Apple Developer + Supabase) — guida sotto.
-3. **Decidere il placeholder ricerca ricette** e applicarlo (1 riga, no a-capo).
+3. **Configurare Apple Sign-In** (Apple Developer + Supabase) — guida sotto.
+   *(Prerequisito comunque necessario per l'app nativa, vedi punto 1.)*
+4. **Decidere il placeholder ricerca ricette** e applicarlo (1 riga, no a-capo).
    *(Nota: distinto dal placeholder "Esigenze alimentari" nel Profilo, già fatto.)*
-4. Eventuali rifiniture UX su Spesa (altezze barra/nav sul dispositivo reale).
+5. Eventuali rifiniture UX su Spesa (altezze barra/nav sul dispositivo reale).
 
 ---
 

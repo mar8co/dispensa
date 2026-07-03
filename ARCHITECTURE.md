@@ -318,6 +318,17 @@ applica `upsert`/`remove` agli stati locali.
 
 ## 10. Scalabilità futura (considerazioni)
 
+- **App nativa (iOS, poi Android) + monetizzazione** — **prossimo obiettivo
+  strategico**, dettagli in `HANDOFF.md` → "Prossimo obiettivo" (leggerlo
+  prima di iniziare qualunque lavoro in quella direzione). Nessuna decisione
+  tecnica presa: ipotesi di lavoro è un **wrapper** (es. Capacitor) sul codice
+  React/Vite/Tailwind esistente, alternativa a un rewrite nativo — da
+  confermare con l'utente. Implicherà: nuove tabelle/colonne per gli
+  entitlements degli abbonamenti (RLS da estendere), integrazione
+  IAP/StoreKit (obbligatoria per Apple, niente pagamenti diretti tipo
+  Stripe dentro l'app), eventuale SDK di pubblicità con gestione App
+  Tracking Transparency. **Da non iniziare senza aver allineato le decisioni
+  aperte con l'utente.**
 - **Multi-utenza reale**: **fatta** — dispensa familiare con `households` +
   `household_members` + RLS `is_household_member`, inviti, username ed espulsione
   (migration-6/7/8/9). Estensioni possibili: ruoli più granulari, cronologia "chi
