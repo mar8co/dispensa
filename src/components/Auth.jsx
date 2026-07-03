@@ -130,9 +130,9 @@ export default function Auth() {
           <div className="mt-1.5 h-1 rounded-full bg-stone-300" />
         </div>
 
-        {/* Sottotitolo funzionale: le tre cose che l'app fa davvero. */}
+        {/* Sottotitolo: la promessa in due parole, non l'elenco feature. */}
         <p className="mt-5 text-sm leading-relaxed text-stone-500">
-          Scadenze sotto controllo, spesa condivisa e ricette con quello che hai.
+          Zero sprechi, zero pensieri.
         </p>
       </div>
 
