@@ -547,25 +547,28 @@ export default function PantryTab({
                         </button>
                       )}
 
-                      {/* Riga 2: stepper nudo a sinistra, unità a destra */}
-                      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
-                        <div data-tour="qty-stepper" className="flex items-center gap-3 px-1">
+                      {/* Riga 2 (zona quantità, separata dall'identità del
+                          prodotto da una riga sottile): stepper a sinistra,
+                          unità a destra. I bersagli −/+ sono 44px (h-11):
+                          il glifo resta piccolo, l'area di tocco no. */}
+                      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-hair pt-2">
+                        <div data-tour="qty-stepper" className="flex items-center gap-1">
                           <button
                             onClick={() => scheduleQty(adjustQty(qtyDraft, -1))}
                             disabled={out}
-                            className="text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
+                            className="flex h-11 w-11 items-center justify-center text-xl leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
                             aria-label="Diminuisci"
                           >−</button>
                           <input
                             inputMode="decimal"
-                            className="w-16 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
+                            className="w-14 border-0 bg-transparent text-center text-[15px] font-bold text-ink outline-none"
                             value={formatQtyDisplay(qtyDraft)}
                             onChange={(e) => scheduleQty(e.target.value.replace("½", "0,5"))}
                             aria-label="Quantità"
                           />
                           <button
                             onClick={() => scheduleQty(adjustQty(qtyDraft, 1))}
-                            className="text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
+                            className="flex h-11 w-11 items-center justify-center text-xl leading-none text-stone-500 transition hover:text-tomato active:scale-90"
                             aria-label="Aumenta"
                           >+</button>
                         </div>
