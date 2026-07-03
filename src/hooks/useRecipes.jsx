@@ -198,10 +198,18 @@ export function useRecipes({
   function initialServings() {
     return prefServings || 1;
   }
+  // Il numero scelto diventa la preferenza per le ricette future ("a casa
+  // siamo in X"): comodo, ma era un effetto collaterale invisibile che
+  // sorprendeva alla ricetta dopo. Un toast, UNA volta per sessione, lo dice.
+  const servingsNoticeRef = useRef(false);
   function changeServings(n) {
     const v = Math.max(1, n);
     setServings(v);
     setPrefServings(v);
+    if (!servingsNoticeRef.current) {
+      servingsNoticeRef.current = true;
+      showToast("Me lo ricorderò per le prossime ricette 👍", undefined, undefined, undefined, 3500);
+    }
   }
 
   const savedByTitle = (title) =>
