@@ -411,8 +411,7 @@ export default function ShoppingTab({
     const clean = String(n ?? name).trim();
     if (!clean) return;
     const res = await onAdd(clean, "1");
-    if (res?.restored) onNotify(<><strong>{clean}</strong> di nuovo in lista</>);
-    else if (res?.merged) onNotify(<><strong>{clean}</strong> era già in lista: quantità aumentata</>);
+    if (res?.merged) onNotify(<><strong>{clean}</strong> era già in lista: quantità aumentata</>);
     setName("");
     inputRef.current?.focus();
   }

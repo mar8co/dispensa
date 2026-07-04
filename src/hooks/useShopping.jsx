@@ -68,9 +68,17 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   // Aggiunge alla lista fondendo i duplicati per nome (le quantità si
   // sommano) e registrando lo storico. entries: [{ name, qty }]
   async function addToShoppingMerged(entries) {
-    const byNorm = new Map(shopping.map((x) => [norm(x.name), x]));
-    const updates = new Map(); // id esistente -> nuova qty
-    const restore = new Set(); // id di articoli da riportare dal carrello alla lista
+    // Il merge punta SOLO alle righe NON barrate (ancora da comprare). Se
+    // l'unica corrispondenza è nel carrello (già acquistato), ri-aggiungere
+    // NON la tocca: crea una riga NUOVA in lista, perché è un bisogno
+    // d'acquisto separato (es. un'altra patata comprata a parte).
+    const byNorm = new Map();
+    for (const x of shopping) {
+      const k = norm(x.name);
+      const cur = byNorm.get(k);
+      if (!cur || (cur.checked && !x.checked)) byNorm.set(k, x);
+    }
+    const updates = new Map(); // id esistente (non barrato) -> nuova qty
     const inserts = new Map(); // nome normalizzato -> { name, qty }
     for (const e of entries || []) {
       const name = String(e.name || "").trim();
@@ -78,12 +86,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
       const qty = normalizeWeight(String(e.qty || "1").trim() || "1");
       const k = norm(name);
       const ex = byNorm.get(k);
-      if (ex) {
-        updates.set(ex.id, normalizeWeight(mergeQty(updates.get(ex.id) ?? ex.qty, qty)));
-        // Se era già nel carrello (acquistato), ri-aggiungerlo è un NUOVO
-        // bisogno: torna in lista (checked=false), non resta tra i presi.
-        if (ex.checked) restore.add(ex.id);
-      }
+      if (ex && !ex.checked) updates.set(ex.id, normalizeWeight(mergeQty(updates.get(ex.id) ?? ex.qty, qty)));
       else if (inserts.has(k)) inserts.get(k).qty = normalizeWeight(mergeQty(inserts.get(k).qty, qty));
       else inserts.set(k, { name, qty });
     }
@@ -93,17 +96,12 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     const newRows = [...inserts.values()].map((e) => ({ id: newLocalId(), name: e.name, qty: e.qty }));
     setShopping((prev) => [
       ...newRows.map((r) => ({ ...r, checked: false, created_at: new Date().toISOString() })),
-      ...prev.map((x) => {
-        if (!updates.has(x.id)) return x;
-        const next = { ...x, qty: updates.get(x.id) };
-        if (restore.has(x.id)) next.checked = false; // riportato in lista
-        return next;
-      }),
+      ...prev.map((x) => (updates.has(x.id) ? { ...x, qty: updates.get(x.id) } : x)),
     ]);
-    for (const [id, qty] of updates) persistUpdate(id, restore.has(id) ? { qty, checked: false } : { qty });
+    for (const [id, qty] of updates) persistUpdate(id, { qty });
     if (newRows.length) persistInsertMany(newRows);
     bumpShopHistory((entries || []).map((e) => e.name));
-    return { added: newRows.length, merged: updates.size, restored: restore.size };
+    return { added: newRows.length, merged: updates.size };
   }
 
   // Aggiunta manuale alla spesa: correzione ortografica locale (stesso
@@ -111,7 +109,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   async function addShoppingItem(name, qty) {
     const res = await addToShoppingMerged([{ name: correctName(String(name)), qty }]);
     tourSignal("shopping-added");
-    return { merged: res.merged > 0, restored: res.restored > 0 };
+    return { merged: res.merged > 0 };
   }
 
   // Salvataggio automatico dal pannello di modifica della spesa (come quello

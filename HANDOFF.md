@@ -140,10 +140,12 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   constants.js; match a 3 livelli — prefisso del nome, prefisso di una parola
   qualsiasi es. "cotto"→"Prosciutto cotto", match a metà parola — esclude ciò
   che è già in lista). Il **microfono** nel campo diventa **X** (svuota) mentre
-  scrivi, torna microfono a campo vuoto. Merge duplicati; **ri-aggiungere un
-  prodotto già nel carrello lo riporta in lista** (nuovo bisogno d'acquisto).
-  Vista "per reparto" o piatta, **carrello** (campo `checked`) con reparto "Nel
-  carrello", "Sposta in dispensa", condivisione lista, wake-lock.
+  scrivi, torna microfono a campo vuoto. Merge duplicati (solo tra righe NON
+  barrate); **ri-aggiungere un prodotto già nel carrello NON lo tocca — crea
+  una riga nuova in lista** (nuovo bisogno d'acquisto separato, es. un'altra
+  patata comprata a parte). Vista "per reparto" o piatta, **carrello** (campo
+  `checked`) con reparto "Nel carrello", "Sposta in dispensa", condivisione
+  lista, wake-lock.
 - **Ricette**: generazione AI in base alla dispensa, occasioni/"modi" (Pranzo
   veloce, Schiscetta, ecc.), preferiti (❤️), cucinate (contatore), **modalità
   cucina** passo-passo con **timer**, scala porzioni, foto Pexels.
