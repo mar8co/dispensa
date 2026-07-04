@@ -155,12 +155,19 @@ export const PRODUCT_CATALOG = {
     "Mix di frutta secca", "Albicocche secche", "Prugne secche",
   ],
   "Dolci": [
-    "Biscotti", "Biscotti secchi", "Biscotti frollini", "Cioccolato",
-    "Cioccolato fondente", "Cioccolato al latte", "Cioccolato bianco",
-    "Merendine", "Marmellata", "Confettura", "Miele", "Zucchero",
-    "Zucchero di canna", "Zucchero a velo", "Nutella", "Crema spalmabile",
-    "Fette biscottate", "Muesli", "Wafer", "Budino", "Cacao",
-    "Cacao amaro", "Caramelle", "Torta", "Torta pronta", "Panettone",
+    "Biscotti", "Biscotti secchi", "Biscotti frollini",
+    // marche note di biscotti: mostrate come suggerimento (chi le digita cerca
+    // proprio queste), poi genericizzate in "Biscotti" all'inserimento
+    // (BRAND_TO_GENERIC in pantry.js → correctName), coerente col resto
+    // dell'app (mai la marca nel nome salvato).
+    "Gocciole", "Pan di Stelle", "Pavesini", "Ringo", "Oro Saiwa", "Abbracci",
+    "Macine", "Baiocchi", "Galletti", "Campagnole", "Grancereale", "Oreo",
+    "Digestive",
+    "Cioccolato", "Cioccolato fondente", "Cioccolato al latte",
+    "Cioccolato bianco", "Merendine", "Marmellata", "Confettura", "Miele",
+    "Zucchero", "Zucchero di canna", "Zucchero a velo", "Nutella",
+    "Crema spalmabile", "Fette biscottate", "Muesli", "Wafer", "Budino",
+    "Cacao", "Cacao amaro", "Caramelle", "Torta", "Torta pronta", "Panettone",
     "Pandoro", "Croissant", "Brioche", "Savoiardi", "Gelatina",
   ],
   "Surgelati": [

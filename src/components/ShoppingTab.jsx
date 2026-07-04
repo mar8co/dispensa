@@ -15,7 +15,7 @@ import {
   Share2, Lightbulb, X,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
-import { atMinQty, adjustQty, formatQtyDisplay, norm, matchKey } from "../lib/pantry.js";
+import { atMinQty, adjustQty, formatQtyDisplay, matchKey } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 
@@ -254,17 +254,15 @@ export default function ShoppingTab({
   const suggestions = useMemo(() => {
     const q = foldKey(name);
     if (!q) return [];
-    // L'uguaglianza "già scritto" resta LETTERALE (norm, non foldKey): due nomi
-    // possono avere la stessa chiave canonica (Carote/carota) pur essendo
-    // testo diverso — vogliamo comunque proporre "Carote" come completamento,
-    // non nasconderlo solo perché concettualmente coincide col singolare digitato.
-    const typed = norm(name);
+    // NON si esclude il caso "hai già scritto esattamente questo nome": la
+    // pillola resta comunque toccabile (conferma rapida, es. "Patate" scritto
+    // per intero continua a mostrare la chip "Patate" invece di sparire).
     // Tre livelli di pertinenza: prefisso del nome intero, prefisso di una
     // parola qualsiasi (es. "cotto" → "Prosciutto cotto"), match a metà parola.
     const starts = [], wordStarts = [], contains = [];
     for (const n of suggestPool) {
       const k = foldKey(n);
-      if (inList.has(k) || norm(n) === typed) continue;
+      if (inList.has(k)) continue;
       if (k.startsWith(q)) starts.push(n);
       else if (k.split(" ").some((w) => w.startsWith(q))) wordStarts.push(n);
       else if (k.includes(q)) contains.push(n);

@@ -142,9 +142,13 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   "cotto"→"Prosciutto cotto", match a metà parola) su una chiave **tollerante**
   (`foldKey` in ShoppingTab.jsx: `matchKey` di pantry.js per i plurali noti +
   rimozione accenti via `\p{Diacritic}`, così "pomodoro"/"pomodori" e
-  "caffe"/"Caffè" si trovano a vicenda); l'uguaglianza "già scritto" resta
-  letterale (norm) per non nascondere varianti col testo diverso (es. digiti
-  "carota", il catalogo propone "Carote"). Esclude ciò che è già in lista. Il
+  "caffe"/"Caffè" si trovano a vicenda). **Nessuna esclusione per il nome già
+  scritto per intero**: la pillola resta sempre toccabile (anche digitando
+  "Patate" per intero, la chip "Patate" non sparisce). Esclude solo ciò che è
+  già in lista. Marche note di biscotti (Gocciole, Pan di Stelle, Pavesini,
+  Ringo, Oro Saiwa, Abbracci, Macine, Baiocchi, Galletti, Campagnole,
+  Grancereale, Oreo, Digestive) compaiono come suggerimento e si genericizzano
+  in "Biscotti"/Dolci all'inserimento (`BRAND_TO_GENERIC` in pantry.js). Il
   **microfono** nel campo diventa **X** (svuota) mentre
   scrivi, torna microfono a campo vuoto. Merge duplicati (solo tra righe NON
   barrate); **ri-aggiungere un prodotto già nel carrello NON lo tocca — crea

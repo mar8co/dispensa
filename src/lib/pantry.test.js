@@ -80,10 +80,18 @@ describe("correctName", () => {
   it("genericizza le marche note nella categoria giusta", () => {
     expect(correctName("Pan di Stelle")).toBe("Biscotti");
     expect(guessCategory(correctName("Pan di Stelle"))).toBe("Dolci");
+    expect(correctName("Gocciole")).toBe("Biscotti");
+    expect(guessCategory(correctName("Gocciole"))).toBe("Dolci");
     expect(correctName("nutella")).toBe("Crema di nocciole");
     expect(guessCategory(correctName("nutella"))).toBe("Dolci");
     expect(correctName("Philadelphia")).toBe("Formaggio spalmabile");
     expect(guessCategory(correctName("Philadelphia"))).toBe("Latticini");
+  });
+  it("altre marche di biscotti genericizzano in Biscotti/Dolci", () => {
+    for (const brand of ["Baiocchi", "Galletti", "Oreo", "Digestive", "Grancereale"]) {
+      expect(correctName(brand)).toBe("Biscotti");
+      expect(guessCategory(correctName(brand))).toBe("Dolci");
+    }
   });
 });
 
