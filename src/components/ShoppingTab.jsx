@@ -15,7 +15,7 @@ import {
   Share2, Lightbulb, X,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
-import { atMinQty, adjustQty, formatQtyDisplay, norm } from "../lib/pantry.js";
+import { atMinQty, adjustQty, formatQtyDisplay, norm, matchKey } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 
@@ -230,11 +230,19 @@ export default function ShoppingTab({
   // --- Autocompletamento del campo: mentre scrivi, suggerisce da storico
   // acquisti → dispensa → catalogo prodotti comuni (in quest'ordine di
   // priorità, deduplicati). Tutto offline e istantaneo, niente AI. ---
+  //
+  // Chiave di confronto TOLLERANTE (solo per il matching, mai per il testo
+  // mostrato): matchKey riconduce i plurali noti al singolare (pomodori →
+  // pomodoro), poi si tolgono anche gli accenti (NFD + rimozione dei segni
+  // diacritici via \p{Diacritic}) così "caffe" trova "Caffè". Locale a questo
+  // componente: non tocca norm()/matchKey() condivise né la logica di merge
+  // altrove.
+  const foldKey = (s) => matchKey(s).normalize("NFD").replace(/\p{Diacritic}/gu, "");
   const suggestPool = useMemo(() => {
     const seen = new Set();
     const out = [];
     for (const n of [...historyNames, ...pantryNames, ...CATALOG_NAMES]) {
-      const k = norm(n);
+      const k = foldKey(n);
       if (!k || seen.has(k)) continue;
       seen.add(k);
       out.push(n);
@@ -242,16 +250,21 @@ export default function ShoppingTab({
     return out;
   }, [historyNames, pantryNames]);
   // Ciò che è già in lista non va ri-suggerito (sarebbe rumore).
-  const inList = useMemo(() => new Set(shopping.map((s) => norm(s.name))), [shopping]);
+  const inList = useMemo(() => new Set(shopping.map((s) => foldKey(s.name))), [shopping]);
   const suggestions = useMemo(() => {
-    const q = norm(name);
+    const q = foldKey(name);
     if (!q) return [];
+    // L'uguaglianza "già scritto" resta LETTERALE (norm, non foldKey): due nomi
+    // possono avere la stessa chiave canonica (Carote/carota) pur essendo
+    // testo diverso — vogliamo comunque proporre "Carote" come completamento,
+    // non nasconderlo solo perché concettualmente coincide col singolare digitato.
+    const typed = norm(name);
     // Tre livelli di pertinenza: prefisso del nome intero, prefisso di una
     // parola qualsiasi (es. "cotto" → "Prosciutto cotto"), match a metà parola.
     const starts = [], wordStarts = [], contains = [];
     for (const n of suggestPool) {
-      const k = norm(n);
-      if (k === q || inList.has(k)) continue;
+      const k = foldKey(n);
+      if (inList.has(k) || norm(n) === typed) continue;
       if (k.startsWith(q)) starts.push(n);
       else if (k.split(" ").some((w) => w.startsWith(q))) wordStarts.push(n);
       else if (k.includes(q)) contains.push(n);
@@ -510,18 +523,18 @@ export default function ShoppingTab({
           )}
         </div>
 
-        {/* Autocompletamento: le stesse chip di "Aggiungi a mano". Un tap e il
-            prodotto entra in lista (pointerdown: funziona con la tastiera iOS
-            aperta, senza che il blur chiuda le chip prima del tocco). */}
+        {/* Autocompletamento: le stesse chip (testo puro) di "Aggiungi a
+            mano". Un tap e il prodotto entra in lista (pointerdown: funziona
+            con la tastiera iOS aperta, senza che il blur chiuda le chip prima
+            del tocco). */}
         {suggestions.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {suggestions.map((n) => (
               <button
                 key={n}
                 onPointerDown={(e) => { e.preventDefault(); add(n); }}
-                className="flex items-center gap-1.5 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                className="rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
               >
-                <span className="text-sm leading-none">{CAT_ICON[catFor(n)] || "🍽️"}</span>
                 {n}
               </button>
             ))}

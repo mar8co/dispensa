@@ -277,7 +277,7 @@ applica `upsert`/`remove` agli stati locali.
 | Componente | Ruolo |
 |---|---|
 | `PantryTab.jsx` | Scheda Dispensa: categorie, ricerca, ordinamento, stepper ½, scadenze, "sta finendo", "Cucina con questo". |
-| `ShoppingTab.jsx` | Scheda Spesa: carrello, per-reparto, controlli in alto, barra azioni in basso, empty-state "Hai preso tutto!", autocompletamento del campo (chip con emoji da storico + dispensa + `PRODUCT_CATALOG`), microfono↔X. |
+| `ShoppingTab.jsx` | Scheda Spesa: carrello, per-reparto, controlli in alto, barra azioni in basso, empty-state "Hai preso tutto!", autocompletamento del campo (chip di testo da storico + dispensa + `PRODUCT_CATALOG`, matching tollerante `foldKey` = `matchKey` + accent-fold), microfono↔X. |
 | `RecipesTab.jsx` | Scheda Ricette: generazione AI, occasioni, preferiti/cucinate, display "q.b." (`isQbIngredient`). |
 | `CookModal.jsx` | "Ho cucinato": 3 corsie di scalatura della dispensa. |
 | `CookingMode.jsx`, `StepTimer.jsx`, `TimerBar.jsx` | Modalità cucina passo-passo + timer. |

@@ -135,11 +135,17 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   il campo inline; destinazioni diverse = niente ambiguità). L'overlay "Sto
   analizzando…" ha **Annulla** (aborta la richiesta AI).
 - **Lista della spesa**: aggiunta manuale/voce, **autocompletamento** mentre
-  scrivi (chip con emoji-reparto sotto il campo; pool storico acquisti → nomi in
-  dispensa → **catalogo prodotti** `PRODUCT_CATALOG`/`CATALOG_NAMES` in
-  constants.js; match a 3 livelli — prefisso del nome, prefisso di una parola
-  qualsiasi es. "cotto"→"Prosciutto cotto", match a metà parola — esclude ciò
-  che è già in lista). Il **microfono** nel campo diventa **X** (svuota) mentre
+  scrivi (chip di solo testo, bg bianco, sotto il campo — niente icona: coerenza
+  con "Aggiungi a mano"; pool storico acquisti → nomi in dispensa → **catalogo
+  prodotti** `PRODUCT_CATALOG`/`CATALOG_NAMES` in constants.js, ~470 voci). Match
+  a 3 livelli (prefisso del nome, prefisso di una parola qualsiasi es.
+  "cotto"→"Prosciutto cotto", match a metà parola) su una chiave **tollerante**
+  (`foldKey` in ShoppingTab.jsx: `matchKey` di pantry.js per i plurali noti +
+  rimozione accenti via `\p{Diacritic}`, così "pomodoro"/"pomodori" e
+  "caffe"/"Caffè" si trovano a vicenda); l'uguaglianza "già scritto" resta
+  letterale (norm) per non nascondere varianti col testo diverso (es. digiti
+  "carota", il catalogo propone "Carote"). Esclude ciò che è già in lista. Il
+  **microfono** nel campo diventa **X** (svuota) mentre
   scrivi, torna microfono a campo vuoto. Merge duplicati (solo tra righe NON
   barrate); **ri-aggiungere un prodotto già nel carrello NON lo tocca — crea
   una riga nuova in lista** (nuovo bisogno d'acquisto separato, es. un'altra
