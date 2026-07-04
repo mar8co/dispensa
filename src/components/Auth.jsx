@@ -114,9 +114,8 @@ export default function Auth() {
           — il posto che aspetta i prodotti di chi entra. */}
       <div className="mx-auto w-full max-w-sm pt-2">
         <h1 className="font-display text-[32px] font-extrabold leading-tight tracking-tight text-ink">
-          La tua{" "}
-          <span className="underline decoration-tomato decoration-wavy decoration-[2.5px] underline-offset-[6px]">cucina</span>
-          , in tasca.
+          Cosa c&rsquo;è in{" "}
+          <span className="underline decoration-tomato decoration-wavy decoration-[2.5px] underline-offset-[6px]">dispensa</span>?
         </h1>
 
         <div className="mt-7" aria-hidden="true">
@@ -131,11 +130,11 @@ export default function Auth() {
           <div className="mt-1.5 h-1 rounded-full bg-stone-300" />
         </div>
 
-        {/* Sottotitolo: la promessa in due parole, non l'elenco feature.
-            "Meno sprechi" in verde brand fisso (#43A047, non tematizzato:
-            l'unico accento di colore fuori dalla palette tomato/ink). */}
+        {/* Sottotitolo: la promessa. "Meno sprechi" in verde brand fisso
+            (#43A047, non tematizzato: l'unico accento fuori dalla palette
+            tomato/ink). */}
         <p className="mt-5 text-sm leading-relaxed text-stone-500">
-          <span className="font-semibold text-[#43A047]">Meno sprechi.</span> Zero pensieri.
+          La tua cucina, in tasca. <span className="font-semibold text-[#43A047]">Meno sprechi.</span> Zero pensieri.
         </p>
       </div>
 
