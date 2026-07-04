@@ -3,7 +3,7 @@
 // possono cambiare nome, quantità (stepper −/+) e categoria, o rimuoverlo.
 // Solo alla conferma i prodotti vengono aggiunti alla dispensa.
 import { useState } from "react";
-import { X, Check } from "lucide-react";
+import { X, Check, Mic } from "lucide-react";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
@@ -14,7 +14,7 @@ function tmpId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
+export default function ReviewScanModal({ initialItems, onCancel, onConfirm, onAddMore }) {
   const [items, setItems] = useState(() =>
     (initialItems || []).map((it) => ({
       id: tmpId(),
@@ -126,16 +126,25 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm }) {
             </div>
           </div>
         ) : (
-          <div className="flex gap-2 border-t border-hair px-5 py-3">
-            <Button variant="secondary" className="flex-1" onClick={() => (dirty ? setConfirmDiscard(true) : close())}>
-              Annulla
-            </Button>
-            <Button variant="primary" className="flex-[2]" onClick={() => onConfirm(items)} disabled={items.length === 0}>
-              <Check className="h-4 w-4" />
-              {items.length > 0
-                ? `Aggiungi ${items.length} ${items.length === 1 ? "prodotto" : "prodotti"}`
-                : "Aggiungi"}
-            </Button>
+          <div className="border-t border-hair px-5 py-3">
+            {/* Solo dal flusso voce (onAddMore presente): riapre la dettatura e
+                ACCODA i nuovi prodotti a questi, senza ricominciare da capo. */}
+            {onAddMore && (
+              <Button variant="secondary" full className="mb-2" onClick={() => onAddMore(items)}>
+                <Mic className="h-4 w-4" /> Aggiungi altri prodotti
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button variant="secondary" className="flex-1" onClick={() => (dirty ? setConfirmDiscard(true) : close())}>
+                Annulla
+              </Button>
+              <Button variant="primary" className="flex-[2]" onClick={() => onConfirm(items)} disabled={items.length === 0}>
+                <Check className="h-4 w-4" />
+                {items.length > 0
+                  ? `Aggiungi ${items.length} ${items.length === 1 ? "prodotto" : "prodotti"}`
+                  : "Aggiungi"}
+              </Button>
+            </div>
           </div>
         )}
       </>

@@ -125,7 +125,9 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   (persistito per-utente), stepper quantità con **mezzo pezzo (½)**, scadenze con
   banner ("scaduti" vs "in scadenza entro 7 gg", su due righe se entrambi),
   suggerimento "sta finendo" (solo nel pannello prodotto), "Cucina con questo".
-- **Aggiunta prodotti**: manuale, a voce (dettatura → AI estrae prodotti),
+- **Aggiunta prodotti**: manuale, a voce (dettatura → AI estrae prodotti →
+  **riepilogo** `ReviewScanModal`; da lì **"Aggiungi altri prodotti"** ri-apre la
+  dettatura e **accoda** i nuovi senza ricominciare da capo),
   **scontrino** (foto → AI), **codice a barre in raffica** (ZXing + Open Food
   Facts): lo scanner resta acceso, ogni bip accumula in un vassoio di chips
   (ri-scansione = quantità +1, tocco sulla chip = togli), "Fatto (N)" apre la

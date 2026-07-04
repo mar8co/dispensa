@@ -214,7 +214,9 @@ verifica la sessione) → se assente mostra `Auth.jsx` (magic-link / Google / Ap
 **Aggiungere un prodotto** (FAB → AddMenu)
 - *Manuale*: `ManualAddModal` → `usePantry` (correzione nome locale + categoria
   via `categorize`).
-- *Voce*: `VoiceAddModal` → trascrizione → `callClaude` estrae prodotti → insert.
+- *Voce*: `VoiceAddModal` → trascrizione → `callClaude` estrae prodotti →
+  `ReviewScanModal` (revisione). Nel riepilogo "Aggiungi altri prodotti"
+  ri-detta e **accoda** (`onAddMore` + `voiceAppendRef` in `Dispensa.jsx`).
 - *Scontrino*: `ReceiptScanModal` → anteprima live in-app alla massima
   risoluzione del track (constraints + `applyConstraints`) → cattura frame →
   resize a 2000px (`lib/image.js → videoFrameToBase64`) → `callClaude` (immagine,
@@ -284,7 +286,7 @@ applica `upsert`/`remove` agli stati locali.
 | `ExpiryCalendar.jsx` | Calendario scadenza **in-app** (rimpiazza il date picker nativo iOS): niente preselezione, scorciatoie Oggi/Domani/Tra 3 gg, in-flow. Usato da `ProductFields`. |
 | `CameraScanShell.jsx` | Guscio comune alle due fotocamere (barcode/scontrino). |
 | `BarcodeScanModal.jsx` / `ReceiptScanModal.jsx` | Scanner (lazy-loaded). |
-| `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. |
+| `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. Dal flusso voce (prop `onAddMore`) mostra "Aggiungi altri prodotti": ri-detta e accoda. |
 | `ManualAddModal.jsx` / `VoiceAddModal.jsx` | Aggiunta manuale / a voce. |
 | `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | FAB "+", menu aggiunta, navigazione. |
 | `ProfileSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo (Nome/username al posto della mail, Esigenze alimentari in box 2 righe, tema, logout, privacy). |

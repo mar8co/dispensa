@@ -149,6 +149,8 @@ export default function Dispensa({ session }) {
   const [barcodeOpen, setBarcodeOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [voiceReview, setVoiceReview] = useState(false); // il riepilogo aperto viene dalla voce → mostra "Aggiungi altri prodotti"
+  const voiceAppendRef = useRef(false); // il prossimo risultato voce si ACCODA al riepilogo invece di sostituirlo
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
 
@@ -621,6 +623,7 @@ export default function Dispensa({ session }) {
       else {
         // Non aggiunge subito: apre la modale di revisione per nome/categoria.
         setScanItems(list);
+        setVoiceReview(false); // scontrino: niente tasto "Aggiungi altri prodotti"
         bumpModal("scan");
         setScanOpen(true);
       }
@@ -671,6 +674,7 @@ export default function Dispensa({ session }) {
         };
       }));
       setScanItems(cleaned.map(({ name, qty, category }) => ({ name, qty, category })));
+      setVoiceReview(false); // barcode: niente tasto "Aggiungi altri prodotti"
       bumpModal("scan");
       setScanOpen(true);
       const missing = cleaned.filter((x) => !x.found).length;
@@ -688,9 +692,18 @@ export default function Dispensa({ session }) {
   }
 
   // Aggiunta a voce: la frase trascritta viene passata all'AI che estrae e
-  // categorizza gli alimenti, poi si apre la revisione (come per le foto).
+  // categorizza gli alimenti, poi si apre la revisione (come per le foto). Dal
+  // riepilogo si può "Aggiungi altri prodotti": ri-detta e ACCODA (append).
   async function handleVoiceResult(transcript) {
-    if (!transcript) { setVoiceOpen(false); return; }
+    // "append" = si arriva dal riepilogo ("Aggiungi altri prodotti"): i nuovi
+    // prodotti si ACCODANO a quelli già riconosciuti invece di sostituirli.
+    const append = voiceAppendRef.current;
+    voiceAppendRef.current = false;
+    if (!transcript) {
+      setVoiceOpen(false);
+      if (append) { bumpModal("scan"); setScanOpen(true); } // torna al riepilogo intatto
+      return;
+    }
     setVoiceProcessing(true);
     try {
       const prompt =
@@ -713,8 +726,13 @@ export default function Dispensa({ session }) {
       }));
       setVoiceProcessing(false);
       setVoiceOpen(false);
-      if (!list.length) { showToast("Non ho riconosciuto alimenti. Riprova."); return; }
-      setScanItems(list);
+      if (!list.length) {
+        showToast("Non ho riconosciuto alimenti. Riprova.");
+        if (append) { bumpModal("scan"); setScanOpen(true); } // riapri il riepilogo con quanto già c'era
+        return;
+      }
+      setVoiceReview(true); // il riepilogo mostrerà "Aggiungi altri prodotti"
+      setScanItems((prev) => (append ? [...prev, ...list] : list));
       bumpModal("scan");
       setScanOpen(true);
     } catch (e) {
@@ -722,7 +740,19 @@ export default function Dispensa({ session }) {
       setVoiceProcessing(false);
       setVoiceOpen(false);
       showToast(aiErrorMessage(e, "Errore nell'elaborare la voce. Riprova."));
+      if (append) { bumpModal("scan"); setScanOpen(true); } // non perdere quanto già riconosciuto
     }
+  }
+
+  // Dal riepilogo voce: "Aggiungi altri prodotti" → riapre la dettatura senza
+  // perdere ciò che è già stato riconosciuto (incluse le modifiche fatte); il
+  // risultato della nuova dettatura si accoda al ritorno (append).
+  function handleReviewAddMore(currentItems) {
+    setScanItems(currentItems);   // conserva l'elenco corrente (con le modifiche)
+    setScanOpen(false);
+    voiceAppendRef.current = true;
+    bumpModal("voice");
+    setVoiceOpen(true);
   }
 
   // Conferma dei prodotti rivisti nella modale: vengono aggiunti alla
@@ -741,6 +771,7 @@ export default function Dispensa({ session }) {
       showToast(`${valid.length} prodotti aggiunti.`);
     }
     setScanItems([]);
+    setVoiceReview(false);
   }
 
   // Porta la pagina in cima (ogni sezione/categoria riparte dall'alto).
@@ -1085,8 +1116,9 @@ export default function Dispensa({ session }) {
         <ReviewScanModal
           key={modalEpoch.current.scan}
           initialItems={scanItems}
-          onCancel={() => { setScanOpen(false); setScanItems([]); }}
+          onCancel={() => { setScanOpen(false); setScanItems([]); setVoiceReview(false); }}
           onConfirm={confirmScan}
+          onAddMore={voiceReview ? handleReviewAddMore : undefined}
         />
       )}
 
@@ -1104,7 +1136,13 @@ export default function Dispensa({ session }) {
         <VoiceAddModal
           key={modalEpoch.current.voice}
           processing={voiceProcessing}
-          onCancel={() => { if (!voiceProcessing) setVoiceOpen(false); }}
+          onCancel={() => {
+            if (voiceProcessing) return;
+            setVoiceOpen(false);
+            // Se stavo aggiungendo altri prodotti a voce, torno al riepilogo
+            // senza perdere quelli già riconosciuti.
+            if (voiceAppendRef.current) { voiceAppendRef.current = false; bumpModal("scan"); setScanOpen(true); }
+          }}
           onResult={handleVoiceResult}
         />
       )}
