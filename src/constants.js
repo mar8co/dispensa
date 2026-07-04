@@ -36,6 +36,113 @@ export const CAT_ICON = {
   "Condimenti e Salse": "🫙", "Spezie ed Erbe": "🌿", "Altro": "📦",
 };
 
+// Catalogo prodotti comuni (nomi puliti, pronti da mostrare) per i suggerimenti
+// della lista della spesa. Raggruppato per reparto solo per leggerezza di
+// manutenzione: l'emoji della chip la decide comunque `catForShopping` (così è
+// sempre coerente col reparto in cui finirà il prodotto). Storico acquisti e
+// dispensa restano prioritari; questo è la base "cold start" quando non bastano.
+export const PRODUCT_CATALOG = {
+  "Verdura": [
+    "Pomodori", "Pomodorini", "Insalata", "Lattuga", "Zucchine", "Melanzane",
+    "Peperoni", "Carote", "Cipolle", "Aglio", "Patate", "Patate dolci", "Zucca",
+    "Finocchi", "Sedano", "Funghi", "Funghi champignon", "Avocado", "Broccoli",
+    "Spinaci", "Cavolfiore", "Cavolo", "Verza", "Porri", "Asparagi", "Rucola",
+    "Radicchio", "Bietole", "Fagiolini", "Cetrioli", "Ravanelli", "Scalogno",
+    "Carciofi", "Songino", "Cime di rapa", "Limoni", "Lime", "Prezzemolo",
+    "Basilico",
+  ],
+  "Frutta": [
+    "Arance", "Mele", "Banane", "Fragole", "Pere", "Pesche", "Kiwi", "Uva",
+    "Anguria", "Melone", "Ananas", "Mandarini", "Clementine", "Albicocche",
+    "Ciliegie", "Prugne", "Fichi", "Mirtilli", "Lamponi", "Pompelmo",
+    "Frutti di bosco", "Cachi", "Melograno", "More", "Papaya", "Mango",
+    "Cocco", "Nespole",
+  ],
+  "Carne": [
+    "Pollo", "Petto di pollo", "Cosce di pollo", "Fusi di pollo", "Ali di pollo",
+    "Manzo", "Maiale", "Tacchino", "Fesa di tacchino", "Vitello", "Salsicce",
+    "Macinato", "Bistecche", "Hamburger", "Cotolette", "Spezzatino", "Arrosto",
+    "Costine", "Scaloppine", "Braciole", "Ossobuco", "Fegato", "Spiedini",
+    "Polpette", "Lonza", "Tagliata", "Filetto di manzo",
+  ],
+  "Salumi": [
+    "Prosciutto crudo", "Prosciutto cotto", "Salame", "Mortadella", "Speck",
+    "Bresaola", "Pancetta", "Wurstel", "Coppa", "Porchetta", "Guanciale",
+    "Lardo", "Culatello", "Nduja", "Finocchiona", "Soppressata", "Salsiccia",
+  ],
+  "Pesce": [
+    "Salmone", "Merluzzo", "Gamberi", "Gamberetti", "Calamari", "Vongole",
+    "Cozze", "Branzino", "Orata", "Baccalà", "Seppie", "Polpo", "Sgombro",
+    "Tonno fresco", "Trota", "Sogliola", "Platessa", "Nasello", "Pesce spada",
+    "Alici", "Scampi", "Totani", "Surimi", "Granchio",
+  ],
+  "Latticini": [
+    "Latte", "Latte intero", "Latte parzialmente scremato", "Latte scremato",
+    "Formaggio", "Parmigiano", "Pecorino", "Mozzarella", "Mozzarella di bufala",
+    "Yogurt", "Yogurt greco", "Burro", "Panna", "Panna da cucina", "Ricotta",
+    "Mascarpone", "Gorgonzola", "Stracchino", "Philadelphia", "Scamorza",
+    "Provola", "Fontina", "Burrata", "Caciotta", "Emmental", "Asiago",
+    "Taleggio", "Robiola",
+  ],
+  "Pane e Forno": [
+    "Pane", "Pane integrale", "Pancarré", "Piadina", "Cracker", "Grissini",
+    "Focaccia", "Taralli", "Panini", "Baguette", "Tortillas", "Pita",
+    "Friselle", "Ciabatta",
+  ],
+  "Pasta, Riso e Cereali": [
+    "Pasta", "Pasta integrale", "Spaghetti", "Penne", "Fusilli", "Rigatoni",
+    "Farfalle", "Tagliatelle", "Lasagne", "Tortellini", "Ravioli", "Gnocchi",
+    "Riso", "Riso basmati", "Riso integrale", "Cous cous", "Farina", "Avena",
+    "Fiocchi di avena", "Cereali", "Orzo", "Farro", "Polenta", "Pangrattato",
+    "Quinoa", "Semola", "Lievito",
+  ],
+  "Legumi": [
+    "Fagioli", "Fagioli cannellini", "Fagioli borlotti", "Ceci", "Lenticchie",
+    "Piselli", "Fave", "Soia", "Edamame",
+  ],
+  "Conserve": [
+    "Tonno in scatola", "Pomodori pelati", "Passata di pomodoro",
+    "Concentrato di pomodoro", "Polpa di pomodoro", "Acciughe", "Sardine",
+    "Olive", "Mais", "Capperi", "Carciofini", "Fagioli in scatola",
+    "Ceci in scatola",
+  ],
+  "Condimenti e Salse": [
+    "Olio EVO", "Olio di semi", "Aceto", "Aceto balsamico", "Maionese",
+    "Ketchup", "Senape", "Pesto", "Sugo pronto", "Brodo", "Dado", "Besciamella",
+    "Salsa di soia", "Tabasco",
+  ],
+  "Spezie ed Erbe": [
+    "Sale", "Pepe", "Paprika", "Curcuma", "Cumino", "Origano", "Rosmarino",
+    "Timo", "Cannella", "Zenzero", "Peperoncino", "Noce moscata", "Curry",
+    "Zafferano", "Alloro", "Salvia", "Vaniglia",
+  ],
+  "Frutta Secca": [
+    "Mandorle", "Noci", "Nocciole", "Pistacchi", "Pinoli", "Anacardi",
+    "Arachidi", "Uvetta", "Datteri", "Semi di chia", "Semi di lino",
+    "Semi di girasole", "Semi di zucca", "Fichi secchi",
+  ],
+  "Dolci": [
+    "Biscotti", "Cioccolato", "Cioccolato fondente", "Merendine", "Marmellata",
+    "Miele", "Zucchero", "Zucchero di canna", "Nutella", "Fette biscottate",
+    "Muesli", "Wafer", "Budino", "Cacao", "Caramelle", "Torta", "Panettone",
+    "Pandoro",
+  ],
+  "Surgelati": [
+    "Piselli surgelati", "Spinaci surgelati", "Minestrone surgelato",
+    "Bastoncini di pesce", "Sofficini", "Gelato", "Ghiaccioli",
+    "Pizza surgelata", "Patatine surgelate", "Verdure surgelate",
+  ],
+  "Bevande": [
+    "Acqua", "Acqua frizzante", "Acqua naturale", "Caffè", "Succo di frutta",
+    "Vino", "Vino rosso", "Vino bianco", "Birra", "Coca cola", "Aranciata",
+    "Tè", "Tisana", "Camomilla", "Spremuta", "Latte di soia", "Latte di avena",
+    "Latte di mandorla", "Latte di cocco", "Prosecco", "Spumante",
+  ],
+};
+
+// Lista piatta dei nomi del catalogo (per il pool dei suggerimenti).
+export const CATALOG_NAMES = Object.values(PRODUCT_CATALOG).flat();
+
 export const MODES = [
   { id: "Pranzo veloce", icon: "⚡", desc: "Pronto in massimo 20 minuti" },
   { id: "Schiscetta", icon: "🍱", desc: "Da preparare e portare via" },

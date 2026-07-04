@@ -12,9 +12,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Pencil, Mic, Check, Trash2, PackagePlus, Loader2, ListChecks, Store,
-  Share2, Lightbulb,
+  Share2, Lightbulb, X,
 } from "lucide-react";
-import { AISLE_ORDER, CAT_ICON } from "../constants.js";
+import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
 import { atMinQty, adjustQty, formatQtyDisplay, norm } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
@@ -227,13 +227,13 @@ export default function ShoppingTab({
   const cartCount = cart.length;
   const allInCart = shopping.length > 0 && cartCount === shopping.length;
 
-  // --- Autocompletamento del campo: mentre scrivi, suggerisce dallo storico
-  // acquisti + nomi già in dispensa (STESSO pool di "Aggiungi a mano", così le
-  // chip si comportano identiche). Tutto offline e istantaneo, niente AI. ---
+  // --- Autocompletamento del campo: mentre scrivi, suggerisce da storico
+  // acquisti → dispensa → catalogo prodotti comuni (in quest'ordine di
+  // priorità, deduplicati). Tutto offline e istantaneo, niente AI. ---
   const suggestPool = useMemo(() => {
     const seen = new Set();
     const out = [];
-    for (const n of [...historyNames, ...pantryNames]) {
+    for (const n of [...historyNames, ...pantryNames, ...CATALOG_NAMES]) {
       const k = norm(n);
       if (!k || seen.has(k)) continue;
       seen.add(k);
@@ -246,14 +246,17 @@ export default function ShoppingTab({
   const suggestions = useMemo(() => {
     const q = norm(name);
     if (!q) return [];
-    const starts = [], contains = [];
+    // Tre livelli di pertinenza: prefisso del nome intero, prefisso di una
+    // parola qualsiasi (es. "cotto" → "Prosciutto cotto"), match a metà parola.
+    const starts = [], wordStarts = [], contains = [];
     for (const n of suggestPool) {
       const k = norm(n);
       if (k === q || inList.has(k)) continue;
-      if (k.startsWith(q)) starts.push(n);       // prefisso: la predizione "vera"
-      else if (k.includes(q)) contains.push(n);  // match anche a metà parola
+      if (k.startsWith(q)) starts.push(n);
+      else if (k.split(" ").some((w) => w.startsWith(q))) wordStarts.push(n);
+      else if (k.includes(q)) contains.push(n);
     }
-    return [...starts, ...contains].slice(0, 5); // prefissi prima
+    return [...starts, ...wordStarts, ...contains].slice(0, 6);
   }, [suggestPool, inList, name]);
 
   // Wake Lock: tiene lo schermo acceso mentre fai la spesa (se supportato).
@@ -408,7 +411,8 @@ export default function ShoppingTab({
     const clean = String(n ?? name).trim();
     if (!clean) return;
     const res = await onAdd(clean, "1");
-    if (res?.merged) onNotify(<><strong>{clean}</strong> era già in lista: quantità aumentata</>);
+    if (res?.restored) onNotify(<><strong>{clean}</strong> di nuovo in lista</>);
+    else if (res?.merged) onNotify(<><strong>{clean}</strong> era già in lista: quantità aumentata</>);
     setName("");
     inputRef.current?.focus();
   }
@@ -482,15 +486,29 @@ export default function ShoppingTab({
             placeholder="Scrivi o dimmi cosa ti manca…"
             className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-10 text-sm text-ink outline-none focus:border-ink"
           />
-          {/* Microfono OUTLINE dentro il campo (arancione, senza riempimento) */}
-          <button
-            onClick={onOpenVoice}
-            aria-label="Aggiungi a voce"
-            title="Aggiungi a voce"
-            className="absolute right-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-tomato transition active:scale-90"
-          >
-            <Mic className="h-[22px] w-[22px]" />
-          </button>
+          {/* Mentre scrivi il microfono diventa una X per svuotare il campo; a
+              campo vuoto torna microfono (dettatura). Coerenza voce↔manuale. */}
+          {name ? (
+            <button
+              type="button"
+              onClick={() => { setName(""); inputRef.current?.focus(); }}
+              aria-label="Cancella"
+              title="Cancella"
+              className="absolute right-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-stone-500 transition hover:text-ink active:scale-90"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenVoice}
+              aria-label="Aggiungi a voce"
+              title="Aggiungi a voce"
+              className="absolute right-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-tomato transition active:scale-90"
+            >
+              <Mic className="h-[22px] w-[22px]" />
+            </button>
+          )}
         </div>
 
         {/* Autocompletamento: le stesse chip di "Aggiungi a mano". Un tap e il
@@ -502,8 +520,9 @@ export default function ShoppingTab({
               <button
                 key={n}
                 onPointerDown={(e) => { e.preventDefault(); add(n); }}
-                className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                className="flex items-center gap-1.5 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
               >
+                <span className="text-sm leading-none">{CAT_ICON[catFor(n)] || "🍽️"}</span>
                 {n}
               </button>
             ))}

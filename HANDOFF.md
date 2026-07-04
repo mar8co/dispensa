@@ -135,11 +135,15 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   il campo inline; destinazioni diverse = niente ambiguità). L'overlay "Sto
   analizzando…" ha **Annulla** (aborta la richiesta AI).
 - **Lista della spesa**: aggiunta manuale/voce, **autocompletamento** mentre
-  scrivi (chip sotto il campo, dallo storico acquisti + nomi in dispensa;
-  prefissi prima, esclude ciò che è già in lista — stesso pool di "Aggiungi a
-  mano"), merge duplicati, vista "per reparto" o piatta, **carrello** (campo
-  `checked`) con reparto "Nel carrello", "Sposta in dispensa", condivisione
-  lista, wake-lock ("schermo sempre acceso").
+  scrivi (chip con emoji-reparto sotto il campo; pool storico acquisti → nomi in
+  dispensa → **catalogo prodotti** `PRODUCT_CATALOG`/`CATALOG_NAMES` in
+  constants.js; match a 3 livelli — prefisso del nome, prefisso di una parola
+  qualsiasi es. "cotto"→"Prosciutto cotto", match a metà parola — esclude ciò
+  che è già in lista). Il **microfono** nel campo diventa **X** (svuota) mentre
+  scrivi, torna microfono a campo vuoto. Merge duplicati; **ri-aggiungere un
+  prodotto già nel carrello lo riporta in lista** (nuovo bisogno d'acquisto).
+  Vista "per reparto" o piatta, **carrello** (campo `checked`) con reparto "Nel
+  carrello", "Sposta in dispensa", condivisione lista, wake-lock.
 - **Ricette**: generazione AI in base alla dispensa, occasioni/"modi" (Pranzo
   veloce, Schiscetta, ecc.), preferiti (❤️), cucinate (contatore), **modalità
   cucina** passo-passo con **timer**, scala porzioni, foto Pexels.
