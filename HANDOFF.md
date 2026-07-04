@@ -132,9 +132,12 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   revisione unica. Il FAB "+" compare **solo nella Dispensa** (nella Spesa c'è
   il campo inline; destinazioni diverse = niente ambiguità). L'overlay "Sto
   analizzando…" ha **Annulla** (aborta la richiesta AI).
-- **Lista della spesa**: aggiunta manuale/voce, merge duplicati, vista "per
-  reparto" o piatta, **carrello** (campo `checked`) con reparto "Nel carrello",
-  "Sposta in dispensa", condivisione lista, wake-lock ("schermo sempre acceso").
+- **Lista della spesa**: aggiunta manuale/voce, **autocompletamento** mentre
+  scrivi (chip sotto il campo, dallo storico acquisti + nomi in dispensa;
+  prefissi prima, esclude ciò che è già in lista — stesso pool di "Aggiungi a
+  mano"), merge duplicati, vista "per reparto" o piatta, **carrello** (campo
+  `checked`) con reparto "Nel carrello", "Sposta in dispensa", condivisione
+  lista, wake-lock ("schermo sempre acceso").
 - **Ricette**: generazione AI in base alla dispensa, occasioni/"modi" (Pranzo
   veloce, Schiscetta, ecc.), preferiti (❤️), cucinate (contatore), **modalità
   cucina** passo-passo con **timer**, scala porzioni, foto Pexels.

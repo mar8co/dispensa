@@ -9,13 +9,13 @@
 // NB sul data layer: il "carrello" è il campo persistito `checked` degli item
 // (uso solo i prop esistenti: onToggle/onToggleAll/onMoveChecked/onClearChecked).
 // Nessuna query/tabella/campo modificato.
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Pencil, Mic, Check, Trash2, PackagePlus, Loader2, ListChecks, Store,
   Share2, Lightbulb,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON } from "../constants.js";
-import { atMinQty, adjustQty, formatQtyDisplay } from "../lib/pantry.js";
+import { atMinQty, adjustQty, formatQtyDisplay, norm } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 
@@ -214,6 +214,7 @@ export default function ShoppingTab({
   onAdd, onToggle, onDelete, onToggleAll, onMoveChecked, onClearChecked,
   movingChecked, byAisle, setByAisle,
   catFor, onAutoSave, onOpenVoice, onNotify,
+  historyNames = [], pantryNames = [],
 }) {
   const [name, setName] = useState(""); // campo di inserimento in linea
   const inputRef = useRef(null);
@@ -225,6 +226,35 @@ export default function ShoppingTab({
   const todo = shopping.filter((s) => !s.checked);
   const cartCount = cart.length;
   const allInCart = shopping.length > 0 && cartCount === shopping.length;
+
+  // --- Autocompletamento del campo: mentre scrivi, suggerisce dallo storico
+  // acquisti + nomi già in dispensa (STESSO pool di "Aggiungi a mano", così le
+  // chip si comportano identiche). Tutto offline e istantaneo, niente AI. ---
+  const suggestPool = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const n of [...historyNames, ...pantryNames]) {
+      const k = norm(n);
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      out.push(n);
+    }
+    return out;
+  }, [historyNames, pantryNames]);
+  // Ciò che è già in lista non va ri-suggerito (sarebbe rumore).
+  const inList = useMemo(() => new Set(shopping.map((s) => norm(s.name))), [shopping]);
+  const suggestions = useMemo(() => {
+    const q = norm(name);
+    if (!q) return [];
+    const starts = [], contains = [];
+    for (const n of suggestPool) {
+      const k = norm(n);
+      if (k === q || inList.has(k)) continue;
+      if (k.startsWith(q)) starts.push(n);       // prefisso: la predizione "vera"
+      else if (k.includes(q)) contains.push(n);  // match anche a metà parola
+    }
+    return [...starts, ...contains].slice(0, 5); // prefissi prima
+  }, [suggestPool, inList, name]);
 
   // Wake Lock: tiene lo schermo acceso mentre fai la spesa (se supportato).
   const wakeSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
@@ -462,6 +492,23 @@ export default function ShoppingTab({
             <Mic className="h-[22px] w-[22px]" />
           </button>
         </div>
+
+        {/* Autocompletamento: le stesse chip di "Aggiungi a mano". Un tap e il
+            prodotto entra in lista (pointerdown: funziona con la tastiera iOS
+            aperta, senza che il blur chiuda le chip prima del tocco). */}
+        {suggestions.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {suggestions.map((n) => (
+              <button
+                key={n}
+                onPointerDown={(e) => { e.preventDefault(); add(n); }}
+                className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Controlli sempre in alto, sotto la barra di testo. */}
         {shopping.length > 0 && (
