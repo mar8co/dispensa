@@ -24,10 +24,68 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 
 ---
 
-## Prossimo obiettivo: app nativa (iOS, poi Android) + monetizzazione
+## Prossimo obiettivo: push scadenze → piano pasti → app nativa + monetizzazione
 
-> **Stato: solo pianificazione — nessuna riga di codice scritta per questo.**
-> Le prossime chat su questo repo (`dispensa`) ripartono da qui.
+> **Stato: roadmap approvata dall'utente il 2026-07-04 — nessuna riga di
+> codice ancora scritta.** Le prossime chat su questo repo (`dispensa`)
+> ripartono dalla **Fase 1**. Le due feature preparano il lancio nativo:
+> le push sono il motore di retention, il piano pasti la feature Pro di punta.
+
+### Fase 1 — Notifiche push per le scadenze (impegno medio) ← SI PARTE DA QUI
+
+**Perché**: oggi le scadenze sono passive — il banner "in scadenza" si vede
+solo aprendo l'app; se non la apri, il latte scade in silenzio. Le push
+chiudono il buco e sono il prerequisito di retention per la monetizzazione.
+
+**Architettura prevista** (coerente coi proxy esistenti — dettagli da
+confermare in chat prima di scrivere codice):
+
+- **Web Push su iOS**: funziona da iOS 16.4+ SOLO con PWA **installata**
+  (il caso dell'utente). Il permesso va chiesto da un gesto utente esplicito
+  (toggle nel Profilo, es. "Avvisami delle scadenze"), mai all'avvio.
+- **Nuova tabella `push_subscriptions`** (user_id, endpoint, chiavi p256dh/auth,
+  created_at; RLS per utente) — **migration-10.sql**: come sempre file SQL
+  manuale che l'utente esegue nel SQL Editor Supabase. Modifica al data layer
+  **già autorizzata in linea di principio** (2026-07-04), ma lo schema concreto
+  va proposto all'utente prima di scrivere la migration.
+- **Endpoint `api/push.js` → `server/push.js`** per registrare/rimuovere la
+  subscription (verifica token Supabase come gli altri proxy).
+- **Cron Vercel** (`vercel.json` → `crons`) che ogni mattina trova i prodotti
+  in scadenza e invia le notifiche con la libreria **`web-push`** (dipendenza
+  solo server, giustificata). Chiavi **VAPID** nelle env Vercel (la public key
+  può stare nel client; la private MAI).
+- **Idea collegata approvata come direzione**: notifica "Hai N prodotti in
+  scadenza: vuoi una ricetta per usarli?" che apre le Ricette.
+
+**Decisioni aperte (fase 1)**: orario d'invio, anticipo di default (1/3/7
+giorni?), copy delle notifiche, comportamento multi-household (avvisare tutti
+i membri del nucleo o solo chi ha attivato il toggle?).
+
+### Fase 2 — Piano pasti settimanale (impegno grande, feature Pro di punta)
+
+**Il ciclo che chiude il cerchio "zero sprechi"**: pianifichi la settimana →
+la lista della spesa si genera dai soli ingredienti mancanti → cucini
+(CookModal scala la dispensa) → la dispensa resta allineata.
+
+**Riusa pezzi esistenti**: `useRecipes` (generazione AI con stagione/contesti/
+porzioni), `saved_recipes` (ricettario), `findMatch`/`addMissingToShopping`
+(calcolo mancanti, oggi su una ricetta alla volta), `CookModal` (scala).
+
+**Serve di nuovo**: tabella **`meal_plan`** (es. id, household_id, user_id,
+date, slot pranzo/cena, titolo+data jsonb della ricetta; RLS
+`is_household_member`) — **migration-11.sql** manuale, schema da proporre
+prima; una **vista calendario settimanale** (dove vive? scheda nuova o dentro
+Ricette? → mockup con opzioni PRIMA di scrivere codice, come da regole).
+
+**Monetizzazione**: pensata come feature **Pro** (ipotesi: free pianifica 2-3
+giorni, Pro la settimana + suggerimenti automatici) — la scelta esatta del
+paywall si prende nella fase 3, la feature va costruita completa.
+
+**Decisioni aperte (fase 2)**: collocazione UI, slot (solo cena o
+pranzo+cena), come si sceglie la ricetta (ricettario vs generazione al volo),
+come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
+
+### Fase 3 — App nativa (iOS, poi Android) + monetizzazione
 
 **Traguardo**: trasformare **questa PWA** in una vera **app nativa pubblicata
 sull'App Store** (e più avanti su Google Play), introducendo la
@@ -42,7 +100,7 @@ conversione diretta di **questo** codice (React/Vite/Tailwind/Supabase) in app
 nativa, non lo sviluppo di Cambusa. Se in una chat futura non è chiaro su
 quale dei due repo si sta lavorando, chiedilo prima di agire.
 
-### Decisioni aperte (da affrontare CON l'utente a inizio della prossima chat)
+#### Decisioni aperte (fase 3 — da affrontare CON l'utente quando ci si arriva)
 
 Nessuna di queste è ancora decisa — vanno proposte con opzioni + una
 raccomandazione (regola generale in `CLAUDE.md`), mai assunte in autonomia:
@@ -71,7 +129,7 @@ raccomandazione (regola generale in `CLAUDE.md`), mai assunte in autonomia:
    $/anno) per pubblicare — lo stesso già citato nell'appendice "Continua con
    Apple" più sotto. Se non ancora attivo, è un prerequisito.
 
-### Vincoli noti da rispettare da subito
+#### Vincoli noti da rispettare da subito (valgono già dalle fasi 1-2)
 
 - Niente **pagamento diretto** (Stripe ecc.) per sbloccare funzioni dentro
   l'app iOS: viola le linee guida Apple e fa rifiutare l'app in review. Gli
@@ -334,10 +392,16 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Todo prioritari
 
-1. **App nativa + monetizzazione** — punto di partenza della prossima chat:
-   vedi la sezione dedicata "Prossimo obiettivo" in cima a questo documento.
-   Prima si allineano le decisioni aperte con l'utente, poi si parte.
-2. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,
+1. **Notifiche push scadenze (Fase 1)** — punto di partenza della prossima
+   chat: vedi "Prossimo obiettivo" in cima. Prima si allineano le decisioni
+   aperte della fase 1 (schema `push_subscriptions`, orario, anticipo, copy,
+   multi-household), poi si implementa.
+2. **Piano pasti settimanale (Fase 2)** — dopo la fase 1: mockup della vista
+   calendario con opzioni PRIMA del codice, poi schema `meal_plan` da proporre,
+   poi implementazione.
+3. **App nativa + monetizzazione (Fase 3)** — dopo le fasi 1-2: decisioni
+   aperte dedicate nella sezione in cima.
+4. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,
    niente fotocamera nativa — scelta UX dell'utente) su uno scontrino lungo reale;
    (b) **barcode in raffica** (vassoio, ri-scansione ×2, Fatto (N)) con prodotti
    reali; (c) torcia barcode dove supportata; (d) **offline end-to-end**
@@ -352,11 +416,11 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
    reale (chiudi/riapri più volte, sfondo/primo piano, rotazione);
    (g) **username + espulsione membri** con più account condivisi (migration-9 già
    eseguita, feature confermata funzionante dall'utente il 2026-07-01).
-3. **Configurare Apple Sign-In** (Apple Developer + Supabase) — guida sotto.
-   *(Prerequisito comunque necessario per l'app nativa, vedi punto 1.)*
-4. **Decidere il placeholder ricerca ricette** e applicarlo (1 riga, no a-capo).
+5. **Configurare Apple Sign-In** (Apple Developer + Supabase) — guida sotto.
+   *(Prerequisito comunque necessario per l'app nativa, vedi punto 3.)*
+6. **Decidere il placeholder ricerca ricette** e applicarlo (1 riga, no a-capo).
    *(Nota: distinto dal placeholder "Esigenze alimentari" nel Profilo, già fatto.)*
-5. Eventuali rifiniture UX su Spesa (altezze barra/nav sul dispositivo reale).
+7. Eventuali rifiniture UX su Spesa (altezze barra/nav sul dispositivo reale).
 
 ---
 

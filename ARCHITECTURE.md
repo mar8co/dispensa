@@ -321,9 +321,26 @@ applica `upsert`/`remove` agli stati locali.
 
 ## 10. Scalabilità futura (considerazioni)
 
-- **App nativa (iOS, poi Android) + monetizzazione** — **prossimo obiettivo
-  strategico**, dettagli in `HANDOFF.md` → "Prossimo obiettivo" (leggerlo
-  prima di iniziare qualunque lavoro in quella direzione). Nessuna decisione
+- **Notifiche push scadenze** — **PIANIFICATA (Fase 1, si parte da qui)**,
+  roadmap in `HANDOFF.md` → "Prossimo obiettivo". Architettura prevista:
+  tabella `push_subscriptions` (RLS per utente, migration-10 manuale),
+  endpoint `api/push.js` → `server/push.js` (stesso pattern degli altri
+  proxy: verifica token Supabase), **cron Vercel** giornaliero che interroga
+  le scadenze e invia via libreria `web-push` (dipendenza solo server),
+  chiavi VAPID nelle env Vercel. Su iOS richiede PWA installata (iOS 16.4+)
+  e permesso chiesto da gesto utente (toggle nel Profilo). Schema e decisioni
+  aperte (orario, anticipo, copy, multi-household) da allineare con l'utente
+  prima del codice.
+- **Piano pasti settimanale** — **PIANIFICATO (Fase 2, feature Pro di punta)**,
+  roadmap in `HANDOFF.md`. Ciclo: pianifica → lista spesa dai mancanti →
+  cucina (CookModal scala) → dispensa allineata. Riusa `useRecipes`,
+  `saved_recipes`, `findMatch`/`addMissingToShopping`, `CookModal`. Nuova
+  tabella `meal_plan` (household_id + RLS `is_household_member`,
+  migration-11 manuale, schema da proporre prima) + vista calendario
+  settimanale (collocazione UI da decidere con mockup prima del codice).
+- **App nativa (iOS, poi Android) + monetizzazione** — **obiettivo
+  strategico (Fase 3)**, dettagli in `HANDOFF.md` → "Prossimo obiettivo"
+  (leggerlo prima di iniziare qualunque lavoro in quella direzione). Nessuna decisione
   tecnica presa: ipotesi di lavoro è un **wrapper** (es. Capacitor) sul codice
   React/Vite/Tailwind esistente, alternativa a un rewrite nativo — da
   confermare con l'utente. Implicherà: nuove tabelle/colonne per gli

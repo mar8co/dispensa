@@ -163,10 +163,16 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
 - Il provider AI è **Gemini**, ma l'interfaccia è "stile Anthropic" per
   portabilità: ragiona sui prompt, non sul provider.
 - L'utente lavora da **iPhone**: la prova finale è sul telefono, non nel preview.
-- **Prossimo obiettivo strategico**: trasformare l'app in **nativa iOS (poi
-  Android) con monetizzazione** (pubblicità + abbonamenti) — sezione dedicata
-  in `HANDOFF.md` → "Prossimo obiettivo". È **pianificazione**, nessun codice
-  scritto: le decisioni tecniche (wrapper vs rewrite, feature free/Pro,
-  provider ads, modello abbonamenti) vanno **prese con l'utente** prima di
-  toccare codice. **Non confondere con "Cambusa"**, repo separato (competitor
+- **Roadmap approvata (2026-07-04), in 3 fasi** — sezione dedicata in
+  `HANDOFF.md` → "Prossimo obiettivo", da leggere prima di iniziare:
+  **Fase 1** notifiche push scadenze (tabella `push_subscriptions`
+  migration-10, proxy `api/push.js`, cron Vercel + `web-push`, VAPID in env);
+  **Fase 2** piano pasti settimanale (tabella `meal_plan` migration-11, vista
+  calendario, riuso ricette/spesa/CookModal) — futura feature Pro;
+  **Fase 3** app nativa iOS + monetizzazione (pubblicità + abbonamenti).
+  Le due migration sono **autorizzate in linea di principio** (eccezione
+  esplicita alla regola 3 sul data layer), ma lo **schema concreto va proposto
+  all'utente prima** di scrivere le migration (che restano SQL manuali).
+  Le scelte UX (mockup con opzioni) precedono sempre il codice.
+  **Non confondere con "Cambusa"**, repo separato (competitor
   nativo RN/Expo di Dispensa): questa iniziativa converte *questo* codice.
