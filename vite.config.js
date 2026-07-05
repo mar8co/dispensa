@@ -79,6 +79,11 @@ export default defineConfig(({ mode }) => {
           globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
           navigateFallback: "index.html",
           navigateFallbackDenylist: [/^\/api\//],
+          // Inietta gli handler push/notificationclick nel SW generato, senza
+          // passare a un service worker custom (injectManifest). Vedi
+          // public/push-sw.js. NB: se un domani cambi push-sw.js, il SW si
+          // aggiorna solo quando cambia anche sw.js (bump del precache).
+          importScripts: ["push-sw.js"],
         },
       }),
     ],

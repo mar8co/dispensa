@@ -42,6 +42,16 @@ export default [
     },
   },
 
+  // Service worker: handler push importati nel SW generato da Workbox.
+  {
+    files: ["public/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "script",
+      globals: { ...globals.serviceworker, ...globals.browser },
+    },
+  },
+
   // Test (Vitest, ambiente node)
   {
     files: ["**/*.test.{js,jsx}"],
