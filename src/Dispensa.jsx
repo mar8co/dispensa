@@ -95,9 +95,19 @@ function animateUI(fn) {
   });
 }
 
+// Deep-link dalle notifiche push: /?view=ricette apre direttamente le Ricette.
+// Letto una volta all'avvio; poi ripuliamo la query così un refresh riparte
+// dalla Dispensa.
+function initialView() {
+  try {
+    const v = new URLSearchParams(window.location.search).get("view");
+    return ["dispensa", "spesa", "ricette"].includes(v) ? v : "dispensa";
+  } catch { return "dispensa"; }
+}
+
 export default function Dispensa({ session }) {
   const [loaded, setLoaded] = useState(false);
-  const [view, setView] = useState("dispensa");
+  const [view, setView] = useState(initialView);
   // Categorie CHIUSE di default: ogni categoria parte con collapsed=true.
   // Le scelte salvate dall'utente (aperto/chiuso) vengono fuse sopra al load.
   const [collapsed, setCollapsed] = useState(() =>
@@ -158,6 +168,7 @@ export default function Dispensa({ session }) {
   // anche dall'hook ricette per i prompt e il default porzioni)
   const [prefServings, setPrefServings] = useState(null); // "a casa siamo in X" (persistito)
   const [foodPrefs, setFoodPrefs] = useState("");          // preferenze alimentari (persistite)
+  const [pushDays, setPushDays] = useState(3);             // anticipo avviso scadenze (1/3/7, persistito)
 
   // "Ho cucinato questo"
   const [cookOpen, setCookOpen] = useState(false);
@@ -211,6 +222,7 @@ export default function Dispensa({ session }) {
     if (s.shopCats && typeof s.shopCats === "object") setShopCats(s.shopCats);
     if (Number(s.prefServings) >= 1) setPrefServings(Number(s.prefServings));
     if (typeof s.foodPrefs === "string") setFoodPrefs(s.foodPrefs);
+    if ([1, 3, 7].includes(Number(s.push?.daysBefore))) setPushDays(Number(s.push.daysBefore));
     if (Array.isArray(s.catOrder)) {
       setCatOrder([
         ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
@@ -382,10 +394,19 @@ export default function Dispensa({ session }) {
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
     if (!loaded) return;
-    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs }).catch((e) =>
+    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, push: { daysBefore: pushDays } }).catch((e) =>
       console.error("Errore salvataggio impostazioni:", e)
     );
-  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
+  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, pushDays, loaded]);
+
+  // Ripulisce la query del deep-link push (?view=…) dopo averla applicata allo
+  // stato iniziale: un refresh riparte così dalla Dispensa, non dalla scheda
+  // aperta dalla notifica.
+  useEffect(() => {
+    if (window.location.search.includes("view=")) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
   useTimersTicker((t) => {
@@ -1077,6 +1098,8 @@ export default function Dispensa({ session }) {
           onHouseholdsChanged={refreshHouseholds}
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
+          pushDays={pushDays}
+          onChangePushDays={setPushDays}
           onClose={() => setProfileOpen(false)}
           onClearPantry={() => {
             // Durante il tutorial lo svuotamento è guidato e immediato (niente

@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import {
   X, SunMoon, Sun, Moon, Trash2, LogOut, User, GraduationCap, Loader2,
-  Leaf, Palette, ChevronDown, Users,
+  Leaf, Palette, ChevronDown, Users, Bell,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
@@ -13,6 +13,7 @@ import FaceIdIcon from "./FaceIdIcon.jsx";
 import { supabase } from "../lib/supabase.js";
 import { getTheme, setTheme } from "../lib/theme.js";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
+import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush } from "../lib/push.js";
 
 // WebAuthn/passkey disponibile solo dove esiste l'API credenziali (iPhone
 // Safari/PWA la supporta). Se manca, la riga Face ID non compare.
@@ -29,6 +30,7 @@ export default function ProfileSheet({
   email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout, onReplayTour,
   onDeleteAccount, onOpenPrivacy,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
+  pushDays = 3, onChangePushDays,
 }) {
   const [theme, setThemeState] = useState(getTheme());
   const [open, setOpen] = useState("");           // riga impostazioni aperta: "prefs" | "theme"
@@ -42,8 +44,40 @@ export default function ProfileSheet({
   const [passkeyActive, setPasskeyActive] = useState(false); // Face ID attivo su questo device
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [passkeyErr, setPasskeyErr] = useState("");
+  // Notifiche push (avvisi scadenze): stato per QUESTO dispositivo.
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushErr, setPushErr] = useState("");
+  const canPush = pushSupported();
+  const iosHint = isIosNotInstalled();
 
   useEffect(() => { getMyUsername().then(setUsernameState).catch(() => {}); }, []);
+
+  // Legge se le notifiche sono già attive su questo dispositivo (esiste una
+  // subscription registrata nel browser).
+  useEffect(() => {
+    if (!canPush) return;
+    getPushState().then((s) => setPushOn(s.enabled)).catch(() => {});
+  }, [canPush]);
+
+  // Toggle notifiche: attiva (chiede permesso + iscrive) o disattiva.
+  async function togglePush() {
+    if (pushBusy) return;
+    setPushErr(""); setPushBusy(true);
+    try {
+      if (pushOn) { await disablePush(); setPushOn(false); }
+      else { await enablePush(); setPushOn(true); }
+    } catch (e) {
+      if (e?.code === "denied") {
+        setPushErr("Permesso negato. Abilita le notifiche per Dispensa dalle impostazioni del telefono.");
+      } else {
+        console.error(e);
+        setPushErr("Operazione non riuscita. Riprova.");
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   // Recupera l'uid e legge se il Face ID è già stato attivato su questo
   // dispositivo (flag locale per-utente scritto al momento della registrazione).
@@ -209,6 +243,73 @@ export default function ProfileSheet({
               </div>
             )}
             {passkeyErr && <p className="border-t border-hair px-3.5 py-2 text-xs font-semibold text-tomato">{passkeyErr}</p>}
+
+            {/* Notifiche push: avvisi scadenze (opt-in per dispositivo). Visibile
+                solo dove le push sono supportate; su iPhone non installato mostra
+                l'invito ad aggiungere l'app alla Home. */}
+            {canPush && (
+              <div className="flex w-full items-center gap-3 border-t border-hair px-3.5 py-3">
+                <Bell className={`h-[19px] w-[19px] shrink-0 ${pushOn ? "text-stone-400" : "text-tomato"}`} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-ink">Avvisami delle scadenze</span>
+                  <span className="block text-xs text-stone-500">
+                    {pushOn ? "Attive su questo dispositivo" : "Un promemoria quando qualcosa sta per scadere"}
+                  </span>
+                </span>
+                {pushBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-stone-400" />
+                ) : pushOn ? (
+                  <button
+                    onClick={togglePush}
+                    className="rounded-lg border border-hair px-2.5 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-50"
+                  >
+                    Disattiva
+                  </button>
+                ) : (
+                  <button
+                    onClick={togglePush}
+                    className="rounded-lg border border-tomato/40 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
+                  >
+                    Attiva
+                  </button>
+                )}
+              </div>
+            )}
+            {canPush && pushOn && (
+              <div className="flex items-center gap-2 border-t border-hair px-3.5 py-2.5">
+                <span className="text-xs text-stone-500">Avvisami con</span>
+                <div className="flex gap-1.5">
+                  {[1, 3, 7].map((n) => {
+                    const active = pushDays === n;
+                    return (
+                      <button
+                        key={n}
+                        onClick={() => onChangePushDays?.(n)}
+                        aria-pressed={active}
+                        className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
+                          active ? "border-ink bg-ink text-white" : "border-hair bg-cream text-stone-500 hover:border-stone-300"
+                        }`}
+                      >
+                        {n} {n === 1 ? "giorno" : "giorni"}
+                      </button>
+                    );
+                  })}
+                  <span className="self-center text-xs text-stone-500">di anticipo</span>
+                </div>
+              </div>
+            )}
+            {pushErr && <p className="border-t border-hair px-3.5 py-2 text-xs font-semibold text-tomato">{pushErr}</p>}
+            {iosHint && (
+              <div className="flex items-start gap-3 border-t border-hair px-3.5 py-3">
+                <Bell className="mt-0.5 h-[18px] w-[18px] shrink-0 text-stone-400" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-ink">Avvisami delle scadenze</span>
+                  <span className="block text-xs text-stone-500">
+                    Installa Dispensa sulla Home (Condividi → «Aggiungi a Home») per ricevere gli avvisi.
+                  </span>
+                </span>
+              </div>
+            )}
 
             {/* Aspetto (tema) */}
             <button

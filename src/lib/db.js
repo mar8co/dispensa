@@ -139,6 +139,29 @@ export async function renameHousehold(householdId, name) {
   if (error) throw error;
 }
 
+// ---------- Notifiche push (subscription per dispositivo) ----------
+
+// Registra/aggiorna la subscription di QUESTO dispositivo. L'upsert per
+// endpoint gira come SECURITY DEFINER (save_push_subscription, migration-10):
+// un re-subscribe sullo stesso endpoint riassegna la riga all'utente corrente.
+export async function savePushSubscription({ endpoint, p256dh, auth }) {
+  const { error } = await supabase.rpc("save_push_subscription", {
+    p_endpoint: endpoint,
+    p_p256dh: p256dh,
+    p_auth: auth,
+  });
+  if (error) throw error;
+}
+
+// Rimuove la subscription (opt-out): la RLS limita alla riga dell'utente.
+export async function deletePushSubscription(endpoint) {
+  const { error } = await supabase
+    .from("push_subscriptions")
+    .delete()
+    .eq("endpoint", endpoint);
+  if (error) throw error;
+}
+
 // ---------- Prodotti dispensa ----------
 
 const PANTRY_COLS = "id, name, qty, category, expiry, created_at";
