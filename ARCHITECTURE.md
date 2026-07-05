@@ -42,11 +42,13 @@ dispensa/
 ├─ api/                     # Serverless functions Vercel (thin wrapper)
 │  ├─ claude.js             #   POST /api/claude  → server/claude.js
 │  ├─ photo.js              #   POST /api/photo   → server/photo.js
-│  └─ account.js            #   POST /api/account → server/account.js
+│  ├─ account.js            #   POST /api/account → server/account.js
+│  └─ push.js              #   POST /api/push    → server/push.js (solo cron)
 ├─ server/                  # Core dei proxy (framework-agnostic, condiviso)
 │  ├─ claude.js             #   proxy AI (Gemini) + auth + rate-limit
 │  ├─ photo.js              #   proxy foto (Pexels) + auth
-│  └─ account.js            #   cancellazione account (service role)
+│  ├─ account.js            #   cancellazione account (service role)
+│  └─ push.js              #   cron notifiche push scadenze (service role + web-push)
 ├─ scripts/
 │  └─ generate-icons.mjs    # genera i PNG PWA da icon.svg (sharp)
 ├─ supabase/
@@ -58,7 +60,8 @@ dispensa/
 │  ├─ migration-6.sql       # dispensa familiare: households + household_id + backfill
 │  ├─ migration-7.sql       # inviti (household_invites) + accept_invite
 │  ├─ migration-8.sql       # switch RLS dati a is_household_member (il "flip")
-│  └─ migration-9.sql       # username membri + espulsione (set_username, remove_member)
+│  ├─ migration-9.sql       # username membri + espulsione (set_username, remove_member)
+│  └─ migration-10.sql      # push scadenze: push_subscriptions + save_push_subscription + cron pg_cron/pg_net
 ├─ src/
 │  ├─ main.jsx              # entry (monta App, registra SW/tema)
 │  ├─ App.jsx               # gate auth (spinner / login / app)
@@ -75,6 +78,7 @@ dispensa/
 │  ├─ lib/
 │  │  ├─ supabase.js        # client Supabase (anon)
 │  │  ├─ db.js              # TUTTE le query (confine data layer)
+│  │  ├─ push.js            # opt-in notifiche push (subscribe/unsubscribe)
 │  │  ├─ claude.js          # client AI/foto (→ /api/*)
 │  │  ├─ pantry.js          # logica pura (quantità, categorie, q.b., ½, match)
 │  │  ├─ pantry.test.js     # 46 test Vitest
@@ -128,8 +132,13 @@ auth.users (gestita da Supabase)
    │                       cooked_count:int, last_cooked_at, created_at)
    │                       UNIQUE(user_id, title)  → upsert per (utente, titolo)
    ├──  user_settings    (user_id PK, settings:jsonb, updated_at)   [1-a-1]
-   └──< ai_usage         (user_id, day:date, count:int) PK(user_id, day)
-                          scritta SOLO dal service role via bump_ai_usage()
+   │                       settings.push.daysBefore = anticipo avviso scadenze (1/3/7)
+   ├──< ai_usage         (user_id, day:date, count:int) PK(user_id, day)
+   │                       scritta SOLO dal service role via bump_ai_usage()
+   └──< push_subscriptions (id, user_id, endpoint UNIQUE, p256dh, auth, created_at)
+                          una riga per dispositivo; RLS per-utente; letta dal
+                          cron col service role. Upsert per endpoint via
+                          save_push_subscription() (SECURITY DEFINER).
 ```
 
 Dettagli rilevanti:
@@ -161,6 +170,7 @@ il proxy fa `supabase.auth.getUser(token)` e rifiuta con 401 se non valido.
 | `POST /api/claude` | `server/claude.js` | Google Gemini `gemini-2.5-flash` | Traduce blocchi Anthropic↔Gemini; `responseMimeType: application/json`; `thinkingBudget: 0` sui 2.5; tetto `max_tokens` 1–2048; tetto payload; rate-limit per utente/giorno. Risponde nel formato `{ content:[{type:"text",text}] }` che il client si aspetta. |
 | `POST /api/photo` | `server/photo.js` | Pexels | Riceve una lista di query, restituisce un URL foto per ciascuna. Mai bloccante per il client (`fetchPhotos` torna `[]` in errore). |
 | `POST /api/account` | `server/account.js` | Supabase (service role) | Cancellazione account utente. |
+| `POST /api/push` | `server/push.js` | Supabase (service role) + Web Push | **Solo cron** (pg_cron): protetto da `CRON_SECRET`, non da token utente. Ricava lo slot (pranzo/cena/sera) dall'ora di Roma, legge scadenze e subscription, invia con `web-push`. Pulisce le subscription morte (404/410). |
 
 Altre integrazioni **dal client** (senza proxy, perché pubbliche):
 
@@ -171,9 +181,12 @@ Altre integrazioni **dal client** (senza proxy, perché pubbliche):
 
 Variabili d'ambiente (server, su Vercel / `.env.local` per il dev):
 `GEMINI_API_KEY` (+ opz. `GEMINI_MODEL`), `PEXELS_API_KEY`, `SUPABASE_URL`,
-`SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (opz., rate-limit/account),
-`AI_DAILY_LIMIT` (opz., default 80). Client: `VITE_SUPABASE_URL`,
-`VITE_SUPABASE_ANON_KEY`.
+`SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (rate-limit/account **e push**),
+`AI_DAILY_LIMIT` (opz., default 80). **Push**: `VAPID_PUBLIC_KEY`,
+`VAPID_PRIVATE_KEY` (mai nel client), `VAPID_SUBJECT` (mailto:), `CRON_SECRET`
+(anche nel Vault Supabase come `dispensa_cron_secret`, letto dal cron). Client:
+`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`
+(la VAPID pubblica, per iscriversi alle push).
 
 ---
 
@@ -321,16 +334,17 @@ applica `upsert`/`remove` agli stati locali.
 
 ## 10. Scalabilità futura (considerazioni)
 
-- **Notifiche push scadenze** — **PIANIFICATA (Fase 1, si parte da qui)**,
-  roadmap in `HANDOFF.md` → "Prossimo obiettivo". Architettura prevista:
-  tabella `push_subscriptions` (RLS per utente, migration-10 manuale),
-  endpoint `api/push.js` → `server/push.js` (stesso pattern degli altri
-  proxy: verifica token Supabase), **cron Vercel** giornaliero che interroga
-  le scadenze e invia via libreria `web-push` (dipendenza solo server),
-  chiavi VAPID nelle env Vercel. Su iOS richiede PWA installata (iOS 16.4+)
-  e permesso chiesto da gesto utente (toggle nel Profilo). Schema e decisioni
-  aperte (orario, anticipo, copy, multi-household) da allineare con l'utente
-  prima del codice.
+- **Notifiche push scadenze** — ✅ **IMPLEMENTATA (Fase 1, 2026-07-05)**.
+  Tabella `push_subscriptions` (RLS per utente, migration-10), endpoint
+  `api/push.js` → `server/push.js` (**solo cron**, protetto da `CRON_SECRET`,
+  non da token utente), **cron pg_cron + pg_net** dentro Supabase (non Vercel
+  Cron) che 3×/giorno interroga le scadenze e invia via `web-push` (dipendenza
+  solo server), chiavi VAPID nelle env. Opt-in per dispositivo dal Profilo
+  (permesso da gesto utente), 3 promemoria in ora di Roma (14:30/18:30/21:45),
+  anticipo 1/3/7 gg in `user_settings.push.daysBefore`, digest multi-household.
+  **Design DST-safe**: pg_cron in UTC → 6 job (gemelli CET/CEST), lo slot lo
+  ricava il server dall'ora di Roma. Su iOS richiede PWA installata (iOS 16.4+).
+  Restano i passi manuali (migration, Vault, env Vercel) e la prova sul telefono.
 - **Piano pasti settimanale** — **PIANIFICATO (Fase 2, feature Pro di punta)**,
   roadmap in `HANDOFF.md`. Ciclo: pianifica → lista spesa dai mancanti →
   cucina (CookModal scala) → dispensa allineata. Riusa `useRecipes`,

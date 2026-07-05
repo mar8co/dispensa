@@ -26,12 +26,41 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 
 ## Prossimo obiettivo: push scadenze → piano pasti → app nativa + monetizzazione
 
-> **Stato: roadmap approvata dall'utente il 2026-07-04 — nessuna riga di
-> codice ancora scritta.** Le prossime chat su questo repo (`dispensa`)
-> ripartono dalla **Fase 1**. Le due feature preparano il lancio nativo:
-> le push sono il motore di retention, il piano pasti la feature Pro di punta.
+> **Stato (agg. 2026-07-05): Fase 1 (push scadenze) IMPLEMENTATA nel codice**
+> — mancano solo i passi manuali dell'utente (migration-10 nel SQL Editor,
+> env VAPID/CRON su Vercel, secret nel Vault) e la prova sul telefono con PWA
+> installata. Le prossime chat ripartono dalla **Fase 2** (piano pasti). Le due
+> feature preparano il lancio nativo: le push sono il motore di retention, il
+> piano pasti la feature Pro di punta.
 
-### Fase 1 — Notifiche push per le scadenze (impegno medio) ← SI PARTE DA QUI
+### Fase 1 — Notifiche push per le scadenze — ✅ IMPLEMENTATA (setup manuale + prova telefono da fare)
+
+> **Decisioni prese (2026-07-05)**: 3 promemoria/giorno in ora di Roma —
+> **14:30** "hai cucinato? aggiorna la dispensa", **18:30** scadenze /
+> "cosa cuciniamo stasera" (apre le Ricette), **21:45** "com'era la cena?
+> aggiorna la dispensa". Anticipo scadenze di **default 3 gg** (selettore
+> 1/3/7 nel Profilo, persistito in `user_settings.push.daysBefore`).
+> Opt-in **per dispositivo**; digest **multi-household**: nuclei dell'utente
+> + prodotti personali. Copy **caldo e diretto**. Schema `push_subscriptions`
+> **minimale** (opzione A). Scheduler **pg_cron + pg_net** (non Vercel Cron).
+> Dominio prod: `https://la-dispensa-omega.vercel.app`.
+>
+> **Cosa manca (utente)**: eseguire `migration-10.sql`; creare il secret
+> `dispensa_cron_secret` nel Vault; aggiungere le env su Vercel
+> (`VITE_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
+> `VAPID_SUBJECT`, `CRON_SECRET`); installare la PWA e attivare il toggle nel
+> Profilo. **Non verificabile dal preview** (serve HTTPS + PWA installata iOS 16.4+).
+>
+> **File**: `supabase/migration-10.sql`, `server/push.js`, `api/push.js`,
+> `public/push-sw.js` (importato nel SW via `workbox.importScripts`),
+> `src/lib/push.js`, `src/lib/db.js` (save/deletePushSubscription),
+> `src/components/ProfileSheet.jsx` (riga "Avvisami delle scadenze"),
+> `src/Dispensa.jsx` (deep-link `?view=` + `pushDays` nelle impostazioni).
+> **Design DST-safe**: pg_cron gira in UTC, quindi 6 job (le due varianti
+> CET/CEST di ogni orario) e lo slot lo ricava il server dall'ora di Roma
+> (±20 min): un solo gemello per stagione invia davvero.
+
+<details><summary>Progetto originario Fase 1 (per contesto storico)</summary>
 
 **Perché**: oggi le scadenze sono passive — il banner "in scadenza" si vede
 solo aprendo l'app; se non la apri, il latte scade in silenzio. Le push
@@ -61,7 +90,9 @@ confermare in chat prima di scrivere codice):
 giorni?), copy delle notifiche, comportamento multi-household (avvisare tutti
 i membri del nucleo o solo chi ha attivato il toggle?).
 
-### Fase 2 — Piano pasti settimanale (impegno grande, feature Pro di punta)
+</details>
+
+### Fase 2 — Piano pasti settimanale (impegno grande, feature Pro di punta) ← SI PARTE DA QUI (prossima chat)
 
 **Il ciclo che chiude il cerchio "zero sprechi"**: pianifichi la settimana →
 la lista della spesa si genera dai soli ingredienti mancanti → cucini
@@ -156,7 +187,7 @@ raccomandazione (regola generale in `CLAUDE.md`), mai assunte in autonomia:
 | Bottom sheet | **Vaul** 1.1.2 (drag-to-dismiss) + `@radix-ui/react-dialog` (transitiva) |
 | Icone | `lucide-react` + emoji per le categorie |
 | Hosting | Vercel (serverless functions in `api/`) |
-| Test | Vitest (`src/lib/pantry.js` + `src/lib/history.js`, **68 test**) |
+| Test | Vitest (`src/lib/pantry.js` + `src/lib/history.js`, **69 test**) |
 | Lint | ESLint flat config (`eslint.config.js`) |
 | Generazione icone | `sharp` (`scripts/generate-icons.mjs`) |
 
@@ -328,7 +359,9 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/index.css` | **Palette** (variabili CSS, light + blocchi dark) e CSS PWA/Vaul. |
 | `src/components/HouseholdSection.jsx` | UI **Dispensa condivisa** nel Profilo: membri (username + corona sul creatore + "Rimuovi"), inviti, entra-con-codice, switch nucleo, esci, popup conferma espulsione. |
 | `src/components/ProfileSheet.jsx` | Foglio Profilo (ibrido): **Nome (username)** al posto della mail, **Esigenze alimentari** (box 2 righe sempre visibile), `HouseholdSection`, Impostazioni (tema), azioni, privacy/elimina account. |
-| `supabase/schema.sql` + `migration-2..9.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6/7/8` = **dispensa familiare** (schema, inviti, switch RLS a household); `migration-9` = **username + espulsione** (colonna `username`, `set_username`/`remove_member` security definer, `accept_invite` eredita lo username). |
+| `supabase/schema.sql` + `migration-2..10.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6/7/8` = **dispensa familiare** (schema, inviti, switch RLS a household); `migration-9` = **username + espulsione** (colonna `username`, `set_username`/`remove_member` security definer, `accept_invite` eredita lo username); `migration-10` = **push scadenze** (tabella `push_subscriptions` + `save_push_subscription` + cron pg_cron/pg_net). |
+| `server/push.js` + `api/push.js` | **Cron notifiche push** (Fase 1): ricava lo slot dall'ora di Roma, legge scadenze/subscription col service role, invia con `web-push`. Protetto da `CRON_SECRET`. |
+| `src/lib/push.js` + `public/push-sw.js` | Opt-in push lato client (subscribe/unsubscribe) + handler `push`/`notificationclick` iniettato nel SW Workbox. |
 
 ---
 
@@ -392,13 +425,14 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Todo prioritari
 
-1. **Notifiche push scadenze (Fase 1)** — punto di partenza della prossima
-   chat: vedi "Prossimo obiettivo" in cima. Prima si allineano le decisioni
-   aperte della fase 1 (schema `push_subscriptions`, orario, anticipo, copy,
-   multi-household), poi si implementa.
-2. **Piano pasti settimanale (Fase 2)** — dopo la fase 1: mockup della vista
-   calendario con opzioni PRIMA del codice, poi schema `meal_plan` da proporre,
-   poi implementazione.
+1. **Notifiche push scadenze (Fase 1)** — ✅ **implementata** (2026-07-05).
+   Restano i passi manuali dell'utente e la prova sul telefono: eseguire
+   `migration-10.sql`, creare il secret `dispensa_cron_secret` nel Vault,
+   aggiungere le env VAPID/CRON su Vercel, installare la PWA e attivare il
+   toggle. Vedi "Prossimo obiettivo → Fase 1" per i dettagli.
+2. **Piano pasti settimanale (Fase 2)** — **prossimo obiettivo**: mockup della
+   vista calendario con opzioni PRIMA del codice, poi schema `meal_plan` da
+   proporre, poi implementazione.
 3. **App nativa + monetizzazione (Fase 3)** — dopo le fasi 1-2: decisioni
    aperte dedicate nella sezione in cima.
 4. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,

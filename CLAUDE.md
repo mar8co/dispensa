@@ -17,7 +17,7 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (68/68), `npm run build`. Se tocchi `pantry.js`/`history.js`, aggiorna i
+   (69/69), `npm run build`. Se tocchi `pantry.js`/`history.js`, aggiorna i
    rispettivi test (`pantry.test.js` / `history.test.js`).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`.
@@ -165,10 +165,13 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
 - L'utente lavora da **iPhone**: la prova finale è sul telefono, non nel preview.
 - **Roadmap approvata (2026-07-04), in 3 fasi** — sezione dedicata in
   `HANDOFF.md` → "Prossimo obiettivo", da leggere prima di iniziare:
-  **Fase 1** notifiche push scadenze (tabella `push_subscriptions`
-  migration-10, proxy `api/push.js`, cron Vercel + `web-push`, VAPID in env);
-  **Fase 2** piano pasti settimanale (tabella `meal_plan` migration-11, vista
-  calendario, riuso ricette/spesa/CookModal) — futura feature Pro;
+  **Fase 1** notifiche push scadenze — ✅ **implementata (2026-07-05)**:
+  tabella `push_subscriptions` (migration-10), proxy `api/push.js`, cron
+  **pg_cron + pg_net** (non Vercel Cron) + `web-push`, VAPID/CRON in env;
+  restano i passi manuali (migration, Vault, env Vercel) e la prova telefono;
+  **Fase 2** (**prossimo obiettivo**) piano pasti settimanale (tabella
+  `meal_plan` migration-11, vista calendario, riuso ricette/spesa/CookModal) —
+  futura feature Pro;
   **Fase 3** app nativa iOS + monetizzazione (pubblicità + abbonamenti).
   Le due migration sono **autorizzate in linea di principio** (eccezione
   esplicita alla regola 3 sul data layer), ma lo **schema concreto va proposto
