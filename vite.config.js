@@ -77,6 +77,10 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+          // Le splash iOS (public/splash/*) NON vanno nel precache: le usa solo
+          // il lancio da Home e Safari le gestisce all'installazione. Tenerle
+          // fuori evita di gonfiare la cache e il churn del SW a ogni deploy.
+          globIgnores: ["**/splash/**"],
           navigateFallback: "index.html",
           navigateFallbackDenylist: [/^\/api\//],
           // Inietta gli handler push/notificationclick nel SW generato, senza

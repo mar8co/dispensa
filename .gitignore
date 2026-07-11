@@ -10,6 +10,9 @@ dist-ssr
 # Mockup di esplorazione stile (solo locali)
 public/mockups
 
+# Snippet <link> generato da scripts/generate-splash.mjs (temporaneo)
+scripts/_splash-links.html
+
 # Local env files — la API key vive SOLO qui, mai nel codice
 .env
 .env.local
