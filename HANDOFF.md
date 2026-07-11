@@ -267,10 +267,15 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 - **Code-split per scheda** — le schede/scanner pesanti sono `React.lazy` in
   `Dispensa.jsx` (ZXing e affini caricati on-demand).
 - **PWA**: installabile, offline shell, tema chiaro/scuro/auto (per-dispositivo).
-  **Splash screen iOS**: `apple-touch-startup-image` in `index.html` (icona
-  centrata su cream/dark via `prefers-color-scheme`), immagini in
-  `public/splash/*` generate da `scripts/generate-splash.mjs` (sharp), escluse
-  dal precache SW (le gestisce Safari). Solo iPhone portrait.
+  **Splash screen iOS**: `apple-touch-startup-image` in `index.html` (icona +
+  wordmark "Dispensa" su cream/dark via `prefers-color-scheme`), immagini in
+  `public/splash/*` generate da `scripts/generate-splash.mjs` (sharp; il font
+  Hanken ExtraBold è bundlato in `scripts/assets/`), escluse dal precache SW
+  (le gestisce Safari). Solo iPhone portrait. **Intro in-app** `SplashIntro.jsx`
+  (montata in `App.jsx`, stili `.splash-*` in `index.css`): riprende la splash
+  nativa e disegna la sottolineatura ondulata tomato (stile login "manifesto"),
+  poi sfuma nell'app — dà l'animazione su tutte le piattaforme; la PNG statica è
+  il primo fotogramma (nessuno stacco). Rispetta `prefers-reduced-motion`.
 - **Tutorial** guidato (TourCoach).
 - **Privacy Policy** (sheet, link nel login e nel Profilo).
 - **Sicurezza**: chiavi AI/Pexels mai nel client (proxy con verifica token

@@ -1,28 +1,28 @@
 // Genera le splash screen iOS (apple-touch-startup-image) da public/icon.svg.
 // Uso: node scripts/generate-splash.mjs
 //
-// Perché: su iOS la PWA NON deriva la splash dal manifest (a differenza di
-// Android/Chrome). Serve un <link rel="apple-touch-startup-image"> per ogni
-// risoluzione FISICA di device, con la media query che combina device-width/
-// height in px CSS + device-pixel-ratio + orientamento. Qui copriamo i
-// principali iPhone in PORTRAIT (la PWA è portrait-only), in variante chiara
-// e scura (prefers-color-scheme), con l'icona centrata sul colore di brand.
+// Layout "concept 4": icona + wordmark "Dispensa" (font Hanken Grotesk
+// ExtraBold, lo stesso dell'app, bundlato in scripts/assets). La sottolineatura
+// ondulata NON è nell'immagine statica: la disegna l'intro in-app
+// (src/components/SplashIntro.jsx), così la splash nativa iOS è esattamente il
+// primo fotogramma dell'animazione e il passaggio è senza stacco.
 //
-// Lo script stampa anche i tag <link> corrispondenti (in scripts/_splash-
-// links.html) così l'index.html resta allineato a ciò che viene generato.
+// Perché su iOS serve un'immagine per risoluzione fisica di device (la PWA non
+// deriva la splash dal manifest): copriamo i principali iPhone in PORTRAIT,
+// variante chiara (#f4f1e9) e scura (#121211) via prefers-color-scheme.
+// I nomi file restano invariati: i <link> in index.html non cambiano.
 import sharp from "sharp";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const svg = readFileSync(join(root, "public", "icon.svg"));
+const fontfile = join(root, "scripts", "assets", "HankenGrotesk-ExtraBold.ttf");
 const outDir = join(root, "public", "splash");
 mkdirSync(outDir, { recursive: true });
 
-// iPhone, PORTRAIT. w/h in px CSS (punti); i pixel fisici = w*dpr, h*dpr.
-// Device con stessa risoluzione CSS ma dpr diverso restano distinti dalla
-// media query (-webkit-device-pixel-ratio).
+// iPhone, PORTRAIT. w/h in px CSS (punti); pixel fisici = w*dpr, h*dpr.
 const DEVICES = [
   { w: 375, h: 667, dpr: 2, note: "iPhone SE 2/3, 8, 7, 6s" },
   { w: 414, h: 896, dpr: 2, note: "iPhone XR, 11" },
@@ -37,41 +37,50 @@ const DEVICES = [
   { w: 440, h: 956, dpr: 3, note: "iPhone 16 Pro Max" },
 ];
 
-// Palette di brand (allineata a theme-color in index.html e ai token CSS).
+// Palette di brand (allineata a --cream in index.css e a theme-color).
 const THEMES = [
-  { name: "light", scheme: "light", bg: { r: 244, g: 241, b: 233, alpha: 1 } }, // #f4f1e9
-  { name: "dark", scheme: "dark", bg: { r: 18, g: 18, b: 17, alpha: 1 } }, //  #121211
+  { name: "light", bg: { r: 244, g: 241, b: 233, alpha: 1 }, ink: "#0a0a0a" },
+  { name: "dark", bg: { r: 18, g: 18, b: 17, alpha: 1 }, ink: "#f4f1e9" },
 ];
 
-const links = [];
+// Wordmark ad alta risoluzione per tema (poi ridimensionato per device).
+async function renderWord(color) {
+  return await sharp({
+    text: {
+      text: `<span foreground="${color}" letter_spacing="-1600">Dispensa</span>`,
+      font: "Hanken Grotesk 96",
+      fontfile,
+      rgba: true,
+      dpi: 300,
+    },
+  }).png().toBuffer();
+}
+const wordBuf = {};
+for (const t of THEMES) wordBuf[t.name] = await renderWord(t.ink);
 
 for (const d of DEVICES) {
   const pw = d.w * d.dpr;
   const ph = d.h * d.dpr;
-  // Icona centrata a ~40% del lato corto: prominente ma non invadente.
-  const iconSize = Math.round(Math.min(pw, ph) * 0.4);
-  // density 96 come generate-icons.mjs: l'SVG (viewBox 4267) viene rasterizzato
-  // grande e poi ridotto a iconSize → nitido, senza sforare il pixel limit.
+  const minSide = Math.min(pw, ph);
+  const iconSize = Math.round(minSide * 0.3);
   const iconPng = await sharp(svg, { density: 96 }).resize(iconSize, iconSize).png().toBuffer();
+  const wordW = Math.round(pw * 0.42);
+  const gap = Math.round(minSide * 0.05);
 
   for (const t of THEMES) {
+    const wImg = await sharp(wordBuf[t.name]).resize({ width: wordW }).png().toBuffer();
+    const wordH = (await sharp(wImg).metadata()).height;
+    const blockH = iconSize + gap + wordH;
+    const top = Math.round(ph * 0.46 - blockH / 2);
     const file = `apple-splash-${t.name}-${pw}-${ph}.png`;
     await sharp({ create: { width: pw, height: ph, channels: 4, background: t.bg } })
-      .composite([{ input: iconPng, gravity: "center" }])
+      .composite([
+        { input: iconPng, left: Math.round(pw / 2 - iconSize / 2), top },
+        { input: wImg, left: Math.round(pw / 2 - wordW / 2), top: top + iconSize + gap },
+      ])
       .png({ compressionLevel: 9 })
       .toFile(join(outDir, file));
     console.log("✓", file, `— ${d.note}`);
-
-    const media =
-      `(prefers-color-scheme: ${t.scheme}) and (device-width: ${d.w}px) and ` +
-      `(device-height: ${d.h}px) and (-webkit-device-pixel-ratio: ${d.dpr}) and ` +
-      `(orientation: portrait)`;
-    links.push(
-      `    <link rel="apple-touch-startup-image" media="${media}" href="/splash/${file}" />`
-    );
   }
 }
-
-writeFileSync(join(root, "scripts", "_splash-links.html"), links.join("\n") + "\n");
-console.log(`\n${DEVICES.length} device × ${THEMES.length} temi = ${links.length} immagini.`);
-console.log("Tag <link> scritti in scripts/_splash-links.html");
+console.log(`\n${DEVICES.length} device × ${THEMES.length} temi = ${DEVICES.length * THEMES.length} immagini in /public/splash`);

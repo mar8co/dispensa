@@ -51,7 +51,8 @@ dispensa/
 │  └─ push.js              #   cron notifiche push scadenze (service role + web-push)
 ├─ scripts/
 │  ├─ generate-icons.mjs    # genera i PNG PWA da icon.svg (sharp)
-│  └─ generate-splash.mjs   # genera le splash iOS (public/splash/*) da icon.svg (sharp)
+│  ├─ generate-splash.mjs   # genera le splash iOS (public/splash/*): icona + wordmark (sharp)
+│  └─ assets/               # font Hanken ExtraBold (TTF + OFL) per il wordmark delle splash
 ├─ supabase/
 │  ├─ schema.sql            # tabelle base + RLS (pantry_items, user_settings)
 │  ├─ migration-2.sql       # expiry + shopping_items
@@ -306,6 +307,7 @@ applica `upsert`/`remove` agli stati locali.
 | `ProfileSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo (Nome/username al posto della mail, Esigenze alimentari in box 2 righe, tema, logout, privacy). |
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
 | `Auth.jsx` | Login a pagina intera (magic-link, Google, Apple, Face ID/passkey), stile "manifesto": headline "Cosa c'è in dispensa?" con wavy underline tomato su "dispensa" + mensole di emoji-categoria con slot "+" + sottotitolo "La tua cucina, in tasca. Meno sprechi (verde fisso `#43A047`). Zero pensieri". |
+| `SplashIntro.jsx` | **Intro splash** montata in `App.jsx`: riprende la splash nativa iOS (icona + "Dispensa") e disegna la sottolineatura ondulata tomato, poi sfuma nell'app. Animazione su tutte le piattaforme; rispetta `prefers-reduced-motion`. Stili `.splash-*` in `index.css`. |
 | `Toast.jsx` | Toast/undo, posizione adattiva (`raised` su Spesa). |
 | `TourCoach.jsx` | Tutorial guidato (`tour.js`). |
 

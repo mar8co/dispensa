@@ -178,3 +178,69 @@ body {
     font-size: 16px !important;
   }
 }
+
+/* Intro splash (SplashIntro.jsx): riprende la splash nativa (icona + "Dispensa")
+   e disegna la sottolineatura ondulata tomato, poi sfuma nell'app. Lo sfondo usa
+   --cream, così combacia con le PNG native (chiaro/scuro). */
+.splash-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--cream));
+  transition: opacity 0.5s ease;
+}
+.splash-intro.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+.splash-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-4%);
+}
+.splash-icon {
+  width: 30vmin;
+  max-width: 220px;
+  height: auto;
+  display: block;
+}
+.splash-word {
+  margin-top: 5vmin;
+  font-family: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-size: 10.5vmin;
+  color: rgb(var(--ink));
+  opacity: 0;
+  animation: splash-rise 0.55s ease 0.15s forwards;
+}
+.splash-uline {
+  width: 42vmin;
+  height: 3vmin;
+  margin-top: 1.4vmin;
+  overflow: visible;
+}
+.splash-uline path {
+  fill: none;
+  stroke: rgb(var(--tomato));
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: var(--dash, 220);
+  stroke-dashoffset: var(--dash, 220);
+  animation: splash-draw 0.62s ease 0.5s forwards;
+}
+@keyframes splash-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes splash-draw {
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-word { animation: none; opacity: 1; }
+  .splash-uline path { animation: none; stroke-dashoffset: 0; }
+}
