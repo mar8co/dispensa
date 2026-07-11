@@ -219,7 +219,7 @@ body {
   animation: splash-rise 0.55s ease 0.15s forwards;
 }
 .splash-uline {
-  width: 42vmin;
+  width: 44vmin;
   height: 3vmin;
   margin-top: 1.4vmin;
   overflow: visible;

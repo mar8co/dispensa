@@ -35,7 +35,7 @@ export default function SplashIntro() {
         <img src="/icon.svg" alt="" width="512" height="512" className="splash-icon" />
         <div className="splash-word">Dispensa</div>
         <svg className="splash-uline" viewBox="0 0 200 16" preserveAspectRatio="none">
-          <path ref={pathRef} d="M4,9 q11,-7 22,0 t22,0 t22,0 t22,0 t22,0 t22,0 t22,0" />
+          <path ref={pathRef} d="M2,9 q11,-7 22,0 t22,0 t22,0 t22,0 t22,0 t22,0 t22,0 t22,0 t22,0" />
         </svg>
       </div>
     </div>
