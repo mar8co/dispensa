@@ -12,6 +12,7 @@ import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, isLow } from "
 import { tourSignal } from "../lib/tour.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
+import PushNudge from "./PushNudge.jsx";
 
 const EXP_STYLE = {
   scaduto: "bg-tomato text-[#fff] ring-2 ring-tomato/30",
@@ -58,6 +59,7 @@ export default function PantryTab({
   grouped, cardRefs,
   onMoveCat, onAutoSave, onSetExpiry, removeItem,
   expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
+  canNudge = false,
 }) {
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
@@ -301,6 +303,11 @@ export default function PantryTab({
           )}
         </div>
       )}
+
+      {/* Soft-ask notifiche: proprio quando c'è il banner scadenze (e fuori dal
+          tutorial) invitiamo ad attivare gli avvisi. Il componente decide da sé
+          se comparire (installata, non già attive, non già rifiutato qui). */}
+      {expiredCount + expiringSoonCount > 0 && canNudge && <PushNudge />}
 
       {/* Barra salta-reparto, fissa in alto: una riga di chips (quelle che
           ci stanno) e la freccina che "srotola" le righe successive — la

@@ -55,6 +55,10 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > `public/push-sw.js` (importato nel SW via `workbox.importScripts`),
 > `src/lib/push.js`, `src/lib/db.js` (save/deletePushSubscription),
 > `src/components/ProfileSheet.jsx` (riga "Avvisami delle scadenze"),
+> `src/components/PushNudge.jsx` (soft-ask contestuale sotto il banner scadenze
+> della Dispensa: secondo punto d'accesso per l'attivazione, one-shot, gated su
+> PWA installata + non già attive + non già rifiutato; flag
+> `dispensa-pushnudge-dismissed`),
 > `src/Dispensa.jsx` (deep-link `?view=` + `pushDays` nelle impostazioni).
 > **Design DST-safe**: pg_cron gira in UTC, quindi 6 job (le due varianti
 > CET/CEST di ogni orario) e lo slot lo ricava il server dall'ora di Roma

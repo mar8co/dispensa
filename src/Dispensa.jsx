@@ -941,6 +941,7 @@ export default function Dispensa({ session }) {
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
             onCookWith={cookWithProduct}
+            canNudge={!tour.active}
           />
         )}
 

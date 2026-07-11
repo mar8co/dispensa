@@ -308,6 +308,7 @@ applica `upsert`/`remove` agli stati locali.
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
 | `Auth.jsx` | Login a pagina intera (magic-link, Google, Apple, Face ID/passkey), stile "manifesto": headline "Cosa c'è in dispensa?" con wavy underline tomato su "dispensa" + mensole di emoji-categoria con slot "+" + sottotitolo "La tua cucina, in tasca. Meno sprechi (verde fisso `#43A047`). Zero pensieri". |
 | `SplashIntro.jsx` | **Intro splash** montata in `App.jsx`: riprende la splash nativa iOS (icona + "Dispensa") e disegna la sottolineatura ondulata tomato, poi sfuma nell'app. Animazione su tutte le piattaforme; rispetta `prefers-reduced-motion`. Stili `.splash-*` in `index.css`. |
+| `PushNudge.jsx` | **Soft-ask notifiche** reso da `PantryTab` sotto il banner scadenze (gated `canNudge={!tour.active}`): invita ad attivare le push nel momento contestuale. Si auto-nasconde se non supportate / già attive / già rifiutato (`dispensa-pushnudge-dismissed`). Riusa `enablePush` di `lib/push.js`. |
 | `Toast.jsx` | Toast/undo, posizione adattiva (`raised` su Spesa). |
 | `TourCoach.jsx` | Tutorial guidato (`tour.js`). |
 
