@@ -50,7 +50,8 @@ dispensa/
 │  ├─ account.js            #   cancellazione account (service role)
 │  └─ push.js              #   cron notifiche push scadenze (service role + web-push)
 ├─ scripts/
-│  └─ generate-icons.mjs    # genera i PNG PWA da icon.svg (sharp)
+│  ├─ generate-icons.mjs    # genera i PNG PWA da icon.svg (sharp)
+│  └─ generate-splash.mjs   # genera le splash iOS (public/splash/*) da icon.svg (sharp)
 ├─ supabase/
 │  ├─ schema.sql            # tabelle base + RLS (pantry_items, user_settings)
 │  ├─ migration-2.sql       # expiry + shopping_items

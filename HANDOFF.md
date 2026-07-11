@@ -267,6 +267,10 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 - **Code-split per scheda** — le schede/scanner pesanti sono `React.lazy` in
   `Dispensa.jsx` (ZXing e affini caricati on-demand).
 - **PWA**: installabile, offline shell, tema chiaro/scuro/auto (per-dispositivo).
+  **Splash screen iOS**: `apple-touch-startup-image` in `index.html` (icona
+  centrata su cream/dark via `prefers-color-scheme`), immagini in
+  `public/splash/*` generate da `scripts/generate-splash.mjs` (sharp), escluse
+  dal precache SW (le gestisce Safari). Solo iPhone portrait.
 - **Tutorial** guidato (TourCoach).
 - **Privacy Policy** (sheet, link nel login e nel Profilo).
 - **Sicurezza**: chiavi AI/Pexels mai nel client (proxy con verifica token
