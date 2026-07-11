@@ -253,7 +253,7 @@ export default function ProfileSheet({
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm text-ink">Avvisami delle scadenze</span>
                   <span className="block text-xs text-stone-500">
-                    {pushOn ? "Attive su questo dispositivo" : "Un promemoria quando qualcosa sta per scadere"}
+                    {pushOn ? "Attive su questo dispositivo" : "Un promemoria per le scadenze"}
                   </span>
                 </span>
                 {pushBusy ? (
