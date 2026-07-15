@@ -363,9 +363,11 @@ export function useRecipes({
   }
 
   // Registra una cottura nello storico (chiamata da "Ho cucinato questo").
-  function recordCookedRecipe() {
-    if (!recipe) return;
-    const ex = savedByTitle(recipe.title);
+  // `cooked` opzionale: di default è la ricetta aperta; il piano pasti passa
+  // la SUA ricetta (che potrebbe non essere aperta in quel momento).
+  function recordCookedRecipe(cooked = recipe) {
+    if (!cooked) return;
+    const ex = savedByTitle(cooked.title);
     const now = new Date().toISOString();
     if (ex) {
       const fields = { cooked_count: (ex.cooked_count || 0) + 1, last_cooked_at: now };
@@ -374,12 +376,12 @@ export function useRecipes({
     } else {
       const id = localRecipeId();
       const row = {
-        id, title: recipe.title, data: recipe, image: recipe.image || null,
+        id, title: cooked.title, data: cooked, image: cooked.image || null,
         saved: false, cooked_count: 1, last_cooked_at: now, created_at: now,
       };
       commitRecipes([row, ...savedRecipes]);
       syncRecipeUpsert(id, {
-        title: recipe.title, data: recipe, image: recipe.image || null,
+        title: cooked.title, data: cooked, image: cooked.image || null,
         saved: false, cooked_count: 1, last_cooked_at: now,
       });
     }

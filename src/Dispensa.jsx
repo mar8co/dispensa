@@ -54,6 +54,7 @@ import { useTimersTicker } from "./hooks/useTimersTicker.js";
 import { useRecipes } from "./hooks/useRecipes.jsx";
 import { useShopping } from "./hooks/useShopping.jsx";
 import { usePantry } from "./hooks/usePantry.jsx";
+import { useMealPlan } from "./hooks/useMealPlan.jsx";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
 // solo quando si apre la scansione del codice a barre.
@@ -213,6 +214,14 @@ export default function Dispensa({ session }) {
     bumpShopHistory, addToShoppingMerged,
   });
 
+  // Piano pasti settimanale (fase 2): settimana visibile, voci e operazioni.
+  // Carica dopo la risoluzione del nucleo (ready = loaded); il ponte col
+  // CookModal ("Ho cucinato" dal piano) è più sotto: cookMealFromPlan.
+  const {
+    weekStart, shiftWeek, meals, setMeals, loadingMeals,
+    planMeal, removeMeal, markMealCooked,
+  } = useMealPlan({ ready: loaded, householdId: activeHouseholdId });
+
   // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
   // NB: lo stato "collassato" NON viene ripristinato: le categorie partono
   // sempre chiuse a ogni apertura/ricarica dell'app (default voluto).
@@ -371,6 +380,9 @@ export default function Dispensa({ session }) {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "shopping_items", filter }, upsert(setShopping))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "shopping_items", filter }, upsert(setShopping))
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "shopping_items", filter }, remove(setShopping))
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "meal_plan", filter }, upsert(setMeals))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "meal_plan", filter }, upsert(setMeals))
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "meal_plan", filter }, remove(setMeals))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -841,11 +853,10 @@ export default function Dispensa({ session }) {
   //  - "exact" → stessa unità della ricetta: matematica esatta (es. 500 g − 200 g).
   //  - "pack"  → unità non confrontabili (es. "1 barattolo" vs "200 g"): niente
   //              stima, l'utente dice quanti ne restano con lo stepper (½ incluso).
-  function openCookModal() {
-    if (!recipe) return;
+  function buildCookRows(rec, f) {
     const rows = [];
     const seen = new Set();
-    for (const ing of (recipe.ingredients || [])) {
+    for (const ing of (rec.ingredients || [])) {
       const match = findMatch(ing.name, items);
       if (!match || seen.has(match.id)) continue;
       seen.add(match.id);
@@ -855,12 +866,39 @@ export default function Dispensa({ session }) {
         rows.push({ itemId: match.id, name: match.name, before: match.qty, kind: "qb" });
         continue;
       }
-      const used = scaleQty(ing.qty, factor);
+      const used = scaleQty(ing.qty, f);
       const sub = subtractQty(match.qty, used);
       rows.push(sub.ok
         ? { itemId: match.id, name: match.name, used, before: match.qty, after: sub.value, kind: "exact" }
         : { itemId: match.id, name: match.name, used, before: match.qty, after: match.qty, kind: "pack" });
     }
+    return rows;
+  }
+  // Chi si sta cucinando: la ricetta per lo storico (recordCookedRecipe) e
+  // l'eventuale voce del piano da marcare a cottura applicata.
+  const cookRecipeRef = useRef(null);
+  const cookMealRef = useRef(null);
+  function openCookModal() {
+    if (!recipe) return;
+    cookRecipeRef.current = recipe;
+    cookMealRef.current = null;
+    setCookRows(buildCookRows(recipe, factor));
+    bumpModal("cook");
+    setCookOpen(true);
+  }
+  // "Ho cucinato" dal piano pasti: stessa scalatura, ricetta della voce
+  // (porzioni base: nel piano non si scala). Se nessun ingrediente è in
+  // dispensa non c'è nulla da scalare: si marca e basta.
+  function cookMealFromPlan(meal) {
+    if (!meal?.data) return;
+    const rows = buildCookRows(meal.data, 1);
+    if (!rows.length) {
+      markMealCooked(meal.id);
+      showToast(<><strong>{meal.title}</strong> segnata come cucinata</>);
+      return;
+    }
+    cookRecipeRef.current = meal.data;
+    cookMealRef.current = meal.id;
     setCookRows(rows);
     bumpModal("cook");
     setCookOpen(true);
@@ -896,7 +934,12 @@ export default function Dispensa({ session }) {
     setCookOpen(false);
     const n = Object.keys(updates).length + removals.size;
     setCookDone(n ? `Dispensa aggiornata: ${n} prodotti.` : "");
-    recordCookedRecipe(); // storico "cucinate di recente"
+    recordCookedRecipe(cookRecipeRef.current || undefined); // storico "cucinate di recente"
+    // Cottura partita dal piano pasti: marca anche la voce del piano.
+    if (cookMealRef.current) {
+      markMealCooked(cookMealRef.current);
+      cookMealRef.current = null;
+    }
     // I prodotti finiti cucinando si possono rimettere in lista con un tap.
     const finished = cookRows.filter((r) => removals.has(r.itemId)).map((r) => r.name);
     if (finished.length) {
@@ -960,6 +1003,7 @@ export default function Dispensa({ session }) {
             onRetry={retryLast}
             onCustomAsk={askCustom}
             recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
+            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, onCookMeal: cookMealFromPlan }}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
             onDeleteSaved={removeSavedRecipe}

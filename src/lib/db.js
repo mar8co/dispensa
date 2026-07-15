@@ -265,6 +265,45 @@ export async function deleteSavedRecipe(id) {
   if (error) throw error;
 }
 
+// ---------- Piano pasti (meal_plan, migration-11) ----------
+
+const MEAL_COLS = "id, date, slot, title, data, cooked_at, created_at";
+
+// Le voci del piano in un intervallo di date (la settimana visibile).
+export async function fetchMealPlan(fromDate, toDate) {
+  let q = supabase
+    .from("meal_plan")
+    .select(MEAL_COLS)
+    .gte("date", fromDate)
+    .lte("date", toDate)
+    .order("date", { ascending: true });
+  if (activeHouseholdId) q = q.eq("household_id", activeHouseholdId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+// `id` opzionale come per la dispensa: generato lato client per l'ottimismo.
+export async function insertMeal({ id = undefined, date, slot, title, data = null }) {
+  const { data: row, error } = await supabase
+    .from("meal_plan")
+    .insert({ ...(id ? { id } : {}), date, slot, title, data, ...withHousehold() })
+    .select(MEAL_COLS)
+    .single();
+  if (error) throw error;
+  return row;
+}
+
+export async function updateMeal(id, fields) {
+  const { error } = await supabase.from("meal_plan").update(fields).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteMeal(id) {
+  const { error } = await supabase.from("meal_plan").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ---------- Impostazioni utente ----------
 
 // Restituisce { settings, updatedAt }: il timestamp serve al chiamante per

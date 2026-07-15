@@ -4,13 +4,42 @@ import { useState, useEffect } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
-  ChefHat, Trash2, Check,
+  ChefHat, Trash2, Check, CalendarPlus,
 } from "lucide-react";
 import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import Button from "./Button.jsx";
+import Sheet from "./Sheet.jsx";
 import StepTimer from "./StepTimer.jsx";
 import CookingMode from "./CookingMode.jsx";
+import PlanWeek from "./PlanWeek.jsx";
+import { isoDate, addDays } from "../hooks/useMealPlan.jsx";
+
+// Mini-foglio "Aggiungi al piano" dal dettaglio ricetta: scegli uno dei
+// prossimi 7 giorni e lo slot (pranzo/cena). La logica resta nel chiamante.
+function PlanDaySheet({ onChoose, onClose }) {
+  const days = [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(new Date(), i));
+  return (
+    <Sheet onClose={onClose}>
+      {(close) => (
+        <div className="px-5 pb-4 pt-1">
+          <h3 className="font-display text-lg font-extrabold tracking-tight text-ink">Aggiungi al piano</h3>
+          <ul className="mt-2 divide-y divide-hair">
+            {days.map((d, i) => (
+              <li key={i} className="flex items-center gap-2 py-2">
+                <span className="min-w-0 flex-1 text-sm font-semibold capitalize text-ink">
+                  {i === 0 ? "Oggi" : d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" })}
+                </span>
+                <Button variant="secondary" size="sm" onClick={() => { close(); onChoose(d, "pranzo"); }}>Pranzo</Button>
+                <Button variant="secondary" size="sm" onClick={() => { close(); onChoose(d, "cena"); }}>Cena</Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </Sheet>
+  );
+}
 
 // Foto con caricamento morbido: placeholder neutro sotto, fade-in quando pronta.
 function FadeImg({ src, className = "" }) {
@@ -56,6 +85,7 @@ export default function RecipesTab({
   onRegenerate, onRetry, onCustomAsk,
   recipeContext = [], onToggleContext,
   savedRecipes, onOpenSaved, onDeleteSaved, isSaved, onToggleSave,
+  plan = null,
 }) {
   const [addedMissing, setAddedMissing] = useState(false);
   const [ask, setAsk] = useState("");          // "Cosa ti va?"
@@ -63,9 +93,21 @@ export default function RecipesTab({
   const [struck, setStruck] = useState({});    // ingredienti spuntati
   const [stepsDone, setStepsDone] = useState({}); // passaggi completati
   const [cooking, setCooking] = useState(false);  // modalità cucina
+  const [tab, setTab] = useState("idee");         // sotto-vista: "idee" | "piano"
+  const [planSheet, setPlanSheet] = useState(false); // "Aggiungi al piano" aperto
+  const [plannedMsg, setPlannedMsg] = useState("");  // feedback dopo l'aggiunta
   useEffect(() => {
     setAddedMissing(false); setStruck({}); setStepsDone({}); setCooking(false);
+    setPlanSheet(false); setPlannedMsg("");
   }, [recipe?.title]);
+
+  // Dal dettaglio ricetta: mette QUESTA ricetta nel piano (giorno + slot).
+  function planCurrentRecipe(day, slot) {
+    if (!plan || !recipe) return;
+    plan.planMeal(isoDate(day), slot, { title: recipe.title, data: recipe });
+    const label = day.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" });
+    setPlannedMsg(`Nel piano: ${label} · ${slot} ✓`);
+  }
 
   const savedList = (savedRecipes || []).filter((r) => r.saved);
   const cookedList = (savedRecipes || [])
@@ -86,6 +128,37 @@ export default function RecipesTab({
         <>
           <h1 className="font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Cosa<br />cuciniamo?</h1>
 
+          {/* Sotto-viste: Idee (occasioni + ricettario) e Piano (settimana).
+              Il piano compare solo se il composition root lo passa (migration-11). */}
+          {plan && (
+            <div className="mt-4 grid grid-cols-2 gap-1 rounded-xl border border-hair bg-paper p-1">
+              {[["idee", "Idee"], ["piano", "Piano"]].map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => setTab(id)}
+                  aria-pressed={tab === id}
+                  className={`rounded-lg py-2 text-sm font-semibold transition ${
+                    tab === id ? "bg-ink text-white" : "text-stone-500 hover:text-ink"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {tab === "piano" && plan && (
+            <PlanWeek
+              {...plan}
+              savedRecipes={savedRecipes}
+              hasIngredient={hasIngredient}
+              onAddMissing={onAddMissing}
+              onGoIdeas={() => setTab("idee")}
+            />
+          )}
+
+          {tab === "idee" && (
+          <>
           {/* Occhiello rosso + ricerca ingredienti: bloccati insieme in alto
               mentre si scorrono occasioni e ricettario. */}
           <div data-tour="recipe-search" className="sticky top-0 z-20 -mx-5 mt-4 bg-cream/95 px-5 pb-3 pt-2 backdrop-blur">
@@ -225,6 +298,8 @@ export default function RecipesTab({
                 </p>
               )}
             </section>
+          )}
+          </>
           )}
         </>
       )}
@@ -425,6 +500,17 @@ export default function RecipesTab({
             )
           )}
 
+          {/* Nel piano settimanale: è anche la via "genera un'idea → piano". */}
+          {plan && (
+            plannedMsg ? (
+              <p className="mt-3 text-center text-xs font-semibold text-stone-500">{plannedMsg}</p>
+            ) : (
+              <Button variant="secondary" size="sm" full className="mt-3" onClick={() => setPlanSheet(true)}>
+                <CalendarPlus className="h-3.5 w-3.5" /> Aggiungi al piano
+              </Button>
+            )
+          )}
+
           {/* Modalità cucina: schermo intero, un passaggio alla volta */}
           <Button variant="secondary" full className="mt-7" onClick={() => setCooking(true)}>
             <ChefHat className="h-4 w-4 text-tomato" /> Modalità cucina
@@ -462,6 +548,13 @@ export default function RecipesTab({
               recipe={recipe}
               onClose={() => setCooking(false)}
               onFinish={openCookModal}
+            />
+          )}
+
+          {planSheet && (
+            <PlanDaySheet
+              onChoose={planCurrentRecipe}
+              onClose={() => setPlanSheet(false)}
             />
           )}
         </>
