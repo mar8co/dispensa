@@ -169,9 +169,9 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
   tabella `push_subscriptions` (migration-10), proxy `api/push.js`, cron
   **pg_cron + pg_net** (non Vercel Cron) + `web-push`, VAPID/CRON in env;
   restano i passi manuali (migration, Vault, env Vercel) e la prova telefono;
-  **Fase 2** (**prossimo obiettivo**) piano pasti settimanale (tabella
-  `meal_plan` migration-11, vista calendario, riuso ricette/spesa/CookModal) —
-  futura feature Pro;
+  **Fase 2** piano pasti settimanale — ✅ **v1 implementata (2026-07-14)**:
+  agenda dentro Ricette ("Idee | Piano"), tabella `meal_plan` (migration-11
+  manuale, da eseguire), riuso ricettario/AI/CookModal — futura feature Pro;
   **Fase 3** app nativa iOS + monetizzazione (pubblicità + abbonamenti).
   Le due migration sono **autorizzate in linea di principio** (eccezione
   esplicita alla regola 3 sul data layer), ma lo **schema concreto va proposto

@@ -63,7 +63,8 @@ dispensa/
 │  ├─ migration-7.sql       # inviti (household_invites) + accept_invite
 │  ├─ migration-8.sql       # switch RLS dati a is_household_member (il "flip")
 │  ├─ migration-9.sql       # username membri + espulsione (set_username, remove_member)
-│  └─ migration-10.sql      # push scadenze: push_subscriptions + save_push_subscription + cron pg_cron/pg_net
+│  ├─ migration-10.sql      # push scadenze: push_subscriptions + save_push_subscription + cron pg_cron/pg_net
+│  └─ migration-11.sql      # piano pasti: meal_plan (RLS household, Realtime, unique per slot)
 ├─ src/
 │  ├─ main.jsx              # entry (monta App, registra SW/tema)
 │  ├─ App.jsx               # gate auth (spinner / login / app)
@@ -76,7 +77,8 @@ dispensa/
 │  │  ├─ useTimersTicker.js # tick dei timer di cottura
 │  │  ├─ usePantry.jsx      # dominio dispensa
 │  │  ├─ useShopping.jsx    # dominio lista spesa
-│  │  └─ useRecipes.jsx     # dominio ricette
+│  │  ├─ useRecipes.jsx     # dominio ricette
+│  │  └─ useMealPlan.jsx    # dominio piano pasti (settimana + helper data locali)
 │  ├─ lib/
 │  │  ├─ supabase.js        # client Supabase (anon)
 │  │  ├─ db.js              # TUTTE le query (confine data layer)
@@ -137,10 +139,15 @@ auth.users (gestita da Supabase)
    │                       settings.push.daysBefore = anticipo avviso scadenze (1/3/7)
    ├──< ai_usage         (user_id, day:date, count:int) PK(user_id, day)
    │                       scritta SOLO dal service role via bump_ai_usage()
-   └──< push_subscriptions (id, user_id, endpoint UNIQUE, p256dh, auth, created_at)
-                          una riga per dispositivo; RLS per-utente; letta dal
-                          cron col service role. Upsert per endpoint via
-                          save_push_subscription() (SECURITY DEFINER).
+   ├──< push_subscriptions (id, user_id, endpoint UNIQUE, p256dh, auth, created_at)
+   │                       una riga per dispositivo; RLS per-utente; letta dal
+   │                       cron col service role. Upsert per endpoint via
+   │                       save_push_subscription() (SECURITY DEFINER).
+   └──< meal_plan        (id, household_id, user_id, date, slot pranzo|cena,
+                          title, data:jsonb ricetta completa o NULL=piatto
+                          libero, cooked_at, created_at)
+                          UNIQUE (coalesce(household_id,user_id), date, slot)
+                          RLS is_household_member + Realtime (come pantry/shopping)
 ```
 
 Dettagli rilevanti:
@@ -349,13 +356,15 @@ applica `upsert`/`remove` agli stati locali.
   **Design DST-safe**: pg_cron in UTC → 6 job (gemelli CET/CEST), lo slot lo
   ricava il server dall'ora di Roma. Su iOS richiede PWA installata (iOS 16.4+).
   Restano i passi manuali (migration, Vault, env Vercel) e la prova sul telefono.
-- **Piano pasti settimanale** — **PIANIFICATO (Fase 2, feature Pro di punta)**,
-  roadmap in `HANDOFF.md`. Ciclo: pianifica → lista spesa dai mancanti →
-  cucina (CookModal scala) → dispensa allineata. Riusa `useRecipes`,
-  `saved_recipes`, `findMatch`/`addMissingToShopping`, `CookModal`. Nuova
-  tabella `meal_plan` (household_id + RLS `is_household_member`,
-  migration-11 manuale, schema da proporre prima) + vista calendario
-  settimanale (collocazione UI da decidere con mockup prima del codice).
+- **Piano pasti settimanale** — ✅ **v1 IMPLEMENTATA (Fase 2, 2026-07-14)**.
+  Agenda verticale dentro Ricette (segmented "Idee | Piano"), slot
+  pranzo+cena, piatto da ricettario/AI/testo libero, "Ho cucinato" dal piano
+  via `cookMealFromPlan` → CookModal (scala e marca `cooked_at`), mancanti
+  alla spesa dal foglio slot, giorni passati compressi, Realtime nel canale
+  esistente. Tabella `meal_plan` (migration-11 manuale). Componenti:
+  `useMealPlan` + `PlanWeek` (+ `PlanDaySheet` in RecipesTab). Restano:
+  esecuzione migration, prova telefono, deep-link 18:30 → Piano, paywall
+  free/Pro (fase 3).
 - **App nativa (iOS, poi Android) + monetizzazione** — **obiettivo
   strategico (Fase 3)**, dettagli in `HANDOFF.md` → "Prossimo obiettivo"
   (leggerlo prima di iniziare qualunque lavoro in quella direzione). Nessuna decisione

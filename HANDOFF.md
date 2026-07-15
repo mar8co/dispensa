@@ -96,7 +96,31 @@ i membri del nucleo o solo chi ha attivato il toggle?).
 
 </details>
 
-### Fase 2 — Piano pasti settimanale (impegno grande, feature Pro di punta) ← SI PARTE DA QUI (prossima chat)
+### Fase 2 — Piano pasti settimanale — ✅ v1 IMPLEMENTATA (manca migration-11 + prova telefono)
+
+> **Stato (agg. 2026-07-14): v1 nel codice.** Mockup 1 approvato dall'utente
+> (agenda verticale DENTRO Ricette, segmented "Idee | Piano"; "oggi"
+> evidenziato in modo discreto: etichetta + bordo tomato tenue). Decisioni
+> prese (raccomandate, confermabili): slot **pranzo+cena**; piatto da
+> **ricettario / AI / testo libero**; "cucinato" via **CookModal** (scala la
+> dispensa, `cooked_at`); giorni passati **attenuati e compressi**.
+>
+> **Cosa manca (utente)**: eseguire `supabase/migration-11.sql` (tabella
+> `meal_plan` + RLS + Realtime) e provare sul telefono. Senza migration la
+> scheda Piano mostra errori di fetch in console ma l'app non si rompe.
+>
+> **File**: `supabase/migration-11.sql`, `src/hooks/useMealPlan.jsx` (dominio,
+> helper data in ora locale), `src/components/PlanWeek.jsx` (settimana + foglio
+> slot), `RecipesTab.jsx` (segmented Idee|Piano + "Aggiungi al piano" dal
+> dettaglio ricetta = via "genera con l'AI"), `Dispensa.jsx` (ponte
+> `cookMealFromPlan`: cucinare dal piano scala la dispensa e marca la voce;
+> Realtime `meal_plan` nel canale esistente), `db.js` (CRUD household-aware),
+> `useRecipes.recordCookedRecipe(cooked?)`.
+>
+> **Rifiniture possibili (v1.1)**: deep-link notifica 18:30 direttamente sulla
+> sotto-vista Piano; porzioni per voce del piano; paywall free/Pro (fase 3).
+
+<details><summary>Progetto originario Fase 2 (per contesto storico)</summary>
 
 **Il ciclo che chiude il cerchio "zero sprechi"**: pianifichi la settimana →
 la lista della spesa si genera dai soli ingredienti mancanti → cucini
@@ -120,7 +144,9 @@ paywall si prende nella fase 3, la feature va costruita completa.
 pranzo+cena), come si sceglie la ricetta (ricettario vs generazione al volo),
 come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 
-### Fase 3 — App nativa (iOS, poi Android) + monetizzazione
+</details>
+
+### Fase 3 — App nativa (iOS, poi Android) + monetizzazione ← PROSSIMA (decisioni da prendere INSIEME)
 
 **Traguardo**: trasformare **questa PWA** in una vera **app nativa pubblicata
 sull'App Store** (e più avanti su Google Play), introducendo la
@@ -443,9 +469,9 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
    `migration-10.sql`, creare il secret `dispensa_cron_secret` nel Vault,
    aggiungere le env VAPID/CRON su Vercel, installare la PWA e attivare il
    toggle. Vedi "Prossimo obiettivo → Fase 1" per i dettagli.
-2. **Piano pasti settimanale (Fase 2)** — **prossimo obiettivo**: mockup della
-   vista calendario con opzioni PRIMA del codice, poi schema `meal_plan` da
-   proporre, poi implementazione.
+2. **Piano pasti settimanale (Fase 2)** — ✅ **v1 implementata (2026-07-14)**.
+   Resta: eseguire `migration-11.sql` e provare sul telefono (vedi "Prossimo
+   obiettivo → Fase 2"). Rifiniture v1.1 elencate lì.
 3. **App nativa + monetizzazione (Fase 3)** — dopo le fasi 1-2: decisioni
    aperte dedicate nella sezione in cima.
 4. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,
