@@ -26,14 +26,16 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 
 ## Prossimo obiettivo: push scadenze → piano pasti → app nativa + monetizzazione
 
-> **Stato (agg. 2026-07-05): Fase 1 (push scadenze) IMPLEMENTATA nel codice**
-> — mancano solo i passi manuali dell'utente (migration-10 nel SQL Editor,
-> env VAPID/CRON su Vercel, secret nel Vault) e la prova sul telefono con PWA
-> installata. Le prossime chat ripartono dalla **Fase 2** (piano pasti). Le due
-> feature preparano il lancio nativo: le push sono il motore di retention, il
-> piano pasti la feature Pro di punta.
+> **Stato (agg. 2026-07-16): Fase 1 (push scadenze) COMPLETA e verificata** —
+> migration-10 eseguita, secret nel Vault, env Vercel impostate, prima
+> subscription registrata dal telefono dell'utente (confermato in produzione:
+> tabella, i 6 cron job attivi, secret nel Vault, VAPID nel bundle client,
+> endpoint `/api/push` protetto). Le prossime chat ripartono dalla **Fase 2**
+> (piano pasti — anch'essa v1 implementata, vedi sotto: manca solo
+> migration-11 + prova telefono). Le due feature preparano il lancio nativo:
+> le push sono il motore di retention, il piano pasti la feature Pro di punta.
 
-### Fase 1 — Notifiche push per le scadenze — ✅ IMPLEMENTATA (setup manuale + prova telefono da fare)
+### Fase 1 — Notifiche push per le scadenze — ✅ COMPLETA E VERIFICATA
 
 > **Decisioni prese (2026-07-05)**: 3 promemoria/giorno in ora di Roma —
 > **14:30** "hai cucinato? aggiorna la dispensa", **18:30** scadenze /
@@ -45,11 +47,15 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > **minimale** (opzione A). Scheduler **pg_cron + pg_net** (non Vercel Cron).
 > Dominio prod: `https://la-dispensa-omega.vercel.app`.
 >
-> **Cosa manca (utente)**: eseguire `migration-10.sql`; creare il secret
-> `dispensa_cron_secret` nel Vault; aggiungere le env su Vercel
-> (`VITE_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
-> `VAPID_SUBJECT`, `CRON_SECRET`); installare la PWA e attivare il toggle nel
-> Profilo. **Non verificabile dal preview** (serve HTTPS + PWA installata iOS 16.4+).
+> **Setup completato (2026-07-16)**: `migration-10.sql` eseguita
+> (`push_subscriptions` + RLS), secret `dispensa_cron_secret` nel Vault, env
+> su Vercel impostate (`VITE_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`,
+> `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`), PWA installata e
+> toggle attivato nel Profilo (subscription registrata). Verificato in
+> produzione: 6 job cron `active`, VAPID nel bundle client, `/api/push`
+> protetto (401 senza secret, 405 su GET). Resta solo la conferma finale di
+> un invio reale ricevuto sul telefono (`select public.dispensa_push_ping();`
+> dentro una finestra oraria, o attendere il prossimo slot naturale).
 >
 > **File**: `supabase/migration-10.sql`, `server/push.js`, `api/push.js`,
 > `public/push-sw.js` (importato nel SW via `workbox.importScripts`),
@@ -464,11 +470,10 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Todo prioritari
 
-1. **Notifiche push scadenze (Fase 1)** — ✅ **implementata** (2026-07-05).
-   Restano i passi manuali dell'utente e la prova sul telefono: eseguire
-   `migration-10.sql`, creare il secret `dispensa_cron_secret` nel Vault,
-   aggiungere le env VAPID/CRON su Vercel, installare la PWA e attivare il
-   toggle. Vedi "Prossimo obiettivo → Fase 1" per i dettagli.
+1. **Notifiche push scadenze (Fase 1)** — ✅ **completa e verificata** (2026-07-16).
+   Setup manuale fatto (migration, Vault, env Vercel, toggle attivato). Resta
+   solo la conferma finale di un invio reale ricevuto (test manuale col ping
+   SQL o attesa del prossimo slot). Vedi "Prossimo obiettivo → Fase 1".
 2. **Piano pasti settimanale (Fase 2)** — ✅ **v1 implementata (2026-07-14)**.
    Resta: eseguire `migration-11.sql` e provare sul telefono (vedi "Prossimo
    obiettivo → Fase 2"). Rifiniture v1.1 elencate lì.
