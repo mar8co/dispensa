@@ -96,9 +96,22 @@ export default function RecipesTab({
   const [tab, setTab] = useState("idee");         // sotto-vista: "idee" | "piano"
   const [planSheet, setPlanSheet] = useState(false); // "Aggiungi al piano" aperto
   const [plannedMsg, setPlannedMsg] = useState("");  // feedback dopo l'aggiunta
+  // Giorno/slot in attesa di un'idea AI (arriva da "Genera un'idea con l'AI"
+  // dentro il foglio di uno slot vuoto): appena si apre una ricetta la
+  // piazziamo lì automaticamente, chiudendo il giro generazione → piano.
+  const [pendingSlot, setPendingSlot] = useState(null); // { date, slot } | null
   useEffect(() => {
     setAddedMissing(false); setStruck({}); setStepsDone({}); setCooking(false);
-    setPlanSheet(false); setPlannedMsg("");
+    setPlanSheet(false);
+    if (recipe && pendingSlot && plan) {
+      plan.planMeal(isoDate(pendingSlot.date), pendingSlot.slot, { title: recipe.title, data: recipe });
+      const label = pendingSlot.date.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" });
+      setPlannedMsg(`Nel piano: ${label} · ${pendingSlot.slot} ✓`);
+      setPendingSlot(null);
+    } else {
+      setPlannedMsg("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipe?.title]);
 
   // Dal dettaglio ricetta: mette QUESTA ricetta nel piano (giorno + slot).
@@ -107,6 +120,30 @@ export default function RecipesTab({
     plan.planMeal(isoDate(day), slot, { title: recipe.title, data: recipe });
     const label = day.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" });
     setPlannedMsg(`Nel piano: ${label} · ${slot} ✓`);
+  }
+
+  // "Genera un'idea con l'AI" da uno slot del Piano: passa alle Idee e chiede
+  // subito una proposta adatta al momento (pranzo/cena). Il pick verrà
+  // piazzato in automatico nell'effetto sopra, appena una ricetta si apre.
+  function generateIdeaFor(date, slot) {
+    setPendingSlot({ date, slot });
+    setTab("idee");
+    onCustomAsk(slot === "pranzo" ? "un'idea veloce per pranzo" : "un'idea per cena");
+  }
+
+  // Tornando alla griglia occasioni si esce dal "genera per questo slot": da
+  // qui in poi il browsing è di nuovo libero, senza piazzamenti automatici.
+  function handleBackToModes() {
+    setPendingSlot(null);
+    backToModes();
+  }
+
+  // Tornando manualmente al Piano (senza aver aperto una ricetta) si annulla
+  // l'attesa: evita che una ricetta aperta più tardi, scollegata, finisca
+  // piazzata per errore nello slot originale.
+  function switchTab(id) {
+    if (id === "piano") setPendingSlot(null);
+    setTab(id);
   }
 
   const savedList = (savedRecipes || []).filter((r) => r.saved);
@@ -135,7 +172,7 @@ export default function RecipesTab({
               {[["idee", "Idee"], ["piano", "Piano"]].map(([id, label]) => (
                 <button
                   key={id}
-                  onClick={() => setTab(id)}
+                  onClick={() => switchTab(id)}
                   aria-pressed={tab === id}
                   className={`rounded-lg py-2 text-sm font-semibold transition ${
                     tab === id ? "bg-ink text-white" : "text-stone-500 hover:text-ink"
@@ -153,7 +190,7 @@ export default function RecipesTab({
               savedRecipes={savedRecipes}
               hasIngredient={hasIngredient}
               onAddMissing={onAddMissing}
-              onGoIdeas={() => setTab("idee")}
+              onGoIdeas={generateIdeaFor}
             />
           )}
 
@@ -309,7 +346,7 @@ export default function RecipesTab({
           {/* Header sticky: indietro + nome categoria, sempre visibile durante
               lo scroll delle proposte. */}
           <div className="sticky top-0 z-20 -mx-5 mb-3 flex items-center gap-2 border-b border-hair bg-cream/95 px-5 py-2.5 backdrop-blur">
-            <button onClick={backToModes} aria-label="Torna alle occasioni" className="-ml-1 shrink-0 rounded-lg p-1 text-stone-500 transition hover:text-ink">
+            <button onClick={handleBackToModes} aria-label="Torna alle occasioni" className="-ml-1 shrink-0 rounded-lg p-1 text-stone-500 transition hover:text-ink">
               <ArrowLeft className="h-5 w-5" />
             </button>
             <span className="shrink-0 text-xl">{mode.icon}</span>

@@ -4,7 +4,7 @@
 // visibili ma attenuati e compressi. Toccando uno slot si apre il foglio:
 // vuoto → scegli dal ricettario / piatto libero / genera un'idea;
 // pieno → cucina (CookModal via bridge), mancanti alla spesa, cambia, rimuovi.
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Sun, Moon, Plus, Check, Sparkles,
   ShoppingCart, Utensils, Trash2, RefreshCw,
@@ -43,6 +43,16 @@ function MealSlotSheet({
   const [query, setQuery] = useState("");
   const [free, setFree] = useState("");
   const [missingAdded, setMissingAdded] = useState(false);
+
+  // Il foglio resta MONTATO durante l'animazione di chiusura di Sheet: se un
+  // pick arriva proprio in quella finestra (close() + onPick() nello stesso
+  // gesto), `meal` passa da vuoto a pieno mentre siamo ancora qui, ma
+  // `picking` (letto una volta sola al mount) restava bloccato su "scelta".
+  // Risincronizziamo appena il piatto risulta impostato/aggiornato.
+  useEffect(() => {
+    if (meal) setPicking(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meal?.id, meal?.title]);
 
   const slotDef = SLOTS.find((s) => s.id === slot);
   const heading = `${dayLabel(date)} · ${slotDef?.label || slot}`;
@@ -162,12 +172,14 @@ function MealSlotSheet({
                   className="min-w-0 flex-1 border-0 border-b border-ink/20 bg-transparent py-2 text-sm text-ink outline-none placeholder:text-stone-400 focus:border-ink"
                 />
                 {free.trim() && (
-                  <Button type="submit" variant="primary" size="sm">Metti</Button>
+                  <Button type="submit" variant="primary" size="sm">Aggiungi</Button>
                 )}
               </form>
 
-              {/* Idea nuova: si genera dalle Idee e da lì "Aggiungi al piano". */}
-              <Button variant="cook" size="sm" full className="mt-4" onClick={() => { close(); onGoIdeas(); }}>
+              {/* Genera un'idea con l'AI per QUESTO giorno/slot: passa alle Idee,
+                  chiede subito una proposta e la piazza qui una volta aperta
+                  (vedi RecipesTab → pendingSlot). */}
+              <Button variant="cook" size="sm" full className="mt-4" onClick={() => { close(); onGoIdeas(date, slot); }}>
                 <Sparkles className="h-3.5 w-3.5" /> Genera un'idea con l'AI
               </Button>
             </>
