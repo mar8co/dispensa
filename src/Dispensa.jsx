@@ -41,6 +41,7 @@ import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
+import SettingsSheet from "./components/SettingsSheet.jsx";
 import PrivacySheet from "./components/PrivacySheet.jsx";
 import TimerBar from "./components/TimerBar.jsx";
 import TourCoach from "./components/TourCoach.jsx";
@@ -176,8 +177,9 @@ export default function Dispensa({ session }) {
   const [cookRows, setCookRows] = useState([]);
   const [cookDone, setCookDone] = useState("");
 
-  // foglio profilo (tema, svuota dispensa, logout)
+  // foglio profilo (nome, famiglia, esigenze, svuota, logout)
   const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false); // impostazioni (⚙️ dal Profilo)
   const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
 
   // tutorial interattivo (primo accesso + ripetibile dal Profilo)
@@ -1143,8 +1145,6 @@ export default function Dispensa({ session }) {
           onHouseholdsChanged={refreshHouseholds}
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
-          pushDays={pushDays}
-          onChangePushDays={setPushDays}
           onClose={() => setProfileOpen(false)}
           onClearPantry={() => {
             // Durante il tutorial lo svuotamento è guidato e immediato (niente
@@ -1153,9 +1153,19 @@ export default function Dispensa({ session }) {
             else { bumpModal("confirmClear"); setConfirmClear(true); }
           }}
           onLogout={logout}
+          onOpenSettings={() => { bumpModal("settings"); setSettingsOpen(true); }}
+        />
+      )}
+
+      {settingsOpen && (
+        <SettingsSheet
+          key={modalEpoch.current.settings}
+          onClose={() => setSettingsOpen(false)}
           onReplayTour={replayTour}
           onDeleteAccount={deleteAccount}
           onOpenPrivacy={() => { bumpModal("privacy"); setPrivacyOpen(true); }}
+          pushDays={pushDays}
+          onChangePushDays={setPushDays}
         />
       )}
 

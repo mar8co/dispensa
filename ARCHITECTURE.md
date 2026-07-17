@@ -311,7 +311,7 @@ applica `upsert`/`remove` agli stati locali.
 | `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. Dal flusso voce (prop `onAddMore`) mostra "Aggiungi altri prodotti": ri-detta e accoda. |
 | `ManualAddModal.jsx` / `VoiceAddModal.jsx` | Aggiunta manuale / a voce. |
 | `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | FAB "+", menu aggiunta, navigazione. |
-| `ProfileSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo (Nome/username al posto della mail, Esigenze alimentari in box 2 righe, tema, logout, privacy). |
+| `ProfileSheet.jsx` / `SettingsSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo = "chi sei" (Nome/username, Dispensa familiare, Esigenze alimentari, Svuota/Esci) con ⚙️ in alto a destra che apre **SettingsSheet** = "come si comporta l'app" (Face ID, notifiche push + anticipo, tema, tutorial, privacy/elimina account). |
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
 | `Auth.jsx` | Login a pagina intera (magic-link, Google, Apple, Face ID/passkey), stile "manifesto": headline "Cosa c'è in dispensa?" con wavy underline tomato su "dispensa" + mensole di emoji-categoria con slot "+" + sottotitolo "La tua cucina, in tasca. Meno sprechi (verde fisso `#43A047`). Zero pensieri". |
 | `SplashIntro.jsx` | **Intro splash** montata in `App.jsx`: riprende la splash nativa iOS (icona + "Dispensa") e disegna la sottolineatura ondulata tomato, poi sfuma nell'app. Animazione su tutte le piattaforme; rispetta `prefers-reduced-motion`. Stili `.splash-*` in `index.css`. |

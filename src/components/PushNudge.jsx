@@ -1,8 +1,8 @@
 // Soft-ask contestuale per le notifiche di scadenza. Compare SOTTO il banner
 // "in scadenza" della Dispensa, cioè proprio nel momento in cui il beneficio è
 // ovvio ("hai prodotti che scadono → vuoi che ti avvisi?"). È un SECONDO punto
-// d'accesso, non un sostituto del toggle nel Profilo (che resta il controllo
-// durevole con il selettore dei giorni).
+// d'accesso, non un sostituto del toggle in Profilo → Impostazioni (che resta
+// il controllo durevole con il selettore dei giorni).
 //
 // Regole UX rispettate:
 //  - mai all'avvio, solo in contesto (lo monta PantryTab quando c'è il banner);
@@ -48,7 +48,7 @@ export default function PushNudge() {
       await enablePush();
       silence(); // attivate: non riproporre più il soft-ask
     } catch (e) {
-      if (e?.code === "denied") setErr("Permesso negato. Puoi attivarle dal Profilo.");
+      if (e?.code === "denied") setErr("Permesso negato. Puoi attivarle da Profilo → Impostazioni.");
       else setErr("Attivazione non riuscita. Riprova.");
     } finally {
       setBusy(false);

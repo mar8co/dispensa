@@ -126,7 +126,7 @@ export const STEPS = [
   },
   {
     id: "done", view: "dispensa", overlay: "card",
-    title: "Tutto pronto! 🎉", text: "Aggiungi gli ingredienti che hai in casa e ti aiuterò a trovare ricette e idee per sfruttarli al meglio. Per svuotare la dispensa vai in Profilo e tocca su “Svuota dispensa”.\n\nVuoi rivedere il tutorial? Lo trovi sempre in Profilo → “Rivedi tutorial”.",
+    title: "Tutto pronto! 🎉", text: "Aggiungi gli ingredienti che hai in casa e ti aiuterò a trovare ricette e idee per sfruttarli al meglio. Per svuotare la dispensa vai in Profilo e tocca su “Svuota dispensa”.\n\nVuoi rivedere il tutorial? Lo trovi sempre in Profilo → ⚙️ Impostazioni → “Rivedi il tutorial”.",
     advance: "finish", cta: "Inizia ora",
   },
 ];
