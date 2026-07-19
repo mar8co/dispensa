@@ -150,7 +150,12 @@ export default function Dispensa({ session }) {
   // usato come `key`, forza React a montare un'istanza FRESCA ogni volta che
   // il foglio viene aperto, indipendentemente da quale stato avesse prima.
   const modalEpoch = useRef({});
-  function bumpModal(name) { modalEpoch.current[name] = (modalEpoch.current[name] || 0) + 1; }
+  const modalSeq = useRef(0);
+  // Sequenza GLOBALE (non per-nome): due modali diversi non hanno mai la
+  // stessa key. Con contatori separati, Profilo (epoch 1) e Impostazioni
+  // (epoch 1) montati vicini collidevano come key React tra fratelli, e React
+  // può ometterne uno ("Encountered two children with the same key").
+  function bumpModal(name) { modalEpoch.current[name] = ++modalSeq.current; }
 
   // scontrino
   const [processing, setProcessing] = useState(false);
@@ -181,6 +186,17 @@ export default function Dispensa({ session }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false); // impostazioni (⚙️ dal Profilo)
   const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
+  // Passaggio Profilo→Impostazioni→Privacy SERIALIZZATO: il foglio successivo
+  // si apre solo QUANDO il precedente ha finito l'animazione di chiusura
+  // (onClose). Due drawer Vaul sovrapposti lasciavano residui Radix
+  // (pointer-events sul body) che mangiavano il primo tap dopo la chiusura.
+  const pendingSheetRef = useRef(null); // "settings" | "privacy" | null
+  function openPendingSheet() {
+    const next = pendingSheetRef.current;
+    pendingSheetRef.current = null;
+    if (next === "settings") { bumpModal("settings"); setSettingsOpen(true); }
+    else if (next === "privacy") { bumpModal("privacy"); setPrivacyOpen(true); }
+  }
 
   // tutorial interattivo (primo accesso + ripetibile dal Profilo)
   const tour = useTourState();
@@ -1145,7 +1161,7 @@ export default function Dispensa({ session }) {
           onHouseholdsChanged={refreshHouseholds}
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
-          onClose={() => setProfileOpen(false)}
+          onClose={() => { setProfileOpen(false); openPendingSheet(); }}
           onClearPantry={() => {
             // Durante il tutorial lo svuotamento è guidato e immediato (niente
             // conferma): cancella i dati demo e avanza al passo finale.
@@ -1153,17 +1169,17 @@ export default function Dispensa({ session }) {
             else { bumpModal("confirmClear"); setConfirmClear(true); }
           }}
           onLogout={logout}
-          onOpenSettings={() => { bumpModal("settings"); setSettingsOpen(true); }}
+          onOpenSettings={() => { pendingSheetRef.current = "settings"; }}
         />
       )}
 
       {settingsOpen && (
         <SettingsSheet
           key={modalEpoch.current.settings}
-          onClose={() => setSettingsOpen(false)}
+          onClose={() => { setSettingsOpen(false); openPendingSheet(); }}
           onReplayTour={replayTour}
           onDeleteAccount={deleteAccount}
-          onOpenPrivacy={() => { bumpModal("privacy"); setPrivacyOpen(true); }}
+          onOpenPrivacy={() => { pendingSheetRef.current = "privacy"; }}
           pushDays={pushDays}
           onChangePushDays={setPushDays}
         />

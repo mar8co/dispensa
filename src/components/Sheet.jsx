@@ -12,7 +12,7 @@
 // API invariata rispetto a prima: i figli ricevono `close` (chiusura animata)
 // da usare nei pulsanti interni; `locked` blocca ogni chiusura (es. durante
 // un'elaborazione); `panelClass`/`handleClass` per il tema (es. scuro).
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Drawer } from "vaul";
 
 export default function Sheet({ onClose, locked = false, panelClass = "bg-cream", handleClass = "bg-stone-300", children }) {
@@ -25,6 +25,25 @@ export default function Sheet({ onClose, locked = false, panelClass = "bg-cream"
   const [open, setOpen] = useState(true);
   const close = () => { if (!locked) setOpen(false); };
 
+  // onClose deve partire UNA volta sola, ma soprattutto deve partire SEMPRE.
+  // Vaul a volte NON emette onAnimationEnd (animazione interrotta, tab in
+  // background): il genitore restava con lo stato "aperto" su un foglio ormai
+  // invisibile e il tap successivo (setX(true) su stato già true) non
+  // re-renderizzava nulla — sintomo: "il Profilo non si apre finché non tocco
+  // un altro punto". Il fallback qui sotto completa comunque la chiusura.
+  const closedRef = useRef(false);
+  const finishClose = () => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    onClose();
+  };
+  useEffect(() => {
+    if (open) return;
+    const t = setTimeout(finishClose, 700); // poco oltre la durata dell'animazione
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   // Invariante anti-freeze: quando l'ULTIMO drawer lascia il DOM, il body non
   // deve restare con pointer-events:none (= tutta l'app sorda ai tocchi).
   // Radix lo imposta all'apertura e lo ripristina a un valore salvato in una
@@ -36,19 +55,24 @@ export default function Sheet({ onClose, locked = false, panelClass = "bg-cream"
   // fogli successivi nello stesso tick: se un altro drawer esiste ancora, non
   // si tocca nulla (ci penserà il suo smontaggio).
   useEffect(() => () => {
-    setTimeout(() => {
+    const fix = () => {
       if (!document.querySelector("[data-vaul-drawer]") &&
           document.body.style.pointerEvents === "none") {
         document.body.style.pointerEvents = "";
       }
-    }, 0);
+    };
+    setTimeout(fix, 0);
+    // Secondo passaggio dopo i timer interni di Vaul/Radix (~500ms): coprono
+    // il caso in cui il residuo venga riscritto DOPO il primo controllo
+    // (sintomo: il primo tap dopo la chiusura di un foglio cade nel vuoto).
+    setTimeout(fix, 600);
   }, []);
 
   return (
     <Drawer.Root
       open={open}
       onOpenChange={(o) => { if (!o) close(); }}
-      onAnimationEnd={(o) => { if (!o) onClose(); }}
+      onAnimationEnd={(o) => { if (!o) finishClose(); }}
       dismissible={!locked}
       repositionInputs={false}
     >
