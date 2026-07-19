@@ -153,7 +153,29 @@ come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 
 </details>
 
-### Fase 3 — App nativa (iOS, poi Android) + monetizzazione ← PROSSIMA (decisioni da prendere INSIEME)
+### Fase 3 — App nativa (iOS, poi Android) + monetizzazione ← IN CORSO (decisioni PRESE il 2026-07-20)
+
+> **Decisioni prese con l'utente (kickoff 2026-07-20)** — vincolanti per le
+> prossime chat:
+> 1. **Packaging: Capacitor** (guscio nativo sul codice React/Vite attuale;
+>    niente rewrite). Push da migrare ad **APNs** via plugin (il cron
+>    pg_cron/server resta, cambia solo il canale d'invio).
+> 2. **Free vs Premium**: free = dispensa + spesa + ricette con pubblicità e
+>    limite AI giornaliero; **Premium = Piano Alimentare + zero pubblicità +
+>    AI senza limiti**.
+> 3. **Prezzo: 1,99 €/mese · 14,99 €/anno**, con 7 giorni di prova gratuita.
+> 4. **Abbonamenti: FATTI IN CASA con StoreKit 2** (scelta esplicita
+>    dell'utente al posto di RevenueCat): serviranno verifica ricevute
+>    server-side (App Store Server API, pattern dei proxy esistenti),
+>    tabella entitlements (migration-12, schema da proporre prima) e gating
+>    `isPro` nel client.
+> 5. **Pubblicità: AdMob, SOLO banner** adattivo in fondo a Dispensa e Spesa
+>    (mai in fotocamera, cucina o Piano Alimentare), con prompt ATT.
+>
+> **Prerequisiti dell'utente**: iscrizione Apple Developer Program
+> (99 €/anno) e account AdMob. **Ordine dei lavori tecnici**: wrapper
+> Capacitor → push APNs → migration-12 entitlements + gating isPro → paywall
+> UI → AdMob + ATT → TestFlight → store listing → submission.
 
 **Traguardo**: trasformare **questa PWA** in una vera **app nativa pubblicata
 sull'App Store** (e più avanti su Google Play), introducendo la
