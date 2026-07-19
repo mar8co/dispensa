@@ -140,13 +140,6 @@ async function fetchUserPantry(admin, userId) {
   return data || [];
 }
 
-async function fetchDaysBefore(admin, userId) {
-  const { data } = await admin
-    .from("user_settings").select("settings").eq("user_id", userId).maybeSingle();
-  const d = Number(data?.settings?.push?.daysBefore);
-  return [1, 3, 7].includes(d) ? d : 3; // default 3 gg
-}
-
 export async function handlePushCron({ headers = {}, env, now = new Date() }) {
   // 1) Autorizzazione: segreto del cron.
   const got = headers["x-cron-secret"] || headers["X-Cron-Secret"];
@@ -184,7 +177,6 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
     byUser.get(s.user_id).push(s);
   }
 
-  const today = romeDateISO(now, 0);
   let sent = 0, removed = 0;
 
   for (const [userId, userSubs] of byUser) {
@@ -197,10 +189,13 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
 
       let expiringNames = [];
       if (slot === "cena") {
-        const daysBefore = await fetchDaysBefore(admin, userId);
-        const limit = romeDateISO(now, daysBefore);
+        // Cadenza AUTOMATICA: un prodotto viene menzionato a 7, 3 e 1 giorno
+        // dalla scadenza — tre richiami ben distanziati invece della
+        // ripetizione quotidiana, e nessuna impostazione da configurare
+        // (il selettore 1/3/7 è stato rimosso, decisione 2026-07-20).
+        const targets = new Set([romeDateISO(now, 1), romeDateISO(now, 3), romeDateISO(now, 7)]);
         expiringNames = pantry
-          .filter((p) => p.expiry && p.expiry >= today && p.expiry <= limit)
+          .filter((p) => p.expiry && targets.has(p.expiry))
           .map((p) => p.name);
       }
       payload = buildPayload(slot, expiringNames);

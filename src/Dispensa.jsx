@@ -175,7 +175,6 @@ export default function Dispensa({ session }) {
   // anche dall'hook ricette per i prompt e il default porzioni)
   const [prefServings, setPrefServings] = useState(null); // "a casa siamo in X" (persistito)
   const [foodPrefs, setFoodPrefs] = useState("");          // preferenze alimentari (persistite)
-  const [pushDays, setPushDays] = useState(3);             // anticipo avviso scadenze (1/3/7, persistito)
 
   // "Ho cucinato questo"
   const [cookOpen, setCookOpen] = useState(false);
@@ -249,7 +248,6 @@ export default function Dispensa({ session }) {
     if (s.shopCats && typeof s.shopCats === "object") setShopCats(s.shopCats);
     if (Number(s.prefServings) >= 1) setPrefServings(Number(s.prefServings));
     if (typeof s.foodPrefs === "string") setFoodPrefs(s.foodPrefs);
-    if ([1, 3, 7].includes(Number(s.push?.daysBefore))) setPushDays(Number(s.push.daysBefore));
     if (Array.isArray(s.catOrder)) {
       setCatOrder([
         ...s.catOrder.filter((c) => CATEGORIES.includes(c)),
@@ -424,10 +422,10 @@ export default function Dispensa({ session }) {
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
     if (!loaded) return;
-    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, push: { daysBefore: pushDays } }).catch((e) =>
+    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs }).catch((e) =>
       console.error("Errore salvataggio impostazioni:", e)
     );
-  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, pushDays, loaded]);
+  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
 
   // Ripulisce la query del deep-link push (?view=…) dopo averla applicata allo
   // stato iniziale: un refresh riparte così dalla Dispensa, non dalla scheda
@@ -1180,8 +1178,6 @@ export default function Dispensa({ session }) {
           onReplayTour={replayTour}
           onDeleteAccount={deleteAccount}
           onOpenPrivacy={() => { pendingSheetRef.current = "privacy"; }}
-          pushDays={pushDays}
-          onChangePushDays={setPushDays}
         />
       )}
 

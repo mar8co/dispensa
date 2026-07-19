@@ -136,7 +136,7 @@ auth.users (gestita da Supabase)
    │                       cooked_count:int, last_cooked_at, created_at)
    │                       UNIQUE(user_id, title)  → upsert per (utente, titolo)
    ├──  user_settings    (user_id PK, settings:jsonb, updated_at)   [1-a-1]
-   │                       settings.push.daysBefore = anticipo avviso scadenze (1/3/7)
+   │                       (gli avvisi scadenza hanno cadenza automatica 7/3/1 gg: nessuna preferenza)
    ├──< ai_usage         (user_id, day:date, count:int) PK(user_id, day)
    │                       scritta SOLO dal service role via bump_ai_usage()
    ├──< push_subscriptions (id, user_id, endpoint UNIQUE, p256dh, auth, created_at)
@@ -311,7 +311,7 @@ applica `upsert`/`remove` agli stati locali.
 | `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. Dal flusso voce (prop `onAddMore`) mostra "Aggiungi altri prodotti": ri-detta e accoda. |
 | `ManualAddModal.jsx` / `VoiceAddModal.jsx` | Aggiunta manuale / a voce. |
 | `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | FAB "+", menu aggiunta, navigazione. |
-| `ProfileSheet.jsx` / `SettingsSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo = "chi sei" (Nome/username, Dispensa familiare, Esigenze alimentari, Svuota/Esci) con ⚙️ in alto a destra che apre **SettingsSheet** = "come si comporta l'app" (Face ID, notifiche push + anticipo, tema, tutorial, privacy/elimina account). |
+| `ProfileSheet.jsx` / `SettingsSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo = "chi sei" (Nome/username, Dispensa familiare, Esigenze alimentari, Svuota/Esci) con ⚙️ in alto a destra che apre **SettingsSheet** = "come si comporta l'app" (Face ID, toggle notifiche push, tema, tutorial, privacy/elimina account). |
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
 | `Auth.jsx` | Login a pagina intera (magic-link, Google, Apple, Face ID/passkey), stile "manifesto": headline "Cosa c'è in dispensa?" con wavy underline tomato su "dispensa" + mensole di emoji-categoria con slot "+" + sottotitolo "La tua cucina, in tasca. Meno sprechi (verde fisso `#43A047`). Zero pensieri". |
 | `SplashIntro.jsx` | **Intro splash** montata in `App.jsx`: riprende la splash nativa iOS (icona + "Dispensa") e disegna la sottolineatura ondulata tomato, poi sfuma nell'app. Animazione su tutte le piattaforme; rispetta `prefers-reduced-motion`. Stili `.splash-*` in `index.css`. |
@@ -352,7 +352,8 @@ applica `upsert`/`remove` agli stati locali.
   Cron) che 3×/giorno interroga le scadenze e invia via `web-push` (dipendenza
   solo server), chiavi VAPID nelle env. Opt-in per dispositivo dal Profilo
   (permesso da gesto utente), 3 promemoria in ora di Roma (14:30/18:30/21:45),
-  anticipo 1/3/7 gg in `user_settings.push.daysBefore`, digest multi-household.
+  avvisi a cadenza automatica 7/3/1 gg dalla scadenza (selettore rimosso il
+  2026-07-20), digest multi-household.
   **Design DST-safe**: pg_cron in UTC → 6 job (gemelli CET/CEST), lo slot lo
   ricava il server dall'ora di Roma. Su iOS richiede PWA installata (iOS 16.4+).
   Restano i passi manuali (migration, Vault, env Vercel) e la prova sul telefono.

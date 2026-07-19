@@ -40,8 +40,9 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > **Decisioni prese (2026-07-05)**: 3 promemoria/giorno in ora di Roma —
 > **14:30** "hai cucinato? aggiorna la dispensa", **18:30** scadenze /
 > "cosa cuciniamo stasera" (apre le Ricette), **21:45** "com'era la cena?
-> aggiorna la dispensa". Anticipo scadenze di **default 3 gg** (selettore
-> 1/3/7 nel Profilo, persistito in `user_settings.push.daysBefore`).
+> aggiorna la dispensa". Avvisi scadenza a **cadenza automatica 7/3/1 giorni
+> prima** (2026-07-20: rimosso il selettore 1/3/7 — nessuna impostazione,
+> tre richiami distanziati invece della ripetizione quotidiana).
 > Opt-in **per dispositivo**; digest **multi-household**: nuclei dell'utente
 > + prodotti personali. Copy **caldo e diretto**. Schema `push_subscriptions`
 > **minimale** (opzione A). Scheduler **pg_cron + pg_net** (non Vercel Cron).
@@ -404,7 +405,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/index.css` | **Palette** (variabili CSS, light + blocchi dark) e CSS PWA/Vaul. |
 | `src/components/HouseholdSection.jsx` | UI **Dispensa condivisa** nel Profilo: membri (username + corona sul creatore + "Rimuovi"), inviti, entra-con-codice, switch nucleo, esci, popup conferma espulsione. |
 | `src/components/ProfileSheet.jsx` | Foglio Profilo ("chi sei"): **Nome (username)** al posto della mail, `HouseholdSection`, **Esigenze alimentari** (box 2 righe), azioni dati (Svuota dispensa `data-tour="clear-pantry"`, Esci). ⚙️ in alto a destra apre `SettingsSheet`. |
-| `src/components/SettingsSheet.jsx` | Foglio **Impostazioni** ("come si comporta l'app", dal ⚙️ del Profilo): Face ID/passkey, notifiche push (toggle + anticipo 1/3/7), Aspetto/tema, Rivedi il tutorial, footer Privacy Policy / Elimina account. |
+| `src/components/SettingsSheet.jsx` | Foglio **Impostazioni** ("come si comporta l'app", dal ⚙️ del Profilo): Face ID/passkey, toggle notifiche push (avvisi automatici a 7/3/1 gg dalla scadenza), Aspetto/tema, Rivedi il tutorial, footer Privacy Policy / Elimina account. |
 | `supabase/schema.sql` + `migration-2..10.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6/7/8` = **dispensa familiare** (schema, inviti, switch RLS a household); `migration-9` = **username + espulsione** (colonna `username`, `set_username`/`remove_member` security definer, `accept_invite` eredita lo username); `migration-10` = **push scadenze** (tabella `push_subscriptions` + `save_push_subscription` + cron pg_cron/pg_net). |
 | `server/push.js` + `api/push.js` | **Cron notifiche push** (Fase 1): ricava lo slot dall'ora di Roma, legge scadenze/subscription col service role, invia con `web-push`. Protetto da `CRON_SECRET`. |
 | `src/lib/push.js` + `public/push-sw.js` | Opt-in push lato client (subscribe/unsubscribe) + handler `push`/`notificationclick` iniettato nel SW Workbox. |

@@ -25,7 +25,6 @@ const THEME_LABEL = { auto: "Auto", light: "Chiaro", dark: "Scuro" };
 
 export default function SettingsSheet({
   onClose, onReplayTour, onDeleteAccount, onOpenPrivacy,
-  pushDays = 3, onChangePushDays,
 }) {
   const [theme, setThemeState] = useState(getTheme());
   const [open, setOpen] = useState("");           // riga espandibile aperta: "theme"
@@ -182,7 +181,7 @@ export default function SettingsSheet({
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm text-ink">Avvisami delle scadenze</span>
                   <span className="block text-xs text-stone-500">
-                    {pushOn ? "Attive su questo dispositivo" : "Un promemoria per le scadenze"}
+                    {pushOn ? "Ti avviso a 7, 3 e 1 giorno dalla scadenza" : "Un promemoria per le scadenze"}
                   </span>
                 </span>
                 {pushBusy ? (
@@ -202,29 +201,6 @@ export default function SettingsSheet({
                     Attiva
                   </button>
                 )}
-              </div>
-            )}
-            {canPush && pushOn && (
-              <div className="flex items-center gap-2 border-t border-hair px-3.5 py-2.5">
-                <span className="text-xs text-stone-500">Avvisami con</span>
-                <div className="flex gap-1.5">
-                  {[1, 3, 7].map((n) => {
-                    const active = pushDays === n;
-                    return (
-                      <button
-                        key={n}
-                        onClick={() => onChangePushDays?.(n)}
-                        aria-pressed={active}
-                        className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
-                          active ? "border-ink bg-ink text-white" : "border-hair bg-cream text-stone-500 hover:border-stone-300"
-                        }`}
-                      >
-                        {n} {n === 1 ? "giorno" : "giorni"}
-                      </button>
-                    );
-                  })}
-                  <span className="self-center text-xs text-stone-500">di anticipo</span>
-                </div>
               </div>
             )}
             {pushErr && <p className="border-t border-hair px-3.5 py-2 text-xs font-semibold text-tomato">{pushErr}</p>}
