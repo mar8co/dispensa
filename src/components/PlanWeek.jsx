@@ -6,7 +6,7 @@
 // pieno → cucina (CookModal via bridge), mancanti alla spesa, cambia, rimuovi.
 import { useState, useEffect } from "react";
 import {
-  ChevronLeft, ChevronRight, Sun, Moon, Plus, Check, Sparkles,
+  ChevronLeft, ChevronRight, Sun, Moon, Plus, Minus, Check, Sparkles,
   ShoppingCart, Utensils, Trash2, RefreshCw,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
@@ -37,7 +37,7 @@ function weekLabel(weekStart) {
 // Foglio dello slot: scelta del piatto (vuoto) o azioni sul piatto (pieno).
 function MealSlotSheet({
   date, slot, meal, savedRecipes, hasIngredient,
-  onPick, onCook, onMarkCooked, onAddMissing, onRemove, onGoIdeas, onClose,
+  onPick, onCook, onMarkCooked, onAddMissing, onRemove, onGoIdeas, onChangeServings, onClose,
 }) {
   const [picking, setPicking] = useState(!meal); // pieno → azioni; vuoto → scelta
   const [query, setQuery] = useState("");
@@ -86,6 +86,34 @@ function MealSlotSheet({
               )}
 
               <div className="mt-4 space-y-2">
+                {/* Porzioni pianificate (solo ricette): "Ho cucinato" scala la
+                    dispensa in proporzione a questo numero. */}
+                {meal.data && !meal.cooked_at && (() => {
+                  const servings = Number(meal.data.planServings) || Number(meal.data.servings) || 2;
+                  return (
+                    <div className="flex items-center justify-between rounded-xl border border-hair bg-paper px-3.5 py-2">
+                      <span className="text-sm text-ink">Porzioni</span>
+                      <div className="inline-flex items-center gap-1 rounded-full border border-hair px-1 py-0.5">
+                        <button
+                          onClick={() => onChangeServings(servings - 1)}
+                          disabled={servings <= 1}
+                          aria-label="Meno porzioni"
+                          className="flex h-7 w-7 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 disabled:opacity-30"
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="w-8 text-center text-xs font-semibold text-ink">{servings}</span>
+                        <button
+                          onClick={() => onChangeServings(servings + 1)}
+                          aria-label="Più porzioni"
+                          className="flex h-7 w-7 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
                 {!meal.cooked_at && (
                   <Button variant="primary" full onClick={() => { close(); (meal.data ? onCook : onMarkCooked)(meal); }}>
                     <Utensils className="h-4 w-4" /> {meal.data ? "Ho cucinato questa ricetta" : "Segna come cucinato"}
@@ -192,7 +220,7 @@ function MealSlotSheet({
 
 export default function PlanWeek({
   meals, weekStart, shiftWeek, loadingMeals,
-  planMeal, removeMeal, markMealCooked, onCookMeal,
+  planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal,
   savedRecipes, hasIngredient, onAddMissing, onGoIdeas,
 }) {
   const [sheet, setSheet] = useState(null); // { date: Date, slot: "pranzo"|"cena" }
@@ -310,6 +338,7 @@ export default function PlanWeek({
           onPick={(v) => planMeal(isoDate(sheet.date), sheet.slot, v)}
           onCook={onCookMeal}
           onMarkCooked={(meal) => markMealCooked(meal.id)}
+          onChangeServings={(n) => sheetMeal && setMealServings(sheetMeal.id, n)}
           onAddMissing={onAddMissing}
           onRemove={(meal) => removeMeal(meal.id)}
           onGoIdeas={onGoIdeas}

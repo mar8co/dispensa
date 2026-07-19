@@ -124,8 +124,13 @@ i membri del nucleo o solo chi ha attivato il toggle?).
 > Realtime `meal_plan` nel canale esistente), `db.js` (CRUD household-aware),
 > `useRecipes.recordCookedRecipe(cooked?)`.
 >
-> **Rifiniture possibili (v1.1)**: deep-link notifica 18:30 direttamente sulla
-> sotto-vista Piano; porzioni per voce del piano; paywall free/Pro (fase 3).
+> **Rifiniture v1.1 — FATTE (2026-07-20)**: deep-link 18:30 → Piano (se non
+> c'è nulla in scadenza e la cena di stasera è pianificata e non cucinata, la
+> notifica diventa "Stasera c'è {piatto} 👨‍🍳" e apre `/?view=piano` →
+> RecipesTab parte sulla sotto-vista Piano via prop `startOnPlan`); porzioni
+> per voce (in `data.planServings`, stepper nel foglio dello slot; "Ho
+> cucinato" scala la dispensa in proporzione planServings/servings). Resta il
+> paywall free/Pro (fase 3).
 
 <details><summary>Progetto originario Fase 2 (per contesto storico)</summary>
 

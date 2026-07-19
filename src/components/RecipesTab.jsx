@@ -86,6 +86,7 @@ export default function RecipesTab({
   recipeContext = [], onToggleContext,
   savedRecipes, onOpenSaved, onDeleteSaved, isSaved, onToggleSave,
   plan = null,
+  startOnPlan = false,
 }) {
   const [addedMissing, setAddedMissing] = useState(false);
   const [ask, setAsk] = useState("");          // "Cosa ti va?"
@@ -93,7 +94,9 @@ export default function RecipesTab({
   const [struck, setStruck] = useState({});    // ingredienti spuntati
   const [stepsDone, setStepsDone] = useState({}); // passaggi completati
   const [cooking, setCooking] = useState(false);  // modalità cucina
-  const [tab, setTab] = useState("idee");         // sotto-vista: "idee" | "piano"
+  // Sotto-vista iniziale: "piano" se si arriva dal deep-link della notifica
+  // delle 18:30 con cena pianificata (/?view=piano), altrimenti "idee".
+  const [tab, setTab] = useState(startOnPlan && plan ? "piano" : "idee");
   const [planSheet, setPlanSheet] = useState(false); // "Aggiungi al piano" aperto
   const [plannedMsg, setPlannedMsg] = useState("");  // feedback dopo l'aggiunta
   // Giorno/slot in attesa di un'idea AI (arriva da "Genera un'idea con l'AI"

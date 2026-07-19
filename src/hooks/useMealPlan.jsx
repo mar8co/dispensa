@@ -91,8 +91,19 @@ export function useMealPlan({ ready, householdId }) {
     try { await updateMeal(id, { cooked_at }); } catch (e) { console.error("Cucinato non salvato:", e); }
   }
 
+  // Porzioni pianificate per una voce-ricetta: vivono DENTRO data
+  // (planServings), così non serve una colonna dedicata. "Ho cucinato" dal
+  // piano scala la dispensa in proporzione (planServings / servings base).
+  async function setMealServings(id, n) {
+    const meal = meals.find((m) => m.id === id);
+    if (!meal?.data) return; // i piatti liberi non hanno porzioni
+    const data = { ...meal.data, planServings: Math.max(1, Number(n) || 1) };
+    setMeals((prev) => prev.map((m) => (m.id === id ? { ...m, data } : m)));
+    try { await updateMeal(id, { data }); } catch (e) { console.error("Porzioni non salvate:", e); }
+  }
+
   return {
     weekStart, shiftWeek, meals, setMeals, loadingMeals,
-    planMeal, removeMeal, markMealCooked,
+    planMeal, removeMeal, markMealCooked, setMealServings,
   };
 }

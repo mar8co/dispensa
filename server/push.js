@@ -76,7 +76,9 @@ function articleFor(name) {
 
 // Copy delle notifiche (scritto dall'utente, 2026-07-19: amichevole, la
 // dispensa parla in prima persona e invoglia ad aprire). `url` = deep-link PWA.
-function buildPayload(slot, expiringNames) {
+// `dinner` = cena di stasera dal Piano Alimentare (solo slot cena, solo se
+// niente scadenze): in quel caso la notifica apre direttamente il Piano.
+function buildPayload(slot, expiringNames, dinner = null) {
   if (slot === "pranzo") {
     return {
       title: "Hai mangiato? 🍽️",
@@ -116,6 +118,14 @@ function buildPayload(slot, expiringNames) {
       body: "Ci sono un po' di cose da usare. Vediamo cosa possiamo combinare.",
     };
   }
+  if (dinner?.title) {
+    return {
+      ...cena,
+      url: "/?view=piano",
+      title: `Stasera c'è ${dinner.title} 👨‍🍳`,
+      body: "Tutto già deciso: apri e mettiamoci ai fornelli.",
+    };
+  }
   return {
     ...cena,
     title: "Stasera che si mangia? 🍽️",
@@ -123,21 +133,36 @@ function buildPayload(slot, expiringNames) {
   };
 }
 
-// Prodotti visibili all'utente: quelli dei suoi nuclei + i suoi personali
-// (household_id null), rispecchiando la RLS is_household_member.
-async function fetchUserPantry(admin, userId) {
-  const { data: memberships } = await admin
+// Nuclei di cui l'utente fa parte (per lo scope delle query che seguono).
+async function fetchHouseholdIds(admin, userId) {
+  const { data } = await admin
     .from("household_members").select("household_id").eq("user_id", userId);
-  const hhIds = (memberships || []).map((m) => m.household_id).filter(Boolean);
+  return (data || []).map((m) => m.household_id).filter(Boolean);
+}
 
-  let q = admin.from("pantry_items").select("name, expiry").not("expiry", "is", null);
+// Applica a una query lo scope "cose visibili all'utente": i suoi nuclei +
+// le righe personali (household_id null), rispecchiando la RLS.
+function scopeToUser(q, hhIds, userId) {
   if (hhIds.length) {
-    q = q.or(`household_id.in.(${hhIds.join(",")}),and(household_id.is.null,user_id.eq.${userId})`);
-  } else {
-    q = q.is("household_id", null).eq("user_id", userId);
+    return q.or(`household_id.in.(${hhIds.join(",")}),and(household_id.is.null,user_id.eq.${userId})`);
   }
-  const { data } = await q;
+  return q.is("household_id", null).eq("user_id", userId);
+}
+
+// Prodotti con scadenza visibili all'utente.
+async function fetchUserPantry(admin, userId, hhIds) {
+  const q = admin.from("pantry_items").select("name, expiry").not("expiry", "is", null);
+  const { data } = await scopeToUser(q, hhIds, userId);
   return data || [];
+}
+
+// La cena di STASERA nel Piano Alimentare (se pianificata e non ancora
+// cucinata): la notifica delle 18:30 la mette in primo piano e apre il Piano.
+async function fetchTonightDinner(admin, userId, hhIds, dateIso) {
+  const q = admin.from("meal_plan").select("title")
+    .eq("date", dateIso).eq("slot", "cena").is("cooked_at", null).limit(1);
+  const { data } = await scopeToUser(q, hhIds, userId);
+  return data?.[0] || null;
 }
 
 export async function handlePushCron({ headers = {}, env, now = new Date() }) {
@@ -183,11 +208,13 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
     // Payload calcolato UNA volta per utente, poi inviato a tutti i suoi device.
     let payload;
     try {
-      const pantry = await fetchUserPantry(admin, userId);
+      const hhIds = await fetchHouseholdIds(admin, userId);
+      const pantry = await fetchUserPantry(admin, userId, hhIds);
       // Niente promemoria su una dispensa vuota (sarebbe rumore inutile).
       if (!pantry.length) continue;
 
       let expiringNames = [];
+      let dinner = null;
       if (slot === "cena") {
         // Cadenza AUTOMATICA: un prodotto viene menzionato a 7, 3 e 1 giorno
         // dalla scadenza — tre richiami ben distanziati invece della
@@ -197,8 +224,13 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
         expiringNames = pantry
           .filter((p) => p.expiry && targets.has(p.expiry))
           .map((p) => p.name);
+        // Le scadenze hanno la precedenza (anima anti-spreco dell'app); se non
+        // ce ne sono e la cena è già nel piano, la notifica apre il Piano.
+        if (!expiringNames.length) {
+          dinner = await fetchTonightDinner(admin, userId, hhIds, romeDateISO(now, 0));
+        }
       }
-      payload = buildPayload(slot, expiringNames);
+      payload = buildPayload(slot, expiringNames, dinner);
     } catch (e) {
       // Un utente che fallisce non deve bloccare gli altri.
       console.error("push: preparazione utente fallita", userId, e?.message || e);

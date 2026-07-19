@@ -97,19 +97,26 @@ function animateUI(fn) {
   });
 }
 
-// Deep-link dalle notifiche push: /?view=ricette apre direttamente le Ricette.
-// Letto una volta all'avvio; poi ripuliamo la query così un refresh riparte
-// dalla Dispensa.
+// Deep-link dalle notifiche push: /?view=ricette apre le Ricette,
+// /?view=piano apre le Ricette direttamente sulla sotto-vista Piano
+// Alimentare. Letto una volta all'avvio; poi ripuliamo la query così un
+// refresh riparte dalla Dispensa.
 function initialView() {
   try {
     const v = new URLSearchParams(window.location.search).get("view");
+    if (v === "piano") return "ricette";
     return ["dispensa", "spesa", "ricette"].includes(v) ? v : "dispensa";
   } catch { return "dispensa"; }
+}
+function initialPlanFirst() {
+  try { return new URLSearchParams(window.location.search).get("view") === "piano"; }
+  catch { return false; }
 }
 
 export default function Dispensa({ session }) {
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState(initialView);
+  const [planFirst] = useState(initialPlanFirst); // notifica 18:30 → sotto-vista Piano
   // Categorie CHIUSE di default: ogni categoria parte con collapsed=true.
   // Le scelte salvate dall'utente (aperto/chiuso) vengono fuse sopra al load.
   const [collapsed, setCollapsed] = useState(() =>
@@ -236,7 +243,7 @@ export default function Dispensa({ session }) {
   // CookModal ("Ho cucinato" dal piano) è più sotto: cookMealFromPlan.
   const {
     weekStart, shiftWeek, meals, setMeals, loadingMeals,
-    planMeal, removeMeal, markMealCooked,
+    planMeal, removeMeal, markMealCooked, setMealServings,
   } = useMealPlan({ ready: loaded, householdId: activeHouseholdId });
 
   // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
@@ -902,12 +909,15 @@ export default function Dispensa({ session }) {
     bumpModal("cook");
     setCookOpen(true);
   }
-  // "Ho cucinato" dal piano pasti: stessa scalatura, ricetta della voce
-  // (porzioni base: nel piano non si scala). Se nessun ingrediente è in
-  // dispensa non c'è nulla da scalare: si marca e basta.
+  // "Ho cucinato" dal piano pasti: stessa scalatura, ricetta della voce.
+  // Le porzioni pianificate (planServings, se impostate nel foglio dello
+  // slot) scalano rispetto alle porzioni base della ricetta. Se nessun
+  // ingrediente è in dispensa non c'è nulla da scalare: si marca e basta.
   function cookMealFromPlan(meal) {
     if (!meal?.data) return;
-    const rows = buildCookRows(meal.data, 1);
+    const base = Number(meal.data.servings) || 2;
+    const plannedServings = Number(meal.data.planServings) || base;
+    const rows = buildCookRows(meal.data, plannedServings / base);
     if (!rows.length) {
       markMealCooked(meal.id);
       showToast(<><strong>{meal.title}</strong> segnata come cucinata</>);
@@ -1019,7 +1029,8 @@ export default function Dispensa({ session }) {
             onRetry={retryLast}
             onCustomAsk={askCustom}
             recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
-            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, onCookMeal: cookMealFromPlan }}
+            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan }}
+            startOnPlan={planFirst}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
             onDeleteSaved={removeSavedRecipe}
