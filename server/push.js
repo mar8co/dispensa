@@ -52,48 +52,74 @@ function romeDateISO(now, addDays = 0) {
   return d.toISOString().slice(0, 10);
 }
 
-// "Latte" · "Latte e Yogurt" · "Latte, Yogurt e altri 2"
-function formatList(names) {
-  const uniq = [...new Set(names.map((n) => String(n || "").trim()).filter(Boolean))];
-  if (uniq.length === 0) return "";
-  if (uniq.length === 1) return uniq[0];
-  if (uniq.length === 2) return `${uniq[0]} e ${uniq[1]}`;
-  return `${uniq[0]}, ${uniq[1]} e altri ${uniq.length - 2}`;
+// Articolo determinativo "best effort" per il nome di un prodotto (usato solo
+// nel titolo con UN prodotto: "Il Latte sta per scadere"). L'italiano non si
+// indovina sempre dal nome: euristiche + eccezioni per i cibi più comuni; nel
+// dubbio "Il". Sbagliare articolo è peggio che ometterlo, ma i casi coperti
+// qui sono la stragrande maggioranza di una dispensa reale.
+const ART_LE = new Set(["uova", "patate", "zucchine", "carote", "mele", "pere", "banane", "fragole", "cipolle", "melanzane", "olive", "noci", "verdure", "acciughe", "vongole", "cozze", "lenticchie", "arance", "albicocche", "uvette", "erbe"]);
+const ART_LA = new Set(["carne"]);
+const ART_I = new Set(["biscotti", "pomodori", "fagioli", "ceci", "piselli", "funghi", "peperoni", "cetrioli", "limoni", "gamberi", "wurstel"]);
+const ART_GLI = new Set(["spinaci", "gnocchi", "asparagi"]);
+function articleFor(name) {
+  const w = String(name || "").trim().toLowerCase().split(/\s+/)[0];
+  if (!w) return "";
+  if (ART_LE.has(w)) return "Le ";
+  if (ART_LA.has(w)) return "La ";
+  if (ART_I.has(w)) return "I ";
+  if (ART_GLI.has(w)) return "Gli ";
+  if (/^[aeiou]/.test(w)) return "L'";
+  if (/^(s[bcdfglmnpqrtvz]|z|gn|ps|pn|x|y)/.test(w)) return "Lo ";
+  if (/a$/.test(w)) return "La ";
+  return "Il ";
 }
 
-// Copy delle notifiche (caldo e diretto). `url` è il deep-link della PWA.
+// Copy delle notifiche (scritto dall'utente, 2026-07-19: amichevole, la
+// dispensa parla in prima persona e invoglia ad aprire). `url` = deep-link PWA.
 function buildPayload(slot, expiringNames) {
   if (slot === "pranzo") {
     return {
-      title: "Hai cucinato? 🍳",
-      body: "Togli dalla dispensa quello che hai usato: resta tutto allineato.",
+      title: "Hai mangiato? 🍽️",
+      body: "Dimmi cosa hai usato e penso io a tenere tutto in ordine.",
       url: "/", tag: "dispensa-pranzo",
     };
   }
   if (slot === "sera") {
     return {
       title: "Com'era la cena? 😋",
-      body: "Un attimo per aggiornare la dispensa: togli quello che hai usato.",
+      body: "Togliamo dalla dispensa quello che hai usato?",
       url: "/", tag: "dispensa-sera",
     };
   }
   // cena: se c'è qualcosa in scadenza lo mettiamo in primo piano, altrimenti
   // l'invito generico a cucinare. Entrambe aprono le Ricette.
-  if (expiringNames.length) {
-    const list = formatList(expiringNames);
-    const plural = expiringNames.length > 1;
+  const uniq = [...new Set(expiringNames.map((n) => String(n || "").trim()).filter(Boolean))];
+  const cena = { url: "/?view=ricette", tag: "dispensa-cena" };
+  if (uniq.length === 1) {
     return {
-      title: `${list} ${plural ? "stanno per scadere" : "sta per scadere"}`,
-      body: plural
-        ? "Li usiamo stasera? Tocca per una ricetta che li salva."
-        : "Lo usiamo stasera? Tocca per una ricetta che lo salva.",
-      url: "/?view=ricette", tag: "dispensa-cena",
+      ...cena,
+      title: `${articleFor(uniq[0])}${uniq[0]} sta per scadere 🚨`,
+      body: "Ti faccio vedere cosa puoi prepararci.",
+    };
+  }
+  if (uniq.length === 2) {
+    return {
+      ...cena,
+      title: `${uniq[0]} e ${uniq[1]} stanno per scadere 🚨`,
+      body: "Ho qualche idea per usarli prima che sia troppo tardi.",
+    };
+  }
+  if (uniq.length >= 3) {
+    return {
+      ...cena,
+      title: `${uniq[0]}, ${uniq[1]} e altri ${uniq.length - 2} stanno per scadere 🚨`,
+      body: "Ci sono un po' di cose da usare. Vediamo cosa possiamo combinare.",
     };
   }
   return {
-    title: "Cosa cuciniamo stasera? 🍝",
-    body: "Tocca per un'idea con quello che hai in dispensa.",
-    url: "/?view=ricette", tag: "dispensa-cena",
+    ...cena,
+    title: "Stasera che si mangia? 🍽️",
+    body: "Vediamo cosa puoi preparare con quello che hai.",
   };
 }
 
