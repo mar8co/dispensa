@@ -169,7 +169,7 @@ export default function RecipesTab({
               Il piano compare solo se il composition root lo passa (migration-11). */}
           {plan && (
             <div className="mt-4 grid grid-cols-2 gap-1 rounded-xl border border-hair bg-paper p-1">
-              {[["idee", "Idee"], ["piano", "Piano"]].map(([id, label]) => (
+              {[["idee", "Idee"], ["piano", "Piano Alimentare"]].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => switchTab(id)}
