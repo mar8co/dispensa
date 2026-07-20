@@ -63,13 +63,40 @@ jobs:
           VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
         run: npm run build
 
-      - name: Sincronizza il progetto iOS
-        run: npx cap sync ios
+      # Diagnostica: i log di Actions non sono leggibili senza login, mentre le
+      # ANNOTAZIONI (::error::) compaiono anche pubblicamente sulla pagina del
+      # run. Copy e update sono separati per capire subito quale dei due rompe.
+      - name: Ambiente iOS
+        run: |
+          echo "xcode: $(xcodebuild -version | tr '\n' ' ')"
+          echo "pod:   $(pod --version 2>/dev/null || echo 'non installato')"
+          echo "cap:   $(npx cap --version)"
+          echo "--- ios/ dal checkout ---"
+          find ios -maxdepth 3 -not -path '*/public/*' | sort
+          echo "--- Podfile presente? ---"
+          ls ios/App/Podfile 2>/dev/null || echo "nessun Podfile (progetto SPM)"
+
+      - name: Copia gli asset web (cap copy)
+        run: |
+          set -o pipefail
+          npx cap copy ios 2>&1 | tee /tmp/capcopy.log || {
+            tail -20 /tmp/capcopy.log | while IFS= read -r l; do echo "::error::cap copy: $l"; done
+            exit 1
+          }
+
+      - name: Aggiorna i plugin nativi (cap update)
+        run: |
+          set -o pipefail
+          npx cap update ios 2>&1 | tee /tmp/capupdate.log || {
+            tail -20 /tmp/capupdate.log | while IFS= read -r l; do echo "::error::cap update: $l"; done
+            exit 1
+          }
 
       # ---------- Compilazione di verifica (senza firma) ----------
       - name: Compila senza firma
         if: ${{ github.event_name == 'push' || !inputs.upload }}
         run: |
+          set -o pipefail
           xcodebuild \
             -project ios/App/App.xcodeproj \
             -scheme App \
@@ -77,7 +104,11 @@ jobs:
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
-            build
+            build 2>&1 | tee /tmp/xcodebuild.log || {
+              grep -E "error:|Error Domain|xcodebuild:" /tmp/xcodebuild.log | tail -15 \
+                | while IFS= read -r l; do echo "::error::xcodebuild: $l"; done
+              exit 1
+            }
 
       # ---------- Archivio firmato + upload su TestFlight ----------
       - name: Prepara portachiavi e profilo

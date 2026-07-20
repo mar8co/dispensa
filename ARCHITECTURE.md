@@ -49,6 +49,9 @@ dispensa/
 │  ├─ photo.js              #   proxy foto (Pexels) + auth
 │  ├─ account.js            #   cancellazione account (service role)
 │  └─ push.js              #   cron notifiche push scadenze (service role + web-push)
+├─ capacitor.config.json    # guscio nativo iOS (Fase 3): appId, webDir=dist
+├─ ios/                     # progetto Xcode generato da Capacitor (SPM, non CocoaPods)
+│  └─ App/App/Info.plist    #   permessi camera/foto/microfono + solo verticale
 ├─ scripts/
 │  ├─ generate-icons.mjs    # genera i PNG PWA da icon.svg (sharp)
 │  ├─ generate-splash.mjs   # genera le splash iOS (public/splash/*): icona + wordmark (sharp)
