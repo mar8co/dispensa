@@ -188,15 +188,25 @@ come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 > Capacitor → push APNs → migration-12 entitlements + gating isPro → paywall
 > UI → AdMob + ATT → TestFlight → store listing → submission.
 >
-> **Checklist tecnica del wrapper (adattamenti noti, da fare nelle prossime
-> chat)**: base URL API configurabile (dentro l'app nativa i fetch relativi
-> `/api/*` non hanno più Vercel dietro → puntare a
-> `https://la-dispensa-omega.vercel.app`); OAuth/magic-link Supabase via
-> deep link nativi; service worker/PWA disattivati nel guscio nativo;
-> splash nativa al posto delle apple-touch-startup-image; verifica
-> getUserMedia (scontrino/barcode) nel WKWebView (iOS 14.3+ ok, serve
-> NSCameraUsageDescription); push web → APNs. Bundle id: `com.mar8co.dispensa`
-> (modificabile finché non si carica il primo build su App Store Connect).
+> **Checklist tecnica del wrapper** — ✅ **FATTI (step 1, 2026-07-20)**:
+> scaffold `ios/` (Capacitor 8 usa **SPM, non CocoaPods** → `cap add ios`
+> gira anche da Windows); base URL API configurabile (`src/lib/api.js`,
+> `VITE_API_BASE` vuota sul web = fetch relativi invariati, dominio Vercel
+> nella build nativa); service worker registrato **solo sul web**
+> (`injectRegister: null` + guard `Capacitor.isNativePlatform` in main.jsx);
+> `Info.plist` con permessi camera/foto/microfono e solo verticale; workflow
+> `.github/workflows/ios.yml` (build senza firma su push, TestFlight a mano).
+> **ANCORA DA FARE**: OAuth/magic-link Supabase via deep link nativi; splash
+> nativa (Assets.xcassets) al posto delle apple-touch-startup-image; prova
+> reale di getUserMedia (scontrino/barcode) nel WKWebView; push web → APNs.
+> Bundle id: `com.mar8co.dispensa` (modificabile finché non si carica il
+> primo build su App Store Connect).
+>
+> **Trappole CI imparate**: i log di Actions non sono leggibili senza login,
+> ma le **annotazioni `::error::` sì** → il workflow cattura l'output dei
+> comandi e lo rilancia come annotazione. La **CLI Capacitor richiede
+> Node >= 22** (con Node 20 `cap copy` esce con `[fatal] The Capacitor CLI
+> requires NodeJS >=22.0.0`): entrambi i workflow sono su Node 22.
 
 **Traguardo**: trasformare **questa PWA** in una vera **app nativa pubblicata
 sull'App Store** (e più avanti su Google Play), introducendo la
