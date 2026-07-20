@@ -75,15 +75,16 @@ function articleFor(name) {
   return "Il ";
 }
 
-// Copy delle notifiche (scritto dall'utente, 2026-07-19: amichevole, la
-// dispensa parla in prima persona e invoglia ad aprire). `url` = deep-link PWA.
+// Copy delle notifiche (scritto dall'utente, 2026-07-19, rifinito 2026-07-20:
+// amichevole, tono "noi" — la dispensa parla come una compagna di cucina, non
+// da assistente — e invoglia ad aprire). `url` = deep-link PWA.
 // `dinner` = cena di stasera dal Piano Alimentare (solo slot cena, solo se
 // niente scadenze): in quel caso la notifica apre direttamente il Piano.
 function buildPayload(slot, expiringNames, dinner = null) {
   if (slot === "pranzo") {
     return {
       title: "Hai mangiato? 🍽️",
-      body: "Dimmi cosa hai usato e penso io a tenere tutto in ordine.",
+      body: "Dimmi cosa hai usato e penso io a tenere tutto in ordine",
       url: "/", tag: "dispensa-pranzo",
     };
   }
@@ -102,21 +103,21 @@ function buildPayload(slot, expiringNames, dinner = null) {
     return {
       ...cena,
       title: `${articleFor(uniq[0])}${uniq[0]} sta per scadere 🚨`,
-      body: "Ti faccio vedere cosa puoi prepararci.",
+      body: "Ti faccio vedere cosa possiamo cucinarci",
     };
   }
   if (uniq.length === 2) {
     return {
       ...cena,
       title: `${uniq[0]} e ${uniq[1]} stanno per scadere 🚨`,
-      body: "Ho qualche idea per usarli prima che sia troppo tardi.",
+      body: "Ho qualche idea per usarli prima che sia troppo tardi",
     };
   }
   if (uniq.length >= 3) {
     return {
       ...cena,
       title: `${uniq[0]}, ${uniq[1]} e altri ${uniq.length - 2} stanno per scadere 🚨`,
-      body: "Ci sono un po' di cose da usare. Vediamo cosa possiamo combinare.",
+      body: "Ci sono un po' di cose da usare, vediamo cosa possiamo combinare",
     };
   }
   if (dinner?.title) {
@@ -124,13 +125,13 @@ function buildPayload(slot, expiringNames, dinner = null) {
       ...cena,
       url: "/?view=piano",
       title: `Stasera c'è ${dinner.title} 👨‍🍳`,
-      body: "Tutto già deciso: apri e mettiamoci ai fornelli.",
+      body: "Tutto già deciso: apri e mettiamoci ai fornelli",
     };
   }
   return {
     ...cena,
     title: "Stasera che si mangia? 🍽️",
-    body: "Vediamo cosa puoi preparare con quello che hai.",
+    body: "Vediamo cosa possiamo preparare",
   };
 }
 
