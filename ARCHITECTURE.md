@@ -48,7 +48,8 @@ dispensa/
 │  ├─ claude.js             #   proxy AI (Gemini) + auth + rate-limit
 │  ├─ photo.js              #   proxy foto (Pexels) + auth
 │  ├─ account.js            #   cancellazione account (service role)
-│  └─ push.js              #   cron notifiche push scadenze (service role + web-push)
+│  ├─ push.js              #   cron notifiche scadenze: sceglie Web Push o APNs per riga
+│  └─ apns.js              #   invio APNs (HTTP/2 + JWT ES256, zero dipendenze)
 ├─ capacitor.config.json    # guscio nativo iOS (Fase 3): appId, webDir=dist
 ├─ ios/                     # progetto Xcode generato da Capacitor (SPM, non CocoaPods)
 │  └─ App/App/Info.plist    #   permessi camera/foto/microfono + solo verticale
@@ -142,10 +143,14 @@ auth.users (gestita da Supabase)
    │                       (gli avvisi scadenza hanno cadenza automatica 7/3/1 gg: nessuna preferenza)
    ├──< ai_usage         (user_id, day:date, count:int) PK(user_id, day)
    │                       scritta SOLO dal service role via bump_ai_usage()
-   ├──< push_subscriptions (id, user_id, endpoint UNIQUE, p256dh, auth, created_at)
+   ├──< push_subscriptions (id, user_id, platform 'web'|'ios', created_at,
+   │                       web:  endpoint UNIQUE, p256dh, auth
+   │                       ios:  apns_token UNIQUE)
    │                       una riga per dispositivo; RLS per-utente; letta dal
-   │                       cron col service role. Upsert per endpoint via
-   │                       save_push_subscription() (SECURITY DEFINER).
+   │                       cron col service role. Upsert via
+   │                       save_push_subscription() / save_apns_token()
+   │                       (SECURITY DEFINER). Vincolo di forma: ogni riga è
+   │                       completa per la sua piattaforma (migration-10/12).
    └──< meal_plan        (id, household_id, user_id, date, slot pranzo|cena,
                           title, data:jsonb ricetta completa o NULL=piatto
                           libero, cooked_at, created_at)
@@ -182,7 +187,7 @@ il proxy fa `supabase.auth.getUser(token)` e rifiuta con 401 se non valido.
 | `POST /api/claude` | `server/claude.js` | Google Gemini `gemini-2.5-flash` | Traduce blocchi Anthropic↔Gemini; `responseMimeType: application/json`; `thinkingBudget: 0` sui 2.5; tetto `max_tokens` 1–2048; tetto payload; rate-limit per utente/giorno. Risponde nel formato `{ content:[{type:"text",text}] }` che il client si aspetta. |
 | `POST /api/photo` | `server/photo.js` | Pexels | Riceve una lista di query, restituisce un URL foto per ciascuna. Mai bloccante per il client (`fetchPhotos` torna `[]` in errore). |
 | `POST /api/account` | `server/account.js` | Supabase (service role) | Cancellazione account utente. |
-| `POST /api/push` | `server/push.js` | Supabase (service role) + Web Push | **Solo cron** (pg_cron): protetto da `CRON_SECRET`, non da token utente. Ricava lo slot (pranzo/cena/sera) dall'ora di Roma, legge scadenze e subscription, invia con `web-push`. Pulisce le subscription morte (404/410). |
+| `POST /api/push` | `server/push.js` (+ `server/apns.js`) | Supabase (service role) + Web Push + APNs | **Solo cron** (pg_cron): protetto da `CRON_SECRET`, non da token utente. Ricava lo slot (pranzo/cena/sera) dall'ora di Roma, legge scadenze e subscription e invia sul canale giusto per riga: `web-push` per la PWA, **APNs** (HTTP/2 + JWT ES256, senza dipendenze) per l'app iOS. Pulisce le iscrizioni morte (404/410 · Unregistered/BadDeviceToken). |
 
 Altre integrazioni **dal client** (senza proxy, perché pubbliche):
 
@@ -198,7 +203,10 @@ Variabili d'ambiente (server, su Vercel / `.env.local` per il dev):
 `VAPID_PRIVATE_KEY` (mai nel client), `VAPID_SUBJECT` (mailto:), `CRON_SECRET`
 (anche nel Vault Supabase come `dispensa_cron_secret`, letto dal cron). Client:
 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`
-(la VAPID pubblica, per iscriversi alle push).
+(la VAPID pubblica, per iscriversi alle push). **App nativa (fase 3)**:
+`VITE_API_BASE` (dominio dei proxy nella build Capacitor) e, per le push
+iOS, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_BUNDLE_ID`,
+`APNS_PRODUCTION`.
 
 ---
 
