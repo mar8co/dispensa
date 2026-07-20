@@ -17,7 +17,7 @@ import { supabase } from "./lib/supabase.js";
 import {
   fetchPantry, insertMany, updateItem,
   deleteItems, deleteAllPantry,
-  fetchSettings, saveSettings,
+  fetchSettings, saveSettings, fetchIsPro,
   fetchShopping, deleteShoppingItems,
   fetchSavedRecipes, deleteSavedRecipe,
   ensurePersonalHousehold, setActiveHousehold, fetchHouseholds, fetchMembers,
@@ -43,6 +43,7 @@ import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
 import SettingsSheet from "./components/SettingsSheet.jsx";
+import PaywallSheet from "./components/PaywallSheet.jsx";
 import PrivacySheet from "./components/PrivacySheet.jsx";
 import TimerBar from "./components/TimerBar.jsx";
 import TourCoach from "./components/TourCoach.jsx";
@@ -193,16 +194,22 @@ export default function Dispensa({ session }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false); // impostazioni (⚙️ dal Profilo)
   const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
+  // Premium: `isPro` decide solo COSA MOSTRARE (i controlli veri sono nelle
+  // policy del DB e nel proxy AI). Parte da true per non far lampeggiare il
+  // paywall a un abbonato mentre la verifica è in corso.
+  const [isPro, setIsPro] = useState(true);
+  const [paywall, setPaywall] = useState(null); // { reason } | null
   // Passaggio Profilo→Impostazioni→Privacy SERIALIZZATO: il foglio successivo
   // si apre solo QUANDO il precedente ha finito l'animazione di chiusura
   // (onClose). Due drawer Vaul sovrapposti lasciavano residui Radix
   // (pointer-events sul body) che mangiavano il primo tap dopo la chiusura.
-  const pendingSheetRef = useRef(null); // "settings" | "privacy" | null
+  const pendingSheetRef = useRef(null); // "settings" | "privacy" | "paywall" | null
   function openPendingSheet() {
     const next = pendingSheetRef.current;
     pendingSheetRef.current = null;
     if (next === "settings") { bumpModal("settings"); setSettingsOpen(true); }
     else if (next === "privacy") { bumpModal("privacy"); setPrivacyOpen(true); }
+    else if (next === "paywall") { bumpModal("paywall"); setPaywall({ reason: null }); }
   }
 
   // tutorial interattivo (primo accesso + ripetibile dal Profilo)
@@ -345,6 +352,7 @@ export default function Dispensa({ session }) {
             if (!cachedTs || remoteTs >= cachedTs) applySettings(remote.settings);
           }
         } catch (e) { console.error(e); }
+        fetchIsPro().then(setIsPro).catch(() => {});
         try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
         // Ricettario local-first: adottiamo le righe dal DB SOLO se ce ne sono.
         // Se il DB è vuoto o non ancora sincronizzato NON sovrascriviamo la
@@ -869,6 +877,21 @@ export default function Dispensa({ session }) {
   const baseServings = recipe ? (Number(recipe.servings) || 2) : 1;
   const factor = servings / baseServings;
 
+  // --- Premium ---
+
+  // Apre il paywall spiegando PERCHÉ (la funzione toccata): un paywall che
+  // risponde a un'azione converte meglio di uno generico.
+  function openPaywall(reason) {
+    bumpModal("paywall");
+    setPaywall({ reason });
+  }
+
+  // Acquisto: StoreKit non è ancora collegato (serve l'account Apple e il
+  // guscio nativo). Meglio dirlo che simulare un pagamento che non avviene.
+  async function purchasePremium() {
+    throw new Error("Gli abbonamenti arriveranno con l'app su App Store. Ancora un po' di pazienza!");
+  }
+
   // --- "Ho cucinato questo" ---
 
   // Prepara le righe del CookModal classificando ogni ingrediente in 3 corsie:
@@ -1032,6 +1055,8 @@ export default function Dispensa({ session }) {
             recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
             plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan }}
             startOnPlan={planFirst}
+            isPro={isPro}
+            onNeedPro={() => openPaywall("Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola.")}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
             onDeleteSaved={removeSavedRecipe}
@@ -1190,6 +1215,17 @@ export default function Dispensa({ session }) {
           onReplayTour={replayTour}
           onDeleteAccount={deleteAccount}
           onOpenPrivacy={() => { pendingSheetRef.current = "privacy"; }}
+          isPro={isPro}
+          onOpenPaywall={() => { pendingSheetRef.current = "paywall"; }}
+        />
+      )}
+
+      {paywall && (
+        <PaywallSheet
+          key={modalEpoch.current.paywall}
+          reason={paywall.reason}
+          onPurchase={purchasePremium}
+          onClose={() => setPaywall(null)}
         />
       )}
 

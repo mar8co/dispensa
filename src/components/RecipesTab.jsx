@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
-  ChefHat, Trash2, Check, CalendarPlus,
+  ChefHat, Trash2, Check, CalendarPlus, Lock,
 } from "lucide-react";
 import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
@@ -87,6 +87,7 @@ export default function RecipesTab({
   savedRecipes, onOpenSaved, onDeleteSaved, isSaved, onToggleSave,
   plan = null,
   startOnPlan = false,
+  isPro = true, onNeedPro,
 }) {
   const [addedMissing, setAddedMissing] = useState(false);
   const [ask, setAsk] = useState("");          // "Cosa ti va?"
@@ -96,7 +97,7 @@ export default function RecipesTab({
   const [cooking, setCooking] = useState(false);  // modalità cucina
   // Sotto-vista iniziale: "piano" se si arriva dal deep-link della notifica
   // delle 18:30 con cena pianificata (/?view=piano), altrimenti "idee".
-  const [tab, setTab] = useState(startOnPlan && plan ? "piano" : "idee");
+  const [tab, setTab] = useState(startOnPlan && plan && isPro ? "piano" : "idee");
   const [planSheet, setPlanSheet] = useState(false); // "Aggiungi al piano" aperto
   const [plannedMsg, setPlannedMsg] = useState("");  // feedback dopo l'aggiunta
   // Giorno/slot in attesa di un'idea AI (arriva da "Genera un'idea con l'AI"
@@ -145,6 +146,9 @@ export default function RecipesTab({
   // l'attesa: evita che una ricetta aperta più tardi, scollegata, finisca
   // piazzata per errore nello slot originale.
   function switchTab(id) {
+    // Il Piano Alimentare è Premium: al tocco mostriamo il paywall invece di
+    // aprire una scheda vuota. Restiamo su "Idee", così l'app resta usabile.
+    if (id === "piano" && !isPro) { onNeedPro?.(); return; }
     if (id === "piano") setPendingSlot(null);
     setTab(id);
   }
@@ -177,11 +181,14 @@ export default function RecipesTab({
                   key={id}
                   onClick={() => switchTab(id)}
                   aria-pressed={tab === id}
-                  className={`rounded-lg py-2 text-sm font-semibold transition ${
+                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition ${
                     tab === id ? "bg-ink text-white" : "text-stone-500 hover:text-ink"
                   }`}
                 >
                   {label}
+                  {/* Lucchetto: si capisce che è Premium PRIMA di toccarlo,
+                      invece di scoprirlo con un paywall a sorpresa. */}
+                  {id === "piano" && !isPro && <Lock className="h-3.5 w-3.5" />}
                 </button>
               ))}
             </div>

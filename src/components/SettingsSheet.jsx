@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react";
 import {
   X, SunMoon, Sun, Moon, GraduationCap, Loader2, Palette, ChevronDown, Bell,
+  Sparkles, ChevronRight,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import FaceIdIcon from "./FaceIdIcon.jsx";
@@ -25,6 +26,7 @@ const THEME_LABEL = { auto: "Auto", light: "Chiaro", dark: "Scuro" };
 
 export default function SettingsSheet({
   onClose, onReplayTour, onDeleteAccount, onOpenPrivacy,
+  isPro = true, onOpenPaywall,
 }) {
   const [theme, setThemeState] = useState(getTheme());
   const [open, setOpen] = useState("");           // riga espandibile aperta: "theme"
@@ -138,6 +140,31 @@ export default function SettingsSheet({
               <X className="h-5 w-5" />
             </button>
           </div>
+
+          {/* Premium: punto d'accesso permanente al paywall (gli altri sono
+              contestuali, sulle funzioni bloccate). Per un abbonato diventa
+              una conferma discreta invece di sparire del tutto. */}
+          {isPro ? (
+            <div className="mb-2 flex items-center gap-3 rounded-xl border border-hair bg-paper px-3.5 py-3">
+              <Sparkles className="h-[18px] w-[18px] shrink-0 text-tomato" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm text-ink">Premium attivo</span>
+                <span className="block text-xs text-stone-500">Grazie per il sostegno 🧡</span>
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={() => { close(); onOpenPaywall?.(); }}
+              className="mb-2 flex w-full items-center gap-3 rounded-xl border border-tomato/40 bg-tomato/5 px-3.5 py-3 text-left transition hover:bg-tomato/10"
+            >
+              <Sparkles className="h-[18px] w-[18px] shrink-0 text-tomato" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-ink">Passa a Premium</span>
+                <span className="block text-xs text-stone-500">Piano Alimentare, AI illimitata, niente pubblicità</span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-tomato" />
+            </button>
+          )}
 
           <div className="overflow-hidden rounded-xl border border-hair bg-paper">
             {/* Face ID / passkey: attivazione dell'accesso rapido su questo
