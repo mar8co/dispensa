@@ -196,9 +196,28 @@ come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 > (`injectRegister: null` + guard `Capacitor.isNativePlatform` in main.jsx);
 > `Info.plist` con permessi camera/foto/microfono e solo verticale; workflow
 > `.github/workflows/ios.yml` (build senza firma su push, TestFlight a mano).
-> **ANCORA DA FARE**: OAuth/magic-link Supabase via deep link nativi; splash
-> nativa (Assets.xcassets) al posto delle apple-touch-startup-image; prova
-> reale di getUserMedia (scontrino/barcode) nel WKWebView; push web → APNs.
+> **Fatti anche (2026-07-20)**: **splash nativa** di brand generata da
+> `generate-splash.mjs` in `Splash.imageset` (chiara + scura; il quadrato
+> 2732² è in `scaleAspectFill`, quindi il lockup è dimensionato sulla
+> striscia centrale ~46% visibile in portrait); **login via deep link**
+> (`dispensa://auth` in `CFBundleURLTypes` + ponte `appUrlOpen` in
+> `src/lib/native.js`, gestisce implicit e PKCE; `Auth.jsx` usa
+> `authRedirectUrl()`); **push APNs** (vedi sotto).
+>
+> **PUSH APNs (migration-12)**: `push_subscriptions` ospita ora sia le Web
+> Push sia i token APNs (colonne `platform`/`apns_token`, vincolo di forma,
+> RPC `save_apns_token`). `server/apns.js` invia via HTTP/2 con JWT ES256
+> **senza nuove dipendenze** (attenzione: la firma dev'essere R||S grezza →
+> `dsaEncoding: "ieee-p1363"`). `server/push.js` sceglie il canale per riga e
+> ripiega sulle sole colonne web se la migration-12 non è ancora applicata.
+> Client: `@capacitor/push-notifications`, token salvato in localStorage
+> (`dispensa-apns-token`), tocco della notifica → deep link.
+>
+> **ANCORA DA FARE**: prova reale di getUserMedia (scontrino/barcode) nel
+> WKWebView; **env APNs su Vercel** (`APNS_KEY_ID`, `APNS_TEAM_ID`,
+> `APNS_KEY_P8`, `APNS_BUNDLE_ID`, `APNS_PRODUCTION`) — richiedono la chiave
+> .p8 dal portale Apple, quindi l'account Developer; **eseguire
+> migration-12**; aggiungere `dispensa://auth` ai Redirect URL su Supabase.
 > Bundle id: `com.mar8co.dispensa` (modificabile finché non si carica il
 > primo build su App Store Connect).
 >

@@ -13,6 +13,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import webpush from "web-push";
+import { apnsConfigured, createApnsSender, isDeadToken } from "./apns.js";
 
 // Momenti canonici, in MINUTI dall'inizio del giorno, ORA DI ROMA.
 const SLOTS = {
@@ -190,10 +191,31 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
 
   const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const { data: subs, error } = await admin
-    .from("push_subscriptions").select("id, user_id, endpoint, p256dh, auth");
-  if (error) return { status: 500, json: { error: "Lettura subscription fallita.", detail: error.message } };
+  // `platform`/`apns_token` esistono dalla migration-12: se non è ancora stata
+  // eseguita la select fallisce, quindi si ripiega sulle sole colonne web e le
+  // notifiche PWA continuano a partire (nessuna regressione).
+  let subs, subsErr;
+  {
+    const full = await admin.from("push_subscriptions")
+      .select("id, user_id, endpoint, p256dh, auth, platform, apns_token");
+    if (full.error) {
+      const legacy = await admin.from("push_subscriptions")
+        .select("id, user_id, endpoint, p256dh, auth");
+      subs = legacy.data;
+      subsErr = legacy.error;
+      if (!legacy.error) console.warn("push: migration-12 non applicata, solo Web Push");
+    } else {
+      subs = full.data;
+    }
+  }
+  if (subsErr) return { status: 500, json: { error: "Lettura subscription fallita.", detail: subsErr.message } };
   if (!subs?.length) return { status: 200, json: { slot, sent: 0, removed: 0 } };
+
+  // Canale APNs aperto una sola volta per tutto il giro (se configurato e se
+  // c'è almeno un dispositivo iOS da servire).
+  const hasIos = subs.some((s) => s.platform === "ios" && s.apns_token);
+  const apns = hasIos && apnsConfigured(env) ? createApnsSender(env) : null;
+  if (hasIos && !apns) console.warn("push: dispositivi iOS presenti ma APNs non configurato");
 
   // Raggruppo le subscription per utente (un utente può avere più dispositivi).
   const byUser = new Map();
@@ -239,6 +261,19 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
 
     const body = JSON.stringify(payload);
     for (const s of userSubs) {
+      // Stesso contenuto, due canali: APNs per l'app iOS, Web Push per la PWA.
+      if (s.platform === "ios") {
+        if (!apns) continue;
+        const res = await apns.send(s.apns_token, payload);
+        if (res.ok) sent++;
+        else if (isDeadToken(res)) {
+          await admin.from("push_subscriptions").delete().eq("id", s.id);
+          removed++;
+        } else {
+          console.error("push: APNs fallito", res.status, res.reason);
+        }
+        continue;
+      }
       const subscription = { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } };
       try {
         await webpush.sendNotification(subscription, body);
@@ -256,5 +291,6 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
     }
   }
 
+  apns?.close();
   return { status: 200, json: { slot, sent, removed } };
 }

@@ -8,15 +8,22 @@
 //    layer (db.js). L'invio vero è del cron server-side (server/push.js).
 //  - La chiave VAPID pubblica arriva da VITE_VAPID_PUBLIC_KEY (client-safe).
 
-import { savePushSubscription, deletePushSubscription } from "./db.js";
+import { PushNotifications } from "@capacitor/push-notifications";
+import { savePushSubscription, deletePushSubscription, saveApnsToken, deleteApnsToken } from "./db.js";
+import { isNative } from "./native.js";
 
 const VAPID_PUBLIC = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+// Il token APNs di questo dispositivo: serve a sapere se le push sono attive e
+// a cancellare la riga giusta al momento dell'opt-out.
+const APNS_KEY = "dispensa-apns-token";
 
-// Push utilizzabili su questo dispositivo? Su iOS Safari NON installato manca
-// `PushManager`, quindi qui torna false (mostreremo un suggerimento a parte).
+// Push utilizzabili su questo dispositivo? Nell'app nativa sempre (ci pensa
+// APNs); sul web servono service worker e PushManager — su iOS Safari NON
+// installato PushManager manca, quindi torna false (c'è un suggerimento a parte).
 export function pushSupported() {
-  return typeof window !== "undefined"
-    && "serviceWorker" in navigator
+  if (typeof window === "undefined") return false;
+  if (isNative()) return true;
+  return "serviceWorker" in navigator
     && "PushManager" in window
     && "Notification" in window;
 }
@@ -43,9 +50,69 @@ function urlBase64ToUint8Array(base64String) {
   return arr;
 }
 
+// --- Sponda NATIVA (iOS, APNs) ---------------------------------------------
+
+function storedApnsToken() {
+  try { return localStorage.getItem(APNS_KEY) || null; } catch { return null; }
+}
+
+// `register()` non restituisce il token: arriva in modo asincrono sull'evento
+// "registration". Lo impacchettiamo in una Promise, con timeout perché senza
+// rete o senza permesso l'evento potrebbe non arrivare mai.
+async function enableNative() {
+  const perm = await PushNotifications.requestPermissions();
+  if (perm.receive !== "granted") {
+    const e = new Error("Permesso notifiche negato.");
+    e.code = "denied";
+    throw e;
+  }
+  const token = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Registrazione APNs non completata.")), 15000);
+    let ok, ko;
+    PushNotifications.addListener("registration", (t) => {
+      clearTimeout(timer); ok?.remove(); ko?.remove(); resolve(t.value);
+    }).then((h) => { ok = h; });
+    PushNotifications.addListener("registrationError", (e) => {
+      clearTimeout(timer); ok?.remove(); ko?.remove();
+      reject(new Error(e?.error || "Registrazione APNs fallita."));
+    }).then((h) => { ko = h; });
+    PushNotifications.register();
+  });
+  await saveApnsToken(token);
+  try { localStorage.setItem(APNS_KEY, token); } catch { /* stato ricavabile comunque */ }
+  return true;
+}
+
+async function disableNative() {
+  const token = storedApnsToken();
+  try { await PushNotifications.unregister(); } catch { /* togliamo comunque la riga */ }
+  if (token) await deleteApnsToken(token);
+  try { localStorage.removeItem(APNS_KEY); } catch { /* */ }
+}
+
+// Al tocco della notifica: apre la scheda giusta (stesso deep-link del web,
+// es. /?view=piano). L'app è già in esecuzione, quindi navighiamo davvero.
+export function installNativePushTapHandler() {
+  if (!isNative()) return;
+  PushNotifications.addListener("pushNotificationActionPerformed", ({ notification }) => {
+    const url = notification?.data?.url;
+    if (url) window.location.assign(url);
+  });
+}
+
+// --- Stato ------------------------------------------------------------------
+
 // Stato per QUESTO dispositivo: attivo = esiste una subscription registrata.
 export async function getPushState() {
   if (!pushSupported()) return { supported: false, enabled: false, permission: "default" };
+  if (isNative()) {
+    const perm = await PushNotifications.checkPermissions();
+    return {
+      supported: true,
+      enabled: perm.receive === "granted" && !!storedApnsToken(),
+      permission: perm.receive,
+    };
+  }
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
   return { supported: true, enabled: !!sub, permission: Notification.permission };
@@ -55,6 +122,7 @@ export async function getPushState() {
 // Lancia un errore con code "denied" se l'utente nega il permesso.
 export async function enablePush() {
   if (!pushSupported()) throw new Error("Notifiche non supportate su questo dispositivo.");
+  if (isNative()) return enableNative();
   if (!VAPID_PUBLIC) throw new Error("Chiave VAPID pubblica mancante.");
 
   const permission = await Notification.requestPermission();
@@ -85,6 +153,7 @@ export async function enablePush() {
 // Disattiva: annulla l'iscrizione del browser e rimuove la riga dal DB.
 export async function disablePush() {
   if (!pushSupported()) return;
+  if (isNative()) return disableNative();
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
   if (!sub) return;

@@ -5,6 +5,7 @@ import "./index.css";
 import { applyTheme, getTheme } from "./lib/theme.js";
 import { installViewportFix } from "./lib/viewportFix.js";
 import { installNativeAuthBridge } from "./lib/native.js";
+import { installNativePushTapHandler } from "./lib/push.js";
 
 // Applica subito il tema scelto (auto/chiaro/scuro) prima del primo render.
 applyTheme(getTheme());
@@ -21,6 +22,10 @@ installViewportFix();
 // e non come navigazione: qui lo intercettiamo e apriamo la sessione. Sul web
 // non fa nulla (ci pensa detectSessionInUrl di supabase-js).
 installNativeAuthBridge();
+
+// Tocco su una notifica APNs: porta alla scheda giusta (stesso deep-link del
+// web, es. /?view=piano). Sul web non fa nulla: lì ci pensa il service worker.
+installNativePushTapHandler();
 
 // Service worker SOLO sul web (PWA installabile e offline shell). Nel guscio
 // nativo Capacitor gli asset sono già locali: un SW che precacha aggiungerebbe

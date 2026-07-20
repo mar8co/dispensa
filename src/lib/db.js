@@ -153,6 +153,22 @@ export async function savePushSubscription({ endpoint, p256dh, auth }) {
   if (error) throw error;
 }
 
+// Registra il token APNs di QUESTO iPhone (app nativa). Gemella di
+// savePushSubscription per la sponda iOS (migration-12).
+export async function saveApnsToken(token) {
+  const { error } = await supabase.rpc("save_apns_token", { p_token: token });
+  if (error) throw error;
+}
+
+// Opt-out dal dispositivo iOS: via la riga col token.
+export async function deleteApnsToken(token) {
+  const { error } = await supabase
+    .from("push_subscriptions")
+    .delete()
+    .eq("apns_token", token);
+  if (error) throw error;
+}
+
 // Rimuove la subscription (opt-out): la RLS limita alla riga dell'utente.
 export async function deletePushSubscription(endpoint) {
   const { error } = await supabase
