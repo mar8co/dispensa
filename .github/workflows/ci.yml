@@ -9,10 +9,11 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          # >=22: richiesto dalla CLI Capacitor (fase 3) e allineato ai runner.
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run lint
