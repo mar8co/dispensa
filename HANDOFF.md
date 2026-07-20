@@ -165,9 +165,15 @@ come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 > 1. **Packaging: Capacitor** (guscio nativo sul codice React/Vite attuale;
 >    niente rewrite). Push da migrare ad **APNs** via plugin (il cron
 >    pg_cron/server resta, cambia solo il canale d'invio).
-> 2. **Free vs Premium**: free = dispensa + spesa + ricette con pubblicità e
->    limite AI giornaliero; **Premium = Piano Alimentare + zero pubblicità +
->    AI senza limiti**.
+> 2. **Free vs Premium** (dettagliato il 2026-07-20): free = dispensa + spesa
+>    + ricette, con pubblicità e **max 5 generazioni AI al giorno**;
+>    **Premium = Piano Alimentare + zero pubblicità + AI illimitata +
+>    possibilità di INVITARE altri nella dispensa condivisa**.
+>    Il Premium vale **per NUCLEO**: se un membro paga, ne beneficiano tutti
+>    (un piano pasti o una dispensa condivisa "a metà" non avrebbe senso).
+>    Il free **non perde mai** ciò che ha già: si blocca solo l'aggiunta di
+>    NUOVI membri, così un abbonamento scaduto non toglie l'accesso ai dati
+>    di altre persone (scelta esplicita: niente azioni distruttive).
 > 3. **Prezzo: 1,99 €/mese · 14,99 €/anno**, con 7 giorni di prova gratuita.
 > 4. **Abbonamenti: FATTI IN CASA con StoreKit 2** (scelta esplicita
 >    dell'utente al posto di RevenueCat): serviranno verifica ricevute
@@ -184,9 +190,26 @@ come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 >    GitHub Secrets.
 >
 > **Prerequisiti dell'utente**: iscrizione Apple Developer Program
-> (99 €/anno) e account AdMob. **Ordine dei lavori tecnici**: wrapper
-> Capacitor → push APNs → migration-12 entitlements + gating isPro → paywall
-> UI → AdMob + ATT → TestFlight → store listing → submission.
+> (99 €/anno, in corso il 2026-07-20) e account AdMob. **Ordine dei lavori
+> tecnici**: wrapper Capacitor ✅ → push APNs ✅ → **entitlements
+> (migration-13) ✅** → paywall UI → StoreKit 2 + verifica ricevute →
+> AdMob + ATT → TestFlight → store listing → submission.
+>
+> **ENTITLEMENTS (migration-13, da eseguire)**: tabella `entitlements`
+> (source apple|comp, status none|active|grace|expired|refunded, expires_at,
+> original_transaction_id) con **sola policy di SELECT** — scrive soltanto il
+> server col service role dopo la verifica Apple, altrimenti chiunque si
+> regalerebbe il Premium da DevTools. Funzione `is_pro(uid)` = unico punto di
+> verità, considera anche i nuclei (Premium per-nucleo) e tratta `grace` come
+> attivo (carta scaduta ≠ Premium spento). Il blocco è applicato **nel
+> database**: la policy di INSERT su `household_invites` ora richiede
+> `is_pro()`. Il tetto AI (5/giorno free, illimitato Premium) è applicato in
+> `server/claude.js`, che chiama `is_pro` passando l'uid esplicito (col
+> service role `auth.uid()` è NULL) e ripiega sul tetto free se la migration
+> non c'è. La migration **regala il Premium a vita agli utenti già esistenti**
+> (`source='comp'`): l'autore e la famiglia non perdono nulla.
+> `fetchIsPro()` in db.js serve solo alla UI e in caso di errore assume
+> `true` (il gate vero è a valle).
 >
 > **Checklist tecnica del wrapper** — ✅ **FATTI (step 1, 2026-07-20)**:
 > scaffold `ios/` (Capacitor 8 usa **SPM, non CocoaPods** → `cap add ios`

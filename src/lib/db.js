@@ -139,6 +139,26 @@ export async function renameHousehold(householdId, name) {
   if (error) throw error;
 }
 
+// ---------- Abbonamento Premium (entitlements, migration-13) ----------
+
+// "Sono Premium?" — la funzione SQL tiene conto anche del NUCLEO: se un
+// familiare è abbonato, lo sono anch'io.
+//
+// Questo valore serve solo a decidere COSA MOSTRARE: i controlli veri stanno
+// nel database (policy sugli inviti) e nel server (tetto AI), dove il client
+// non può metterci mano. Per questo, se la lettura fallisce (offline, oppure
+// migration-13 non ancora applicata), si assume `true`: meglio mostrare una
+// funzione a chi non ne ha diritto — tanto l'azione verrà rifiutata a valle —
+// che togliere il Premium a un abbonato per un problema di rete.
+export async function fetchIsPro() {
+  const { data, error } = await supabase.rpc("is_pro");
+  if (error) {
+    console.warn("Stato Premium non leggibile, assumo attivo:", error.message);
+    return true;
+  }
+  return data === true;
+}
+
 // ---------- Notifiche push (subscription per dispositivo) ----------
 
 // Registra/aggiorna la subscription di QUESTO dispositivo. L'upsert per

@@ -66,15 +66,33 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
   // 2b) Rate-limit per utente/giorno (anti-abuso, protegge la quota AI).
   // Best-effort: richiede SUPABASE_SERVICE_ROLE_KEY + la funzione SQL
   // bump_ai_usage (migration-5). Se manca o va in errore, NON blocca.
+  //
+  // Premium (migration-13): nessun tetto. Il controllo è QUI, lato server, non
+  // nel client: è l'unico posto dove non è aggirabile. `is_pro` va chiamata
+  // passando l'uid esplicito, perché col service role auth.uid() è NULL.
   if (env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-      const limit = Number(env.AI_DAILY_LIMIT) || 80;
-      const { data: count, error } = await admin.rpc("bump_ai_usage", { p_uid: userData.user.id });
-      if (!error && typeof count === "number" && count > limit) {
-        // code: "daily_limit" → il client NON ritenta (il limite è giornaliero,
-        // ritentare sprecherebbe solo attese). Diverso da un 429 transitorio Gemini.
-        return { status: 429, json: { error: "Hai raggiunto il limite di richieste AI per oggi. Riprova domani.", code: "daily_limit" } };
+      let pro = false;
+      const { data: isPro, error: proErr } = await admin.rpc("is_pro", { uid: userData.user.id });
+      // Se la migration-13 non è ancora applicata la rpc fallisce: si prosegue
+      // col tetto del piano gratuito (nessuno resta bloccato per un errore).
+      if (!proErr) pro = isPro === true;
+
+      if (!pro) {
+        const limit = Number(env.AI_DAILY_LIMIT) || 5;
+        const { data: count, error } = await admin.rpc("bump_ai_usage", { p_uid: userData.user.id });
+        if (!error && typeof count === "number" && count > limit) {
+          // code: "daily_limit" → il client NON ritenta (il limite è giornaliero,
+          // ritentare sprecherebbe solo attese). Diverso da un 429 transitorio Gemini.
+          return {
+            status: 429,
+            json: {
+              error: "Hai finito le ricette AI di oggi. Passa a Premium per usarle senza limiti, o riprova domani.",
+              code: "daily_limit",
+            },
+          };
+        }
       }
     } catch { /* best-effort: non blocca la richiesta */ }
   }
