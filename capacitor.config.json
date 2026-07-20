@@ -1,0 +1,15 @@
+{
+  "appId": "com.mar8co.dispensa",
+  "appName": "Dispensa",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#f4f1e9"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#f4f1e9"
+    }
+  }
+}

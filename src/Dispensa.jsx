@@ -12,6 +12,7 @@ import {
   norm, matchKey, isStapleQb, isQbQty, isSpoonQty,
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
+import { apiUrl } from "./lib/api.js";
 import { supabase } from "./lib/supabase.js";
 import {
   fetchPantry, insertMany, updateItem,
@@ -522,7 +523,7 @@ export default function Dispensa({ session }) {
   async function deleteAccount() {
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token;
-    const res = await fetch("/api/account", {
+    const res = await fetch(apiUrl("/api/account"), {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     });

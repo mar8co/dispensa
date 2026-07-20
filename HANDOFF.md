@@ -177,10 +177,26 @@ come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 > 5. **Pubblicità: AdMob, SOLO banner** adattivo in fondo a Dispensa e Spesa
 >    (mai in fotocamera, cucina o Piano Alimentare), con prompt ATT.
 >
+> 6. **Build iOS SENZA Mac** (l'utente non ha un Mac, 2026-07-20): si usa
+>    la **CI macOS di GitHub Actions** (gratis: il repo è pubblico) per
+>    compilare, firmare e caricare su TestFlight. Niente Xcode locale;
+>    certificati/provisioning gestiti via App Store Connect API key nei
+>    GitHub Secrets.
+>
 > **Prerequisiti dell'utente**: iscrizione Apple Developer Program
 > (99 €/anno) e account AdMob. **Ordine dei lavori tecnici**: wrapper
 > Capacitor → push APNs → migration-12 entitlements + gating isPro → paywall
 > UI → AdMob + ATT → TestFlight → store listing → submission.
+>
+> **Checklist tecnica del wrapper (adattamenti noti, da fare nelle prossime
+> chat)**: base URL API configurabile (dentro l'app nativa i fetch relativi
+> `/api/*` non hanno più Vercel dietro → puntare a
+> `https://la-dispensa-omega.vercel.app`); OAuth/magic-link Supabase via
+> deep link nativi; service worker/PWA disattivati nel guscio nativo;
+> splash nativa al posto delle apple-touch-startup-image; verifica
+> getUserMedia (scontrino/barcode) nel WKWebView (iOS 14.3+ ok, serve
+> NSCameraUsageDescription); push web → APNs. Bundle id: `com.mar8co.dispensa`
+> (modificabile finché non si carica il primo build su App Store Connect).
 
 **Traguardo**: trasformare **questa PWA** in una vera **app nativa pubblicata
 sull'App Store** (e più avanti su Google Play), introducendo la

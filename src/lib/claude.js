@@ -2,6 +2,7 @@
 // API key Anthropic lato server. Qui mandiamo solo il contenuto del prompt
 // (invariato) e il token Supabase dell'utente per autenticare la richiesta.
 import { supabase } from "./supabase.js";
+import { apiUrl } from "./api.js";
 
 export function fileToBase64(file) {
   return new Promise((res, rej) => {
@@ -18,7 +19,7 @@ export async function fetchPhotos(queries) {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token;
-    const res = await fetch("/api/photo", {
+    const res = await fetch(apiUrl("/api/photo"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -77,7 +78,7 @@ export async function callClaude(content, maxTokens = 1000, opts = {}) {
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token;
 
-    const res = await fetch("/api/claude", {
+    const res = await fetch(apiUrl("/api/claude"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

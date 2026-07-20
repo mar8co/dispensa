@@ -4,8 +4,10 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 
 export default [
-  // dist e file legacy non vengono analizzati
-  { ignores: ["dist", "dev-dist", "node_modules", "dispensa-ui.jsx"] },
+  // dist, progetto nativo e file legacy non vengono analizzati.
+  // `ios` contiene la copia della build web fatta da `cap sync` (minificata):
+  // non è codice sorgente nostro.
+  { ignores: ["dist", "dev-dist", "node_modules", "dispensa-ui.jsx", "ios", "android"] },
 
   js.configs.recommended,
 

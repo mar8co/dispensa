@@ -53,6 +53,11 @@ export default defineConfig(({ mode }) => {
       devApi("/api/account", handleDeleteAccount, apiEnv),
       VitePWA({
         registerType: "autoUpdate",
+        // La registrazione del SW NON è più iniettata in automatico: la fa
+        // main.jsx solo sul web. Nel guscio nativo (Capacitor) gli asset sono
+        // già dentro l'app e un SW che precacha rischierebbe di servire una
+        // versione vecchia dopo un aggiornamento dallo store.
+        injectRegister: null,
         includeAssets: ["favicon-32x32.png", "apple-touch-icon.png", "icon.svg"],
         manifest: {
           id: "/",
