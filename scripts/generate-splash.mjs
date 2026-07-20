@@ -12,7 +12,7 @@
 // variante chiara (#f4f1e9) e scura (#121211) via prefers-color-scheme.
 // I nomi file restano invariati: i <link> in index.html non cambiano.
 import sharp from "sharp";
-import { readFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -84,3 +84,64 @@ for (const d of DEVICES) {
   }
 }
 console.log(`\n${DEVICES.length} device × ${THEMES.length} temi = ${DEVICES.length * THEMES.length} immagini in /public/splash`);
+
+// ============================================================
+//  Splash NATIVA iOS (Capacitor) — stesso lockup, asset diverso
+// ============================================================
+// La LaunchScreen.storyboard mostra un'unica immagine QUADRATA 2732×2732 in
+// `scaleAspectFill`. Su un iPhone in verticale il quadrato viene scalato per
+// coprire lo schermo: si vede tutta l'altezza ma solo la striscia centrale in
+// larghezza (~46% sui modelli più allungati). Quindi il lockup va dimensionato
+// su quella striscia, non sul lato del quadrato, altrimenti risulterebbe
+// enorme e tagliato ai bordi.
+const NATIVE_SIZE = 2732;
+const VISIBLE_W = Math.round(NATIVE_SIZE * 0.46); // striscia visibile in portrait
+const nativeDir = join(root, "ios", "App", "App", "Assets.xcassets", "Splash.imageset");
+
+if (existsSync(nativeDir)) {
+  const iconSize = Math.round(VISIBLE_W * 0.3);
+  const wordW = Math.round(VISIBLE_W * 0.42);
+  const gap = Math.round(VISIBLE_W * 0.05);
+  const iconPng = await sharp(svg, { density: 96 }).resize(iconSize, iconSize).png().toBuffer();
+
+  for (const t of THEMES) {
+    const wImg = await sharp(wordBuf[t.name]).resize({ width: wordW }).png().toBuffer();
+    const wordH = (await sharp(wImg).metadata()).height;
+    const blockH = iconSize + gap + wordH;
+    const top = Math.round(NATIVE_SIZE * 0.46 - blockH / 2);
+    const png = await sharp({ create: { width: NATIVE_SIZE, height: NATIVE_SIZE, channels: 4, background: t.bg } })
+      .composite([
+        { input: iconPng, left: Math.round(NATIVE_SIZE / 2 - iconSize / 2), top },
+        { input: wImg, left: Math.round(NATIVE_SIZE / 2 - wordW / 2), top: top + iconSize + gap },
+      ])
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+
+    // Xcode chiede 1x/2x/3x: Capacitor usa lo stesso asset per tutti e tre.
+    const suffix = t.name === "dark" ? "-dark" : "";
+    for (const n of ["", "-1", "-2"]) {
+      writeFileSync(join(nativeDir, `splash-2732x2732${suffix}${n}.png`), png);
+    }
+    console.log("✓ splash nativa iOS", t.name);
+  }
+
+  // Contents.json con le due apparenze: iOS sceglie da sé chiaro/scuro.
+  const entry = (scale, file, dark) => ({
+    idiom: "universal",
+    filename: file,
+    scale,
+    ...(dark ? { appearances: [{ appearance: "luminosity", value: "dark" }] } : {}),
+  });
+  writeFileSync(join(nativeDir, "Contents.json"), JSON.stringify({
+    images: [
+      entry("1x", "splash-2732x2732-2.png", false),
+      entry("1x", "splash-2732x2732-dark-2.png", true),
+      entry("2x", "splash-2732x2732-1.png", false),
+      entry("2x", "splash-2732x2732-dark-1.png", true),
+      entry("3x", "splash-2732x2732.png", false),
+      entry("3x", "splash-2732x2732-dark.png", true),
+    ],
+    info: { version: 1, author: "xcode" },
+  }, null, 2) + "\n");
+  console.log("✓ Splash.imageset/Contents.json (chiaro + scuro)");
+}

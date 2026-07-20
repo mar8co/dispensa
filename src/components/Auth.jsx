@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { Loader2, Mail, Check } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
+import { authRedirectUrl } from "../lib/native.js";
 import PrivacySheet from "./PrivacySheet.jsx";
 import FaceIdIcon from "./FaceIdIcon.jsx";
 
@@ -42,7 +43,7 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: addr,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: authRedirectUrl() },
       });
       if (error) throw error;
       setSent(true);
@@ -60,7 +61,7 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: authRedirectUrl() },
       });
       if (error) throw error;
       // Successo: parte il redirect, lo spinner resta acceso fino al cambio pagina.
@@ -77,7 +78,7 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "apple",
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: authRedirectUrl() },
       });
       if (error) throw error;
       // Successo: parte il redirect, lo spinner resta acceso fino al cambio pagina.

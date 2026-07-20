@@ -5,11 +5,5 @@
   "ios": {
     "contentInset": "always",
     "backgroundColor": "#f4f1e9"
-  },
-  "plugins": {
-    "SplashScreen": {
-      "launchAutoHide": false,
-      "backgroundColor": "#f4f1e9"
-    }
   }
 }

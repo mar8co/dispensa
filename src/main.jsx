@@ -4,6 +4,7 @@ import App from "./App.jsx";
 import "./index.css";
 import { applyTheme, getTheme } from "./lib/theme.js";
 import { installViewportFix } from "./lib/viewportFix.js";
+import { installNativeAuthBridge } from "./lib/native.js";
 
 // Applica subito il tema scelto (auto/chiaro/scuro) prima del primo render.
 applyTheme(getTheme());
@@ -15,6 +16,11 @@ if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 // Ri-ancoraggio della navbar fixed al ritorno in primo piano (bug iOS PWA:
 // navbar a metà schermo dopo chiudi/riapri l'app).
 installViewportFix();
+
+// Nel guscio nativo il ritorno dal login arriva come deep link (dispensa://auth)
+// e non come navigazione: qui lo intercettiamo e apriamo la sessione. Sul web
+// non fa nulla (ci pensa detectSessionInUrl di supabase-js).
+installNativeAuthBridge();
 
 // Service worker SOLO sul web (PWA installabile e offline shell). Nel guscio
 // nativo Capacitor gli asset sono già locali: un SW che precacha aggiungerebbe

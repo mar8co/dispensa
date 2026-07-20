@@ -24,6 +24,20 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Schema custom per il ritorno dal login (magic link e OAuth): Supabase
+	     rimanda a dispensa://auth e il ponte in src/lib/native.js apre la
+	     sessione. Va aggiunto anche ai Redirect URL consentiti su Supabase. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.mar8co.dispensa</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>dispensa</string>
+			</array>
+		</dict>
+	</array>
 	<!-- Permessi richiesti dalle funzioni esistenti: senza queste stringhe iOS
 	     blocca getUserMedia e l'app viene rifiutata in review. -->
 	<key>NSCameraUsageDescription</key>
