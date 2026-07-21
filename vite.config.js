@@ -4,6 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import { handleClaudeRequest } from "./server/claude.js";
 import { handlePhotoRequest } from "./server/photo.js";
 import { handleDeleteAccount } from "./server/account.js";
+import { handleReceipt, handleAppStoreNotification } from "./server/receipt.js";
 
 // Middleware di sviluppo: in `npm run dev` espone gli endpoint /api/* usando lo
 // stesso core delle serverless function Vercel, così sono testabili in locale.
@@ -43,6 +44,11 @@ export default defineConfig(({ mode }) => {
     GEMINI_API_KEY: e.GEMINI_API_KEY,
     GEMINI_MODEL: e.GEMINI_MODEL,
     PEXELS_API_KEY: e.PEXELS_API_KEY,
+    APPSTORE_KEY_ID: e.APPSTORE_KEY_ID,
+    APPSTORE_ISSUER_ID: e.APPSTORE_ISSUER_ID,
+    APPSTORE_KEY_P8: e.APPSTORE_KEY_P8,
+    APPSTORE_BUNDLE_ID: e.APPSTORE_BUNDLE_ID,
+    APPSTORE_ENVIRONMENT: e.APPSTORE_ENVIRONMENT,
   };
 
   return {
@@ -51,6 +57,8 @@ export default defineConfig(({ mode }) => {
       devApi("/api/claude", handleClaudeRequest, apiEnv),
       devApi("/api/photo", handlePhotoRequest, apiEnv),
       devApi("/api/account", handleDeleteAccount, apiEnv),
+      devApi("/api/receipt", handleReceipt, apiEnv),
+      devApi("/api/appstore-notify", handleAppStoreNotification, apiEnv),
       VitePWA({
         registerType: "autoUpdate",
         // La registrazione del SW NON è più iniettata in automatico: la fa
