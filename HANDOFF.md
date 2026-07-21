@@ -24,16 +24,51 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 
 ---
 
-## Prossimo obiettivo: push scadenze → piano pasti → app nativa + monetizzazione
+## Prossimo obiettivo: STOREKIT + PRIMO BUILD SU TESTFLIGHT (Fase 3)
 
-> **Stato (agg. 2026-07-16): Fase 1 (push scadenze) COMPLETA e verificata** —
-> migration-10 eseguita, secret nel Vault, env Vercel impostate, prima
-> subscription registrata dal telefono dell'utente (confermato in produzione:
-> tabella, i 6 cron job attivi, secret nel Vault, VAPID nel bundle client,
-> endpoint `/api/push` protetto). Le prossime chat ripartono dalla **Fase 2**
-> (piano pasti — anch'essa v1 implementata, vedi sotto: manca solo
-> migration-11 + prova telefono). Le due feature preparano il lancio nativo:
-> le push sono il motore di retention, il piano pasti la feature Pro di punta.
+> **Stato (agg. 2026-07-20): Fasi 1 e 2 complete e in produzione; Fase 3
+> (app nativa iOS + monetizzazione) quasi tutta implementata nel codice.**
+> Restano solo i pezzi che richiedono l'**account Apple Developer**
+> (l'utente sta completando l'iscrizione Individual):
+> **StoreKit 2 + verifica ricevute** → firma + **primo build su TestFlight**
+> → scheda App Store → submission.
+>
+> Riepilogo di ciò che è GIÀ FATTO (dettagli nelle sezioni sotto):
+> - **Fase 1 push scadenze** ✅ completa e verificata in produzione (migration-10,
+>   cron pg_cron, VAPID, endpoint protetto, subscription reale). Copy definitivo
+>   (tono "noi") + cadenza automatica 7/3/1 gg. Su nativo: canale **APNs**.
+> - **Fase 2 piano pasti** ✅ "Piano Alimentare" dentro Ricette (migration-11,
+>   `useMealPlan`/`PlanWeek`), deep-link 18:30 → Piano, porzioni per voce.
+> - **Fase 3 nativa/monetizzazione** — **wrapper Capacitor** (progetto `ios/`,
+>   build verde su CI macOS di GitHub Actions), **push APNs** (migration-12,
+>   `server/apns.js`), **login via deep link** (`dispensa://auth`),
+>   **splash nativa**, **entitlements Premium** (migration-13, `is_pro`),
+>   **paywall** (`PaywallSheet`), **AdMob banner + ATT** (`src/lib/ads.js`).
+>
+> **Migration da eseguire (utente)**: 11, 12, 13 se non ancora fatte
+> (13 dà Premium `comp` a vita agli utenti esistenti; l'utente ha già
+> ripulito righe di sconosciuti). Redirect Supabase: aggiungere
+> `dispensa://auth`. Le due feature (push, piano pasti) preparano il lancio
+> nativo: le push sono il motore di retention, il Piano Alimentare la feature
+> Pro di punta.
+>
+> ### Cosa serve fare nella prossima chat (StoreKit + TestFlight)
+> 1. **StoreKit 2 nel guscio**: prodotti `dispensa.premium.monthly` /
+>    `.yearly` (id già in `src/lib/premium.js`), acquisto reale al posto
+>    dell'errore-placeholder in `purchasePremium()` (Dispensa.jsx). Plugin
+>    consigliato: `@capacitor-community/in-app-purchases` o RevenueCat SDK
+>    (l'utente ha scelto "fatto in casa", quindi StoreKit diretto).
+> 2. **Verifica ricevute server-side**: nuovo `api/receipt.js` → `server/`
+>    che valida con **App Store Server API** (JWT ES256 come `server/apns.js`
+>    — riusare quel pattern) e **scrive** su `entitlements` col service role
+>    (l'unico autorizzato a farlo: la tabella ha solo policy SELECT). Gestire
+>    anche le **App Store Server Notifications V2** (rinnovi, rimborsi,
+>    scadenze) → aggiornano `status`/`expires_at`.
+> 3. **App Store Connect**: creare i due prodotti auto-renewable con prova di
+>    7 giorni, prezzi 1,99 €/mese e 14,99 €/anno.
+> 4. **Firma + TestFlight**: popolare i GitHub Secrets (vedi
+>    `.github/workflows/ios.yml`) e lanciare il workflow **iOS** con
+>    `upload=true`. Env APNs e AdMob su Vercel/plist con i valori reali.
 
 ### Fase 1 — Notifiche push per le scadenze — ✅ COMPLETA E VERIFICATA
 
@@ -583,15 +618,19 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Todo prioritari
 
-1. **Notifiche push scadenze (Fase 1)** — ✅ **completa e verificata** (2026-07-16).
-   Setup manuale fatto (migration, Vault, env Vercel, toggle attivato). Resta
-   solo la conferma finale di un invio reale ricevuto (test manuale col ping
-   SQL o attesa del prossimo slot). Vedi "Prossimo obiettivo → Fase 1".
-2. **Piano pasti settimanale (Fase 2)** — ✅ **v1 implementata (2026-07-14)**.
-   Resta: eseguire `migration-11.sql` e provare sul telefono (vedi "Prossimo
-   obiettivo → Fase 2"). Rifiniture v1.1 elencate lì.
-3. **App nativa + monetizzazione (Fase 3)** — dopo le fasi 1-2: decisioni
-   aperte dedicate nella sezione in cima.
+1. **StoreKit 2 + primo build su TestFlight (Fase 3)** — ⏳ **PROSSIMO
+   OBIETTIVO**, sbloccato ora dall'account Apple Developer. Dettagli operativi
+   in "Prossimo obiettivo" in cima (StoreKit nel guscio, verifica ricevute
+   server-side su `entitlements`, prodotti su App Store Connect, firma +
+   upload via workflow `iOS`).
+2. **Notifiche push scadenze (Fase 1)** — ✅ **completa e verificata** (2026-07-16),
+   in produzione. Su nativo passa ad APNs (migration-12).
+3. **Piano pasti (Fase 2)** — ✅ **implementata**, "Piano Alimentare" dentro
+   Ricette. Resta solo eseguire `migration-11.sql` se non fatta.
+4. **Resto Fase 3 già fatto**: wrapper Capacitor, push APNs, deep link login,
+   splash nativa, entitlements Premium (migration-13), paywall, AdMob.
+   Migration 11/12/13 da eseguire se non ancora fatte; `dispensa://auth` da
+   aggiungere ai Redirect URL Supabase.
 4. **Verificare sul telefono**: (a) **anteprima scontrino in-app** (bottom-sheet,
    niente fotocamera nativa — scelta UX dell'utente) su uno scontrino lungo reale;
    (b) **barcode in raffica** (vassoio, ri-scansione ×2, Fatto (N)) con prodotti

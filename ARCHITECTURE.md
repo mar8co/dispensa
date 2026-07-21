@@ -86,7 +86,11 @@ dispensa/
 │  ├─ lib/
 │  │  ├─ supabase.js        # client Supabase (anon)
 │  │  ├─ db.js              # TUTTE le query (confine data layer)
-│  │  ├─ push.js            # opt-in notifiche push (subscribe/unsubscribe)
+│  │  ├─ push.js            # opt-in notifiche push (web + APNs nel nativo)
+│  │  ├─ api.js             # base URL proxy /api/* (vuota sul web, dominio nel nativo)
+│  │  ├─ native.js          # ponte Capacitor: isNative, deep link login
+│  │  ├─ ads.js             # AdMob banner (solo nativo, solo free) — fase 3
+│  │  ├─ premium.js         # piani/prezzi/id abbonamento — fase 3
 │  │  ├─ claude.js          # client AI/foto (→ /api/*)
 │  │  ├─ pantry.js          # logica pura (quantità, categorie, q.b., ½, match)
 │  │  ├─ pantry.test.js     # 46 test Vitest
@@ -326,6 +330,7 @@ applica `upsert`/`remove` agli stati locali.
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
 | `Auth.jsx` | Login a pagina intera (magic-link, Google, Apple, Face ID/passkey), stile "manifesto": headline "Cosa c'è in dispensa?" con wavy underline tomato su "dispensa" + mensole di emoji-categoria con slot "+" + sottotitolo "La tua cucina, in tasca. Meno sprechi (verde fisso `#43A047`). Zero pensieri". |
 | `SplashIntro.jsx` | **Intro splash** montata in `App.jsx`: riprende la splash nativa iOS (icona + "Dispensa") e disegna la sottolineatura ondulata tomato, poi sfuma nell'app. Animazione su tutte le piattaforme; rispetta `prefers-reduced-motion`. Stili `.splash-*` in `index.css`. |
+| `PaywallSheet.jsx` | **Paywall Premium** (fase 3): due piani affiancati, annuale evidenziato, prezzo barrato = 12 mensilità (Omnibus-safe). Prezzi/id da `lib/premium.js`. Aperto dal tab Piano Alimentare (non-Pro), da Impostazioni, dal deep-link `?view=piano`. |
 | `PushNudge.jsx` | **Soft-ask notifiche** reso da `PantryTab` sotto il banner scadenze (gated `canNudge={!tour.active}`): invita ad attivare le push nel momento contestuale. Si auto-nasconde se non supportate / già attive / già rifiutato (`dispensa-pushnudge-dismissed`). Riusa `enablePush` di `lib/push.js`. |
 | `Toast.jsx` | Toast/undo, posizione adattiva (`raised` su Spesa). |
 | `TourCoach.jsx` | Tutorial guidato (`tour.js`). |
@@ -377,17 +382,21 @@ applica `upsert`/`remove` agli stati locali.
   `useMealPlan` + `PlanWeek` (+ `PlanDaySheet` in RecipesTab). Restano:
   esecuzione migration, prova telefono, deep-link 18:30 → Piano, paywall
   free/Pro (fase 3).
-- **App nativa (iOS, poi Android) + monetizzazione** — **obiettivo
-  strategico (Fase 3)**, dettagli in `HANDOFF.md` → "Prossimo obiettivo"
-  (leggerlo prima di iniziare qualunque lavoro in quella direzione). Nessuna decisione
-  tecnica presa: ipotesi di lavoro è un **wrapper** (es. Capacitor) sul codice
-  React/Vite/Tailwind esistente, alternativa a un rewrite nativo — da
-  confermare con l'utente. Implicherà: nuove tabelle/colonne per gli
-  entitlements degli abbonamenti (RLS da estendere), integrazione
-  IAP/StoreKit (obbligatoria per Apple, niente pagamenti diretti tipo
-  Stripe dentro l'app), eventuale SDK di pubblicità con gestione App
-  Tracking Transparency. **Da non iniziare senza aver allineato le decisioni
-  aperte con l'utente.**
+- **App nativa iOS + monetizzazione** — **Fase 3, quasi tutta implementata
+  (2026-07-20)**, dettagli in `HANDOFF.md` → "Prossimo obiettivo". Scelte:
+  **Capacitor** (progetto `ios/`, build su CI macOS GitHub Actions — l'utente
+  non ha un Mac), abbonamenti **StoreKit 2 fatti in casa**, **AdMob solo
+  banner**. Fatto: wrapper, push APNs (migration-12, `server/apns.js`), login
+  via deep link (`dispensa://auth`, `lib/native.js`), splash nativa,
+  entitlements (migration-13: tabella `entitlements` sola-SELECT + `is_pro`
+  per-nucleo; gate nelle policy DB e nel proxy AI), paywall
+  (`PaywallSheet`+`lib/premium.js`), AdMob+ATT (`lib/ads.js`).
+  **Manca (serve account Apple)**: StoreKit nel guscio (l'acquisto oggi è un
+  errore-placeholder in `purchasePremium()`), verifica ricevute server-side
+  (nuovo `api/receipt.js` che valida con App Store Server API e scrive su
+  `entitlements` col service role) + App Store Server Notifications, prodotti
+  su App Store Connect, firma + TestFlight. IAP obbligatorio (niente Stripe
+  in-app). **Cambusa** è un repo separato (rewrite RN), non questo.
 - **Multi-utenza reale**: **fatta** — dispensa familiare con `households` +
   `household_members` + RLS `is_household_member`, inviti, username ed espulsione
   (migration-6/7/8/9). Estensioni possibili: ruoli più granulari, cronologia "chi

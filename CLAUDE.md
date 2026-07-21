@@ -164,18 +164,20 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
   portabilità: ragiona sui prompt, non sul provider.
 - L'utente lavora da **iPhone**: la prova finale è sul telefono, non nel preview.
 - **Roadmap approvata (2026-07-04), in 3 fasi** — sezione dedicata in
-  `HANDOFF.md` → "Prossimo obiettivo", da leggere prima di iniziare:
-  **Fase 1** notifiche push scadenze — ✅ **implementata (2026-07-05)**:
-  tabella `push_subscriptions` (migration-10), proxy `api/push.js`, cron
-  **pg_cron + pg_net** (non Vercel Cron) + `web-push`, VAPID/CRON in env;
-  restano i passi manuali (migration, Vault, env Vercel) e la prova telefono;
-  **Fase 2** piano pasti settimanale — ✅ **v1 implementata (2026-07-14)**:
-  agenda dentro Ricette ("Idee | Piano"), tabella `meal_plan` (migration-11
-  manuale, da eseguire), riuso ricettario/AI/CookModal — futura feature Pro;
-  **Fase 3** app nativa iOS + monetizzazione (pubblicità + abbonamenti).
-  Le due migration sono **autorizzate in linea di principio** (eccezione
-  esplicita alla regola 3 sul data layer), ma lo **schema concreto va proposto
-  all'utente prima** di scrivere le migration (che restano SQL manuali).
+  `HANDOFF.md` → "Prossimo obiettivo", da leggere prima di iniziare.
+  **Fase 1** push scadenze ✅ e **Fase 2** Piano Alimentare ✅ complete e
+  in produzione. **Fase 3** app nativa iOS + monetizzazione: **quasi tutta
+  implementata (2026-07-20)** — wrapper Capacitor (progetto `ios/`, build
+  verde su CI macOS GitHub Actions), push APNs (migration-12), deep link
+  login (`dispensa://auth`), splash nativa, entitlements Premium
+  (migration-13, `is_pro`, Premium **per-nucleo**), paywall (`PaywallSheet`),
+  AdMob banner + ATT. **Prossimo obiettivo = StoreKit 2 + verifica ricevute
+  + primo build su TestFlight** (sbloccato dall'account Apple Developer).
+  Migration 11/12/13 sono SQL manuali (eccezione esplicita alla regola 3);
+  lo **schema concreto va proposto all'utente prima**.
   Le scelte UX (mockup con opzioni) precedono sempre il codice.
+  Free vs Premium: free = dispensa+spesa+ricette con pubblicità e **5
+  generazioni AI/giorno**; **Premium (1,99€/mese · 14,99€/anno, 7gg prova)
+  = Piano Alimentare + niente pubblicità + AI illimitata + invitare membri**.
   **Non confondere con "Cambusa"**, repo separato (competitor
   nativo RN/Expo di Dispensa): questa iniziativa converte *questo* codice.
