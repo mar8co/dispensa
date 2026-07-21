@@ -192,8 +192,8 @@ come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 > **Prerequisiti dell'utente**: iscrizione Apple Developer Program
 > (99 €/anno, in corso il 2026-07-20) e account AdMob. **Ordine dei lavori
 > tecnici**: wrapper Capacitor ✅ → push APNs ✅ → **entitlements
-> (migration-13) ✅** → paywall UI → StoreKit 2 + verifica ricevute →
-> AdMob + ATT → TestFlight → store listing → submission.
+> (migration-13) ✅** → **paywall UI ✅** → **AdMob + ATT ✅** →
+> StoreKit 2 + verifica ricevute → TestFlight → store listing → submission.
 >
 > **ENTITLEMENTS (migration-13, da eseguire)**: tabella `entitlements`
 > (source apple|comp, status none|active|grace|expired|refunded, expires_at,
@@ -210,6 +210,22 @@ come si segna "cucinato" dal piano, cosa mostrare dei giorni passati.
 > (`source='comp'`): l'autore e la famiglia non perdono nulla.
 > `fetchIsPro()` in db.js serve solo alla UI e in caso di errore assume
 > `true` (il gate vero è a valle).
+>
+> **PAYWALL (`PaywallSheet.jsx` + `src/lib/premium.js`)**: mockup "due piani
+> affiancati". Prezzi/id in un unico file (`premium.js`); gli `id` prodotto
+> devono combaciare con App Store Connect. Prezzo barrato = 23,88 € (12
+> mensilità), NON un "prima" fittizio — Omnibus + review Apple. Punti
+> d'accesso: tocco sul tab Piano Alimentare da non-Pro (lucchetto sul tab),
+> voce in Impostazioni, deep-link `?view=piano`. L'acquisto solleva un errore
+> esplicito finché StoreKit non è collegato (niente finti pagamenti).
+>
+> **ADMOB (`src/lib/ads.js`)**: banner adattivo in fondo, SOLO nativo, SOLO
+> Dispensa/Spesa, SOLO free (nascosto per i Pro e sul web — import dinamico
+> del plugin dietro `isNative()`). ATT chiesto alla prima comparsa del
+> banner. In `Info.plist`: `GADApplicationIdentifier` (senza → crash) e
+> `NSUserTrackingUsageDescription`. **ID di TEST Google** finché non c'è
+> l'account: con l'account bastano le env `VITE_ADMOB_BANNER_IOS` +
+> `VITE_ADMOB_PROD=1` e va sostituito il GADApplicationIdentifier nel plist.
 >
 > **Checklist tecnica del wrapper** — ✅ **FATTI (step 1, 2026-07-20)**:
 > scaffold `ios/` (Capacitor 8 usa **SPM, non CocoaPods** → `cap add ios`
