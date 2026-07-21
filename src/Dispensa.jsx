@@ -24,6 +24,7 @@ import {
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
 import { showBanner, hideBanner } from "./lib/ads.js";
+import { storeKitAvailable, purchaseProduct, syncReceipt, onTransactionUpdate } from "./lib/storekit.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
 import { sortedNames } from "./lib/history.js";
@@ -462,6 +463,25 @@ export default function Dispensa({ session }) {
     else hideBanner();
   }, [isPro, view]);
 
+  // Transazioni che arrivano FUORI da un acquisto esplicito (rinnovi mentre
+  // l'app è aperta, Ask-to-Buy approvato, acquisto su un altro dispositivo):
+  // le mandiamo al server e rileggiamo lo stato Premium. Solo guscio nativo.
+  useEffect(() => {
+    if (!storeKitAvailable()) return undefined;
+    let removed = false;
+    let handle;
+    onTransactionUpdate(async (tx) => {
+      try {
+        await syncReceipt(tx);
+        setIsPro(await fetchIsPro());
+      } catch (e) { console.error("Sync transazione fallita:", e); }
+    }).then((h) => {
+      handle = h;
+      if (removed) h.remove(); // smontato prima che la promise risolvesse
+    });
+    return () => { removed = true; handle?.remove?.(); };
+  }, []);
+
   // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
   useTimersTicker((t) => {
     // Il toast resta finché non tocchi "Stop", che zittisce l'allarme.
@@ -896,10 +916,30 @@ export default function Dispensa({ session }) {
     setPaywall({ reason });
   }
 
-  // Acquisto: StoreKit non è ancora collegato (serve l'account Apple e il
-  // guscio nativo). Meglio dirlo che simulare un pagamento che non avviene.
-  async function purchasePremium() {
-    throw new Error("Gli abbonamenti arriveranno con l'app su App Store. Ancora un po' di pazienza!");
+  // Acquisto reale via StoreKit 2 (solo nell'app nativa). Il pagamento passa da
+  // Apple; la transazione firmata va a /api/receipt, che verifica con Apple e
+  // scrive l'entitlement col service role. Poi rileggiamo lo stato Premium: la
+  // UI non se lo decide da sola. Sul web (paywall visibile per provare la UI)
+  // diciamo chiaramente che l'acquisto si fa dall'app.
+  async function purchasePremium(productId) {
+    if (!storeKitAvailable()) {
+      throw new Error("Gli abbonamenti si attivano dall'app Dispensa su App Store.");
+    }
+    const res = await purchaseProduct(productId, session.user.id);
+    if (res?.status === "cancelled") return; // annullato dall'utente: nessun errore
+    if (res?.status === "pending") {
+      // Ask-to-Buy / autorizzazione: l'esito arriverà dal listener transactionUpdated.
+      showToast("Acquisto in attesa di approvazione. Ti avviseremo.");
+      return;
+    }
+    if (res?.status !== "purchased") {
+      throw new Error("Acquisto non completato. Riprova.");
+    }
+    await syncReceipt(res); // verifica lato server + scrittura entitlement
+    const pro = await fetchIsPro();
+    setIsPro(pro);
+    if (!pro) throw new Error("Pagamento ricevuto: attivazione in corso, riprova tra poco.");
+    showToast("Benvenuto in Premium! 🎉");
   }
 
   // --- "Ho cucinato questo" ---
