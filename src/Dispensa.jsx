@@ -23,6 +23,7 @@ import {
   ensurePersonalHousehold, setActiveHousehold, fetchHouseholds, fetchMembers,
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
+import { showBanner, hideBanner } from "./lib/ads.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
 import { sortedNames } from "./lib/history.js";
@@ -451,6 +452,15 @@ export default function Dispensa({ session }) {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
+
+  // Banner pubblicitario (solo nativo, solo piano gratuito): visibile su
+  // Dispensa e Spesa, nascosto su Ricette/Piano e per i Premium. Il layer
+  // ads.js è inerte sul web, quindi qui non serve alcun guard aggiuntivo.
+  useEffect(() => {
+    const wantsAd = !isPro && (view === "dispensa" || view === "spesa");
+    if (wantsAd) showBanner();
+    else hideBanner();
+  }, [isPro, view]);
 
   // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
   useTimersTicker((t) => {

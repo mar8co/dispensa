@@ -24,6 +24,15 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- AdMob: id APPLICAZIONE (non dell'unità pubblicitaria). Ora è quello di
+	     TEST di Google; va sostituito col reale quando c'è l'account AdMob.
+	     Senza questa chiave l'SDK va in crash all'avvio. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<!-- App Tracking Transparency: testo del prompt di sistema. Obbligatorio
+	     se si usa l'IDFA per la pubblicità. -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Usiamo questo permesso per mostrarti pubblicità più pertinente. Puoi rifiutare: gli annunci resteranno, solo meno mirati.</string>
 	<!-- Schema custom per il ritorno dal login (magic link e OAuth): Supabase
 	     rimanda a dispensa://auth e il ponte in src/lib/native.js apre la
 	     sessione. Va aggiunto anche ai Redirect URL consentiti su Supabase. -->
