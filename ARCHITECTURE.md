@@ -43,16 +43,21 @@ dispensa/
 │  ├─ claude.js             #   POST /api/claude  → server/claude.js
 │  ├─ photo.js              #   POST /api/photo   → server/photo.js
 │  ├─ account.js            #   POST /api/account → server/account.js
-│  └─ push.js              #   POST /api/push    → server/push.js (solo cron)
+│  ├─ push.js              #   POST /api/push    → server/push.js (solo cron)
+│  ├─ receipt.js           #   POST /api/receipt → server/receipt.js (verifica IAP)
+│  └─ appstore-notify.js   #   POST /api/appstore-notify → ASSN V2 (Apple → noi)
 ├─ server/                  # Core dei proxy (framework-agnostic, condiviso)
 │  ├─ claude.js             #   proxy AI (Gemini) + auth + rate-limit
 │  ├─ photo.js              #   proxy foto (Pexels) + auth
 │  ├─ account.js            #   cancellazione account (service role)
 │  ├─ push.js              #   cron notifiche scadenze: sceglie Web Push o APNs per riga
-│  └─ apns.js              #   invio APNs (HTTP/2 + JWT ES256, zero dipendenze)
+│  ├─ apns.js              #   invio APNs (HTTP/2 + JWT ES256, zero dipendenze)
+│  ├─ appstore.js          #   App Store Server API: JWT ES256, decode JWS, stato sub
+│  └─ receipt.js           #   verifica ricevute IAP + notifiche V2 → entitlements
 ├─ capacitor.config.json    # guscio nativo iOS (Fase 3): appId, webDir=dist
 ├─ ios/                     # progetto Xcode generato da Capacitor (SPM, non CocoaPods)
-│  └─ App/App/Info.plist    #   permessi camera/foto/microfono + solo verticale
+│  ├─ App/App/Info.plist    #   permessi camera/foto/microfono + solo verticale
+│  └─ App/App/StoreKitPlugin.swift  # plugin StoreKit 2 locale (IAP, fase 3)
 ├─ scripts/
 │  ├─ generate-icons.mjs    # genera i PNG PWA da icon.svg (sharp)
 │  ├─ generate-splash.mjs   # genera le splash iOS (public/splash/*): icona + wordmark (sharp)
@@ -91,6 +96,7 @@ dispensa/
 │  │  ├─ native.js          # ponte Capacitor: isNative, deep link login
 │  │  ├─ ads.js             # AdMob banner (solo nativo, solo free) — fase 3
 │  │  ├─ premium.js         # piani/prezzi/id abbonamento — fase 3
+│  │  ├─ storekit.js        # ponte JS al plugin StoreKit 2 + syncReceipt — fase 3
 │  │  ├─ claude.js          # client AI/foto (→ /api/*)
 │  │  ├─ pantry.js          # logica pura (quantità, categorie, q.b., ½, match)
 │  │  ├─ pantry.test.js     # 46 test Vitest
@@ -192,6 +198,8 @@ il proxy fa `supabase.auth.getUser(token)` e rifiuta con 401 se non valido.
 | `POST /api/photo` | `server/photo.js` | Pexels | Riceve una lista di query, restituisce un URL foto per ciascuna. Mai bloccante per il client (`fetchPhotos` torna `[]` in errore). |
 | `POST /api/account` | `server/account.js` | Supabase (service role) | Cancellazione account utente. |
 | `POST /api/push` | `server/push.js` (+ `server/apns.js`) | Supabase (service role) + Web Push + APNs | **Solo cron** (pg_cron): protetto da `CRON_SECRET`, non da token utente. Ricava lo slot (pranzo/cena/sera) dall'ora di Roma, legge scadenze e subscription e invia sul canale giusto per riga: `web-push` per la PWA, **APNs** (HTTP/2 + JWT ES256, senza dipendenze) per l'app iOS. Pulisce le iscrizioni morte (404/410 · Unregistered/BadDeviceToken). |
+| `POST /api/receipt` | `server/receipt.js` (+ `server/appstore.js`) | Supabase (service role) + App Store Server API | Verifica IAP **su richiesta del client** (token utente): interroga Apple (JWT ES256), controlla che l'`appAccountToken` combaci con l'uid (anti-furto), scrive `entitlements` col service role. |
+| `POST /api/appstore-notify` | `server/receipt.js` | App Store Server API | **App Store Server Notifications V2** (Apple → noi): rinnovi/rimborsi/scadenze. Non crede al contenuto della notifica: la usa per sapere quale sub ricontrollare, poi riprende la verità dall'API. Mappa l'utente via `appAccountToken` o riga esistente. Risponde 200 anche quando ignora (niente retry infiniti). |
 
 Altre integrazioni **dal client** (senza proxy, perché pubbliche):
 
@@ -210,7 +218,11 @@ Variabili d'ambiente (server, su Vercel / `.env.local` per il dev):
 (la VAPID pubblica, per iscriversi alle push). **App nativa (fase 3)**:
 `VITE_API_BASE` (dominio dei proxy nella build Capacitor) e, per le push
 iOS, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_BUNDLE_ID`,
-`APNS_PRODUCTION`.
+`APNS_PRODUCTION`. **Abbonamenti (IAP, fase 3)**: `APPSTORE_KEY_ID`,
+`APPSTORE_ISSUER_ID`, `APPSTORE_KEY_P8` (chiave App Store Server API / In-App
+Purchase), `APPSTORE_BUNDLE_ID` (opz., default `com.mar8co.dispensa`),
+`APPSTORE_ENVIRONMENT` (opz.: `sandbox` per provare prima la sandbox in
+TestFlight).
 
 ---
 
@@ -391,12 +403,15 @@ applica `upsert`/`remove` agli stati locali.
   entitlements (migration-13: tabella `entitlements` sola-SELECT + `is_pro`
   per-nucleo; gate nelle policy DB e nel proxy AI), paywall
   (`PaywallSheet`+`lib/premium.js`), AdMob+ATT (`lib/ads.js`).
-  **Manca (serve account Apple)**: StoreKit nel guscio (l'acquisto oggi è un
-  errore-placeholder in `purchasePremium()`), verifica ricevute server-side
-  (nuovo `api/receipt.js` che valida con App Store Server API e scrive su
-  `entitlements` col service role) + App Store Server Notifications, prodotti
-  su App Store Connect, firma + TestFlight. IAP obbligatorio (niente Stripe
-  in-app). **Cambusa** è un repo separato (rewrite RN), non questo.
+  **StoreKit 2 + verifica ricevute — FATTI (codice, 2026-07-21)**: plugin
+  Swift locale (`ios/App/App/StoreKitPlugin.swift`) + ponte `lib/storekit.js`;
+  `purchasePremium()` compra davvero e chiama `/api/receipt`, che valida con
+  l'App Store Server API (`server/appstore.js`) e scrive `entitlements` col
+  service role; `/api/appstore-notify` gestisce le notifiche V2. **Manca (azioni
+  Apple)**: creare i 2 prodotti su App Store Connect, la chiave App Store Server
+  API + env `APPSTORE_*` su Vercel, l'URL notifiche, poi firma + TestFlight.
+  IAP obbligatorio (niente Stripe in-app). **Cambusa** è un repo separato
+  (rewrite RN), non questo.
 - **Multi-utenza reale**: **fatta** — dispensa familiare con `households` +
   `household_members` + RLS `is_household_member`, inviti, username ed espulsione
   (migration-6/7/8/9). Estensioni possibili: ruoli più granulari, cronologia "chi

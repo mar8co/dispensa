@@ -26,12 +26,24 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 
 ## Prossimo obiettivo: STOREKIT + PRIMO BUILD SU TESTFLIGHT (Fase 3)
 
-> **Stato (agg. 2026-07-20): Fasi 1 e 2 complete e in produzione; Fase 3
-> (app nativa iOS + monetizzazione) quasi tutta implementata nel codice.**
-> Restano solo i pezzi che richiedono l'**account Apple Developer**
-> (l'utente sta completando l'iscrizione Individual):
-> **StoreKit 2 + verifica ricevute** → firma + **primo build su TestFlight**
-> → scheda App Store → submission.
+> **Stato (agg. 2026-07-21): Fasi 1 e 2 complete e in produzione; Fase 3
+> (app nativa iOS + monetizzazione) implementata nel codice, StoreKit 2 +
+> verifica ricevute INCLUSI.** L'account Apple Developer è attivo (Individual).
+> Restano solo **azioni sui portali Apple/Vercel** + il primo upload:
+> creare i 2 prodotti su App Store Connect, la chiave App Store Server API con
+> le env `APPSTORE_*` su Vercel, l'URL notifiche V2 → firma + **primo build su
+> TestFlight** → scheda App Store → submission.
+>
+> **StoreKit 2 + verifica ricevute — FATTI nel codice (2026-07-21)**:
+> - Plugin Swift locale `ios/App/App/StoreKitPlugin.swift` (StoreKit 2 diretto,
+>   "fatto in casa" come `server/apns.js`): `getProducts`/`purchase`/`restore` +
+>   evento `transactionUpdated`. L'uid Supabase è legato alla transazione come
+>   `appAccountToken` (anti-furto di ricevuta). Registrato al target via
+>   `project.pbxproj` (edit manuale, niente Mac). Ponte JS `src/lib/storekit.js`.
+> - `purchasePremium()` in `Dispensa.jsx` compra davvero → `/api/receipt`.
+> - `server/appstore.js` + `server/receipt.js`: verifica con App Store Server
+>   API (JWT ES256), upsert `entitlements` col service role; `/api/appstore-notify`
+>   gestisce le notifiche V2 (rinnovi/rimborsi/scadenze). Nessuna migration nuova.
 >
 > Riepilogo di ciò che è GIÀ FATTO (dettagli nelle sezioni sotto):
 > - **Fase 1 push scadenze** ✅ completa e verificata in produzione (migration-10,
@@ -52,23 +64,29 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > nativo: le push sono il motore di retention, il Piano Alimentare la feature
 > Pro di punta.
 >
-> ### Cosa serve fare nella prossima chat (StoreKit + TestFlight)
-> 1. **StoreKit 2 nel guscio**: prodotti `dispensa.premium.monthly` /
->    `.yearly` (id già in `src/lib/premium.js`), acquisto reale al posto
->    dell'errore-placeholder in `purchasePremium()` (Dispensa.jsx). Plugin
->    consigliato: `@capacitor-community/in-app-purchases` o RevenueCat SDK
->    (l'utente ha scelto "fatto in casa", quindi StoreKit diretto).
-> 2. **Verifica ricevute server-side**: nuovo `api/receipt.js` → `server/`
->    che valida con **App Store Server API** (JWT ES256 come `server/apns.js`
->    — riusare quel pattern) e **scrive** su `entitlements` col service role
->    (l'unico autorizzato a farlo: la tabella ha solo policy SELECT). Gestire
->    anche le **App Store Server Notifications V2** (rinnovi, rimborsi,
->    scadenze) → aggiornano `status`/`expires_at`.
-> 3. **App Store Connect**: creare i due prodotti auto-renewable con prova di
->    7 giorni, prezzi 1,99 €/mese e 14,99 €/anno.
-> 4. **Firma + TestFlight**: popolare i GitHub Secrets (vedi
+> ### Cosa resta da fare (azioni Apple/Vercel + TestFlight)
+> 1. ✅ **StoreKit 2 nel guscio** — FATTO (plugin Swift + `purchasePremium`).
+> 2. ✅ **Verifica ricevute server-side + notifiche V2** — FATTO
+>    (`server/appstore.js`, `server/receipt.js`, `api/receipt.js`,
+>    `api/appstore-notify.js`).
+> 3. ⏳ **App Store Connect** (utente): creare i due prodotti auto-renewable
+>    **con questi id esatti** (devono combaciare con `src/lib/premium.js`):
+>    `dispensa.premium.monthly` (1,99 €/mese) e `dispensa.premium.yearly`
+>    (14,99 €/anno), entrambi nello **stesso gruppo di abbonamento**, con
+>    **offerta introduttiva "prova gratuita 7 giorni"**. Poi:
+>    - Generare una chiave **In-App Purchase** (Users and Access → Integrations
+>      → In-App Purchase → chiave .p8): dà `APPSTORE_KEY_ID` e `APPSTORE_ISSUER_ID`;
+>      il .p8 va in `APPSTORE_KEY_P8`.
+>    - Impostare l'**URL notifiche V2** (Sandbox e Production) su
+>      `https://la-dispensa-omega.vercel.app/api/appstore-notify`.
+>    - Env su **Vercel**: `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`,
+>      `APPSTORE_KEY_P8`, `APPSTORE_BUNDLE_ID=com.mar8co.dispensa`,
+>      `APPSTORE_ENVIRONMENT=sandbox` (finché si testa in TestFlight).
+> 4. ⏳ **Firma + TestFlight** (utente): generare CSR/certificato/provisioning da
+>    Windows con `openssl`, popolare i GitHub Secrets (vedi
 >    `.github/workflows/ios.yml`) e lanciare il workflow **iOS** con
->    `upload=true`. Env APNs e AdMob su Vercel/plist con i valori reali.
+>    `upload=true`. Serve anche la capability **In-App Purchase** sull'App ID.
+>    Env APNs e AdMob su Vercel/plist con i valori reali.
 
 ### Fase 1 — Notifiche push per le scadenze — ✅ COMPLETA E VERIFICATA
 
@@ -618,11 +636,11 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 ## Todo prioritari
 
-1. **StoreKit 2 + primo build su TestFlight (Fase 3)** — ⏳ **PROSSIMO
-   OBIETTIVO**, sbloccato ora dall'account Apple Developer. Dettagli operativi
-   in "Prossimo obiettivo" in cima (StoreKit nel guscio, verifica ricevute
-   server-side su `entitlements`, prodotti su App Store Connect, firma +
-   upload via workflow `iOS`).
+1. **Primo build su TestFlight (Fase 3)** — ⏳ **PROSSIMO OBIETTIVO**.
+   StoreKit 2 + verifica ricevute sono **fatti nel codice (2026-07-21)**;
+   restano azioni su App Store Connect (2 prodotti + chiave App Store Server
+   API + URL notifiche V2), env `APPSTORE_*` su Vercel, e firma + upload via
+   workflow `iOS`. Dettagli in "Prossimo obiettivo" in cima.
 2. **Notifiche push scadenze (Fase 1)** — ✅ **completa e verificata** (2026-07-16),
    in produzione. Su nativo passa ad APNs (migration-12).
 3. **Piano pasti (Fase 2)** — ✅ **implementata**, "Piano Alimentare" dentro
