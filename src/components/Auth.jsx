@@ -1,13 +1,15 @@
 // Schermata di accesso a pagina intera: 3 provider rapidi (Apple, Google,
-// Face ID/passkey) in alto, poi accesso via email con link magico. Stile
-// coerente con l'app (palette cream/paper/ink/tomato) e con il tema attivo
-// (chiaro/scuro): niente card centrata, il contenuto riempie lo schermo.
+// Face ID/passkey) in alto, poi accesso via email con link magico. Veste
+// manifesto: arancio del marchio (lo imposta App.jsx), titolo enorme, i due
+// barattoli, pillole bianche per i provider, campo con la sola riga sotto.
 import { useState } from "react";
 import { Loader2, Mail, Check } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
 import { authRedirectUrl } from "../lib/native.js";
 import PrivacySheet from "./PrivacySheet.jsx";
 import FaceIdIcon from "./FaceIdIcon.jsx";
+import Barattoli from "./Barattoli.jsx";
+import { PAGE_COLOR } from "../lib/colors.js";
 
 // WebAuthn/passkey disponibile solo su contesti sicuri con l'API credenziali
 // (iPhone Safari/PWA la supporta). Se manca, nascondiamo il pulsante Face ID.
@@ -109,33 +111,22 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex min-h-[100svh] flex-col bg-cream px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]">
-      {/* Header "manifesto": la domanda del brand + due mensole di
-          emoji-categoria (le stesse di CAT_ICON) con uno slot "+" tratteggiato
-          — il posto che aspetta i prodotti di chi entra. */}
-      <div className="mx-auto w-full max-w-sm pt-2">
-        <h1 className="font-display text-[32px] font-extrabold leading-tight tracking-tight text-ink">
+    <div className="flex min-h-[100svh] flex-col bg-sfondo px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+2rem)]">
+      {/* Testata: la domanda del brand, enorme, con la sottolineatura ondulata
+          (la stessa che disegna l'intro) e i due barattoli. */}
+      <div className="mx-auto w-full max-w-sm">
+        <Barattoli size={92} fill={PAGE_COLOR.accesso} className="-ml-1 mb-3 text-ink" />
+        <h1 className="gigante">
           Cosa c&rsquo;è in{" "}
-          <span className="underline decoration-tomato decoration-wavy decoration-[2.5px] underline-offset-[6px]">dispensa</span>?
+          <span className="underline decoration-ink decoration-wavy decoration-[3px] underline-offset-[10px] [text-decoration-skip-ink:none]">dispensa</span>?
         </h1>
 
-        <div className="mt-7" aria-hidden="true">
-          <div className="flex items-end justify-around text-2xl">
-            <span>🥬</span><span>🍎</span><span>🥩</span><span>🐟</span>
-          </div>
-          <div className="mt-1.5 h-1 rounded-full bg-stone-300" />
-          <div className="mt-5 flex items-end justify-around text-2xl">
-            <span>🧀</span><span>🍞</span><span>🥫</span>
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border-[1.5px] border-dashed border-tomato text-[17px] font-bold leading-none text-tomato">+</span>
-          </div>
-          <div className="mt-1.5 h-1 rounded-full bg-stone-300" />
-        </div>
-
-        {/* Sottotitolo: la promessa. "Meno sprechi" in verde brand fisso
-            (#43A047, non tematizzato: l'unico accento fuori dalla palette
-            tomato/ink). */}
-        <p className="mt-5 text-sm leading-relaxed text-stone-500">
-          La tua cucina, in tasca. <span className="font-semibold text-[#43A047]">Meno sprechi.</span> Zero pensieri.
+        {/* Sottotitolo: la promessa. "Meno sprechi" su pillola verde (il verde
+            del brand: sull'arancio un testo verde non si leggerebbe). */}
+        <p className="mt-6 text-[1.05rem] font-semibold leading-relaxed text-ink">
+          La tua cucina, in tasca.{" "}
+          <span className="whitespace-nowrap rounded-full bg-verde px-2 py-0.5 font-extrabold">Meno sprechi.</span>{" "}
+          Zero pensieri.
         </p>
       </div>
 
@@ -144,17 +135,17 @@ export default function Auth() {
         {sent ? (
           // Conferma link email inviato
           <div className="flex flex-col items-center gap-2 py-2 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tomato/10">
-              <Check className="h-6 w-6 text-tomato" />
+            <div className="tondo h-12 w-12 bg-ink text-white">
+              <Check className="h-6 w-6" />
             </div>
-            <p className="text-sm font-semibold text-ink">Controlla la tua email</p>
-            <p className="text-sm text-stone-500">
-              Ti ho inviato un link di accesso a <span className="font-semibold text-ink">{email}</span>.
+            <p className="mt-1 text-[1.3rem] font-extrabold tracking-[-0.03em] text-ink">Controlla la tua email</p>
+            <p className="text-[0.95rem] font-medium text-ink/75">
+              Ti ho inviato un link di accesso a <span className="font-bold text-ink">{email}</span>.
               Aprilo da questo dispositivo per entrare.
             </p>
             <button
               onClick={() => { setSent(false); setEmail(""); }}
-              className="mt-2 text-xs text-stone-500 transition hover:text-ink"
+              className="link mt-2 min-h-[36px] text-[0.9rem] text-ink"
             >
               Usa un'altra email
             </button>
@@ -162,7 +153,7 @@ export default function Auth() {
         ) : (
           // Schermata principale: provider rapidi + OPPURE + email
           <>
-            <div className={`grid gap-2.5 ${showPasskey ? "grid-cols-3" : "grid-cols-2"}`}>
+            <div className={`grid gap-2 ${showPasskey ? "grid-cols-3" : "grid-cols-2"}`}>
               <SocialButton label="Continua con Apple" onClick={signInApple} busy={oauthBusy === "apple"}>
                 <AppleIcon />
               </SocialButton>
@@ -176,10 +167,10 @@ export default function Auth() {
               )}
             </div>
             {/* Errore dei provider: adiacente ai pulsanti, non in fondo pagina */}
-            {provErr && <p className="mt-3 text-center text-xs font-semibold text-tomato">{provErr}</p>}
+            {provErr && <p className="mt-3 text-center text-[0.9rem] font-bold text-ink">{provErr}</p>}
 
-            <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-stone-500">
-              <div className="h-px flex-1 bg-hair" /> OPPURE <div className="h-px flex-1 bg-hair" />
+            <div className="micro my-5 flex items-center gap-3 text-ink/70">
+              <div className="h-px flex-1 bg-ink/30" /> Oppure <div className="h-px flex-1 bg-ink/30" />
             </div>
 
             <form onSubmit={sendMagicLink}>
@@ -192,19 +183,15 @@ export default function Auth() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="latua@mail.it"
                 aria-label="Email"
-                className="w-full rounded-xl border border-hair bg-paper px-3.5 py-3 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15"
+                className="campo testo-grande text-[1.1rem] text-ink"
               />
-              <button
-                type="submit"
-                disabled={sending}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-              >
+              <button type="submit" disabled={sending} className="bottone mt-4 w-full">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                 Invia il link di accesso
               </button>
             </form>
 
-            {err && <p className="mt-3 text-center text-xs font-semibold text-tomato">{err}</p>}
+            {err && <p className="mt-3 text-center text-[0.9rem] font-bold text-ink">{err}</p>}
           </>
         )}
       </div>
@@ -213,7 +200,7 @@ export default function Auth() {
       <div className="mx-auto mt-auto w-full max-w-sm pt-8 text-center">
         <button
           onClick={() => setPrivacyOpen(true)}
-          className="text-[11px] text-stone-500 transition hover:text-ink hover:underline"
+          className="min-h-[36px] text-[0.8rem] font-semibold text-ink/70 underline underline-offset-2"
         >
           Privacy Policy
         </button>
@@ -233,9 +220,9 @@ function SocialButton({ onClick, label, children, busy = false }) {
       disabled={busy}
       aria-label={label}
       title={label}
-      className="flex h-12 items-center justify-center rounded-2xl border border-hair bg-paper transition hover:bg-stone-50 active:scale-[0.98] disabled:opacity-60"
+      className="flex h-[52px] items-center justify-center rounded-full border-[1.5px] border-ink bg-white transition active:scale-[0.97] disabled:opacity-60"
     >
-      {busy ? <Loader2 className="h-[22px] w-[22px] animate-spin text-stone-400" /> : children}
+      {busy ? <Loader2 className="h-[22px] w-[22px] animate-spin text-ink/50" /> : children}
     </button>
   );
 }

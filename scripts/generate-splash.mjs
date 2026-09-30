@@ -1,24 +1,25 @@
 // Genera le splash screen iOS (apple-touch-startup-image) da public/icon.svg.
 // Uso: node scripts/generate-splash.mjs
 //
-// Layout "concept 4": icona + wordmark "Dispensa" (font Hanken Grotesk
-// ExtraBold, lo stesso dell'app, bundlato in scripts/assets). La sottolineatura
-// ondulata NON è nell'immagine statica: la disegna l'intro in-app
-// (src/components/SplashIntro.jsx), così la splash nativa iOS è esattamente il
-// primo fotogramma dell'animazione e il passaggio è senza stacco.
+// Veste manifesto: fondo arancio del marchio, i due barattoli (l'icona: il suo
+// quadrato arancio sparisce sul fondo uguale) e la scritta "Dispensa" in Inter
+// Tight 800. La scritta è un'immagine già pronta (scripts/assets/
+// wordmark-dispensa.png, disegnata una volta con il carattere dell'app): così
+// qui non serve alcun file del carattere. La sottolineatura ondulata NON è
+// nell'immagine statica: la disegna l'intro in-app (SplashIntro.jsx), così la
+// splash nativa è esattamente il primo fotogramma dell'animazione.
 //
 // Perché su iOS serve un'immagine per risoluzione fisica di device (la PWA non
-// deriva la splash dal manifest): copriamo i principali iPhone in PORTRAIT,
-// variante chiara (#f4f1e9) e scura (#121211) via prefers-color-scheme.
-// I nomi file restano invariati: i <link> in index.html non cambiano.
+// deriva la splash dal manifest): copriamo i principali iPhone in PORTRAIT.
+// Un solo tema (chiaro): niente più varianti scure.
 import sharp from "sharp";
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const svg = readFileSync(join(root, "public", "icon.svg"));
-const fontfile = join(root, "scripts", "assets", "HankenGrotesk-ExtraBold.ttf");
+const wordmark = readFileSync(join(root, "scripts", "assets", "wordmark-dispensa.png"));
 const outDir = join(root, "public", "splash");
 mkdirSync(outDir, { recursive: true });
 
@@ -37,53 +38,40 @@ const DEVICES = [
   { w: 440, h: 956, dpr: 3, note: "iPhone 16 Pro Max" },
 ];
 
-// Palette di brand (allineata a --cream in index.css e a theme-color).
-const THEMES = [
-  { name: "light", bg: { r: 244, g: 241, b: 233, alpha: 1 }, ink: "#0a0a0a" },
-  { name: "dark", bg: { r: 18, g: 18, b: 17, alpha: 1 }, ink: "#f4f1e9" },
-];
+// Arancio del marchio (= PAGE_COLOR.accesso in src/lib/colors.js e theme-color).
+const BG = { r: 255, g: 122, b: 26, alpha: 1 };
 
-// Wordmark ad alta risoluzione per tema (poi ridimensionato per device).
-async function renderWord(color) {
-  return await sharp({
-    text: {
-      text: `<span foreground="${color}" letter_spacing="-1600">Dispensa</span>`,
-      font: "Hanken Grotesk 96",
-      fontfile,
-      rgba: true,
-      dpi: 300,
-    },
-  }).png().toBuffer();
+// Lockup centrato: barattoli sopra, scritta sotto. `visibleW` = larghezza utile.
+async function lockup(width, height, visibleW, minSide) {
+  const iconSize = Math.round(minSide * 0.3);
+  const iconPng = await sharp(svg, { density: 300 }).resize(iconSize, iconSize).png().toBuffer();
+  const wordW = Math.round(visibleW * 0.46);
+  const wImg = await sharp(wordmark).resize({ width: wordW }).png().toBuffer();
+  const wordH = (await sharp(wImg).metadata()).height;
+  const gap = Math.round(minSide * 0.03);
+  const blockH = iconSize + gap + wordH;
+  const top = Math.round(height * 0.46 - blockH / 2);
+  return sharp({ create: { width, height, channels: 4, background: BG } })
+    .composite([
+      { input: iconPng, left: Math.round(width / 2 - iconSize / 2), top },
+      { input: wImg, left: Math.round(width / 2 - wordW / 2), top: top + iconSize + gap },
+    ])
+    .png({ compressionLevel: 9 });
 }
-const wordBuf = {};
-for (const t of THEMES) wordBuf[t.name] = await renderWord(t.ink);
+
+// Via le splash scure della veste precedente (non più collegate in index.html).
+for (const f of readdirSync(outDir)) {
+  if (f.startsWith("apple-splash-dark-")) unlinkSync(join(outDir, f));
+}
 
 for (const d of DEVICES) {
   const pw = d.w * d.dpr;
   const ph = d.h * d.dpr;
-  const minSide = Math.min(pw, ph);
-  const iconSize = Math.round(minSide * 0.3);
-  const iconPng = await sharp(svg, { density: 96 }).resize(iconSize, iconSize).png().toBuffer();
-  const wordW = Math.round(pw * 0.42);
-  const gap = Math.round(minSide * 0.05);
-
-  for (const t of THEMES) {
-    const wImg = await sharp(wordBuf[t.name]).resize({ width: wordW }).png().toBuffer();
-    const wordH = (await sharp(wImg).metadata()).height;
-    const blockH = iconSize + gap + wordH;
-    const top = Math.round(ph * 0.46 - blockH / 2);
-    const file = `apple-splash-${t.name}-${pw}-${ph}.png`;
-    await sharp({ create: { width: pw, height: ph, channels: 4, background: t.bg } })
-      .composite([
-        { input: iconPng, left: Math.round(pw / 2 - iconSize / 2), top },
-        { input: wImg, left: Math.round(pw / 2 - wordW / 2), top: top + iconSize + gap },
-      ])
-      .png({ compressionLevel: 9 })
-      .toFile(join(outDir, file));
-    console.log("✓", file, `— ${d.note}`);
-  }
+  const file = `apple-splash-light-${pw}-${ph}.png`;
+  await (await lockup(pw, ph, pw, Math.min(pw, ph))).toFile(join(outDir, file));
+  console.log("✓", file, `— ${d.note}`);
 }
-console.log(`\n${DEVICES.length} device × ${THEMES.length} temi = ${DEVICES.length * THEMES.length} immagini in /public/splash`);
+console.log(`\n${DEVICES.length} immagini in /public/splash`);
 
 // ============================================================
 //  Splash NATIVA iOS (Capacitor) — stesso lockup, asset diverso
@@ -99,49 +87,20 @@ const VISIBLE_W = Math.round(NATIVE_SIZE * 0.46); // striscia visibile in portra
 const nativeDir = join(root, "ios", "App", "App", "Assets.xcassets", "Splash.imageset");
 
 if (existsSync(nativeDir)) {
-  const iconSize = Math.round(VISIBLE_W * 0.3);
-  const wordW = Math.round(VISIBLE_W * 0.42);
-  const gap = Math.round(VISIBLE_W * 0.05);
-  const iconPng = await sharp(svg, { density: 96 }).resize(iconSize, iconSize).png().toBuffer();
-
-  for (const t of THEMES) {
-    const wImg = await sharp(wordBuf[t.name]).resize({ width: wordW }).png().toBuffer();
-    const wordH = (await sharp(wImg).metadata()).height;
-    const blockH = iconSize + gap + wordH;
-    const top = Math.round(NATIVE_SIZE * 0.46 - blockH / 2);
-    const png = await sharp({ create: { width: NATIVE_SIZE, height: NATIVE_SIZE, channels: 4, background: t.bg } })
-      .composite([
-        { input: iconPng, left: Math.round(NATIVE_SIZE / 2 - iconSize / 2), top },
-        { input: wImg, left: Math.round(NATIVE_SIZE / 2 - wordW / 2), top: top + iconSize + gap },
-      ])
-      .png({ compressionLevel: 9 })
-      .toBuffer();
-
-    // Xcode chiede 1x/2x/3x: Capacitor usa lo stesso asset per tutti e tre.
-    const suffix = t.name === "dark" ? "-dark" : "";
-    for (const n of ["", "-1", "-2"]) {
-      writeFileSync(join(nativeDir, `splash-2732x2732${suffix}${n}.png`), png);
-    }
-    console.log("✓ splash nativa iOS", t.name);
+  const png = await (await lockup(NATIVE_SIZE, NATIVE_SIZE, VISIBLE_W, VISIBLE_W)).toBuffer();
+  // Xcode chiede 1x/2x/3x: Capacitor usa lo stesso asset per tutti e tre.
+  for (const n of ["", "-1", "-2"]) {
+    writeFileSync(join(nativeDir, `splash-2732x2732${n}.png`), png);
+    const dark = join(nativeDir, `splash-2732x2732-dark${n}.png`);
+    if (existsSync(dark)) unlinkSync(dark); // un solo tema
   }
-
-  // Contents.json con le due apparenze: iOS sceglie da sé chiaro/scuro.
-  const entry = (scale, file, dark) => ({
-    idiom: "universal",
-    filename: file,
-    scale,
-    ...(dark ? { appearances: [{ appearance: "luminosity", value: "dark" }] } : {}),
-  });
   writeFileSync(join(nativeDir, "Contents.json"), JSON.stringify({
     images: [
-      entry("1x", "splash-2732x2732-2.png", false),
-      entry("1x", "splash-2732x2732-dark-2.png", true),
-      entry("2x", "splash-2732x2732-1.png", false),
-      entry("2x", "splash-2732x2732-dark-1.png", true),
-      entry("3x", "splash-2732x2732.png", false),
-      entry("3x", "splash-2732x2732-dark.png", true),
+      { idiom: "universal", filename: "splash-2732x2732-2.png", scale: "1x" },
+      { idiom: "universal", filename: "splash-2732x2732-1.png", scale: "2x" },
+      { idiom: "universal", filename: "splash-2732x2732.png", scale: "3x" },
     ],
     info: { version: 1, author: "xcode" },
   }, null, 2) + "\n");
-  console.log("✓ Splash.imageset/Contents.json (chiaro + scuro)");
+  console.log("✓ splash nativa iOS + Contents.json (un solo tema)");
 }

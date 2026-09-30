@@ -80,8 +80,8 @@ export default defineConfig(({ mode }) => {
           display: "standalone",
           display_override: ["standalone"],
           orientation: "portrait",
-          theme_color: "#F4F1E9",
-          background_color: "#F4F1E9",
+          theme_color: "#ff7a1a",
+          background_color: "#ff7a1a",
           icons: [
             { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
             { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png" },

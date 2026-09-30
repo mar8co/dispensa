@@ -354,12 +354,15 @@ svg.lucide {
   height: auto;
   display: block;
 }
+/* Misure uguali a scripts/generate-splash.mjs (scritta larga ~46% dello
+   schermo, 3% di stacco dai barattoli), così la splash nativa è il primo
+   fotogramma dell'intro. */
 .splash-word {
-  margin-top: 5vmin;
+  margin-top: 3vmin;
   font-weight: 800;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   line-height: 1;
-  font-size: 10.5vmin;
+  font-size: 11.4vmin;
   color: #0a0a0a;
   opacity: 0;
   animation: splash-rise 0.55s ease 0.15s forwards;

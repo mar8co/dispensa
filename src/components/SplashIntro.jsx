@@ -1,6 +1,6 @@
 // Intro in-app (splash "concept 4"): riprende esattamente la splash nativa iOS
-// (icona + "Dispensa" su sfondo di brand) e vi aggiunge la sottolineatura
-// ondulata tomato che si DISEGNA, poi sfuma nell'app. È il livello che dà
+// (barattoli + "Dispensa" sull'arancio del marchio) e vi aggiunge la
+// sottolineatura ondulata nera che si DISEGNA, poi sfuma nell'app. È il livello che dà
 // l'animazione su TUTTE le piattaforme (iOS PWA installata, Android, desktop):
 // la PNG statica è il primo fotogramma, quindi il passaggio è senza stacco.
 //
