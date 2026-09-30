@@ -1,8 +1,8 @@
 // Foglio profilo (dalla navbar). Dopo lo split con Impostazioni (⚙️ in alto a
 // destra → SettingsSheet) qui resta il "chi sei": account (nome/username),
 // Dispensa familiare, Esigenze alimentari e le azioni sui dati (Svuota
-// dispensa, Esci). Face ID, notifiche, tema, tutorial e footer legale vivono
-// in SettingsSheet.
+// dispensa, Esci). Face ID, notifiche, tutorial e footer legale vivono in
+// SettingsSheet. Veste manifesto: foglio sabbia, righe sottili, pillole.
 import { useState, useEffect } from "react";
 import { X, Settings, Trash2, LogOut, User, Leaf, Users } from "lucide-react";
 import Sheet from "./Sheet.jsx";
@@ -28,30 +28,30 @@ export default function ProfileSheet({
   }
 
   return (
-    <Sheet onClose={onClose}>
+    <Sheet onClose={onClose} panelClass="bg-sabbia">
       {(close) => (
-        <div className="px-5 pb-3 pt-1">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Profilo</h3>
-            <div className="flex items-center gap-1">
-              {/* Ingranaggio → Impostazioni (Face ID, notifiche, tema, tutorial,
+        <div className="px-[18px] pb-4 pt-1">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="titolo">Profilo</h3>
+            <div className="flex items-center gap-2">
+              {/* Ingranaggio → Impostazioni (Face ID, notifiche, tutorial,
                   privacy/elimina): il Profilo resta identità e famiglia. */}
               <button
                 onClick={() => { close(); onOpenSettings?.(); }}
                 aria-label="Impostazioni"
-                className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100"
+                className="tondo"
               >
-                <Settings className="h-5 w-5" />
+                <Settings className="h-[18px] w-[18px]" />
               </button>
-              <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
-                <X className="h-5 w-5" />
+              <button onClick={close} aria-label="Chiudi" className="tondo">
+                <X className="h-[18px] w-[18px]" />
               </button>
             </div>
           </div>
 
           {/* Account: il Nome (username) prende il posto della mail */}
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-tomato/10 text-tomato">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-white text-ink">
               <User className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
@@ -61,18 +61,18 @@ export default function ProfileSheet({
                 maxLength={24}
                 placeholder="Il tuo nome"
                 aria-label="Il tuo nome"
-                className={`w-full truncate bg-transparent text-sm font-semibold text-ink outline-none placeholder:font-medium ${
-                  shared && !username ? "placeholder:text-tomato" : "placeholder:text-stone-400"
+                className={`testo-grande w-full truncate border-0 border-b-[1.5px] border-ink bg-transparent pb-0.5 text-[1.25rem] font-extrabold tracking-[-0.03em] text-ink outline-none placeholder:font-bold ${
+                  shared && !username ? "placeholder:text-ink" : "placeholder:text-ink/40"
                 }`}
               />
-              <p className="flex items-center gap-1.5 text-xs text-stone-500">
+              <p className="mt-1 flex items-center gap-1.5 text-[0.8rem] font-medium text-tenue">
                 {shared && <Users className="h-3.5 w-3.5 shrink-0" />}
                 {shared ? "La nostra dispensa · " : ""}{itemCount} {itemCount === 1 ? "prodotto" : "prodotti"}
               </p>
             </div>
           </div>
           {shared && !username && (
-            <p className="mt-1.5 text-xs font-medium text-tomato">Aggiungi il tuo nome così gli altri ti riconoscono nella dispensa.</p>
+            <p className="mt-2 text-[0.86rem] font-bold text-ink">Aggiungi il tuo nome così gli altri ti riconoscono nella dispensa.</p>
           )}
 
           {/* Dispensa familiare: sempre aperta */}
@@ -87,49 +87,42 @@ export default function ProfileSheet({
 
           {/* Esigenze alimentari: box da 2 righe sempre visibile (le ricette ne
               tengono conto — è "chi sei a tavola", per questo resta nel Profilo) */}
-          <div className="mt-3 overflow-hidden rounded-xl border border-hair bg-paper">
-            <div className="flex items-start gap-3 px-3.5 py-2.5">
-              <Leaf className="mt-0.5 h-[18px] w-[18px] shrink-0 text-stone-400" />
-              <textarea
-                defaultValue={foodPrefs}
-                onBlur={(e) => onSaveFoodPrefs(e.target.value.trim())}
-                rows={2}
-                placeholder="Esigenze alimentari: allergie, vegano, pochi fritti… Le ricette ne terranno conto."
-                aria-label="Esigenze alimentari"
-                title="Le ricette proposte ne terranno sempre conto"
-                className="min-w-0 flex-1 resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-stone-400"
-              />
-            </div>
+          <div className="sezione mt-6">Esigenze alimentari</div>
+          <div className="mt-2 flex items-start gap-3 rounded-card bg-white px-3.5 py-2.5">
+            <Leaf className="mt-0.5 h-[18px] w-[18px] shrink-0 text-ink" />
+            <textarea
+              defaultValue={foodPrefs}
+              onBlur={(e) => onSaveFoodPrefs(e.target.value.trim())}
+              rows={2}
+              placeholder="Esigenze alimentari: allergie, vegano, pochi fritti… Le ricette ne terranno conto."
+              aria-label="Esigenze alimentari"
+              title="Le ricette proposte ne terranno sempre conto"
+              className="min-w-0 flex-1 resize-none bg-transparent text-[1rem] font-medium leading-snug text-ink outline-none placeholder:text-ink/40"
+            />
           </div>
 
-          {/* Azioni */}
-          <div className="mt-2 overflow-hidden rounded-xl border border-hair bg-paper">
+          {/* Azioni: righe sottili, niente scatole */}
+          <div className="mt-5 border-t-[1.5px] border-ink">
             <button
               data-tour="clear-pantry"
               onClick={() => { close(); onClearPantry(); }}
-              className="flex w-full items-center gap-3 px-3.5 py-3 text-left text-sm text-ink transition hover:bg-stone-50"
+              className="flex min-h-[52px] w-full items-center gap-3 border-b border-riga text-left text-[1rem] font-bold text-ink"
             >
-              <Trash2 className="h-[18px] w-[18px] text-stone-400" /> Svuota dispensa
+              <Trash2 className="h-[18px] w-[18px]" /> Svuota dispensa
             </button>
             {confirmLogout ? (
-              <div className="flex gap-2 border-t border-hair p-2.5">
-                <button
-                  onClick={() => setConfirmLogout(false)}
-                  className="flex-1 rounded-lg border border-hair py-2.5 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
-                >
+              <div className="flex gap-2 py-3">
+                <button onClick={() => setConfirmLogout(false)} className="bottone-chiaro flex-1">
                   Annulla
                 </button>
-                <button
-                  onClick={onLogout}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-tomato py-2.5 text-sm font-semibold text-[#fff] transition hover:bg-tomato-700"
-                >
+                <button onClick={onLogout} className="bottone-rosso flex-1">
                   <LogOut className="h-4 w-4" /> Sì, esci
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => setConfirmLogout(true)}
-                className="flex w-full items-center gap-3 border-t border-hair px-3.5 py-3 text-left text-sm font-semibold text-tomato transition hover:bg-tomato/5"
+                className="flex min-h-[52px] w-full items-center gap-3 text-left text-[1rem] font-bold text-ink"
               >
                 <LogOut className="h-[18px] w-[18px]" /> Esci
               </button>

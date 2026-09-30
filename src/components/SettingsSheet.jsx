@@ -118,14 +118,22 @@ export default function SettingsSheet({
     catch { setDeleting(false); setDelErr("Eliminazione non riuscita. Riprova."); }
   }
 
+  // Riga d'impostazione: icona · nome + stato piccolo · comando a destra.
+  const riga = "flex min-h-[60px] w-full items-center gap-3 border-b border-riga py-2.5";
+  const nome = "block text-[1rem] font-bold tracking-[-0.01em] text-ink";
+  const stato = "block text-[0.8rem] font-medium leading-snug text-tenue";
+  // "Attiva" = pillola piena (invito), "Disattiva" = solo bordo.
+  const attiva = "pillola min-h-[34px] bg-ink px-3.5 text-[0.84rem] text-white";
+  const disattiva = "pillola min-h-[34px] px-3.5 text-[0.84rem]";
+
   return (
-    <Sheet onClose={onClose}>
+    <Sheet onClose={onClose} panelClass="bg-sabbia">
       {(close) => (
-        <div className="px-5 pb-3 pt-1">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Impostazioni</h3>
-            <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
-              <X className="h-5 w-5" />
+        <div className="px-[18px] pb-4 pt-1">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="titolo">Impostazioni</h3>
+            <button onClick={close} aria-label="Chiudi" className="tondo">
+              <X className="h-[18px] w-[18px]" />
             </button>
           </div>
 
@@ -133,98 +141,78 @@ export default function SettingsSheet({
               contestuali, sulle funzioni bloccate). Per un abbonato diventa
               una conferma discreta invece di sparire del tutto. */}
           {isPro ? (
-            <div className="mb-2 flex items-center gap-3 rounded-xl border border-hair bg-paper px-3.5 py-3">
-              <Sparkles className="h-[18px] w-[18px] shrink-0 text-tomato" />
+            <div className="flex items-center gap-3 rounded-card bg-white px-3.5 py-3">
+              <Sparkles className="h-[18px] w-[18px] shrink-0 text-ink" />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm text-ink">Premium attivo</span>
-                <span className="block text-xs text-stone-500">Grazie per il sostegno 🧡</span>
+                <span className={nome}>Premium attivo</span>
+                <span className={stato}>Grazie per il sostegno 🧡</span>
               </span>
             </div>
           ) : (
             <button
               onClick={() => { close(); onOpenPaywall?.(); }}
-              className="mb-2 flex w-full items-center gap-3 rounded-xl border border-tomato/40 bg-tomato/5 px-3.5 py-3 text-left transition hover:bg-tomato/10"
+              className="flex w-full items-center gap-3 rounded-card bg-rosa px-3.5 py-3 text-left shadow-[inset_0_0_0_1.5px_#0a0a0a] transition active:scale-[0.99]"
             >
-              <Sparkles className="h-[18px] w-[18px] shrink-0 text-tomato" />
+              <Sparkles className="h-[18px] w-[18px] shrink-0 text-ink" />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-ink">Passa a Premium</span>
-                <span className="block text-xs text-stone-500">Piano Alimentare, AI illimitata, niente pubblicità</span>
+                <span className={nome}>Passa a Premium</span>
+                <span className="block text-[0.8rem] font-medium leading-snug text-ink/70">Piano Alimentare, AI illimitata, niente pubblicità</span>
               </span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-tomato" />
+              <ChevronRight className="h-5 w-5 shrink-0 text-ink" />
             </button>
           )}
 
-          <div className="overflow-hidden rounded-xl border border-hair bg-paper">
+          <div className="mt-4 border-t-[1.5px] border-ink">
             {/* Face ID / passkey: attivazione dell'accesso rapido su questo
                 dispositivo (visibile solo dove WebAuthn è supportato) */}
             {CAN_USE_PASSKEY && (
-              <div className="flex w-full items-center gap-3 px-3.5 py-3">
-                <FaceIdIcon className={`h-[19px] w-[19px] shrink-0 ${passkeyActive ? "text-stone-400" : "text-tomato"}`} />
+              <div className={riga}>
+                <FaceIdIcon className="h-[19px] w-[19px] shrink-0 text-ink" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm text-ink">Face ID</span>
-                  <span className="block text-xs text-stone-500">
+                  <span className={nome}>Face ID</span>
+                  <span className={stato}>
                     {passkeyActive ? "Attivo su questo dispositivo" : "Accesso rapido su questo dispositivo"}
                   </span>
                 </span>
                 {passkeyBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-stone-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-ink" />
                 ) : passkeyActive ? (
-                  <button
-                    onClick={deactivatePasskey}
-                    className="rounded-lg border border-hair px-2.5 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-50"
-                  >
-                    Disattiva
-                  </button>
+                  <button onClick={deactivatePasskey} className={disattiva}>Disattiva</button>
                 ) : (
-                  <button
-                    onClick={activatePasskey}
-                    className="rounded-lg border border-tomato/40 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
-                  >
-                    Attiva
-                  </button>
+                  <button onClick={activatePasskey} className={attiva}>Attiva</button>
                 )}
               </div>
             )}
-            {passkeyErr && <p className="border-t border-hair px-3.5 py-2 text-xs font-semibold text-tomato">{passkeyErr}</p>}
+            {passkeyErr && <p className="border-b border-riga py-2 text-[0.86rem] font-bold text-ink">{passkeyErr}</p>}
 
             {/* Notifiche push: avvisi scadenze (opt-in per dispositivo). Visibile
                 solo dove le push sono supportate; su iPhone non installato mostra
                 l'invito ad aggiungere l'app alla Home. */}
             {canPush && (
-              <div className={`flex w-full items-center gap-3 px-3.5 py-3 ${CAN_USE_PASSKEY ? "border-t border-hair" : ""}`}>
-                <Bell className={`h-[19px] w-[19px] shrink-0 ${pushOn ? "text-stone-400" : "text-tomato"}`} />
+              <div className={riga}>
+                <Bell className="h-[19px] w-[19px] shrink-0 text-ink" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm text-ink">Avvisami delle scadenze</span>
-                  <span className="block text-xs text-stone-500">
+                  <span className={nome}>Avvisami delle scadenze</span>
+                  <span className={stato}>
                     {pushOn ? "Ti avviso a 7, 3 e 1 giorno dalla scadenza" : "Un promemoria per le scadenze"}
                   </span>
                 </span>
                 {pushBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-stone-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-ink" />
                 ) : pushOn ? (
-                  <button
-                    onClick={togglePush}
-                    className="rounded-lg border border-hair px-2.5 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-50"
-                  >
-                    Disattiva
-                  </button>
+                  <button onClick={togglePush} className={disattiva}>Disattiva</button>
                 ) : (
-                  <button
-                    onClick={togglePush}
-                    className="rounded-lg border border-tomato/40 px-2.5 py-1.5 text-xs font-semibold text-tomato transition hover:bg-tomato/5"
-                  >
-                    Attiva
-                  </button>
+                  <button onClick={togglePush} className={attiva}>Attiva</button>
                 )}
               </div>
             )}
-            {pushErr && <p className="border-t border-hair px-3.5 py-2 text-xs font-semibold text-tomato">{pushErr}</p>}
+            {pushErr && <p className="border-b border-riga py-2 text-[0.86rem] font-bold text-ink">{pushErr}</p>}
             {iosHint && (
-              <div className={`flex items-start gap-3 px-3.5 py-3 ${CAN_USE_PASSKEY ? "border-t border-hair" : ""}`}>
-                <Bell className="mt-0.5 h-[18px] w-[18px] shrink-0 text-stone-400" />
+              <div className={`${riga} items-start`}>
+                <Bell className="mt-0.5 h-[18px] w-[18px] shrink-0 text-ink" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm text-ink">Avvisami delle scadenze</span>
-                  <span className="block text-xs text-stone-500">
+                  <span className={nome}>Avvisami delle scadenze</span>
+                  <span className={stato}>
                     Installa Dispensa sulla Home (Condividi → «Aggiungi a Home») per ricevere gli avvisi.
                   </span>
                 </span>
@@ -234,43 +222,44 @@ export default function SettingsSheet({
             {/* Tutorial */}
             <button
               onClick={() => { close(); onReplayTour?.(); }}
-              className={`flex w-full items-center gap-3 px-3.5 py-3 text-left text-sm text-ink transition hover:bg-stone-50 ${(CAN_USE_PASSKEY || canPush || iosHint) ? "border-t border-hair" : ""}`}
+              className={`${riga} text-left`}
             >
-              <GraduationCap className="h-[18px] w-[18px] text-stone-400" /> Rivedi il tutorial
+              <GraduationCap className="h-[19px] w-[19px] shrink-0 text-ink" />
+              <span className={nome}>Rivedi il tutorial</span>
             </button>
           </div>
 
           {/* Footer discreto: privacy e cancellazione account */}
           {!confirmDelete ? (
-            <div className="mt-2 flex items-center justify-center gap-2.5 text-[11px] text-stone-500">
+            <div className="mt-3 flex items-center justify-center gap-2.5 text-[0.8rem] font-semibold text-tenue">
               {onOpenPrivacy && (
                 <>
-                  <button onClick={() => { close(); onOpenPrivacy(); }} className="transition hover:text-stone-600 hover:underline">
+                  <button onClick={() => { close(); onOpenPrivacy(); }} className="py-2 underline underline-offset-2">
                     Privacy Policy
                   </button>
                   <span aria-hidden="true">·</span>
                 </>
               )}
-              <button onClick={() => { setDelErr(""); setConfirmDelete(true); }} className="transition hover:text-tomato hover:underline">
+              <button onClick={() => { setDelErr(""); setConfirmDelete(true); }} className="py-2 underline underline-offset-2">
                 Elimina account
               </button>
             </div>
           ) : (
-            <div className="mt-2 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
-              <p className="text-xs text-stone-600">Eliminare account e tutti i dati? L'azione è definitiva e non recuperabile.</p>
-              {delErr && <p className="mt-1.5 text-xs font-semibold text-tomato">{delErr}</p>}
-              <div className="mt-2.5 flex gap-2">
+            <div className="mt-3 rounded-card bg-giallo p-3.5 text-center">
+              <p className="text-[0.95rem] font-semibold leading-snug text-ink">Eliminare account e tutti i dati? L'azione è definitiva e non recuperabile.</p>
+              {delErr && <p className="mt-1.5 text-[0.86rem] font-bold text-ink">{delErr}</p>}
+              <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => setConfirmDelete(false)}
                   disabled={deleting}
-                  className="flex-1 rounded-lg border border-hair px-3 py-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-50 disabled:opacity-60"
+                  className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]"
                 >
                   Annulla
                 </button>
                 <button
                   onClick={runDelete}
                   disabled={deleting}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-tomato px-3 py-2 text-xs font-semibold text-[#fff] transition hover:bg-tomato-700 disabled:opacity-60"
+                  className="bottone-rosso min-h-[44px] flex-1 py-2 text-[0.92rem]"
                 >
                   {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Elimina tutto"}
                 </button>

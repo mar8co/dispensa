@@ -8,6 +8,7 @@
 // Parametri (querystring):
 //   vista = dispensa | spesa | ricette | proposte | ricetta | piano | accesso
 //   menu=1  menu "+" aperto · toast=1  avviso con Annulla
+//   foglio = profilo | impostazioni | premium | privacy | svuota
 import { useState, useRef } from "react";
 import { DEMO_DATA, CATEGORIES, MODES } from "../constants.js";
 import { guessCategory, daysUntilExpiry, findMatch } from "../lib/pantry.js";
@@ -19,11 +20,17 @@ import AddFab from "../components/AddFab.jsx";
 import Toast from "../components/Toast.jsx";
 import Auth from "../components/Auth.jsx";
 import { mondayOf } from "../hooks/useMealPlan.jsx";
+import ProfileSheet from "../components/ProfileSheet.jsx";
+import SettingsSheet from "../components/SettingsSheet.jsx";
+import PaywallSheet from "../components/PaywallSheet.jsx";
+import PrivacySheet from "../components/PrivacySheet.jsx";
+import ConfirmClearModal from "../components/ConfirmClearModal.jsx";
 import { usePageColor } from "../hooks/usePageColor.js";
 import { pageColorFor, PAGE_COLOR } from "../lib/colors.js";
 
 const q = new URLSearchParams(location.search);
 const PARAM_VISTA = q.get("vista") || "dispensa";
+const PARAM_FOGLIO = q.get("foglio") || "";
 
 const inDays = (n) => {
   const d = new Date();
@@ -89,6 +96,8 @@ export default function Anteprima() {
   const [recipe, setRecipe] = useState(PARAM_VISTA === "ricetta" ? RECIPE : null);
   const [servings, setServings] = useState(2);
   const [context, setContext] = useState([]);
+  const [foglio, setFoglio] = useState(PARAM_FOGLIO);
+  const chiudi = () => setFoglio("");
   const cardRefs = useRef({});
   const modeCardRefs = useRef({});
 
@@ -205,6 +214,21 @@ export default function Anteprima() {
           />
         )}
       />
+
+      {foglio === "profilo" && (
+        <ProfileSheet
+          email="prova@esempio.it" itemCount={items.length} shared foodPrefs="" onSaveFoodPrefs={() => {}}
+          onClose={chiudi} onClearPantry={() => setFoglio("svuota")} onLogout={chiudi}
+          onOpenSettings={() => setFoglio("impostazioni")}
+          households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
+        />
+      )}
+      {foglio === "impostazioni" && (
+        <SettingsSheet onClose={chiudi} onReplayTour={() => {}} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")} isPro={false} onOpenPaywall={() => setFoglio("premium")} />
+      )}
+      {foglio === "premium" && <PaywallSheet onClose={chiudi} reason="Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola." />}
+      {foglio === "privacy" && <PrivacySheet onClose={chiudi} />}
+      {foglio === "svuota" && <ConfirmClearModal onCancel={chiudi} onConfirm={chiudi} />}
 
       {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionTone={toast.actionTone} raised={view === "spesa" && shopping.some((x) => x.checked)} />}
     </div>

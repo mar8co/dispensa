@@ -96,31 +96,33 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
 
   return (
     <>
-      <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Dispensa condivisa</p>
+      <div className="sezione mt-6">
+        <span>Dispensa condivisa</span>
+        <span className="micro">{members.length} {members.length === 1 ? "membro" : "membri"}</span>
+      </div>
 
-      {/* Nucleo attivo + membri */}
-      <div className="rounded-xl border border-hair bg-paper p-3.5">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-tomato" />
-          <span className="min-w-0 truncate text-sm font-semibold text-ink">{members.length > 1 ? "La nostra dispensa" : "La tua dispensa"}</span>
-          <span className="ml-auto shrink-0 text-xs text-stone-500">{members.length} {members.length === 1 ? "membro" : "membri"}</span>
+      {/* Nucleo attivo + membri: righe sottili, niente scatola */}
+      <div>
+        <div className="flex items-center gap-2 pt-2.5">
+          <Users className="h-[18px] w-[18px] text-ink" />
+          <span className="min-w-0 truncate text-[1.1rem] font-extrabold tracking-[-0.03em] text-ink">{members.length > 1 ? "La nostra dispensa" : "La tua dispensa"}</span>
         </div>
         {members.length > 0 && (
-          <ul className="mt-2 space-y-1">
+          <ul className="mt-1.5 divide-y divide-riga">
             {members.map((m) => {
               const isMe = m.email && m.email === email;
               const isOwner = m.role === "owner";
               return (
-                <li key={m.user_id} className="flex items-center gap-2 text-xs text-stone-600">
+                <li key={m.user_id} className="flex min-h-[40px] items-center gap-2 text-[0.95rem] font-semibold text-ink">
                   <span className="min-w-0 truncate">{memberName(m)}{isMe ? " (tu)" : ""}</span>
                   {isOwner ? (
-                    <span className="ml-auto flex w-16 shrink-0 justify-center">
-                      <Crown className="h-3.5 w-3.5 text-tomato" aria-label="Creatore" />
+                    <span className="ml-auto flex w-[76px] shrink-0 justify-center">
+                      <Crown className="h-4 w-4 text-ink" aria-label="Creatore" />
                     </span>
                   ) : amOwner ? (
                     <button
                       onClick={() => setConfirmRemove(m)}
-                      className="ml-auto w-16 shrink-0 rounded-md bg-stone-100 py-1 text-center text-[10px] font-semibold text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+                      className="pillola ml-auto min-h-[30px] w-[76px] shrink-0 px-2 text-[0.76rem]"
                     >
                       Rimuovi
                     </button>
@@ -134,22 +136,22 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
 
       {/* Conferma: far uscire un membro */}
       {confirmRemove && (
-        <div className="mt-2 rounded-xl border border-tomato/30 bg-tomato/5 p-3 text-center">
-          <p className="text-xs text-stone-600">
-            Vuoi far uscire <span className="font-bold text-ink">{memberName(confirmRemove)}</span> dalla Dispensa condivisa?
+        <div className="mt-2 rounded-card bg-giallo p-3.5 text-center">
+          <p className="text-[0.95rem] font-semibold leading-snug text-ink">
+            Vuoi far uscire <span className="font-extrabold">{memberName(confirmRemove)}</span> dalla Dispensa condivisa?
           </p>
-          <div className="mt-2.5 flex gap-2">
+          <div className="mt-3 flex gap-2">
             <button
               onClick={() => setConfirmRemove(null)}
               disabled={busy === "remove"}
-              className="flex-1 rounded-lg border-2 border-stone-300 px-3 py-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-50 disabled:opacity-60"
+              className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]"
             >
               Annulla
             </button>
             <button
               onClick={kick}
               disabled={busy === "remove"}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-tomato px-3 py-2 text-xs font-semibold text-[#fff] transition hover:bg-tomato-700 disabled:opacity-60"
+              className="bottone-rosso min-h-[44px] flex-1 py-2 text-[0.92rem]"
             >
               {busy === "remove" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><UserMinus className="h-3.5 w-3.5" /> Rimuovi</>}
             </button>
@@ -165,9 +167,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
               key={h.id}
               onClick={() => onSwitch?.(h.id)}
               aria-pressed={h.id === active.id}
-              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                h.id === active.id ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
-              }`}
+              className="pillola min-h-[34px] px-3 text-[0.84rem]"
             >
               {h.name}
             </button>
@@ -176,7 +176,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
       )}
 
       {/* Entra + Invita: sulla stessa riga, mezza larghezza ciascuno */}
-      <div className="mt-2 flex gap-2">
+      <div className="mt-3 flex gap-2">
         <Button variant="secondary" size="sm" className="flex-1" onClick={() => { setJoinOpen((o) => !o); setCode(""); setMsg(""); }}>
           <DoorOpen className="h-4 w-4" /> Entra con codice
         </Button>
@@ -187,9 +187,9 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
 
       {/* Codice invito appena generato */}
       {code && (
-        <div className="mt-2 rounded-xl border border-tomato/30 bg-tomato/5 p-2.5 text-center">
-          <p className="text-[11px] font-semibold text-stone-500">Codice invito (valido 7 giorni)</p>
-          <p className="my-1 font-display text-xl font-extrabold tracking-[0.2em] text-tomato">{code}</p>
+        <div className="mt-2 rounded-card bg-white p-3 text-center">
+          <p className="micro">Codice invito (valido 7 giorni)</p>
+          <p className="num my-1.5 text-[2.2rem] font-extrabold leading-none tracking-[0.12em] text-ink">{code}</p>
           <div className="flex justify-center gap-2">
             <Button variant="secondary" size="sm" onClick={copyCode}>
               {copied ? <><Check className="h-4 w-4" /> Copiato</> : <><Copy className="h-4 w-4" /> Copia</>}
@@ -206,7 +206,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             placeholder="CODICE"
-            className="min-w-0 flex-1 rounded-xl border border-hair bg-paper px-3 py-2.5 text-sm tracking-[0.15em] text-ink outline-none focus:border-stone-400"
+            className="campo min-w-0 flex-1 tracking-[0.15em] text-ink"
           />
           <Button variant="primary" size="sm" onClick={join} disabled={busy === "join" || !joinCode.trim()}>
             {busy === "join" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entra"}
@@ -214,14 +214,14 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         </div>
       )}
 
-      {msg && <p className="mt-1.5 text-center text-xs font-semibold text-tomato">{msg}</p>}
+      {msg && <p className="mt-2 text-center text-[0.86rem] font-bold text-ink">{msg}</p>}
 
       {/* Esci dal nucleo (solo se ne hai un altro a cui tornare) */}
       {households.length > 1 && (
         <button
           onClick={leave}
           disabled={busy === "leave"}
-          className="mt-2 flex w-full items-center justify-center gap-2 text-xs font-semibold text-stone-500 transition hover:text-tomato disabled:opacity-60"
+          className="link mt-2 flex min-h-[36px] w-full items-center justify-center gap-2 text-[0.9rem] text-ink disabled:opacity-60"
         >
           <LogOut className="h-3.5 w-3.5" /> Esci
         </button>

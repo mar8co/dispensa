@@ -9,24 +9,24 @@ const CONTACT_EMAIL = "mar8co@gmail.com";
 function Section({ title, children }) {
   return (
     <div className="mt-5">
-      <h4 className="font-display text-sm font-bold uppercase tracking-wide text-ink">{title}</h4>
-      <div className="mt-1.5 space-y-1.5 text-sm leading-relaxed text-stone-600">{children}</div>
+      <h4 className="border-b-[1.5px] border-ink pb-1.5 text-[1.1rem] font-extrabold tracking-[-0.03em] text-ink">{title}</h4>
+      <div className="mt-2 space-y-1.5 text-[0.95rem] font-medium leading-relaxed text-ink/80">{children}</div>
     </div>
   );
 }
 
 export default function PrivacySheet({ onClose }) {
   return (
-    <Sheet onClose={onClose}>
+    <Sheet onClose={onClose} panelClass="bg-sabbia">
       {(close) => (
-        <div className="px-5 pb-8 pt-1">
-          <div className="mb-1 flex items-center justify-between">
-            <h3 className="font-display text-xl font-extrabold tracking-tight text-ink">Privacy</h3>
-            <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100" aria-label="Chiudi">
-              <X className="h-5 w-5" />
+        <div className="px-[18px] pb-8 pt-1">
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <h3 className="titolo">Privacy</h3>
+            <button onClick={close} className="tondo" aria-label="Chiudi">
+              <X className="h-[18px] w-[18px]" />
             </button>
           </div>
-          <p className="text-xs text-stone-500">Come tratto i tuoi dati in Dispensa.</p>
+          <p className="micro mt-1">Come tratto i tuoi dati in Dispensa.</p>
 
           <Section title="Quali dati tratto">
             <p>• <strong className="text-ink">Account</strong>: il tuo indirizzo email (per l'accesso).</p>
