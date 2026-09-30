@@ -60,6 +60,9 @@ import { useRecipes } from "./hooks/useRecipes.jsx";
 import { useShopping } from "./hooks/useShopping.jsx";
 import { usePantry } from "./hooks/usePantry.jsx";
 import { useMealPlan } from "./hooks/useMealPlan.jsx";
+import { usePageColor } from "./hooks/usePageColor.js";
+import { pageColorFor } from "./lib/colors.js";
+import Barattoli from "./components/Barattoli.jsx";
 
 // Caricata on-demand: la libreria di scansione (ZXing) è pesante e serve
 // solo quando si apre la scansione del codice a barre.
@@ -514,6 +517,10 @@ export default function Dispensa({ session }) {
     tourActive: tour.active, setCookDone,
     showToast, dismissToast, animateUI, scrollToTop,
   });
+
+  // Colore pieno della schermata (fondo + barra di stato): uno per scheda, la
+  // ricetta aperta in bianco. Cambia dentro la View Transition del cambio vista.
+  usePageColor(pageColorFor(view, !!recipe || loadingRecipe));
 
   // Pulisce/genericizza un nome alimento via AI -> { name, category }.
   async function aiCleanName(raw, signal) {
@@ -1059,17 +1066,17 @@ export default function Dispensa({ session }) {
 
   if (!loaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-cream">
-        <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
+      <div className="flex min-h-screen items-center justify-center bg-sfondo">
+        <Loader2 className="h-6 w-6 animate-spin text-ink/40" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-cream text-ink">
+    <div className="min-h-screen bg-sfondo text-ink">
       {!online && (
-        <div className="fixed left-1/2 top-2 z-40 -translate-x-1/2 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-700 shadow">
-          offline
+        <div className="fixed left-1/2 top-2 z-40 -translate-x-1/2 rounded-full bg-ink px-3 py-1 text-[11px] font-bold text-crema">
+          Offline
         </div>
       )}
       {/* Sulla dispensa più spazio in fondo, così il "+" non copre l'ultima categoria */}
@@ -1089,7 +1096,7 @@ export default function Dispensa({ session }) {
         )}
 
         {view === "ricette" && (
-          <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-tomato" /></div>}>
+          <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-ink" /></div>}>
           <RecipesTab
             orderedModes={orderedModes} mode={mode} modeCardRefs={modeCardRefs}
             dragMode={dragMode} onModeDragStart={onModeDragStart} onModeDragMove={onModeDragMove}
@@ -1117,7 +1124,7 @@ export default function Dispensa({ session }) {
         )}
 
         {view === "spesa" && (
-          <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-tomato" /></div>}>
+          <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-ink" /></div>}>
           <ShoppingTab
             shared={sharedHousehold}
             shopping={shopping}
@@ -1152,14 +1159,14 @@ export default function Dispensa({ session }) {
           : "calc(86px + env(safe-area-inset-bottom))"}
       />
 
-      {/* Overlay sfocato del menù "+": a livello di pagina (NON dentro la
-          navbar, che ha transform), così copre tutto lo schermo e chiude il
-          menù al tocco esterno. */}
+      {/* Velo del menù "+": a livello di pagina (NON dentro la navbar, che ha
+          transform), così copre tutto lo schermo e chiude il menù al tocco
+          esterno. Tinta piena, niente sfocatura (su iPhone rallenta). */}
       <button
         onClick={() => setAddMenuOpen(false)}
         aria-label="Chiudi menù"
         tabIndex={addMenuOpen ? 0 : -1}
-        className={`fixed inset-0 z-30 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-30 bg-black/45 transition-opacity duration-300 ${
           addMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
@@ -1204,19 +1211,16 @@ export default function Dispensa({ session }) {
       {/* Overlay di analisi: copre il momento di attesa dell'AI. "Annulla"
           aborta la richiesta (mai più di qualche secondo in ostaggio). */}
       {processing && (
-        <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-5 bg-cream/95 px-10 text-center backdrop-blur">
-          <img src="/analisi-spesa.png" alt="" className="h-auto w-[140px]" />
-          <Loader2 className="h-5 w-5 animate-spin text-tomato" />
+        <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-5 bg-sfondo px-10 text-center">
+          <Barattoli size={112} fill={pageColorFor(view, !!recipe || loadingRecipe)} className="text-ink" />
+          <Loader2 className="h-5 w-5 animate-spin text-ink" />
           <div>
-            <p className="font-display text-xl font-extrabold tracking-tight text-ink">Sto analizzando la spesa…</p>
-            <p className="mx-auto mt-1.5 max-w-xs text-sm text-stone-500">
+            <p className="grande">Sto analizzando la spesa…</p>
+            <p className="mx-auto mt-2 max-w-xs text-[0.95rem] font-medium text-tenue">
               Identifico i prodotti e li aggiungo alla dispensa.
             </p>
           </div>
-          <button
-            onClick={() => processAbortRef.current?.abort()}
-            className="rounded-xl border border-hair bg-paper px-5 py-2.5 text-sm font-semibold text-stone-600 transition hover:bg-stone-50 active:scale-[0.98]"
-          >
+          <button onClick={() => processAbortRef.current?.abort()} className="bottone-chiaro">
             Annulla
           </button>
         </div>

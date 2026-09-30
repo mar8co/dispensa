@@ -15,7 +15,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "vaul";
 
-export default function Sheet({ onClose, locked = false, panelClass = "bg-cream", handleClass = "bg-stone-300", children }) {
+// Colore del foglio (veste manifesto): bianco per i fogli dove si scrive
+// (default); gli altri passano il loro colore pieno in `panelClass`
+// (Profilo/Impostazioni sabbia, Premium rosa, conferme gialle, fotocamere nere).
+export default function Sheet({ onClose, locked = false, panelClass = "bg-white", handleClass = "bg-ink/25", children }) {
   // Montiamo GIÀ aperto (open=true): così il contenuto del foglio è subito nel
   // DOM. È fondamentale per i fogli con fotocamera (barcode/scontrino): l'effetto
   // che avvia la camera gira al mount e ha bisogno del <video> già presente —
@@ -77,17 +80,17 @@ export default function Sheet({ onClose, locked = false, panelClass = "bg-cream"
       repositionInputs={false}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/45" />
         <Drawer.Content
           aria-describedby={undefined}
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-          className={`fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-3xl shadow-2xl outline-none ${panelClass}`}
+          className={`fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-foglio outline-none ${panelClass}`}
         >
           {/* Titolo nascosto: soddisfa l'accessibilità di Radix (il titolo
               visibile è dentro ogni foglio). */}
           <Drawer.Title className="sr-only">Pannello</Drawer.Title>
           <div className="flex shrink-0 cursor-grab justify-center pb-1.5 pt-2.5 active:cursor-grabbing" aria-hidden="true">
-            <div className={`h-1 w-10 rounded-full ${handleClass}`} />
+            <div className={`h-[5px] w-11 rounded-full ${handleClass}`} />
           </div>
           {/* Area scorrevole interna: se il contenuto supera l'altezza del
               foglio scorre qui dentro; Vaul evita di chiudere se non sei in

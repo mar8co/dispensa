@@ -1,7 +1,6 @@
-// Toast in basso con eventuale azione (default "Annulla" per gli undo,
-// oppure un'etichetta personalizzata, es. "In lista spesa").
+// Avviso breve in basso: pillola nera con l'eventuale azione in giallo
+// ("Annulla" per gli undo, oppure un'etichetta personalizzata, es. "Stop").
 import { useState, useEffect } from "react";
-import { Undo2 } from "lucide-react";
 
 // Posizione: appena sopra il FAB "+" (`bottom-32`), uguale su tutte le schede.
 // Eccezione 1: sulla Spesa, quando c'è la barra "Sposta in dispensa" (carrello
@@ -9,7 +8,9 @@ import { Undo2 } from "lucide-react";
 // Eccezione 2: con la TASTIERA aperta (un campo di testo ha il focus) il toast
 // va IN ALTO: su iOS la tastiera copre gli elementi fissati in basso, e i
 // feedback con Annulla ("Modifica salvata") arrivano proprio mentre si scrive.
-export default function Toast({ message, onUndo, actionLabel = "Annulla", actionTone = "tomato", raised = false }) {
+// (`actionTone` dei chiamanti non serve più: nella veste manifesto l'azione è
+// sempre gialla sul nero.)
+export default function Toast({ message, onUndo, actionLabel = "Annulla", raised = false }) {
   const [kbOpen, setKbOpen] = useState(false);
   useEffect(() => {
     const isTyping = () => {
@@ -34,16 +35,12 @@ export default function Toast({ message, onUndo, actionLabel = "Annulla", action
 
   return (
     <div className={`pointer-events-none fixed inset-x-0 ${pos} z-[60] flex justify-center px-4`}>
-      <div className="pointer-events-auto flex max-w-full items-center gap-3 rounded-xl border border-stone-300 bg-stone-200 px-4 py-2.5 text-sm text-stone-900 shadow-lg">
+      {/* Raggio 24px: su una riga è una pillola, se il testo va a capo resta morbido. */}
+      <div role="status" className="animate-sale pointer-events-auto flex max-w-full items-center gap-3.5 rounded-[24px] bg-ink px-[1.1rem] py-[0.7rem] text-[0.92rem] font-[650] leading-snug text-white shadow-barra">
         <span className="min-w-0 break-words">{message}</span>
         {onUndo && (
-          <button
-            onClick={onUndo}
-            className={`flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold text-white transition ${
-              actionTone === "ink" ? "bg-ink hover:opacity-90" : "bg-tomato hover:bg-tomato-700"
-            }`}
-          >
-            {actionLabel === "Annulla" && <Undo2 className="h-3.5 w-3.5" />} {actionLabel}
+          <button onClick={onUndo} className="-my-2 shrink-0 py-2 text-[0.95rem] font-extrabold text-giallo">
+            {actionLabel}
           </button>
         )}
       </div>

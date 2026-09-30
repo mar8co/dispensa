@@ -1,18 +1,22 @@
-// Navigazione principale: barra con Dispensa · Spesa · [+] · Ricette · Profilo.
-// Il "+" è un pulsante centrale rialzato (lo slot addSlot lo riceve).
-import { Package, ShoppingCart, ChefHat, User } from "lucide-react";
+// Navigazione principale: pillola nera flottante con Dispensa · Spesa · [+] ·
+// Ricette · Profilo (solo parole, la scheda aperta "accesa" in crema). Il "+"
+// è un pulsante centrale rialzato sopra la barra (lo slot addSlot lo riceve):
+// lo spazio al centro resta riservato anche dove il "+" non c'è, così le
+// schede non si spostano cambiando pagina.
 
-function Tab({ active, onClick, icon: Icon, label, badge, tourId }) {
+function Tab({ active, onClick, label, badge, tourId }) {
   return (
-    <button onClick={onClick} data-tour={tourId} className="relative flex flex-1 flex-col items-center gap-0.5 py-1">
-      <span className={`flex items-center justify-center rounded-full px-3 py-1 transition ${active ? "bg-tomato/10" : ""}`}>
-        <Icon className={`h-[21px] w-[21px] ${active ? "text-tomato" : "text-stone-500"}`} strokeWidth={active ? 2.3 : 1.9} />
-      </span>
-      <span className={`text-[10px] font-semibold tracking-wide ${active ? "text-tomato" : "text-stone-500"}`}>
-        {label}
-      </span>
+    <button
+      onClick={onClick}
+      data-tour={tourId}
+      aria-current={active ? "page" : undefined}
+      className={`relative flex h-[46px] min-w-0 flex-1 items-center justify-center rounded-full px-1 text-[0.9rem] font-[650] tracking-[-0.01em] transition-colors duration-200 ${
+        active ? "bg-crema text-ink" : "text-crema"
+      }`}
+    >
+      {label}
       {badge > 0 && (
-        <span className="absolute right-3 top-0 min-w-[16px] rounded-full bg-tomato px-1 text-center text-[9px] font-bold leading-4 text-[#fff]">
+        <span className="absolute right-0.5 top-0.5 min-w-[17px] rounded-full bg-rosso-azione px-1 text-center text-[10.5px] font-extrabold leading-[17px] text-white">
           {badge}
         </span>
       )}
@@ -28,14 +32,15 @@ export default function BottomNav({ view, setView, onProfile, shoppingCount, exp
       style={{ paddingBottom: "max(4px, calc(env(safe-area-inset-bottom) - 12px))" }}
     >
       <div className="relative w-full max-w-md">
-        {/* Barra: 2 tab · spazio centrale · 2 tab. Il badge sulla Dispensa
-            conta i prodotti GIÀ scaduti (richiamo a rientrare nell'app). */}
-        <div className="flex items-stretch rounded-[26px] border border-hair bg-cream/80 px-1.5 py-1.5 shadow-[0_4px_22px_rgba(0,0,0,0.12)] backdrop-blur-md">
-          <Tab active={view === "dispensa"} onClick={() => setView("dispensa")} icon={Package} label="Dispensa" badge={expiredCount} tourId="tab-dispensa" />
-          <Tab active={view === "spesa"} onClick={() => setView("spesa")} icon={ShoppingCart} label="Spesa" badge={shoppingCount} tourId="tab-spesa" />
-          <div className="w-14 shrink-0" aria-hidden="true" />
-          <Tab active={view === "ricette"} onClick={() => setView("ricette")} icon={ChefHat} label="Ricette" tourId="tab-ricette" />
-          <Tab active={false} onClick={onProfile} icon={User} label="Profilo" tourId="tab-profilo" />
+        {/* Barra: 2 schede · spazio centrale · 2 schede. Il numero sulla
+            Dispensa conta i prodotti GIÀ scaduti (richiamo a rientrare
+            nell'app), quello sulla Spesa i prodotti ancora da prendere. */}
+        <div className="flex items-center gap-1 rounded-full bg-ink p-[5px] shadow-barra">
+          <Tab active={view === "dispensa"} onClick={() => setView("dispensa")} label="Dispensa" badge={expiredCount} tourId="tab-dispensa" />
+          <Tab active={view === "spesa"} onClick={() => setView("spesa")} label="Spesa" badge={shoppingCount} tourId="tab-spesa" />
+          <div className="w-16 shrink-0" aria-hidden="true" />
+          <Tab active={view === "ricette"} onClick={() => setView("ricette")} label="Ricette" tourId="tab-ricette" />
+          <Tab active={false} onClick={onProfile} label="Profilo" tourId="tab-profilo" />
         </div>
 
         {/* "+" centrale rialzato */}

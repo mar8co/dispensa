@@ -27,15 +27,15 @@ export default function TimerBar({ onTap, bottom }) {
   return (
     <button
       onClick={onTap}
-      className="fixed left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border border-tomato/30 bg-cream/95 py-2 pl-3 pr-4 shadow-lg backdrop-blur transition active:scale-95"
+      className="fixed left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full bg-ink py-2 pl-3 pr-4 text-crema shadow-barra transition active:scale-95"
       style={{ bottom }}
       aria-label="Vai al timer"
     >
-      <Timer className="h-4 w-4 animate-pulse text-tomato" />
-      <span className="font-mono text-sm font-bold tabular-nums text-ink">{fmt(left)}</span>
-      {t.label && <span className="max-w-[9rem] truncate text-xs font-semibold text-stone-500">{t.label}</span>}
+      <Timer className="h-4 w-4 animate-pulse" />
+      <span className="num text-[0.95rem] font-extrabold tracking-[-0.02em]">{fmt(left)}</span>
+      {t.label && <span className="max-w-[9rem] truncate text-xs font-semibold text-crema/70">{t.label}</span>}
       {list.length > 1 && (
-        <span className="rounded-full bg-tomato px-1.5 text-[10px] font-bold leading-4 text-white">+{list.length - 1}</span>
+        <span className="rounded-full bg-giallo px-1.5 text-[10px] font-extrabold leading-4 text-ink">+{list.length - 1}</span>
       )}
     </button>
   );
