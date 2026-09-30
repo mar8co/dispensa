@@ -48,7 +48,7 @@
   aperta in crema, numeri rossi; **"+" arancio rialzato al centro** (scelta dell'utente), solo in
   Dispensa, con il menu a semicerchio (bollini bianchi, velo nero senza sfocatura).
 - **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Barra timer nera.
-- **Oggetto simbolo: due barattoli** (`components/Barattoli.jsx`, stesso disegno di
+- **Oggetto simbolo: sacchetto della spesa + cappello da chef** (`components/Barattoli.jsx`, stesso disegno di
   `public/icon.svg`): dietro pieno nero, davanti col colore della superficie. Usato per icona,
   splash, accesso, dispensa vuota, "Sto analizzando la spesa" e il pulsante "Sposta in dispensa".
 - **Icona e splash**: barattoli neri sull'arancio; splash con la scritta "Dispensa" (immagine

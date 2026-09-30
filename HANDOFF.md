@@ -423,7 +423,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 - **Auth** Supabase: magic-link (email), Google OAuth, Apple OAuth, **Face ID/
   passkey** (WebAuthn, vedi "in sviluppo" per Apple e passkey). Login **a pagina
-  intera** su arancio (veste manifesto del 2026-09-30): i due barattoli,
+  intera** su arancio (veste manifesto del 2026-09-30): i sacchetto della spesa + cappello da chef,
   headline enorme "Cosa c'è in dispensa?" con sottolineatura ondulata nera su
   "dispensa", sottotitolo "La tua cucina, in tasca. **Meno sprechi.** Zero
   pensieri." ("Meno sprechi" su pillola verde: sull'arancio un testo verde non
@@ -589,7 +589,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/constants.js` | Categorie, ordini reparto, **emoji categorie (`CAT_ICON`)**, prompt AI, seed/demo. |
 | `src/index.css` | Veste manifesto: `--sfondo` (colore della schermata), classi comuni (`.gigante`, `.micro`, `.bottone`, `.pillola`, `.tondo`, `.cartellino`, `.campo`...) e CSS PWA/Vaul/splash. Token in `tailwind.config.js`. |
 | `src/lib/colors.js` + `src/hooks/usePageColor.js` | **Colore per schermata** (`PAGE_COLOR`, `pageColorFor`, `setPageColor`: `--sfondo` + `theme-color`). |
-| `src/components/Barattoli.jsx` | **Oggetto simbolo** (due barattoli), stesso disegno di `public/icon.svg`. |
+| `src/components/Barattoli.jsx` | **Oggetto simbolo** (sacchetto della spesa + cappello da chef), stesso disegno di `public/icon.svg`. |
 | `anteprima.html` + `src/anteprima/` | **Pagina di prova solo sviluppo**: schermate vere con dati finti, senza login (`?vista=`, `?foglio=`). Non entra nella build. |
 | `src/components/HouseholdSection.jsx` | UI **Dispensa condivisa** nel Profilo: membri (username + corona sul creatore + "Rimuovi"), inviti, entra-con-codice, switch nucleo, esci, popup conferma espulsione. |
 | `src/components/ProfileSheet.jsx` | Foglio Profilo ("chi sei"): **Nome (username)** al posto della mail, `HouseholdSection`, **Esigenze alimentari** (box 2 righe), azioni dati (Svuota dispensa `data-tour="clear-pantry"`, Esci). ⚙️ in alto a destra apre `SettingsSheet`. |
