@@ -1,35 +1,25 @@
 // Foglio Impostazioni (dall'ingranaggio in alto a destra del Profilo).
-// Raccoglie il "come si comporta l'app": Face ID, notifiche push, tema,
+// Raccoglie il "come si comporta l'app": Face ID, notifiche push,
 // tutorial e il footer legale (privacy / elimina account). Il Profilo resta
 // il "chi sei": nome, dispensa familiare, esigenze alimentari e azioni dati.
 import { useState, useEffect } from "react";
 import {
-  X, SunMoon, Sun, Moon, GraduationCap, Loader2, Palette, ChevronDown, Bell,
+  X, GraduationCap, Loader2, Bell,
   Sparkles, ChevronRight,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import FaceIdIcon from "./FaceIdIcon.jsx";
 import { supabase } from "../lib/supabase.js";
-import { getTheme, setTheme } from "../lib/theme.js";
 import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush } from "../lib/push.js";
 
 // WebAuthn/passkey disponibile solo dove esiste l'API credenziali (iPhone
 // Safari/PWA la supporta). Se manca, la riga Face ID non compare.
 const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
 
-const THEMES = [
-  { id: "auto", label: "Auto", icon: SunMoon },
-  { id: "light", label: "Chiaro", icon: Sun },
-  { id: "dark", label: "Scuro", icon: Moon },
-];
-const THEME_LABEL = { auto: "Auto", light: "Chiaro", dark: "Scuro" };
-
 export default function SettingsSheet({
   onClose, onReplayTour, onDeleteAccount, onOpenPrivacy,
   isPro = true, onOpenPaywall,
 }) {
-  const [theme, setThemeState] = useState(getTheme());
-  const [open, setOpen] = useState("");           // riga espandibile aperta: "theme"
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [delErr, setDelErr] = useState("");
@@ -121,8 +111,6 @@ export default function SettingsSheet({
     }
   }
 
-  function chooseTheme(id) { setTheme(id); setThemeState(id); }
-  const toggle = (id) => setOpen((o) => (o === id ? "" : id));
 
   async function runDelete() {
     setDeleting(true); setDelErr("");
@@ -243,45 +231,10 @@ export default function SettingsSheet({
               </div>
             )}
 
-            {/* Aspetto (tema) */}
-            <button
-              onClick={() => toggle("theme")}
-              className={`flex w-full items-center gap-3 px-3.5 py-3 text-left ${(CAN_USE_PASSKEY || canPush || iosHint) ? "border-t border-hair" : ""}`}
-              aria-expanded={open === "theme"}
-            >
-              <Palette className="h-[18px] w-[18px] text-stone-400" />
-              <span className="flex-1 text-sm text-ink">Aspetto</span>
-              <span className="text-xs text-stone-500">{THEME_LABEL[theme]}</span>
-              <ChevronDown className={`h-4 w-4 text-stone-400 transition-transform ${open === "theme" ? "rotate-180" : ""}`} />
-            </button>
-            {open === "theme" && (
-              <div className="border-t border-hair px-3.5 pb-3.5 pt-3">
-                <div className="grid grid-cols-3 gap-2">
-                  {THEMES.map(({ id, label, icon: Icon }) => {
-                    const active = theme === id;
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => chooseTheme(id)}
-                        aria-pressed={active}
-                        className={`flex flex-col items-center gap-1.5 rounded-xl border py-2.5 text-xs font-semibold transition ${
-                          active ? "border-ink bg-ink text-white" : "border-hair bg-cream text-stone-500 hover:border-stone-300"
-                        }`}
-                      >
-                        <Icon className="h-5 w-5" />
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {theme === "auto" && <p className="mt-2 text-xs text-stone-500">Segue le impostazioni del telefono.</p>}
-              </div>
-            )}
-
             {/* Tutorial */}
             <button
               onClick={() => { close(); onReplayTour?.(); }}
-              className="flex w-full items-center gap-3 border-t border-hair px-3.5 py-3 text-left text-sm text-ink transition hover:bg-stone-50"
+              className={`flex w-full items-center gap-3 px-3.5 py-3 text-left text-sm text-ink transition hover:bg-stone-50 ${(CAN_USE_PASSKEY || canPush || iosHint) ? "border-t border-hair" : ""}`}
             >
               <GraduationCap className="h-[18px] w-[18px] text-stone-400" /> Rivedi il tutorial
             </button>

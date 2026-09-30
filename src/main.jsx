@@ -1,14 +1,16 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
+// Carattere della veste "manifesto" (file locali, niente CDN: funziona anche
+// offline e nel guscio nativo). Solo il tondo: il corsivo non si usa.
+import "@fontsource-variable/inter-tight/wght.css";
 import "./index.css";
-import { applyTheme, getTheme } from "./lib/theme.js";
 import { installViewportFix } from "./lib/viewportFix.js";
 import { installNativeAuthBridge } from "./lib/native.js";
 import { installNativePushTapHandler } from "./lib/push.js";
 
-// Applica subito il tema scelto (auto/chiaro/scuro) prima del primo render.
-applyTheme(getTheme());
+// Un solo tema (chiaro): la vecchia scelta Auto/Chiaro/Scuro non esiste più.
+try { localStorage.removeItem("dispensa-theme"); } catch { /* niente */ }
 
 // Niente ripristino automatico della posizione di scroll tra le aperture:
 // ogni sezione riparte dall'alto (lo gestiamo noi).

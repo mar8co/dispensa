@@ -2,104 +2,233 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Palette in variabili (terne RGB, così funzionano le opacità Tailwind tipo
-   bg-tomato/10). La modalità scura segue il sistema e ribalta i toni. */
+/* Veste "manifesto svizzero" (DESIGN-ATTUALE.md): un colore pieno per
+   schermata, inchiostro nero, righe sottili, pillole. Un solo tema, chiaro: il
+   tema scuro è stato tolto su richiesta (come in Expense Track). */
 :root {
-  color-scheme: light dark;
-  --cream: 244 241 233;   /* tela di fondo: avorio (#F4F1E9) */
-  --paper: 255 255 255;   /* superfici/card in bianco puro, per lo stacco */
-  --ink: 10 10 10;        /* testo principale (#0A0A0A) */
-  --hair: 230 226 216;    /* righe sottili (avorio un filo più scuro) */
-  --white: 255 255 255;   /* superfici "bianche" e testo su ink/tomato */
-  --tomato: 255 67 6;     /* rosso principale (#FF4306) */
-  --tomato-700: 214 54 0; /* rosso scuro (hover) */
-  --tomato-50: 255 237 230;
-  --tomato-100: 255 216 204;
-  --stone-50: 250 250 249;
-  --stone-100: 245 245 244;
-  --stone-200: 231 229 228;
-  --stone-300: 214 211 209;
-  --stone-400: 168 162 158;
-  --stone-500: 120 113 108;
-  --stone-600: 87 83 78;
-  --stone-700: 68 64 60;
-  --stone-800: 41 37 36;
-  --stone-900: 28 25 23;
-  --amber-100: 254 243 199;
-  --amber-700: 180 83 9;
+  color-scheme: light only;
+  -webkit-tap-highlight-color: transparent;
+  /* Colore pieno della schermata aperta (terna RGB, per le opacità Tailwind):
+     lo imposta setPageColor() a ogni cambio pagina, insieme a theme-color. */
+  --sfondo: 255 122 26;
 }
-
-/* Toni scuri: valgono in automatico (sistema scuro, salvo forzatura "chiaro")
-   e quando l'utente forza "scuro" dal profilo. NB: i due blocchi devono
-   restare identici. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --cream: 18 18 17;
-    --paper: 30 30 29;
-    --ink: 242 240 236;
-    --hair: 44 44 42;
-    --white: 24 24 23;
-    --tomato: 255 96 56;     /* rosso #FF4306 più luminoso sul fondo scuro */
-    --tomato-700: 255 128 96;
-    --tomato-50: 56 26 16;
-    --tomato-100: 74 34 22;
-    --stone-50: 36 36 34;
-    --stone-100: 44 44 42;
-    --stone-200: 58 58 55;
-    --stone-300: 76 76 72;
-    --stone-400: 136 136 130;
-    --stone-500: 162 162 156;
-    --stone-600: 194 194 188;
-    --stone-700: 212 212 206;
-    --stone-800: 226 226 220;
-    --stone-900: 240 240 234;
-    --amber-100: 58 47 18;
-    --amber-700: 224 179 79;
-  }
-}
-:root[data-theme="dark"] {
-  --cream: 18 18 17;
-  --paper: 30 30 29;
-  --ink: 242 240 236;
-  --hair: 44 44 42;
-  --white: 24 24 23;
-  --tomato: 255 96 56;
-  --tomato-700: 255 128 96;
-  --tomato-50: 56 26 16;
-  --tomato-100: 74 34 22;
-  --stone-50: 36 36 34;
-  --stone-100: 44 44 42;
-  --stone-200: 58 58 55;
-  --stone-300: 76 76 72;
-  --stone-400: 136 136 130;
-  --stone-500: 162 162 156;
-  --stone-600: 194 194 188;
-  --stone-700: 212 212 206;
-  --stone-800: 226 226 220;
-  --stone-900: 240 240 234;
-  --amber-100: 58 47 18;
-  --amber-700: 224 179 79;
-}
-:root[data-theme="light"] { color-scheme: light; }
-:root[data-theme="dark"] { color-scheme: dark; }
 
 html {
-  -webkit-tap-highlight-color: transparent;
+  background: rgb(var(--sfondo));
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
-  background: rgb(var(--cream));
-  font-family: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
-  color: rgb(var(--ink));
+  min-height: 100dvh;
+  background: rgb(var(--sfondo));
+  color: #0a0a0a;
+  font: 500 16px/1.35 "Inter Tight Variable", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
   /* Parole molto lunghe (nomi prodotto, richieste libere) vanno a capo
      invece di sforare dai bordi. */
   overflow-wrap: break-word;
 }
 
-/* Titoli: grottesco con tracking stretto */
-.font-display {
-  letter-spacing: -0.03em;
+/* Nessuna barra di scorrimento visibile, mai: si scorre lo stesso. */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+/* Icone lucide a tratto spesso (di serie è 2). */
+svg.lucide {
+  stroke-width: 2.6px;
+}
+
+@layer components {
+  /* Titolo di pagina enorme e stretto. word-spacing: con -0.065em lo spazio
+     tra le parole quasi sparisce ("Haifame?"). */
+  .gigante {
+    font-size: clamp(3.4rem, 17vw, 5.4rem);
+    font-weight: 800;
+    letter-spacing: -0.065em;
+    word-spacing: 0.1em;
+    line-height: 0.84;
+    margin-left: -0.04em;
+  }
+  /* Titolo più piccolo (fogli, sotto-viste): stesso taglio. */
+  .titolo {
+    font-size: clamp(2.3rem, 11.5vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    word-spacing: 0.08em;
+    line-height: 0.92;
+    margin-left: -0.03em;
+  }
+  /* Frase grande / nome in evidenza. */
+  .grande {
+    font-size: 1.9rem;
+    font-weight: 750;
+    letter-spacing: -0.045em;
+    line-height: 0.95;
+  }
+  /* Etichetta piccola e tenue sopra un valore: mai tutto maiuscolo. */
+  .micro {
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.25;
+    color: rgb(10 10 10 / 0.6);
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Intestazione di sezione: nome a sinistra, dato a destra, filetto nero sotto. */
+  .sezione {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding-bottom: 0.4rem;
+    border-bottom: 1.5px solid #0a0a0a;
+  }
+
+  /* Pulsanti a pillola: pieno nero (azione principale), col bordo
+     (alternative), rosso (ciò che toglie). */
+  .bottone,
+  .bottone-chiaro,
+  .bottone-rosso {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 50px;
+    padding: 0.85rem 1.3rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    transition: transform 0.12s, opacity 0.15s;
+  }
+  .bottone {
+    background: #0a0a0a;
+    color: #fff;
+  }
+  .bottone-chiaro {
+    background: transparent;
+    color: #0a0a0a;
+    border: 1.5px solid #0a0a0a;
+  }
+  .bottone-rosso {
+    background: #e02a0d;
+    color: #fff;
+  }
+  .bottone:active,
+  .bottone-chiaro:active,
+  .bottone-rosso:active {
+    transform: scale(0.97);
+  }
+  .bottone:disabled,
+  .bottone-chiaro:disabled,
+  .bottone-rosso:disabled {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  /* Pulsante tondo con l'icona. */
+  .tondo {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid #0a0a0a;
+    background: transparent;
+    color: #0a0a0a;
+    transition: transform 0.12s;
+  }
+  .tondo:active {
+    transform: scale(0.92);
+  }
+
+  /* Pillola di scelta (filtri, chip): solo bordo; scelta = piena nera. */
+  .pillola {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 0.85rem;
+    border-radius: 999px;
+    border: 1.5px solid #0a0a0a;
+    background: transparent;
+    color: #0a0a0a;
+    font-weight: 700;
+    font-size: 0.86rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .pillola.attiva,
+  .pillola[aria-pressed="true"] {
+    background: #0a0a0a;
+    color: #fff;
+  }
+
+  /* Cartellino: etichetta piccolissima a pillola (scadenze, "finito"). */
+  .cartellino {
+    flex: none;
+    border: 1.3px solid #0a0a0a;
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+
+  /* Azione rara o secondaria: testo sottolineato. */
+  .link {
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Campo di testo: solo una riga sotto, niente scatola. */
+  .campo {
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    border-bottom: 1.5px solid #0a0a0a;
+    border-radius: 0;
+    background: transparent;
+    font-weight: 600;
+    outline: none;
+  }
+  .campo:focus {
+    border-bottom-width: 3px;
+  }
+  .campo::placeholder {
+    color: rgb(10 10 10 / 0.5);
+  }
+
+  /* Riquadro scuro "in evidenza": il riassunto più utile della pagina. */
+  .evidenza {
+    background: #0a0a0a;
+    color: #f3f1ec;
+    border-radius: 18px;
+  }
+  .evidenza .micro {
+    color: rgb(243 241 236 / 0.62);
+  }
 }
 
 /* Transizioni di vista (cambio scheda / dettaglio ricetta): dissolvenza breve. */
@@ -114,12 +243,10 @@ body {
   }
 }
 
-/* Barre orizzontali scorrevoli senza scrollbar visibile (salta-reparto). */
+/* Barre orizzontali scorrevoli (salta-reparto): la regola globale nasconde
+   già le barre, la classe resta per chiarezza. */
 .no-scrollbar {
   scrollbar-width: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
 }
 
 /* Foglio voce: anelli che pulsano attorno al microfono e barre equalizer. */
@@ -142,7 +269,23 @@ body {
   animation: voice-eq 0.8s ease-in-out infinite;
 }
 
-/* Dissolvenza generica (es. sfondo blurrato delle finestre). */
+/* Comparsa degli avvisi: salgono di 24 px in dissolvenza (solo transform e
+   opacity, niente ridisegni). */
+@keyframes sale {
+  from { transform: translateY(24px); opacity: 0; }
+}
+.animate-sale {
+  animation: sale 0.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-sale,
+  .animate-fade-in,
+  .animate-drop-in {
+    animation: none;
+  }
+}
+
+/* Dissolvenza generica (comparse brevi). */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -180,15 +323,15 @@ body {
 }
 
 /* Intro splash (SplashIntro.jsx): riprende la splash nativa (icona + "Dispensa")
-   e disegna la sottolineatura ondulata tomato, poi sfuma nell'app. Lo sfondo usa
-   --cream, così combacia con le PNG native (chiaro/scuro). */
+   e disegna la sottolineatura ondulata, poi sfuma nell'app. Lo sfondo è il
+   colore della pagina (arancio all'avvio), come le PNG native. */
 .splash-intro {
   position: fixed;
   inset: 0;
   z-index: 9999;
   display: grid;
   place-items: center;
-  background: rgb(var(--cream));
+  background: rgb(var(--sfondo));
   transition: opacity 0.5s ease;
 }
 .splash-intro.is-leaving {
@@ -209,12 +352,11 @@ body {
 }
 .splash-word {
   margin-top: 5vmin;
-  font-family: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.06em;
   line-height: 1;
   font-size: 10.5vmin;
-  color: rgb(var(--ink));
+  color: #0a0a0a;
   opacity: 0;
   animation: splash-rise 0.55s ease 0.15s forwards;
 }
@@ -226,7 +368,7 @@ body {
 }
 .splash-uline path {
   fill: none;
-  stroke: rgb(var(--tomato));
+  stroke: #0a0a0a;
   stroke-width: 5;
   stroke-linecap: round;
   stroke-dasharray: var(--dash, 220);

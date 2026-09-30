@@ -1,48 +1,90 @@
 /** @type {import('tailwindcss').Config} */
-// I colori puntano alle variabili CSS di index.css (terne RGB): così la
-// modalità scura ribalta tutta la palette senza toccare i componenti.
-const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+// Veste "manifesto svizzero" (stessa di Wishlist Viaggi ed Expense Track):
+// colori pieni, inchiostro nero, righe sottili, pillole. Un solo tema, chiaro.
+// Guida completa: Downloads/APP/wishlist-viaggi/docs/LINEE-GUIDA-DESIGN.md.
+
+// Colore pieno della schermata aperta: lo imposta setPageColor (terna RGB in
+// --sfondo), così `bg-sfondo` segue la pagina senza toccare i componenti.
+const sfondo = "rgb(var(--sfondo) / <alpha-value>)";
+// Inchiostro trasparente: su qualsiasi colore pieno resta leggibile e prende
+// la tinta del fondo (un grigio fisso sul giallo o sull'arancio sporcherebbe).
+const inkA = (a) => `rgb(10 10 10 / calc(<alpha-value> * ${a}))`;
 
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        // Stile X · Editoriale (fondo bianco; scuro automatico da sistema)
-        cream: v("cream"),
-        paper: v("paper"),
-        ink: v("ink"),
-        hair: v("hair"),
-        // "white" segue il tema: superfici bianche e testi su ink/tomato
-        // diventano scuri in dark mode. Il nero (scrim) resta letterale.
-        white: v("white"),
+        sfondo,
+        ink: "rgb(10 10 10 / <alpha-value>)",
+        white: "#ffffff",
+        crema: "#f3f1ec", // "bianco caldo" del testo su nero
+        carta: "#efede8",
+        tenue: inkA(0.6), // etichette e testi secondari
+        riga: inkA(0.16), // fili sottili tra le righe
+        // Colori pieni (sopra si scrive in nero; bianco solo sul rosso azione)
+        arancio: "#ff7a1a", // marchio: Dispensa, accesso, avvio, icona
+        giallo: "#ffd60a",
+        verde: "#22b35e",
+        rosa: "#ffb5d0",
+        sabbia: "#dccdb2",
+        blu: "#3572e8",
+        grigio: "#c9c5bd",
+        rosso: {
+          DEFAULT: "#ff3b1c",
+          azione: "#e02a0d", // ciò che toglie (regge il testo bianco)
+          elimina: "#d8241a", // fondo dietro lo swipe "Elimina"
+        },
+        errore: "#c21d05",
+
+        // --- Alias TEMPORANEI della veste precedente, finché il restyle non
+        // ha riscritto ogni schermata: poi si tolgono (vedi DESIGN-ATTUALE). ---
+        cream: sfondo,
+        paper: "#ffffff",
+        hair: inkA(0.16),
         tomato: {
-          DEFAULT: v("tomato"),
-          50: v("tomato-50"),
-          100: v("tomato-100"),
-          600: v("tomato"),
-          700: v("tomato-700"),
+          DEFAULT: "rgb(10 10 10 / <alpha-value>)",
+          50: inkA(0.05),
+          100: inkA(0.1),
+          600: "rgb(10 10 10 / <alpha-value>)",
+          700: "rgb(10 10 10 / <alpha-value>)",
         },
         stone: {
-          50: v("stone-50"),
-          100: v("stone-100"),
-          200: v("stone-200"),
-          300: v("stone-300"),
-          400: v("stone-400"),
-          500: v("stone-500"),
-          600: v("stone-600"),
-          700: v("stone-700"),
-          800: v("stone-800"),
-          900: v("stone-900"),
+          50: inkA(0.04),
+          100: inkA(0.07),
+          200: inkA(0.12),
+          300: inkA(0.25),
+          400: inkA(0.42),
+          500: inkA(0.6),
+          600: inkA(0.72),
+          700: inkA(0.82),
+          800: inkA(0.9),
+          900: inkA(0.95),
         },
         amber: {
-          100: v("amber-100"),
-          700: v("amber-700"),
+          100: "#ffd60a",
+          700: "rgb(10 10 10 / <alpha-value>)",
         },
       },
       fontFamily: {
-        sans: ['"Hanken Grotesk"', "system-ui", "-apple-system", "sans-serif"],
-        display: ['"Hanken Grotesk"', "system-ui", "-apple-system", "sans-serif"],
+        sans: ['"Inter Tight Variable"', '"Helvetica Neue"', "Helvetica", "Arial", "system-ui", "sans-serif"],
+        display: ['"Inter Tight Variable"', '"Helvetica Neue"', "Helvetica", "Arial", "system-ui", "sans-serif"],
+      },
+      letterSpacing: {
+        titolo: "-0.065em",
+        numero: "-0.06em",
+        grande: "-0.045em",
+      },
+      borderRadius: {
+        foglio: "28px",
+        card: "18px",
+        riga: "14px",
+      },
+      boxShadow: {
+        card: "0 6px 18px rgb(0 0 0 / .1)",
+        ricerca: "0 14px 34px rgb(0 0 0 / .12)",
+        popover: "0 12px 30px rgb(0 0 0 / .16)",
+        barra: "0 8px 30px rgb(0 0 0 / .25)",
       },
     },
   },
