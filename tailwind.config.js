@@ -36,39 +36,9 @@ export default {
           elimina: "#d8241a", // fondo dietro lo swipe "Elimina"
         },
         errore: "#c21d05",
-
-        // --- Alias TEMPORANEI della veste precedente, finché il restyle non
-        // ha riscritto ogni schermata: poi si tolgono (vedi DESIGN-ATTUALE). ---
-        cream: sfondo,
-        paper: "#ffffff",
-        hair: inkA(0.16),
-        tomato: {
-          DEFAULT: "rgb(10 10 10 / <alpha-value>)",
-          50: inkA(0.05),
-          100: inkA(0.1),
-          600: "rgb(10 10 10 / <alpha-value>)",
-          700: "rgb(10 10 10 / <alpha-value>)",
-        },
-        stone: {
-          50: inkA(0.04),
-          100: inkA(0.07),
-          200: inkA(0.12),
-          300: inkA(0.25),
-          400: inkA(0.42),
-          500: inkA(0.6),
-          600: inkA(0.72),
-          700: inkA(0.82),
-          800: inkA(0.9),
-          900: inkA(0.95),
-        },
-        amber: {
-          100: "#ffd60a",
-          700: "rgb(10 10 10 / <alpha-value>)",
-        },
       },
       fontFamily: {
         sans: ['"Inter Tight Variable"', '"Helvetica Neue"', "Helvetica", "Arial", "system-ui", "sans-serif"],
-        display: ['"Inter Tight Variable"', '"Helvetica Neue"', "Helvetica", "Arial", "system-ui", "sans-serif"],
       },
       letterSpacing: {
         titolo: "-0.065em",
