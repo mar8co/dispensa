@@ -142,10 +142,10 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
               disabled={busy}
               aria-label="Scatta"
               className={`flex h-[72px] w-[72px] items-center justify-center rounded-full ring-4 transition active:scale-95 disabled:opacity-60 ${
-                sharp ? "bg-tomato ring-tomato/40" : "bg-[#fff] ring-[#fff]/40"
+                sharp ? "bg-giallo ring-giallo/40" : "bg-[#fff] ring-[#fff]/40"
               }`}
             >
-              <span className={`h-14 w-14 rounded-full border-[3px] ${sharp ? "border-[#fff]/40 bg-tomato" : "border-black/10 bg-[#fff]"}`} />
+              <span className={`h-14 w-14 rounded-full border-[3px] ${sharp ? "border-black/20 bg-giallo" : "border-black/10 bg-[#fff]"}`} />
             </button>
           )}
           <button
@@ -153,7 +153,7 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
             disabled={busy}
             aria-label="Scegli dalla galleria"
             title="Dalla galleria"
-            className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-[#fff]/50 bg-[#fff]/10 text-[#fff] transition hover:bg-[#fff]/20 disabled:opacity-60 ${
+            className={`flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-crema/60 text-crema transition active:scale-95 disabled:opacity-60 ${
               error ? "" : "absolute right-0"
             }`}
           >
@@ -177,13 +177,13 @@ export default function ReceiptScanModal({ onClose, onCapture }) {
               riempie con lo scontrino senza doverlo allontanare. */}
           <div
             className={`absolute inset-y-6 inset-x-7 rounded-2xl border-2 transition-colors ${
-              sharp ? "border-tomato" : "border-[#fff]/70"
+              sharp ? "border-giallo" : "border-[#fff]/70"
             }`}
           />
           {/* Scritta centrata SULLA linea superiore del riquadro. */}
           <span
-            className={`absolute left-1/2 top-6 max-w-[80%] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-center text-xs font-bold shadow-lg backdrop-blur transition ${
-              sharp ? "bg-tomato text-[#fff]" : "bg-black/70 text-[#fff]"
+            className={`absolute left-1/2 top-6 max-w-[80%] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-center text-xs font-bold transition ${
+              sharp ? "bg-giallo text-ink" : "bg-black/80 text-[#fff]"
             }`}
           >
             {sharp ? "A fuoco — scatta" : "Metti a fuoco e scatta"}

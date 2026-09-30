@@ -60,13 +60,15 @@ svg.lucide {
     line-height: 0.84;
     margin-left: -0.04em;
   }
-  /* Titolo più piccolo (fogli, sotto-viste): stesso taglio. */
+  /* Titolo più piccolo (fogli, sotto-viste): stesso taglio. Misura della
+     guida per i titoli dei fogli (clamp 1.9–2.3rem): "Aggiungi a mano" sta su
+     una riga accanto al tondo, così il foglio resta basso con la tastiera. */
   .titolo {
-    font-size: clamp(2.3rem, 11.5vw, 3rem);
+    font-size: clamp(1.9rem, 9.4vw, 2.3rem);
     font-weight: 800;
-    letter-spacing: -0.06em;
+    letter-spacing: -0.055em;
     word-spacing: 0.08em;
-    line-height: 0.92;
+    line-height: 0.95;
     margin-left: -0.03em;
   }
   /* Frase grande / nome in evidenza. */

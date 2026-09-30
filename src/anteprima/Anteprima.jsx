@@ -8,7 +8,8 @@
 // Parametri (querystring):
 //   vista = dispensa | spesa | ricette | proposte | ricetta | piano | accesso
 //   menu=1  menu "+" aperto · toast=1  avviso con Annulla
-//   foglio = profilo | impostazioni | premium | privacy | svuota
+//   foglio = profilo | impostazioni | premium | privacy | svuota | aggiungi |
+//            revisione | cucinato | voce
 import { useState, useRef } from "react";
 import { DEMO_DATA, CATEGORIES, MODES } from "../constants.js";
 import { guessCategory, daysUntilExpiry, findMatch } from "../lib/pantry.js";
@@ -25,6 +26,27 @@ import SettingsSheet from "../components/SettingsSheet.jsx";
 import PaywallSheet from "../components/PaywallSheet.jsx";
 import PrivacySheet from "../components/PrivacySheet.jsx";
 import ConfirmClearModal from "../components/ConfirmClearModal.jsx";
+import ManualAddModal from "../components/ManualAddModal.jsx";
+import ReviewScanModal from "../components/ReviewScanModal.jsx";
+import CookModal from "../components/CookModal.jsx";
+import VoiceAddModal from "../components/VoiceAddModal.jsx";
+
+// "Aggiungi a mano" con lo stato che in Dispensa.jsx vive nel composition root.
+function AggiungiProva({ onClose }) {
+  const [name, setName] = useState("Pomod");
+  const [qty, setQty] = useState("1");
+  const [unit, setUnit] = useState("");
+  const [cat, setCat] = useState("");
+  const [expiry, setExpiry] = useState("");
+  return (
+    <ManualAddModal
+      newName={name} setNewName={setName} newQty={qty} setNewQty={setQty} unit={unit} setUnit={setUnit}
+      newCat={cat} setNewCat={setCat} newExpiry={expiry} setNewExpiry={setExpiry}
+      adding={false} onSubmit={async () => ({ name, category: "Verdura" })} onQuickAdd={async (n) => ({ name: n, category: "Verdura" })}
+      onClose={onClose} historyNames={["Pomodori", "Pomodorini"]} pantryNames={[]}
+    />
+  );
+}
 import { usePageColor } from "../hooks/usePageColor.js";
 import { pageColorFor, PAGE_COLOR } from "../lib/colors.js";
 
@@ -229,6 +251,24 @@ export default function Anteprima() {
       {foglio === "premium" && <PaywallSheet onClose={chiudi} reason="Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola." />}
       {foglio === "privacy" && <PrivacySheet onClose={chiudi} />}
       {foglio === "svuota" && <ConfirmClearModal onCancel={chiudi} onConfirm={chiudi} />}
+      {foglio === "aggiungi" && <AggiungiProva onClose={chiudi} />}
+      {foglio === "revisione" && (
+        <ReviewScanModal
+          initialItems={[{ name: "Latte", qty: "1 l", category: "Latticini" }, { name: "Pane", qty: "1", category: "Pane e Forno" }, { name: "Mozzarella", qty: "2", category: "Latticini" }]}
+          onCancel={chiudi} onConfirm={chiudi} onAddMore={() => {}}
+        />
+      )}
+      {foglio === "cucinato" && (
+        <CookModal
+          rows={[
+            { itemId: "a", name: "Spaghetti", kind: "exact", used: "180 g", before: "500 g", after: "320 g" },
+            { itemId: "b", name: "Zucchine", kind: "pack", before: "3", after: "1" },
+            { itemId: "c", name: "Olio EVO", kind: "qb", before: "1 l", after: "1 l" },
+          ]}
+          onClose={chiudi} onSetAfter={() => {}} onRemoveRow={() => {}} onApply={chiudi} onStapleToShopping={() => {}}
+        />
+      )}
+      {foglio === "voce" && <VoiceAddModal processing={false} onCancel={chiudi} onResult={chiudi} />}
 
       {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionTone={toast.actionTone} raised={view === "spesa" && shopping.some((x) => x.checked)} />}
     </div>

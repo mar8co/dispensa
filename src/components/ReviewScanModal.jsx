@@ -49,38 +49,38 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm, onA
     <Sheet onClose={onCancel} locked={dirty}>
       {(close) => (
       <>
-        <div className="flex items-start justify-between px-5 pb-3 pt-1">
+        <div className="flex items-start justify-between gap-2 px-[18px] pb-3 pt-1">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Revisione</p>
-            <h3 className="mt-0.5 font-display text-xl font-extrabold tracking-tight text-ink">Prodotti riconosciuti</h3>
-            <p className="mt-0.5 text-xs text-stone-500">Controlla nome, quantità e categoria, poi conferma.</p>
+            <p className="micro">Revisione</p>
+            <h3 className="titolo mt-1">Prodotti riconosciuti</h3>
+            <p className="mt-2 text-[0.9rem] font-medium leading-snug text-tenue">Controlla nome, quantità e categoria, poi conferma.</p>
           </div>
           <button
             onClick={() => (dirty ? setConfirmDiscard(true) : close())}
-            className="-mr-1 rounded-lg p-1.5 text-stone-400 hover:bg-stone-100"
+            className="tondo"
             aria-label="Chiudi"
           >
-            <X className="h-5 w-5" />
+            <X className="h-[18px] w-[18px]" />
           </button>
         </div>
 
-        <div className="max-h-[58vh] overflow-y-auto border-t border-hair px-5 py-3">
+        <div className="max-h-[58vh] overflow-y-auto border-t-[1.5px] border-ink px-[18px] py-3">
           {items.length === 0 ? (
-            <p className="py-8 text-center text-sm text-stone-500">
+            <p className="py-8 text-center text-[1rem] font-semibold text-tenue">
               Nessun prodotto da aggiungere.
             </p>
           ) : (
             <div className="space-y-5">
               {grouped.map(({ cat, list }) => (
                 <div key={cat}>
-                  <div className="mb-2 flex items-center gap-1.5">
-                    <span className="text-sm">{CAT_ICON[cat]}</span>
-                    <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-stone-500">{cat}</h4>
-                    <span className="font-display text-xs font-bold text-tomato">{list.length}</span>
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="text-[1.05rem] leading-none">{CAT_ICON[cat]}</span>
+                    <h4 className="text-[1.1rem] font-extrabold tracking-[-0.03em] text-ink">{cat}</h4>
+                    <span className="num text-[1.1rem] font-extrabold tracking-[-0.03em] text-tenue">{list.length}</span>
                   </div>
-                  <ul className="space-y-2">
+                  <ul className="divide-y divide-riga">
                     {list.map((it) => (
-                      <li key={it.id} className="rounded-xl border border-hair bg-paper p-2.5">
+                      <li key={it.id} className="py-3">
                         {/* Vista prodotto standard (ProductFields): identica a
                             Dispensa/Spesa/Aggiungi a mano. */}
                         <ProductFields
@@ -110,8 +110,8 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm, onA
         </div>
 
         {confirmDiscard ? (
-          <div className="border-t border-tomato/30 bg-tomato/5 px-5 py-3">
-            <p className="text-center text-xs font-semibold text-stone-600">
+          <div className="border-t-[1.5px] border-ink bg-giallo px-[18px] py-3.5">
+            <p className="text-center text-[0.95rem] font-semibold text-ink">
               Scartare {items.length === 1 ? "il prodotto riconosciuto" : `i ${items.length} prodotti riconosciuti`}?
             </p>
             <div className="mt-2.5 flex gap-2">
@@ -126,7 +126,7 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm, onA
             </div>
           </div>
         ) : (
-          <div className="border-t border-hair px-5 py-3">
+          <div className="border-t-[1.5px] border-ink px-[18px] py-3">
             {/* Solo dal flusso voce (onAddMore presente): riapre la dettatura e
                 ACCODA i nuovi prodotti a questi, senza ricominciare da capo. */}
             {onAddMore && (

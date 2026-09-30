@@ -16,9 +16,9 @@ import { adjustQty, formatQtyDisplay } from "../lib/pantry.js";
 // nel codice): "sottratto per te" = matematica fatta dall'app, "quanto
 // resta?" = lo dice l'utente con lo stepper, "q.b." = scorta non toccata.
 const TAGS = {
-  exact: { label: "sottratto per te", cls: "bg-stone-100 text-stone-500" },
-  pack: { label: "quanto resta?", cls: "bg-tomato/10 text-tomato" },
-  qb: { label: "q.b.", cls: "bg-amber-100 text-amber-700" },
+  exact: { label: "sottratto per te", cls: "border-ink/35 text-tenue" },
+  pack: { label: "quanto resta?", cls: "bg-ink text-white" },
+  qb: { label: "q.b.", cls: "" },
 };
 
 export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onApply, onStapleToShopping }) {
@@ -29,33 +29,33 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
     <Sheet onClose={onClose}>
       {(close) => (
         <>
-          <div className="flex items-center justify-between border-b border-hair px-4 pb-3 pt-1">
-            <h3 className="text-base font-semibold text-ink">Aggiorna la dispensa</h3>
-            <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100" aria-label="Chiudi">
-              <X className="h-5 w-5" />
+          <div className="flex items-center justify-between gap-2 border-b-[1.5px] border-ink px-[18px] pb-3 pt-1">
+            <h3 className="titolo">Aggiorna la dispensa</h3>
+            <button onClick={close} className="tondo" aria-label="Chiudi">
+              <X className="h-[18px] w-[18px]" />
             </button>
           </div>
 
-          <div className="max-h-96 overflow-y-auto px-4 py-3">
+          <div className="max-h-96 overflow-y-auto px-[18px] py-3">
             {rows.length === 0 ? (
-              <p className="py-8 text-center text-sm text-stone-500">
+              <p className="py-8 text-center text-[1rem] font-semibold text-tenue">
                 Nessun ingrediente di questa ricetta corrisponde a un prodotto in dispensa.
               </p>
             ) : (
               <>
-                <p className="mb-3 text-xs text-stone-500">
+                <p className="mb-2 text-[0.86rem] font-medium leading-snug text-tenue">
                   Controlla quanto resta di ogni prodotto. Le scorte “q.b.” (olio, sale, spezie…) non si aggiornano.
                 </p>
-                <ul className="space-y-3">
+                <ul className="divide-y divide-riga">
                   {rows.map((r, i) => {
                     const tag = TAGS[r.kind] || TAGS.exact;
                     const isAdded = added.has(r.itemId);
                     return (
-                      <li key={r.itemId} className="rounded-xl border border-stone-200 p-3">
+                      <li key={r.itemId} className="py-3">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-stone-800">{r.name}</p>
-                            <p className="mt-0.5 text-xs text-stone-500">
+                            <p className="truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.name}</p>
+                            <p className="mt-0.5 text-[0.8rem] font-medium text-tenue">
                               {r.kind === "qb"
                                 ? "Usato q.b. · non aggiornato"
                                 : r.kind === "pack"
@@ -63,7 +63,7 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
                                   : <>Usato: {formatQtyDisplay(r.used)} · Prima: {formatQtyDisplay(r.before)}</>}
                             </p>
                           </div>
-                          <span className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${tag.cls}`}>
+                          <span className={`cartellino ${tag.cls}`}>
                             {tag.label}
                           </span>
                         </div>
@@ -72,7 +72,7 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
                           <button
                             onClick={() => { onStapleToShopping(r.name); setAdded((p) => new Set(p).add(r.itemId)); }}
                             disabled={isAdded}
-                            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-tomato disabled:text-stone-400"
+                            className="pillola mt-2 min-h-[32px] px-3 text-[0.8rem] disabled:opacity-40"
                           >
                             {isAdded
                               ? <><Check className="h-3.5 w-3.5" /> in lista</>
@@ -80,29 +80,29 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
                           </button>
                         ) : (
                           <div className="mt-2 flex items-center gap-2">
-                            <span className="shrink-0 text-xs text-stone-500">Rimane:</span>
+                            <span className="shrink-0 text-[0.86rem] font-semibold text-tenue">Rimane:</span>
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => onSetAfter(i, adjustQty(r.after, -1))}
-                                className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-ink hover:text-ink active:scale-95"
+                                className="flex h-8 w-8 items-center justify-center rounded-full border-[1.5px] border-ink text-ink transition active:scale-95"
                                 aria-label="Diminuisci"
                               >−</button>
                               <input
                                 inputMode="decimal"
-                                className="w-20 rounded-lg border border-stone-300 bg-paper px-2 py-1.5 text-center text-sm font-bold text-ink outline-none focus:border-stone-500 focus:ring-2 focus:ring-stone-200"
+                                className="num w-20 rounded-none border-0 border-b-[1.5px] border-ink bg-transparent px-1 py-1 text-center font-extrabold text-ink outline-none focus:border-b-[3px]"
                                 value={formatQtyDisplay(r.after)}
                                 onChange={(e) => onSetAfter(i, e.target.value.replace("½", "0,5"))}
                                 aria-label="Quantità rimasta"
                               />
                               <button
                                 onClick={() => onSetAfter(i, adjustQty(r.after, 1))}
-                                className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-tomato hover:text-tomato active:scale-95"
+                                className="flex h-8 w-8 items-center justify-center rounded-full border-[1.5px] border-ink text-ink transition active:scale-95"
                                 aria-label="Aumenta"
                               >+</button>
                             </div>
                             <button
                               onClick={() => onRemoveRow(i)}
-                              className="ml-auto rounded-lg p-1.5 text-stone-300 hover:bg-stone-100 hover:text-stone-500"
+                              className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-ink/40 active:text-ink"
                               aria-label="Ignora"
                             >
                               <X className="h-4 w-4" />
@@ -113,14 +113,14 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
                     );
                   })}
                 </ul>
-                <p className="mt-3 text-xs text-stone-500">
+                <p className="mt-3 text-[0.86rem] font-medium text-tenue">
                   Lascia vuoto o 0 per togliere un prodotto dalla dispensa.
                 </p>
               </>
             )}
           </div>
 
-          <div className="flex gap-2 border-t border-hair px-4 py-3">
+          <div className="flex gap-2 border-t-[1.5px] border-ink px-[18px] py-3">
             <Button variant="secondary" className="flex-1" onClick={close}>
               Annulla
             </Button>

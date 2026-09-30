@@ -103,21 +103,21 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
   return (
     <Sheet onClose={onCancel} locked={processing}>
       {() => (
-      <div className="px-6 pb-7 pt-1 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">
+      <div className="px-[18px] pb-6 pt-1 text-center">
+        <p className="micro">
           {error ? "Microfono" : listening ? "Ti ascolto" : "In pausa"}
         </p>
 
         {/* Microfono: tap = pausa/riprendi. Un solo anello, discreto. */}
         <div className="relative mx-auto my-4 h-20 w-20">
           {listening && !processing && (
-            <span className="animate-voice-ring absolute inset-0 rounded-full border border-tomato/40" style={{ animationDuration: "2.4s" }} />
+            <span className="animate-voice-ring absolute inset-0 rounded-full border-2 border-ink/40" style={{ animationDuration: "2.4s" }} />
           )}
           <button
             onClick={() => (listening ? pause() : resume())}
             disabled={processing || !!error}
             className={`absolute inset-2 flex items-center justify-center rounded-full transition active:scale-95 ${
-              listening ? "bg-tomato text-white" : "bg-stone-200 text-stone-500"
+              listening ? "bg-ink text-white" : "border-[1.5px] border-ink bg-transparent text-ink"
             }`}
             aria-label={listening ? "Metti in pausa" : "Riprendi ad ascoltare"}
           >
@@ -127,15 +127,15 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
 
         {/* Trascrizione: la vera protagonista */}
         {error ? (
-          <p className="min-h-[5rem] py-2 text-sm font-semibold text-tomato">{error}</p>
+          <p className="min-h-[5rem] py-2 text-[1rem] font-bold text-ink">{error}</p>
         ) : (
-          <p className="min-h-[5rem] px-1 py-1 font-display text-[22px] font-bold leading-snug tracking-tight text-ink">
+          <p className="min-h-[5rem] px-1 py-1 text-[1.6rem] font-extrabold leading-[1.15] tracking-[-0.04em] text-ink">
             {transcript
               ? <>«{transcript}»</>
-              : <span className="font-sans text-sm font-normal italic text-stone-400">Es: «pane, un pacco di pasta, il latte e sei uova»</span>}
+              : <span className="text-[0.95rem] font-medium tracking-normal text-tenue">Es: «pane, un pacco di pasta, il latte e sei uova»</span>}
           </p>
         )}
-        <p className="mt-0.5 h-4 text-xs text-stone-500">
+        <p className="micro mt-1 h-4">
           {!error && listening ? `Quando hai finito, tocca “${confirmLabel}”` : ""}
         </p>
 
@@ -143,7 +143,7 @@ export default function VoiceAddModal({ processing, onCancel, onResult, confirmL
         <button
           onClick={confirm}
           disabled={processing || !transcript.trim()}
-          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-tomato py-3.5 text-sm font-bold text-white transition hover:bg-tomato-700 disabled:opacity-40"
+          className="bottone mt-4 w-full"
         >
           {processing
             ? <><Loader2 className="h-4 w-4 animate-spin" /> Elaboro…</>

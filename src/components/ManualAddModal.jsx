@@ -77,11 +77,11 @@ export default function ManualAddModal({
   return (
     <Sheet onClose={onClose}>
       {(close) => (
-      <div className="px-5 pb-7 pt-1">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-display text-xl font-semibold text-ink">Aggiungi a mano</h3>
-          <button onClick={close} className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100" aria-label="Chiudi">
-            <X className="h-5 w-5" />
+      <div className="px-[18px] pb-6 pt-1">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h3 className="titolo">Aggiungi a mano</h3>
+          <button onClick={close} className="tondo" aria-label="Chiudi">
+            <X className="h-[18px] w-[18px]" />
           </button>
         </div>
 
@@ -109,13 +109,13 @@ export default function ManualAddModal({
         >
           {/* Completamenti: un tap e il prodotto è dentro */}
           {suggestions.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {suggestions.map((n) => (
                 <button
                   key={n}
                   // pointerdown: funziona anche con la tastiera iOS aperta
                   onPointerDown={(e) => { e.preventDefault(); quickAdd(n); }}
-                  className="rounded-full border border-hair bg-stone-50 px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                  className="pillola min-h-[34px] px-3 text-[0.84rem]"
                 >
                   {n}
                 </button>
@@ -124,14 +124,14 @@ export default function ManualAddModal({
           )}
         </ProductFields>
 
-        <Button variant="primary" full className="mt-3" onClick={submit} disabled={adding || !newName.trim()}>
+        <Button variant="primary" full className="mt-4" onClick={submit} disabled={adding || !newName.trim()}>
           {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 shrink-0" /> Aggiungi</>}
         </Button>
 
         {/* Conferma dell'ultimo inserimento: il foglio resta aperto */}
         {lastAdded && (
-          <p className="mt-2.5 flex items-center gap-1.5 text-xs font-semibold text-stone-500">
-            <Check className="h-3.5 w-3.5 shrink-0 text-tomato" />
+          <p className="mt-3 flex items-center gap-1.5 text-[0.86rem] font-semibold text-tenue">
+            <Check className="h-4 w-4 shrink-0 text-ink" />
             <span className="min-w-0 truncate">
               <strong className="text-ink">{lastAdded.name}</strong>{" "}
               {lastAdded.merged

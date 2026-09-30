@@ -251,7 +251,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
             <button
               onClick={finish}
               disabled={anyLoading}
-              className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-tomato py-3 text-sm font-bold text-[#fff] transition active:scale-[0.99] disabled:opacity-60"
+              className="bottone mb-2 w-full bg-giallo text-ink"
             >
               {anyLoading
                 ? <><Loader2 className="h-4 w-4 animate-spin" /> Cerco gli ultimi…</>
@@ -267,16 +267,16 @@ export default function BarcodeScanModal({ onClose, onResult }) {
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value.replace(/[^0-9]/g, ""))}
                 placeholder="Es. 8001234567890"
-                className="flex-1 rounded-xl border border-[#fff]/30 bg-black/40 px-3 py-2.5 text-sm text-[#fff] placeholder-[#fff]/50 outline-none backdrop-blur focus:border-[#fff]/70"
+                className="flex-1 rounded-full border-[1.5px] border-crema/40 bg-black/60 px-4 py-2.5 text-sm text-crema placeholder-crema/50 outline-none focus:border-crema"
               />
-              <button type="submit" aria-label="Aggiungi al vassoio" className="flex items-center justify-center rounded-xl bg-[#fff] px-4 py-2.5 text-black transition active:scale-95">
+              <button type="submit" aria-label="Aggiungi al vassoio" className="flex h-11 w-11 items-center justify-center rounded-full bg-crema text-ink transition active:scale-95">
                 <Search className="h-4 w-4" />
               </button>
             </form>
           )}
           <button
             onClick={() => { setManualMode((m) => !m); setError(""); }}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#fff]/50 bg-black/45 py-3 text-sm font-semibold text-[#fff] backdrop-blur transition hover:bg-black/60"
+            className="bottone-chiaro w-full border-crema text-crema"
           >
             {manualMode
               ? (<><ScanBarcode className="h-4 w-4" /> Usa la fotocamera</>)
@@ -302,7 +302,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
             {/* Rettangolo guida basso e largo, a forma di codice a barre.
                 Stesso bordo/opacità/scrim della schermata scontrino. */}
             <div className="h-28 w-[78%] rounded-2xl border-2 border-[#fff]/85 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
-            <span className="absolute left-1/2 top-[10%] flex max-w-[88%] -translate-x-1/2 items-center gap-2 rounded-full bg-black/70 px-3.5 py-1.5 text-center text-xs font-bold text-[#fff] shadow-lg backdrop-blur">
+            <span className="absolute left-1/2 top-[10%] flex max-w-[88%] -translate-x-1/2 items-center gap-2 rounded-full bg-black/80 px-3.5 py-1.5 text-center text-xs font-bold text-[#fff]">
               {status === "Cerco il prodotto…" && <Loader2 className="h-4 w-4 animate-spin" />}
               {status}
             </span>
@@ -313,8 +313,8 @@ export default function BarcodeScanModal({ onClose, onResult }) {
               onClick={toggleTorch}
               aria-label={torchOn ? "Spegni torcia" : "Accendi torcia"}
               aria-pressed={torchOn}
-              className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur transition active:scale-95 ${
-                torchOn ? "bg-[#fff] text-black" : "bg-black/50 text-[#fff] hover:bg-black/65"
+              className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
+                torchOn ? "bg-giallo text-ink" : "bg-black/70 text-[#fff]"
               }`}
             >
               {torchOn ? <Flashlight className="h-5 w-5" /> : <FlashlightOff className="h-5 w-5" />}

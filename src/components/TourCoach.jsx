@@ -67,7 +67,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   const ExitBtn = (
     <button
       onClick={exit}
-      className="flex items-center gap-1 text-[11px] font-semibold text-stone-500 transition hover:text-ink"
+      className="flex min-h-[32px] shrink-0 items-center gap-1 text-[0.8rem] font-bold text-ink underline underline-offset-2"
     >
       Esci dal tutorial <X className="h-3.5 w-3.5" />
     </button>
@@ -80,20 +80,20 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   const Controls = (
     <div className={`mt-3 flex items-center gap-3 ${step.hint ? "justify-between" : "justify-end"}`}>
       {step.hint && (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-tomato/10 px-2.5 py-1 text-[11px] font-bold text-tomato">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-2.5 py-1 text-[0.76rem] font-bold text-white">
           <Hand className="h-3.5 w-3.5" /> Tocca l'elemento evidenziato
         </span>
       )}
       {step.hint ? (
         step.noSkip ? null : (
-          <button onClick={primary} className="shrink-0 text-[11px] font-semibold text-stone-500 underline transition hover:text-ink">
+          <button onClick={primary} className="link shrink-0 py-1 text-[0.8rem] text-ink">
             salta
           </button>
         )
       ) : (
         <button
           onClick={primary}
-          className="flex items-center gap-1.5 rounded-xl bg-tomato px-4 py-2 text-sm font-bold text-[#fff] shadow-lg shadow-tomato/30 transition hover:bg-tomato-700 active:scale-95"
+          className="bottone min-h-[42px] px-4 py-2 text-[0.92rem]"
         >
           {step.cta || "Avanti"} <ArrowRight className="h-4 w-4" />
         </button>
@@ -104,35 +104,35 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   // --- Resa a riquadro centrale (benvenuto / scontrino / svuota / fine) ---
   if (isCard) {
     return (
-      <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        <div onPointerDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-cream p-6 shadow-2xl">
+      <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 px-5" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+        <div onPointerDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-[24px] bg-giallo p-6 shadow-popover">
           <div className="mb-3 flex items-center justify-end">
             {ExitBtn}
           </div>
-          <h2 className="font-display text-2xl font-extrabold leading-tight tracking-tight text-ink">{step.title}</h2>
-          <p className="mt-2.5 whitespace-pre-line text-[15px] leading-relaxed text-stone-500">{step.text}</p>
+          <h2 className="text-[2.1rem] font-extrabold leading-[0.95] tracking-[-0.06em] text-ink [word-spacing:0.08em]">{step.title}</h2>
+          <p className="mt-4 whitespace-pre-line text-[1.02rem] font-semibold leading-[1.38] text-ink/80">{step.text}</p>
 
           {step.demo === "scan" && (
-            <div className="mt-4 rounded-2xl border border-hair bg-paper p-3">
+            <div className="mt-4 rounded-card bg-white p-3">
               {/* Da una foto dello scontrino O della spesa → ai prodotti */}
               <div className="mb-2.5 flex items-center justify-center gap-2 text-xl">
                 <span title="Scontrino">🧾</span>
-                <span className="text-sm font-bold text-stone-300">o</span>
+                <span className="text-sm font-bold text-ink/40">o</span>
                 <span title="Sacchetto della spesa">🛍️</span>
                 <span title="Carrello">🛒</span>
-                <ArrowRight className="h-4 w-4 text-stone-400" />
-                <ScanLine className="h-4 w-4 text-tomato" />
+                <ArrowRight className="h-4 w-4 text-ink/50" />
+                <ScanLine className="h-4 w-4 text-ink" />
               </div>
-              <div className="mb-2 text-center text-[11px] font-bold uppercase tracking-wide text-stone-500">
+              <div className="micro mb-2 text-center">
                 Alimenti riconosciuti
               </div>
-              <ul className="divide-y divide-hair">
+              <ul className="divide-y divide-riga">
                 {TOUR_SCAN.map((p) => (
                   <li key={p.name} className="flex items-center justify-between py-1.5 text-sm">
                     <span className="flex items-center gap-2 font-semibold text-ink">
                       <span>{p.emoji}</span> {p.name}
                     </span>
-                    <span className="text-xs font-medium text-stone-500">{p.qty}</span>
+                    <span className="num text-[0.86rem] font-bold text-ink">{p.qty}</span>
                   </li>
                 ))}
               </ul>
@@ -141,7 +141,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
 
           <button
             onClick={primary}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-tomato px-4 py-3.5 text-sm font-bold text-[#fff] shadow-lg shadow-tomato/30 transition hover:bg-tomato-700 active:scale-[0.99]"
+            className="bottone mt-6 w-full"
           >
             {step.cta || "Avanti"} {step.advance !== "finish" && <ArrowRight className="h-4 w-4" />}
           </button>
@@ -165,12 +165,12 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
           ? { paddingBottom: "calc(env(safe-area-inset-bottom) + 224px)" }
           : { paddingTop: "calc(env(safe-area-inset-top) + 18px)" }}
       >
-        <div onPointerDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl border border-hair bg-cream/95 p-4 shadow-2xl backdrop-blur">
-          <div className="mb-1.5 flex items-center justify-between">
-            <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>
+        <div onPointerDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-card bg-giallo p-4 shadow-popover">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <h3 className="text-[1.25rem] font-extrabold leading-tight tracking-[-0.035em] text-ink">{step.title}</h3>
             {ExitBtn}
           </div>
-          <p className="whitespace-pre-line text-sm leading-relaxed text-stone-500">{step.text}</p>
+          <p className="whitespace-pre-line text-[0.95rem] font-medium leading-relaxed text-ink/80">{step.text}</p>
           {Controls}
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
   };
   const holeBottom = hole.top + hole.height;
   const holeRight = hole.left + hole.width;
-  const dim = "fixed z-[90] bg-black/55 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
+  const dim = "fixed z-[90] bg-black/55";
   const stop = (e) => e.stopPropagation(); // non far chiudere i pannelli aperti
 
   // Tooltip: sotto il bersaglio se c'è spazio, altrimenti sopra.
@@ -214,17 +214,17 @@ export default function TourCoach({ onExit, onComplete, onEmptyDemo }) {
 
       {/* Anello luminoso attorno al bersaglio */}
       <div
-        className="pointer-events-none fixed z-[91] rounded-xl border-2 border-tomato transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-        style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height, boxShadow: "0 0 0 3px rgba(226,73,47,0.25)" }}
+        className="pointer-events-none fixed z-[91] rounded-xl border-[3px] border-giallo"
+        style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height, boxShadow: "0 0 0 2px #0a0a0a" }}
       />
 
       {/* Tooltip contestuale */}
-      <div onPointerDown={stop} className="fixed z-[92] rounded-2xl border border-hair bg-cream p-4 shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]" style={tipStyle}>
+      <div onPointerDown={stop} className="animate-fade-in fixed z-[92] rounded-card bg-giallo p-4 shadow-popover" style={tipStyle}>
         <div className="mb-1 flex items-center justify-between gap-2">
-          <h3 className="font-display text-base font-extrabold tracking-tight text-ink">{step.title}</h3>
+          <h3 className="text-[1.25rem] font-extrabold leading-tight tracking-[-0.035em] text-ink">{step.title}</h3>
           {ExitBtn}
         </div>
-        <p className="whitespace-pre-line text-sm leading-relaxed text-stone-500">{step.text}</p>
+        <p className="whitespace-pre-line text-[0.95rem] font-medium leading-relaxed text-ink/80">{step.text}</p>
         {Controls}
       </div>
     </>
