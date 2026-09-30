@@ -1089,11 +1089,11 @@ export default function Dispensa({ session }) {
 
   return (
     <div className="min-h-screen bg-sfondo text-ink">
-      {/* Spazio in fondo: la barra e, sulla Dispensa, il "+" sopra di essa non
-          devono coprire l'ultima riga (le quantità stanno proprio a destra). */}
+      {/* Spazio in fondo: la barra (col "+" sulla stessa riga) non deve coprire
+          l'ultima riga. */}
       <div
         className="mx-auto max-w-md px-4 pt-7"
-        style={{ paddingBottom: view === "dispensa" ? "calc(var(--sopra-nav) + var(--banner-h) + 72px)" : "calc(var(--sopra-nav) + var(--banner-h))" }}
+        style={{ paddingBottom: "calc(var(--sopra-nav) + var(--banner-h))" }}
       >
         {/* Testata, come in Wishlist: l'avatar del Profilo in alto a sinistra
             (prima era una voce della barra in basso) e, accanto, "Offline"
@@ -1178,11 +1178,11 @@ export default function Dispensa({ session }) {
       </div>
 
       {/* Timer attivi visibili da ogni scheda */}
-      {/* Timer attivi: sulla riga del "+" (centrato, il "+" sta a destra), o
-          sopra la barra "Sposta in dispensa" e il suo avviso quando c'è. */}
+      {/* Timer attivi: sopra il posto degli avvisi, o sopra la barra "Sposta in
+          dispensa" e il suo avviso quando c'è. */}
       <TimerBar
         onTap={() => changeView("ricette")}
-        bottom={cartBar ? `calc(${DOCK_TOP} + 68px)` : "calc(var(--sopra-nav) + var(--banner-h))"}
+        bottom={cartBar ? `calc(${DOCK_TOP} + 68px)` : "calc(var(--sopra-nav) + var(--banner-h) + 56px)"}
       />
 
       {/* Velo del menù "+": a livello di pagina (NON dentro la navbar, che ha
@@ -1197,26 +1197,26 @@ export default function Dispensa({ session }) {
         }`}
       />
 
-      {/* Barra in basso: Dispensa · Spesa · Ricette (come Wishlist). Il "+"
-          aggiunge ALLA DISPENSA, quindi compare solo lì, fuori dalla barra a
-          destra: nella Spesa c'è già il campo inline + microfono (destinazione
+      {/* Barra in basso: Dispensa · Spesa · Ricette (come Wishlist) e, sulla
+          stessa riga, il "+". Il "+" aggiunge ALLA DISPENSA, quindi compare solo
+          lì: nella Spesa c'è già il campo inline + microfono (destinazione
           diversa, niente ambiguità) e nelle Ricette non ha un ruolo. */}
       <BottomNav
         view={view}
         setView={changeView}
         shoppingCount={shopping.filter((s) => !s.checked).length}
         expiredCount={expiredCount}
+        addSlot={view === "dispensa" && (
+          <AddFab
+            menuOpen={addMenuOpen}
+            setMenuOpen={setAddMenuOpen}
+            onManual={() => { bumpModal("manual"); setManualOpen(true); }}
+            onPhoto={() => { bumpModal("receipt"); setReceiptOpen(true); }}
+            onBarcode={() => { bumpModal("barcode"); setBarcodeOpen(true); }}
+            onVoice={() => { bumpModal("voice"); setVoiceOpen(true); }}
+          />
+        )}
       />
-      {view === "dispensa" && (
-        <AddFab
-          menuOpen={addMenuOpen}
-          setMenuOpen={setAddMenuOpen}
-          onManual={() => { bumpModal("manual"); setManualOpen(true); }}
-          onPhoto={() => { bumpModal("receipt"); setReceiptOpen(true); }}
-          onBarcode={() => { bumpModal("barcode"); setBarcodeOpen(true); }}
-          onVoice={() => { bumpModal("voice"); setVoiceOpen(true); }}
-        />
-      )}
 
       {/* Fotocamera integrata per lo scontrino (anteprima live + galleria).
           key: forza un'istanza fresca del foglio a ogni apertura, anche se il
@@ -1380,9 +1380,9 @@ export default function Dispensa({ session }) {
 
       {/* Toast alzato solo quando c'è la barra "Sposta in dispensa" (Spesa con
           carrello non vuoto), così non la copre; altrove appena sopra il FAB. */}
-      {/* Avviso: sopra il "+" (stessa altezza su tutte le schede), o sopra la
-          barra "Sposta in dispensa" quando il carrello non è vuoto. */}
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} bottom={cartBar ? `calc(${DOCK_TOP} + 12px)` : "calc(var(--sopra-nav) + var(--banner-h) + 68px)"} />}
+      {/* Avviso: appena sopra la barra (stessa altezza su tutte le schede), o
+          sopra la barra "Sposta in dispensa" quando il carrello non è vuoto. */}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} bottom={cartBar ? `calc(${DOCK_TOP} + 12px)` : "calc(var(--sopra-nav) + var(--banner-h))"} />}
     </div>
   );
 }

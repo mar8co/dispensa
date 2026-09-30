@@ -2,13 +2,13 @@
 // ("Annulla" per gli undo, oppure un'etichetta personalizzata, es. "Stop").
 import { useState, useEffect } from "react";
 
-// Posizione: la decide Dispensa.jsx (`bottom`, un valore CSS): sopra il "+"
-// su tutte le schede, sopra la barra "Sposta in dispensa" quando c'è.
+// Posizione: la decide Dispensa.jsx (`bottom`, un valore CSS): appena sopra la
+// barra (col "+") su tutte le schede, sopra "Sposta in dispensa" quando c'è.
 // Eccezione: con la TASTIERA aperta (un campo di testo ha il focus) l'avviso
 // va IN ALTO: su iOS la tastiera copre gli elementi fissati in basso, e i
 // feedback con Annulla ("Modifica salvata") arrivano proprio mentre si scrive.
 // (`actionTone` dei chiamanti non serve più: l'azione è sempre gialla sul nero.)
-export default function Toast({ message, onUndo, actionLabel = "Annulla", bottom = "calc(var(--sopra-nav) + 68px)" }) {
+export default function Toast({ message, onUndo, actionLabel = "Annulla", bottom = "var(--sopra-nav)" }) {
   const [kbOpen, setKbOpen] = useState(false);
   useEffect(() => {
     const isTyping = () => {

@@ -149,7 +149,7 @@ export default function Anteprima() {
     <div className="min-h-screen bg-sfondo text-ink">
       <div
         className="mx-auto max-w-md px-4 pt-7"
-        style={{ paddingBottom: view === "dispensa" ? "calc(var(--sopra-nav) + var(--banner-h) + 72px)" : "calc(var(--sopra-nav) + var(--banner-h))" }}
+        style={{ paddingBottom: "calc(var(--sopra-nav) + var(--banner-h))" }}
       >
         <header className="mb-3.5 flex items-center gap-2.5">
           <button
@@ -240,14 +240,14 @@ export default function Anteprima() {
         setView={(v) => { setView(v); window.scrollTo(0, 0); }}
         shoppingCount={shopping.filter((x) => !x.checked).length}
         expiredCount={expiredCount}
+        addSlot={view === "dispensa" && (
+          <AddFab
+            menuOpen={addMenuOpen}
+            setMenuOpen={setAddMenuOpen}
+            onManual={() => setFoglio("aggiungi")} onPhoto={() => {}} onBarcode={() => {}} onVoice={() => {}}
+          />
+        )}
       />
-      {view === "dispensa" && (
-        <AddFab
-          menuOpen={addMenuOpen}
-          setMenuOpen={setAddMenuOpen}
-          onManual={() => setFoglio("aggiungi")} onPhoto={() => {}} onBarcode={() => {}} onVoice={() => {}}
-        />
-      )}
 
       {foglio === "profilo" && (
         <ProfileSheet
@@ -288,7 +288,7 @@ export default function Anteprima() {
           onUndo={toast.onUndo}
           bottom={view === "spesa" && shopping.some((x) => x.checked)
             ? "calc((var(--nav-bottom) + var(--nav-h) + var(--banner-h) + 74px) + 12px)"
-            : "calc(var(--sopra-nav) + var(--banner-h) + 68px)"}
+            : "calc(var(--sopra-nav) + var(--banner-h))"}
         />
       )}
     </div>

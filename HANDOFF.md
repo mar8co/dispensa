@@ -36,8 +36,9 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > gesti e testi invariati. Scelte dell'utente: primario **nero** (prima
 > pomodoro). **Barra uniformata a Wishlist (30/09)**: pillola nera con 3
 > voci (Dispensa · Spesa · Ricette), pallini rossi senza numero, **Profilo =
-> avatar tondo in alto a sinistra**, **"+" tondo a destra sopra la barra**
-> (solo nella Dispensa) con le 4 azioni in colonna. Stessa barra in Expense
+> avatar tondo in alto a sinistra**, **"+" tondo nero sulla stessa riga della
+> barra, staccato** (solo nella Dispensa; il posto resta riservato nelle altre
+> schede) con le 4 azioni in colonna. Stessa barra in Expense
 > Track.
 > Dettagli, regole e cosa conservare: **`DESIGN-ATTUALE.md`**. Per vedere le
 > schermate senza login: `npm run dev` → `/anteprima.html` (dati finti).

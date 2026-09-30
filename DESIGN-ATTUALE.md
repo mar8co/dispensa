@@ -50,9 +50,10 @@
   e su Spesa se c'è qualcosa da prendere.
 - **Profilo**: avatar tondo nero (36 px, iniziale del Nome o della mail) in alto a sinistra di ogni
   scheda; accanto, "Offline" quando manca la rete.
-- **"+"**: tondo arancio col bordo nero (56 px) a destra, 12 px sopra la barra, **solo nella
-  Dispensa**; le 4 azioni salgono in colonna sopra di lui ("A mano" la più vicina), etichette a
-  sinistra, velo nero senza sfocatura.
+- **"+"**: tondo **nero** col "+" crema, alto quanto la barra (52 px), **sulla stessa riga** e
+  staccato di 10 px; barra e posto del "+" sono un gruppo centrato, e il posto resta vuoto nelle
+  schede senza "+" (la barra non si sposta). **Solo nella Dispensa**; le 4 azioni salgono in colonna
+  sopra di lui ("A mano" la più vicina), etichette a sinistra, velo nero senza sfocatura.
 - **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Barra timer nera.
 - **Oggetto simbolo: sacchetto della spesa + cappello da chef** (`components/Barattoli.jsx`, stesso disegno di
   `public/icon.svg`): dietro pieno nero, davanti col colore della superficie. Usato per icona,
