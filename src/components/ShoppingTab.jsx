@@ -11,13 +11,14 @@
 // Nessuna query/tabella/campo modificato.
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
-  Pencil, Mic, Check, Trash2, PackagePlus, Loader2, ListChecks, Store,
-  Share2, Lightbulb, X,
+  Pencil, Mic, Check, Trash2, Loader2, Store,
+  Share, Lightbulb, X,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
 import { atMinQty, adjustQty, formatQtyDisplay, matchKey } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
+import Barattoli from "./Barattoli.jsx";
 
 // --- Riga prodotto. Gesti (stesso modello della Dispensa: tap = modifica):
 // • tap sul nome = apre la modifica;
@@ -88,13 +89,18 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
 
   return (
     <li className="relative overflow-hidden">
-      {/* Sfondi azione, rivelati dallo scorrimento: modifica (sx, arancione
-          acceso) / elimina (dx, rosso pomodoro) */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-between text-sm">
-        <span className={`flex items-center gap-1.5 pl-3 font-extrabold text-orange-500 transition-opacity ${dx > 4 ? "opacity-100" : "opacity-0"}`}>
-          <Pencil className="h-4 w-4" strokeWidth={2.4} /> Modifica
+      {/* Sfondi azione, rivelati dallo scorrimento: modifica (sx, nero) /
+          elimina (dx, rosso). Il colore esiste solo mentre la riga è spostata. */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 flex items-center justify-between text-[0.95rem] font-extrabold tracking-[-0.01em] ${
+          dx > 4 ? "bg-ink text-crema" : dx < -4 ? "bg-rosso-elimina text-white" : ""
+        }`}
+      >
+        <span className={`flex items-center gap-1.5 pl-4 transition-opacity ${dx > 4 ? "opacity-100" : "opacity-0"}`}>
+          <Pencil className="h-4 w-4" /> Modifica
         </span>
-        <span className={`flex items-center gap-1.5 pr-3 font-bold text-tomato transition-opacity ${dx < -4 ? "opacity-100" : "opacity-0"}`}>
+        <span className={`flex items-center gap-1.5 pr-4 transition-opacity ${dx < -4 ? "opacity-100" : "opacity-0"}`}>
           Elimina <Trash2 className="h-4 w-4" />
         </span>
       </div>
@@ -114,20 +120,20 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
           transform: `translateX(${dx}px)`,
           transition: dragging ? "none" : "transform 0.2s ease",
         }}
-        className="relative flex min-h-[44px] cursor-pointer select-none items-center gap-3 bg-cream py-2 outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-tomato/30"
+        className="relative flex min-h-[50px] cursor-pointer select-none items-center gap-3 bg-sfondo py-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
       >
-        <span className={`min-w-0 flex-1 truncate text-[15px] font-semibold ${selected ? "text-stone-400 line-through" : "text-ink"}`}>
+        <span className={`min-w-0 flex-1 truncate text-[1.06rem] font-[650] tracking-[-0.02em] ${selected ? "text-ink/45 line-through" : "text-ink"}`}>
           {it.name}
         </span>
-        {/* Badge quantità in spazio dedicato (solo se impostata, ≠ "1") */}
+        {/* Quantità in spazio dedicato (solo se impostata, ≠ "1") */}
         {it.qty && it.qty !== "1" && (
-          <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-stone-600">
+          <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${selected ? "text-ink/45 line-through" : "text-ink"}`}>
             {formatQtyDisplay(it.qty)}
           </span>
         )}
-        {/* Quadratino carrello: bottone REALE (area di tocco 44px, riquadro
-            26px centrato). stopPropagation così il tocco non apre la modifica
-            e non avvia lo swipe. */}
+        {/* Cerchio carrello: bottone REALE (area di tocco 44px, cerchio 28px
+            centrato). stopPropagation così il tocco non apre la modifica e non
+            avvia lo swipe. */}
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
@@ -138,8 +144,8 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
         >
           <span
             aria-hidden="true"
-            className={`flex h-[26px] w-[26px] items-center justify-center rounded-md border transition ${
-              selected ? "border-tomato bg-tomato text-[#fff]" : "border-stone-300 bg-paper text-transparent"
+            className={`flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-ink transition ${
+              selected ? "bg-ink text-white" : "text-transparent"
             }`}
           >
             <Check className="h-4 w-4" />
@@ -154,26 +160,24 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
 // tutto", SEMPRE visibili (non spariscono quando metti roba nel carrello). ---
 function TopControls({ byAisle, setByAisle, allSelected, onSelectAll }) {
   return (
-    <div className="mt-2 flex items-center justify-between">
-      {/* Chip toggle "Per reparto": arancione pieno quando attivo */}
+    <div className="mt-3 flex items-center justify-between">
+      {/* Pillola "Per reparto": piena nera quando attiva */}
       <button
         onClick={() => setByAisle((v) => !v)}
         aria-pressed={byAisle}
-        className={`flex h-9 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold transition ${
-          byAisle ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-600 hover:bg-stone-50"
-        }`}
+        className="pillola min-h-[38px] px-3.5 text-[0.88rem]"
       >
         <Store className="h-4 w-4" /> Per reparto
       </button>
-      {/* Azione testuale (niente box): grigio come il testo di "Per reparto" */}
+      {/* Azione testuale (niente box): link sottolineato */}
       {/* "Rimetti in lista" (deseleziona, reversibile) e NON "Svuota
           carrello": quella dicitura si confondeva col cestino della barra in
           basso, che invece ELIMINA i prodotti presi. */}
       <button
         onClick={onSelectAll}
-        className="flex h-9 items-center gap-1.5 px-2 text-sm font-semibold text-stone-600 transition hover:text-ink"
+        className="link flex h-10 items-center text-[0.9rem] text-ink"
       >
-        <ListChecks className="h-4 w-4" /> {allSelected ? "Rimetti in lista" : "Seleziona tutto"}
+        {allSelected ? "Rimetti in lista" : "Seleziona tutto"}
       </button>
     </div>
   );
@@ -187,19 +191,21 @@ function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
   if (cartCount === 0) return null;
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-hair bg-cream"
-      style={{ paddingBottom: "calc(76px + env(safe-area-inset-bottom))" }}
+      className="fixed inset-x-0 bottom-0 z-20 border-t-[1.5px] border-ink bg-sfondo"
+      style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}
     >
+      {/* 64px: la barra in basso è alta 56 (+ il suo margine), così resta
+          ~20px d'aria tra i pulsanti e la navbar, come prima. */}
       <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-2">
-        <Button variant="primary" className="h-11 flex-1" onClick={onMove} disabled={moving}>
+        <Button variant="primary" className="flex-1" onClick={onMove} disabled={moving}>
           {moving
             ? <Loader2 className="h-4 w-4 animate-spin" />
-            : <><PackagePlus className="h-4 w-4" /> {allInCart ? "Sposta tutto in dispensa" : `Sposta ${cartCount} in dispensa`}</>}
+            : <><Barattoli size={26} fill="#0a0a0a" className="-my-1 text-crema" /> {allInCart ? "Sposta tutto in dispensa" : `Sposta ${cartCount} in dispensa`}</>}
         </Button>
         <button
           onClick={onRemove}
           aria-label="Rimuovi dal carrello"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-hair text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+          className="tondo h-[50px] w-[50px]"
         >
           <Trash2 className="h-5 w-5" />
         </button>
@@ -395,7 +401,7 @@ export default function ShoppingTab({
   function renderEditPanel(it) {
     const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
     return (
-      <li key={it.id} ref={panelRef} className="-mx-1 my-1 scroll-mb-[150px] rounded-xl bg-stone-50 p-3">
+      <li key={it.id} ref={panelRef} className="-mx-2 my-1.5 scroll-mb-[150px] rounded-card bg-white p-3 shadow-card">
         {/* Vista prodotto standard (ProductFields), come Dispensa/Aggiungi/
             Revisione. Qui niente scadenza: è una lista della spesa. */}
         <ProductFields
@@ -453,8 +459,8 @@ export default function ShoppingTab({
   return (
     <div className="pt-2">
       <div className="flex items-start justify-between">
-        <h1 className="font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">La spesa</h1>
-        <div className="-mr-1 mt-1 flex gap-0.5">
+        <h1 className="gigante">La spesa</h1>
+        <div className="mt-2.5 flex gap-2">
           {wakeSupported && shopping.length > 0 && (
             <button
               onClick={() => {
@@ -463,38 +469,38 @@ export default function ShoppingTab({
                 onNotify(next ? "💡 Schermo sempre acceso mentre fai la spesa" : "Lo schermo può spegnersi di nuovo");
               }}
               aria-pressed={awake}
-              className={`rounded-lg p-1.5 transition ${awake ? "bg-tomato/10 text-tomato" : "text-stone-500 hover:bg-stone-100 hover:text-ink"}`}
+              className={`tondo ${awake ? "bg-ink text-white" : ""}`}
               title="Tieni lo schermo acceso"
               aria-label="Tieni lo schermo acceso"
             >
-              <Lightbulb className="h-5 w-5" />
+              <Lightbulb className="h-[18px] w-[18px]" />
             </button>
           )}
           {shopping.length > 0 && (
             <button
               onClick={shareList}
-              className="rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-100 hover:text-ink"
+              className="tondo"
               title="Condividi la lista"
               aria-label="Condividi la lista"
             >
-              <Share2 className="h-5 w-5" />
+              <Share className="h-[18px] w-[18px]" />
             </button>
           )}
         </div>
       </div>
 
       {/* Occhiello + inserimento: bloccati in alto durante lo scroll. */}
-      <div className="sticky top-0 z-20 -mx-4 mt-2 bg-cream/95 px-4 pb-1.5 pt-2.5 backdrop-blur">
-        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">{shared ? "La nostra lista" : "La tua lista"}</div>
+      <div className="sticky top-0 z-20 -mx-4 mt-4 bg-sfondo px-4 pb-1.5 pt-2">
+        <div className="micro">{shared ? "La nostra lista" : "La tua lista"}</div>
         <div data-tour="shopping-input" className="relative">
-          <Pencil className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
+          <Pencil className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
           <input
             ref={inputRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && add()}
             placeholder="Scrivi o dimmi cosa ti manca…"
-            className="w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 pr-10 text-sm text-ink outline-none focus:border-ink"
+            className="campo testo-grande pl-8 pr-10 text-[1.06rem] text-ink"
           />
           {/* Mentre scrivi il microfono diventa una X per svuotare il campo; a
               campo vuoto torna microfono (dettatura). Coerenza voce↔manuale. */}
@@ -504,7 +510,7 @@ export default function ShoppingTab({
               onClick={() => { setName(""); inputRef.current?.focus(); }}
               aria-label="Cancella"
               title="Cancella"
-              className="absolute right-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-stone-500 transition hover:text-ink active:scale-90"
+              className="absolute -right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-ink transition active:scale-90"
             >
               <X className="h-5 w-5" />
             </button>
@@ -514,7 +520,7 @@ export default function ShoppingTab({
               onClick={onOpenVoice}
               aria-label="Aggiungi a voce"
               title="Aggiungi a voce"
-              className="absolute right-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-tomato transition active:scale-90"
+              className="absolute -right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-ink transition active:scale-90"
             >
               <Mic className="h-[22px] w-[22px]" />
             </button>
@@ -526,12 +532,12 @@ export default function ShoppingTab({
             con la tastiera iOS aperta, senza che il blur chiuda le chip prima
             del tocco). */}
         {suggestions.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             {suggestions.map((n) => (
               <button
                 key={n}
                 onPointerDown={(e) => { e.preventDefault(); add(n); }}
-                className="rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                className="pillola min-h-[34px] px-3 text-[0.84rem]"
               >
                 {n}
               </button>
@@ -551,7 +557,7 @@ export default function ShoppingTab({
       </div>
 
       {shopping.length === 0 && (
-        <p className="py-12 text-center text-sm text-stone-500">
+        <p className="py-12 text-center text-[1.05rem] font-semibold text-tenue">
           La lista è vuota. Scrivi qui sopra cosa ti manca, dettalo col microfono
           o aggiungi i mancanti da una ricetta.
         </p>
@@ -563,36 +569,36 @@ export default function ShoppingTab({
         {shopping.length > 0 && (
           <>
             {byAisle ? (
-              <div className="space-y-5">
+              <div>
                 {groups.map(({ cat, list }) => (
                   <section key={cat}>
-                    <div className="flex items-center gap-2 border-b border-ink/10 pb-2">
-                      <span className="text-base">{CAT_ICON[cat]}</span>
-                      <h4 className="font-display text-base font-bold uppercase tracking-wide text-ink">{cat}</h4>
-                      <span className="font-display text-sm font-bold text-tomato">{list.length}</span>
+                    <div className="flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px] pt-4">
+                      <span className="text-[1.15rem] leading-none">{CAT_ICON[cat]}</span>
+                      <h4 className="min-w-0 truncate text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">{cat}</h4>
+                      <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{list.length}</span>
                     </div>
-                    <ul className="divide-y divide-hair">{renderItems(list)}</ul>
+                    <ul className="divide-y divide-riga">{renderItems(list)}</ul>
                   </section>
                 ))}
               </div>
             ) : (
-              <ul className="divide-y divide-hair">{renderItems(todo)}</ul>
+              <ul className="divide-y divide-riga">{renderItems(todo)}</ul>
             )}
 
             {/* Tutto preso: messaggio al centro dov'erano i prodotti. */}
             {todo.length === 0 && cart.length > 0 && (
-              <p className="py-6 text-center text-sm text-stone-500">Hai preso tutto! 🎉</p>
+              <p className="py-6 text-center text-[1.05rem] font-semibold text-tenue">Hai preso tutto! 🎉</p>
             )}
 
             {/* Reparto "Nel carrello": gli articoli presi, barrati. */}
             {cart.length > 0 && (
-              <section className="mt-6">
-                <div className="flex items-center gap-2 border-b border-tomato/30 pb-2">
-                  <span className="text-base">🛒</span>
-                  <h4 className="font-display text-base font-bold uppercase tracking-wide text-tomato">Nel carrello</h4>
-                  <span className="font-display text-sm font-bold text-tomato">{cart.length}</span>
+              <section className="mt-4">
+                <div className="flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px] pt-4">
+                  <span className="text-[1.15rem] leading-none">🛒</span>
+                  <h4 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Nel carrello</h4>
+                  <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{cart.length}</span>
                 </div>
-                <ul className="divide-y divide-hair">{renderItems(cart)}</ul>
+                <ul className="divide-y divide-riga">{renderItems(cart)}</ul>
               </section>
             )}
           </>
