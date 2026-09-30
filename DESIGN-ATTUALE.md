@@ -49,12 +49,17 @@
   dal fondo; scheda aperta in crema; **pallino rosso** (senza numero) su Dispensa se ci sono scaduti
   e su Spesa se c'è qualcosa da prendere.
 - **Profilo**: avatar tondo nero (36 px, iniziale del Nome o della mail) in alto a sinistra di ogni
-  scheda; accanto, "Offline" quando manca la rete.
-- **"+"**: tondo **nero** col "+" crema, alto quanto la barra (52 px), **sulla stessa riga** e
-  staccato di 10 px; barra e posto del "+" sono un gruppo centrato, e il posto resta vuoto nelle
-  schede senza "+" (la barra non si sposta). **Solo nella Dispensa**; le 4 azioni salgono in colonna
-  sopra di lui ("A mano" la più vicina), etichette a sinistra, velo nero senza sfocatura.
-- **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Barra timer nera.
+  scheda; accanto, "Offline" quando manca la rete. Il foglio Profilo ha solo l'ingranaggio
+  (Impostazioni) in alto a destra: niente X e niente "Esci".
+- **Esci**: tondo con la freccia contro la barra (stessa icona di Wishlist, `IconaEsci.jsx`) in
+  alto a destra su **tutte** le schede, con foglio giallo di conferma "Vuoi uscire?". Nella Spesa
+  luce e condivisione gli stanno accanto, a sinistra.
+- **"+"**: tondo **bianco** col bordo e il "+" neri, alto quanto la barra (52 px), **sulla stessa
+  riga** e staccato di 10 px; **su tutte le schede** (aggiunge sempre alla dispensa); le 4 azioni
+  salgono in colonna sopra di lui ("A mano" la più vicina), etichette a sinistra, velo nero senza
+  sfocatura.
+- **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Eccezione: "X spostato nel
+  carrello" = pillola **verde** col bordo nero, 2,5 s, con "Annulla" (rimette in lista). Barra timer nera.
 - **Oggetto simbolo: sacchetto della spesa + cappello da chef** (`components/Barattoli.jsx`, stesso disegno di
   `public/icon.svg`): dietro pieno nero, davanti col colore della superficie. Usato per icona,
   splash, accesso, dispensa vuota, "Sto analizzando la spesa" e il pulsante "Sposta in dispensa".
@@ -78,7 +83,7 @@
    fuori), unità che ripartono dal valore base, calendario scadenze dentro l'app.
 3. Spesa: tocco sul nome = modifica, cerchio = carrello, swipe ← elimina / → modifica (soglia 72
    px), "Per reparto" nel giro del supermercato, "Nel carrello", barra "Sposta in dispensa".
-4. Barra: Dispensa · Spesa · Ricette; Profilo dall'avatar in alto a sinistra; "+" solo in Dispensa;
+4. Barra: Dispensa · Spesa · Ricette; Profilo dall'avatar in alto a sinistra; "+" su tutte le schede;
    pallini su Dispensa (scaduti) e Spesa (da prendere). `data-tour` di schede, avatar e "+" invariati.
 5. Tutorial: gli attributi `data-tour` restano su ogni elemento.
 6. Emoji delle categorie identiche tra Dispensa e Spesa; testi e microcopy invariati.

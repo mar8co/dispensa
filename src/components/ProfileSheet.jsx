@@ -1,20 +1,20 @@
 // Foglio profilo (dalla navbar). Dopo lo split con Impostazioni (⚙️ in alto a
 // destra → SettingsSheet) qui resta il "chi sei": account (nome/username),
-// Dispensa familiare, Esigenze alimentari e le azioni sui dati (Svuota
-// dispensa, Esci). Face ID, notifiche, tutorial e footer legale vivono in
+// Dispensa familiare, Esigenze alimentari e "Svuota dispensa". Niente X (si
+// chiude trascinando giù o toccando fuori) ed "Esci" sta in alto a destra
+// nella testata dell'app, non qui. Face ID, notifiche, tutorial e footer legale vivono in
 // SettingsSheet. Veste manifesto: foglio sabbia, righe sottili, pillole.
 import { useState, useEffect } from "react";
-import { X, Settings, Trash2, LogOut, User, Leaf, Users } from "lucide-react";
+import { Settings, Trash2, User, Leaf, Users } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
 
 export default function ProfileSheet({
-  email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry, onLogout,
+  email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
   onOpenSettings,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
 }) {
-  const [confirmLogout, setConfirmLogout] = useState(false);
   const [username, setUsernameState] = useState("");
   const [membersKey, setMembersKey] = useState(0);  // forza il refresh della lista membri
 
@@ -33,20 +33,15 @@ export default function ProfileSheet({
         <div className="px-[18px] pb-4 pt-1">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h3 className="titolo">Profilo</h3>
-            <div className="flex items-center gap-2">
-              {/* Ingranaggio → Impostazioni (Face ID, notifiche, tutorial,
-                  privacy/elimina): il Profilo resta identità e famiglia. */}
-              <button
-                onClick={() => { close(); onOpenSettings?.(); }}
-                aria-label="Impostazioni"
-                className="tondo"
-              >
-                <Settings className="h-[18px] w-[18px]" />
-              </button>
-              <button onClick={close} aria-label="Chiudi" className="tondo">
-                <X className="h-[18px] w-[18px]" />
-              </button>
-            </div>
+            {/* Ingranaggio → Impostazioni (Face ID, notifiche, tutorial,
+                privacy/elimina): il Profilo resta identità e famiglia. */}
+            <button
+              onClick={() => { close(); onOpenSettings?.(); }}
+              aria-label="Impostazioni"
+              className="tondo"
+            >
+              <Settings className="h-[18px] w-[18px]" />
+            </button>
           </div>
 
           {/* Account: il Nome (username) prende il posto della mail */}
@@ -106,27 +101,10 @@ export default function ProfileSheet({
             <button
               data-tour="clear-pantry"
               onClick={() => { close(); onClearPantry(); }}
-              className="flex min-h-[52px] w-full items-center gap-3 border-b border-riga text-left text-[1rem] font-bold text-ink"
+              className="flex min-h-[52px] w-full items-center gap-3 text-left text-[1rem] font-bold text-ink"
             >
               <Trash2 className="h-[18px] w-[18px]" /> Svuota dispensa
             </button>
-            {confirmLogout ? (
-              <div className="flex gap-2 py-3">
-                <button onClick={() => setConfirmLogout(false)} className="bottone-chiaro flex-1">
-                  Annulla
-                </button>
-                <button onClick={onLogout} className="bottone-rosso flex-1">
-                  <LogOut className="h-4 w-4" /> Sì, esci
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setConfirmLogout(true)}
-                className="flex min-h-[52px] w-full items-center gap-3 text-left text-[1rem] font-bold text-ink"
-              >
-                <LogOut className="h-[18px] w-[18px]" /> Esci
-              </button>
-            )}
           </div>
         </div>
       )}

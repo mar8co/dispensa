@@ -156,7 +156,12 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   async function toggleShoppingItem(id, checked) {
     if (checked) {
       const it = shopping.find((x) => x.id === id);
-      if (it) showToast(<><strong>{it.name}</strong> spostato nel carrello</>, undefined, undefined, undefined, 3500);
+      // Avviso breve (2,5 s), pillola verde, con Annulla = rimette in lista.
+      if (it) showToast(<><strong>{it.name}</strong> spostato nel carrello</>, () => {
+        setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked: false } : x)));
+        persistUpdate(id, { checked: false });
+        dismissToast();
+      }, undefined, "verde", 2500);
     }
     setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
     persistUpdate(id, { checked });

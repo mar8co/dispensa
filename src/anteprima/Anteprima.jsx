@@ -22,6 +22,8 @@ import Toast from "../components/Toast.jsx";
 import Auth from "../components/Auth.jsx";
 import { mondayOf } from "../hooks/useMealPlan.jsx";
 import ProfileSheet from "../components/ProfileSheet.jsx";
+import ConfirmLogoutModal from "../components/ConfirmLogoutModal.jsx";
+import IconaEsci from "../components/IconaEsci.jsx";
 import SettingsSheet from "../components/SettingsSheet.jsx";
 import PaywallSheet from "../components/PaywallSheet.jsx";
 import PrivacySheet from "../components/PrivacySheet.jsx";
@@ -161,6 +163,11 @@ export default function Anteprima() {
             M
           </button>
           <div id="testata-azioni" className="ml-auto flex gap-2" />
+          {/* Esci: in alto a destra su tutte le schede (come Wishlist), con
+              conferma. Nel Profilo non c'è più. */}
+          <button onClick={() => setFoglio("esci")} aria-label="Esci" title="Esci" className="tondo">
+            <IconaEsci />
+          </button>
         </header>
         {view === "dispensa" && (
           <PantryTab
@@ -180,7 +187,11 @@ export default function Anteprima() {
           <ShoppingTab
             shopping={shopping}
             onAdd={async (name, qty) => { setShopping((l) => [{ id: `n${Date.now()}`, name, qty, checked: false }, ...l]); return {}; }}
-            onToggle={(id, checked) => setShopping((l) => l.map((x) => (x.id === id ? { ...x, checked } : x)))}
+            onToggle={(id, checked) => {
+              setShopping((l) => l.map((x) => (x.id === id ? { ...x, checked } : x)));
+              const it = shopping.find((x) => x.id === id);
+              if (checked && it) setToast({ message: <><strong>{it.name}</strong> spostato nel carrello</>, actionTone: "verde", onUndo: () => { setShopping((l) => l.map((x) => (x.id === id ? { ...x, checked: false } : x))); setToast(null); } });
+            }}
             onDelete={(id) => setShopping((l) => l.filter((x) => x.id !== id))}
             onToggleAll={() => setShopping((l) => { const all = l.every((x) => x.checked); return l.map((x) => ({ ...x, checked: !all })); })}
             onMoveChecked={() => setShopping((l) => l.filter((x) => !x.checked))}
@@ -241,7 +252,7 @@ export default function Anteprima() {
         setView={(v) => { setView(v); window.scrollTo(0, 0); }}
         shoppingCount={shopping.filter((x) => !x.checked).length}
         expiredCount={expiredCount}
-        addSlot={view === "dispensa" && (
+        addSlot={(
           <AddFab
             menuOpen={addMenuOpen}
             setMenuOpen={setAddMenuOpen}
@@ -253,7 +264,7 @@ export default function Anteprima() {
       {foglio === "profilo" && (
         <ProfileSheet
           email="prova@esempio.it" itemCount={items.length} shared foodPrefs="" onSaveFoodPrefs={() => {}}
-          onClose={chiudi} onClearPantry={() => setFoglio("svuota")} onLogout={chiudi}
+          onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
           onOpenSettings={() => setFoglio("impostazioni")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
         />
@@ -264,6 +275,7 @@ export default function Anteprima() {
       {foglio === "premium" && <PaywallSheet onClose={chiudi} reason="Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola." />}
       {foglio === "privacy" && <PrivacySheet onClose={chiudi} />}
       {foglio === "svuota" && <ConfirmClearModal onCancel={chiudi} onConfirm={chiudi} />}
+      {foglio === "esci" && <ConfirmLogoutModal onCancel={chiudi} onConfirm={chiudi} />}
       {foglio === "aggiungi" && <AggiungiProva onClose={chiudi} />}
       {foglio === "revisione" && (
         <ReviewScanModal
@@ -287,6 +299,7 @@ export default function Anteprima() {
         <Toast
           message={toast.message}
           onUndo={toast.onUndo}
+          tone={toast.actionTone}
           bottom="calc(var(--sopra-nav) + var(--banner-h))"
         />
       )}

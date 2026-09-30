@@ -81,7 +81,7 @@
   stepper ±, chip/pill, strisce dentro i banner).
 - **Posizioni sopra la barra** (variabili in `src/index.css`: `--nav-bottom`
   12px + zona sicura, `--nav-h` 52px, `--sopra-nav`, `--banner-h`): il "+"
-  della Dispensa sta sulla riga della barra (slot `addSlot` di `BottomNav`);
+  (su tutte le schede) sta sulla riga della barra (slot `addSlot` di `BottomNav`);
   l'**avviso** (`Toast.jsx`, prop `bottom` decisa in `Dispensa.jsx`) sta a
   `--sopra-nav` su tutte le schede (la barra "Sposta in dispensa" della Spesa
   sta in fondo alla lista, non è fissa); con la tastiera aperta va in alto. Se cambia la barra

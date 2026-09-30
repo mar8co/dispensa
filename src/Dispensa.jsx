@@ -45,6 +45,8 @@ import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
+import ConfirmLogoutModal from "./components/ConfirmLogoutModal.jsx";
+import IconaEsci from "./components/IconaEsci.jsx";
 import SettingsSheet from "./components/SettingsSheet.jsx";
 import PaywallSheet from "./components/PaywallSheet.jsx";
 import PrivacySheet from "./components/PrivacySheet.jsx";
@@ -184,6 +186,7 @@ export default function Dispensa({ session }) {
   const [voiceReview, setVoiceReview] = useState(false); // il riepilogo aperto viene dalla voce → mostra "Aggiungi altri prodotti"
   const voiceAppendRef = useRef(false); // il prossimo risultato voce si ACCODA al riepilogo invece di sostituirlo
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
 
   // porzioni e preferenze alimentari (persistite nelle impostazioni, usate
@@ -1104,8 +1107,13 @@ export default function Dispensa({ session }) {
           </button>
           {!online && <span className="text-[0.72rem] font-bold text-ink">Offline</span>}
           {/* Azioni della scheda aperta sulla stessa riga, a destra (la Spesa ci
-              mette luce e condivisione, via portal). */}
+              mette luce e condivisione, via portal), poi Esci. */}
           <div id="testata-azioni" className="ml-auto flex gap-2" />
+          {/* Esci: in alto a destra su tutte le schede (come Wishlist), con
+              conferma. Nel Profilo non c'è più. */}
+          <button onClick={() => { bumpModal("logout"); setConfirmLogout(true); }} aria-label="Esci" title="Esci" className="tondo">
+            <IconaEsci />
+          </button>
         </header>
         {view === "dispensa" && (
           <PantryTab
@@ -1195,15 +1203,13 @@ export default function Dispensa({ session }) {
       />
 
       {/* Barra in basso: Dispensa · Spesa · Ricette (come Wishlist) e, sulla
-          stessa riga, il "+". Il "+" aggiunge ALLA DISPENSA, quindi compare solo
-          lì: nella Spesa c'è già il campo inline + microfono (destinazione
-          diversa, niente ambiguità) e nelle Ricette non ha un ruolo. */}
+          stessa riga, il "+" (su tutte le schede; aggiunge ALLA DISPENSA). */}
       <BottomNav
         view={view}
         setView={changeView}
         shoppingCount={shopping.filter((s) => !s.checked).length}
         expiredCount={expiredCount}
-        addSlot={view === "dispensa" && (
+        addSlot={(
           <AddFab
             menuOpen={addMenuOpen}
             setMenuOpen={setAddMenuOpen}
@@ -1278,7 +1284,6 @@ export default function Dispensa({ session }) {
             if (tour.active) { tourEmptyDemo(); tourSignal("pantry-cleared"); }
             else { bumpModal("confirmClear"); setConfirmClear(true); }
           }}
-          onLogout={logout}
           onOpenSettings={() => { pendingSheetRef.current = "settings"; }}
         />
       )}
@@ -1305,6 +1310,10 @@ export default function Dispensa({ session }) {
       )}
 
       {privacyOpen && <PrivacySheet key={modalEpoch.current.privacy} onClose={() => setPrivacyOpen(false)} />}
+
+      {confirmLogout && (
+        <ConfirmLogoutModal key={modalEpoch.current.logout} onCancel={() => setConfirmLogout(false)} onConfirm={logout} />
+      )}
 
       {confirmClear && (
         <ConfirmClearModal key={modalEpoch.current.confirmClear} onCancel={() => setConfirmClear(false)} onConfirm={clearPantry} />
@@ -1376,7 +1385,7 @@ export default function Dispensa({ session }) {
       )}
 
       {/* Avviso: appena sopra la barra, stessa altezza su tutte le schede. */}
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} bottom="calc(var(--sopra-nav) + var(--banner-h))" />}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} tone={toast.actionTone} bottom="calc(var(--sopra-nav) + var(--banner-h))" />}
     </div>
   );
 }

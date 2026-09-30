@@ -1,6 +1,6 @@
-// Pulsante "+" della Dispensa: un tondo NERO (sull'arancio della home si
-// stacca) sulla stessa riga della barra in basso, separato da lei (vive nello
-// slot `addSlot` di BottomNav, alto quanto la barra). Aprendolo, le 4 azioni
+// Pulsante "+": un tondo BIANCO con il "+" nero, su tutte le schede, sulla
+// stessa riga della barra in basso, separato da lei (vive nello slot `addSlot`
+// di BottomNav, alto quanto la barra). Aggiunge sempre ALLA DISPENSA. Aprendolo, le 4 azioni
 // salgono in COLONNA sopra il "+" (la più usata, "A mano", è la più vicina al
 // pollice), con l'etichetta a sinistra di ogni tondo: col "+" sul bordo destro
 // un ventaglio a quarto di cerchio faceva sovrapporre le etichette. Il velo che
@@ -62,7 +62,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
         data-tour="add-fab"
         onClick={() => setMenuOpen((v) => { const next = !v; if (next) tourSignal("add-menu-opened"); return next; })}
         aria-label={menuOpen ? "Chiudi" : "Aggiungi"}
-        className="relative flex h-full w-full items-center justify-center rounded-full bg-ink text-crema shadow-barra transition active:scale-95"
+        className="relative flex h-full w-full items-center justify-center rounded-full border-[1.5px] border-ink bg-white text-ink shadow-barra transition active:scale-95"
       >
         <Plus className={`h-7 w-7 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} />
       </button>

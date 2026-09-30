@@ -36,12 +36,14 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > gesti e testi invariati. Scelte dell'utente: primario **nero** (prima
 > pomodoro). **Barra uniformata a Wishlist (30/09)**: pillola nera con 3
 > voci (Dispensa · Spesa · Ricette), pallini rossi senza numero, **Profilo =
-> avatar tondo in alto a sinistra**, **"+" tondo nero sulla stessa riga della
-> barra, staccato** (solo nella Dispensa; il posto resta riservato nelle altre
-> schede) con le 4 azioni in colonna. Stessa barra in Expense
+> avatar tondo in alto a sinistra**, **"+" tondo bianco sulla stessa riga della
+> barra, staccato** (su tutte le schede) con le 4 azioni in colonna; **Esci in
+> alto a destra** su tutte le schede (non più nel Profilo, che ha solo
+> l'ingranaggio). Stessa barra in Expense
 > Track. **Spesa (30/09)**: tocco sul nome = modifica, sul resto della riga =
 > carrello; luce e condivisione sulla riga dell'avatar; "Sposta in dispensa" +
-> cestino in fondo alla lista (non più fissi).
+> cestino in fondo alla lista (non più fissi); "spostato nel carrello" = avviso
+> verde di 2,5 s con Annulla.
 > Dettagli, regole e cosa conservare: **`DESIGN-ATTUALE.md`**. Per vedere le
 > schermate senza login: `npm run dev` → `/anteprima.html` (dati finti).
 >
@@ -449,8 +451,8 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   **scontrino** (foto → AI), **codice a barre in raffica** (ZXing + Open Food
   Facts): lo scanner resta acceso, ogni bip accumula in un vassoio di chips
   (ri-scansione = quantità +1, tocco sulla chip = togli), "Fatto (N)" apre la
-  revisione unica. Il FAB "+" compare **solo nella Dispensa** (nella Spesa c'è
-  il campo inline; destinazioni diverse = niente ambiguità). L'overlay "Sto
+  revisione unica. Il FAB "+" compare **su tutte le schede** (dal 30/09; aggiunge
+  sempre alla dispensa, la Spesa ha in più il suo campo inline). L'overlay "Sto
   analizzando…" ha **Annulla** (aborta la richiesta AI).
 - **Lista della spesa**: aggiunta manuale/voce, **autocompletamento** mentre
   scrivi (chip di solo testo, bg bianco, sotto il campo — niente icona: coerenza
@@ -646,8 +648,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   g/ml/kg/l; **mai parentesi** nel qty. I cucchiaini nel **CookModal** sono scorte
   q.b. (non sottratte): `isSpoonQty`. `isStapleQb` resta per le scorte del CookModal.
 - **Carrello = campo `checked`** degli `shopping_items` (nessuna tabella nuova).
-- **Toast**: sopra il "+" su tutte le schede, sopra la barra "Sposta in
-  dispensa" quando il carrello non è vuoto (prop `bottom` da `Dispensa.jsx`,
+- **Toast**: appena sopra la barra col "+", uguale su tutte le schede (prop `bottom` da `Dispensa.jsx`,
   variabili `--sopra-nav`/`--nav-h` in `index.css`).
   Lo stepper quantità committa **subito a 0** (toast "Hai finito" immediato).
 - **View Transition serializzata** (`animateUI`, una per volta) per evitare freeze
