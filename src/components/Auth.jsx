@@ -118,7 +118,7 @@ export default function Auth() {
         <Barattoli size={92} fill={PAGE_COLOR.accesso} className="-ml-1 mb-3 text-ink" />
         <h1 className="gigante">
           Cosa c&rsquo;è in{" "}
-          <span className="underline decoration-ink decoration-wavy decoration-[3px] underline-offset-[10px] [text-decoration-skip-ink:none]">dispensa</span>?
+          <span className="underline decoration-rosso-azione decoration-wavy decoration-[3px] underline-offset-[10px] [text-decoration-skip-ink:none]">dispensa</span>?
         </h1>
 
         {/* Sottotitolo: la promessa. "Meno sprechi" su pillola verde (il verde

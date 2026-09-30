@@ -375,7 +375,7 @@ svg.lucide {
 }
 .splash-uline path {
   fill: none;
-  stroke: #0a0a0a;
+  stroke: #e02a0d; /* ondina rossa (scelta utente) */
   stroke-width: 5;
   stroke-linecap: round;
   stroke-dasharray: var(--dash, 220);

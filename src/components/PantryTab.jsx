@@ -63,6 +63,18 @@ export default function PantryTab({
   const [expDraft, setExpDraft] = useState(""); // valore della scadenza nel pannello
   // Barra sticky: espansione verticale di tutti i reparti (niente swipe).
   const [catsExpanded, setCatsExpanded] = useState(false);
+  // Altezza reale della ricerca fissa: la barra dei reparti si aggancia
+  // subito sotto (1px di sovrapposizione), così scorrendo non resta una
+  // fessura da cui si intravede la lista (su iPhone l'altezza varia di poco).
+  const searchRef = useRef(null);
+  const [searchH, setSearchH] = useState(76);
+  useEffect(() => {
+    const el = searchRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => setSearchH(Math.round(el.getBoundingClientRect().height)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // --- Pannello prodotto con salvataggio automatico ---
   // Le modifiche si applicano da sole (nome al blur, quantità con una breve
@@ -215,7 +227,7 @@ export default function PantryTab({
 
       {/* Occhiello rosso + ricerca: bloccati insieme in alto durante lo scroll
           (con l'ordinamento dietro l'icona). */}
-      <div className="sticky top-0 z-30 -mx-4 mt-5 bg-sfondo px-4 pb-1.5 pt-2">
+      <div ref={searchRef} className="sticky top-0 z-30 -mx-4 mt-5 bg-sfondo px-4 pb-1.5 pt-2">
       <div className="micro">{shared ? "La nostra dispensa" : "La tua dispensa"}</div>
       <div className="relative">
         <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
@@ -312,7 +324,7 @@ export default function PantryTab({
           riga visibile è la prima riga del menù espanso. Niente scorrimento
           laterale, niente numeri. */}
       {grouped.length > 1 && (
-        <div className="sticky top-[4.8rem] z-20 -mx-4 mt-3 bg-sfondo py-2 pl-4 pr-2.5">
+        <div className="sticky z-20 -mx-4 mt-3 bg-sfondo py-2 pl-4 pr-2.5" style={{ top: searchH - 1 }}>
           <div className="flex items-start gap-1.5">
             {/* Chiuso: riga unica scorrevole (swipe) come prima. Aperto: le
                 stesse chip vanno a capo su più righe — la prima riga coincide

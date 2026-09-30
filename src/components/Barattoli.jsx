@@ -1,24 +1,25 @@
-// Oggetto simbolo dell'app: due barattoli (come i due biglietti di Wishlist
-// Viaggi e i due scontrini di Expense Track). Quello dietro è pieno col colore
-// del testo (currentColor), quello davanti ha il colore `fill` (di solito
-// quello della superficie) con coperchio ed etichetta. Stesso disegno di
-// public/icon.svg.
+// Oggetto simbolo dell'app: due barattoli di conserva fatta in casa, col
+// tessuto legato sul coperchio (come i due biglietti di Wishlist Viaggi e i
+// due scontrini di Expense Track). Quello dietro è pieno col colore del testo
+// (currentColor), quello davanti ha il colore `fill` con la marmellata e i
+// frutti dentro. Stesso disegno di public/icon.svg.
 export default function Barattoli({ size = 48, fill = "#fff", className = "" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <g transform="translate(15.5 0.5) rotate(12 17 26)">
-        <rect x="8.5" y="9" width="17" height="6.5" rx="1.8" fill="currentColor" stroke="currentColor" strokeWidth="2.6" />
-        <path d="M11 15.5H23V16.8Q23 18.2 26 19.4Q30.5 21.2 30.5 25.5V37.5Q30.5 41.5 26.5 41.5H7.5Q3.5 41.5 3.5 37.5V25.5Q3.5 21.2 8 19.4Q11 18.2 11 16.8Z" fill="currentColor" stroke="currentColor" strokeWidth="2.6" />
-        {/* stacco del coperchio e riflesso del vetro, nel colore della superficie */}
-        <path d="M9.5 15.6h15" stroke={fill} strokeWidth="1.6" />
-        <path d="M26.5 25.5v8" stroke={fill} strokeWidth="2.2" />
+      {/* dietro: barattolo alto, pieno */}
+      <g transform="translate(17 -1) rotate(9 14 26)" fill="currentColor" stroke="currentColor" strokeWidth="2.6">
+        <path d="M7 20H25V40Q25 43 22 43H10Q7 43 7 40Z"/>
+        <path d="M5 20L7 12H25L27 20L24.5 22L22 20L19.5 22L17 20L14.5 22L12 20L9.5 22L7 20Z"/>
       </g>
-      <g transform="translate(2 2.5) rotate(-6 16 24)" stroke="currentColor">
-        <path d="M9.5 11.5H22.5V13Q22.5 14.5 25 15.5Q28 16.8 28 20V37.5Q28 41.5 24 41.5H8Q4 41.5 4 37.5V20Q4 16.8 7 15.5Q9.5 14.5 9.5 13Z" fill={fill} strokeWidth="2.6" />
-        <rect x="7.5" y="5" width="17" height="6.5" rx="2" fill={fill} strokeWidth="2.6" />
-        <path d="M10.5 8.3h11" strokeWidth="1.7" strokeDasharray="1.6 2.4" />
-        <rect x="7.5" y="22.5" width="17" height="11" rx="1.6" strokeWidth="2.2" />
-        <path d="M11 26.8h10M11 30.2h5.5" strokeWidth="2.2" />
+      {/* davanti: barattolo basso col tessuto a smerlo e la marmellata */}
+      <g transform="translate(1 3) rotate(-5 18 30)" stroke="currentColor">
+        <path d="M8 23H28V39Q28 43 24 43H12Q8 43 8 39Z" fill={fill} strokeWidth="2.6"/>
+        <path d="M6 23L8 14H28L30 23L27 25.5L24 23L21 25.5L18 23L15 25.5L12 23L9 25.5L6 23Z" fill={fill} strokeWidth="2.6"/>
+        <path d="M7.4 18.5H28.6" strokeWidth="2.2"/>
+        <path d="M11 30q2.3-1.8 4.6 0t4.6 0t4.6 0" strokeWidth="2.2"/>
+        <circle cx="13" cy="36" r="1.8" fill="currentColor" strokeWidth="1"/>
+        <circle cx="18.5" cy="38.5" r="1.8" fill="currentColor" strokeWidth="1"/>
+        <circle cx="23.5" cy="35.5" r="1.8" fill="currentColor" strokeWidth="1"/>
       </g>
     </svg>
   );
