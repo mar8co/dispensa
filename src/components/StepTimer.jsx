@@ -46,20 +46,20 @@ export default function StepTimer({ minutes, id, label }) {
   return (
     <div
       data-tour="step-timer"
-      className={`mt-2.5 inline-flex items-center gap-2 rounded-full border py-1 pl-3 pr-1 ${
-        done ? "border-tomato/40 bg-tomato/5" : "border-hair bg-stone-50"
+      className={`mt-2.5 inline-flex items-center gap-2 rounded-full border-[1.5px] border-ink py-1 pl-3 pr-1 text-ink ${
+        done ? "bg-verde" : ""
       }`}
     >
-      <Timer className={`h-4 w-4 ${done ? "text-tomato" : "text-stone-400"}`} />
-      <span className={`font-mono text-sm font-bold tabular-nums ${done ? "text-tomato" : "text-ink"}`}>
+      <Timer className="h-4 w-4" />
+      <span className="num text-[1rem] font-extrabold tracking-[-0.02em]">
         {fmt(left)}
       </span>
       {done ? (
-        <span className="px-1 text-xs font-bold text-tomato">pronto!</span>
+        <span className="px-1 text-[0.84rem] font-extrabold">pronto!</span>
       ) : (
         <button
           onClick={() => (running ? pause() : start())}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-tomato text-white transition hover:bg-tomato-700 active:scale-95"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white transition active:scale-95"
           aria-label={running ? "Pausa" : "Avvia"}
         >
           {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
@@ -67,7 +67,7 @@ export default function StepTimer({ minutes, id, label }) {
       )}
       <button
         onClick={reset}
-        className="flex h-7 w-7 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-200 hover:text-stone-600"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-ink/50 transition active:text-ink"
         aria-label="Reimposta"
       >
         <RotateCcw className="h-3.5 w-3.5" />

@@ -1,7 +1,7 @@
 // Piano pasti — vista settimana (mockup 1 approvato: agenda verticale dentro
-// Ricette). Una card per giorno con gli slot Pranzo/Cena; "oggi" è evidenziato
-// in modo discreto (etichetta e bordo tomato tenue); i giorni passati restano
-// visibili ma attenuati e compressi. Toccando uno slot si apre il foglio:
+// Ricette). Una card bianca per giorno con gli slot Pranzo/Cena; "oggi" è
+// evidenziato in modo discreto (cartellino nero "Oggi" e bordo nero); i giorni
+// passati restano visibili ma attenuati e compressi. Toccando uno slot si apre il foglio:
 // vuoto → scegli dal ricettario / piatto libero / genera un'idea;
 // pieno → cucina (CookModal via bridge), mancanti alla spesa, cambia, rimuovi.
 import { useState, useEffect } from "react";
@@ -69,18 +69,18 @@ function MealSlotSheet({
   return (
     <Sheet onClose={onClose}>
       {(close) => (
-        <div className="px-5 pb-4 pt-1">
-          <h3 className="font-display text-lg font-extrabold capitalize tracking-tight text-ink">{heading}</h3>
+        <div className="px-[18px] pb-4 pt-1">
+          <p className="micro capitalize">{heading}</p>
 
           {!picking && meal && (
             <>
-              <p className="mt-1 text-[15px] font-semibold text-ink">{meal.title}</p>
+              <p className="titolo mt-1">{meal.title}</p>
               {meal.cooked_at ? (
-                <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-stone-500">
-                  <Check className="h-3.5 w-3.5 text-tomato" /> Cucinato
+                <p className="mt-2 flex items-center gap-1 text-[0.86rem] font-semibold text-tenue">
+                  <Check className="h-3.5 w-3.5 text-ink" /> Cucinato
                 </p>
               ) : (
-                <p className="mt-0.5 text-xs text-stone-500">
+                <p className="mt-2 text-[0.86rem] font-semibold text-tenue">
                   {meal.data ? "Ricetta nel piano" : "Piatto libero"}
                 </p>
               )}
@@ -91,22 +91,22 @@ function MealSlotSheet({
                 {meal.data && !meal.cooked_at && (() => {
                   const servings = Number(meal.data.planServings) || Number(meal.data.servings) || 2;
                   return (
-                    <div className="flex items-center justify-between rounded-xl border border-hair bg-paper px-3.5 py-2">
-                      <span className="text-sm text-ink">Porzioni</span>
-                      <div className="inline-flex items-center gap-1 rounded-full border border-hair px-1 py-0.5">
+                    <div className="flex items-center justify-between border-y-[1.5px] border-ink py-2">
+                      <span className="text-[1rem] font-bold text-ink">Porzioni</span>
+                      <div className="inline-flex items-center gap-1">
                         <button
                           onClick={() => onChangeServings(servings - 1)}
                           disabled={servings <= 1}
                           aria-label="Meno porzioni"
-                          className="flex h-7 w-7 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 disabled:opacity-30"
+                          className="flex h-[34px] w-[34px] items-center justify-center rounded-full border-[1.5px] border-ink text-ink transition active:scale-90 disabled:opacity-30"
                         >
                           <Minus className="h-3.5 w-3.5" />
                         </button>
-                        <span className="w-8 text-center text-xs font-semibold text-ink">{servings}</span>
+                        <span className="num w-9 text-center text-[1.15rem] font-extrabold text-ink">{servings}</span>
                         <button
                           onClick={() => onChangeServings(servings + 1)}
                           aria-label="Più porzioni"
-                          className="flex h-7 w-7 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100"
+                          className="flex h-[34px] w-[34px] items-center justify-center rounded-full border-[1.5px] border-ink text-ink transition active:scale-90"
                         >
                           <Plus className="h-3.5 w-3.5" />
                         </button>
@@ -121,7 +121,7 @@ function MealSlotSheet({
                 )}
                 {meal.data && missing.length > 0 && (
                   missingAdded ? (
-                    <p className="text-center text-xs font-semibold text-stone-500">
+                    <p className="text-center text-[0.86rem] font-semibold text-tenue">
                       {missing.length} {missing.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista della spesa.
                     </p>
                   ) : (
@@ -152,10 +152,10 @@ function MealSlotSheet({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Cerca nel ricettario…"
                 aria-label="Cerca nel ricettario"
-                className="mt-3 w-full border-0 border-b border-ink/20 bg-transparent py-2 text-sm text-ink outline-none placeholder:text-stone-400 focus:border-ink"
+                className="campo mt-3 text-ink"
               />
               {list.length > 0 ? (
-                <ul className="mt-1 max-h-56 divide-y divide-hair overflow-y-auto">
+                <ul className="mt-1 max-h-56 divide-y divide-riga overflow-y-auto">
                   {list.map((r) => (
                     <li key={r.id}>
                       <button
@@ -163,26 +163,26 @@ function MealSlotSheet({
                         className="flex w-full items-center gap-3 py-2.5 text-left"
                       >
                         {r.image ? (
-                          <img src={r.image} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                          <img src={r.image} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-xl object-cover" />
                         ) : (
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-lg">🍽️</span>
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink/[0.06] text-lg">🍽️</span>
                         )}
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-ink">{r.title}</span>
-                          {r.data?.time && <span className="block text-xs text-stone-500">{r.data.time}</span>}
+                          <span className="block truncate text-[1rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>
+                          {r.data?.time && <span className="block text-[0.8rem] font-medium text-tenue">{r.data.time}</span>}
                         </span>
                       </button>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="py-4 text-center text-xs text-stone-500">
+                <p className="py-4 text-center text-[0.9rem] font-semibold text-tenue">
                   {query.trim() ? "Nessuna ricetta trovata." : "Il ricettario è vuoto: salva una ricetta col cuore ♡"}
                 </p>
               )}
 
               {/* Piatto libero (es. pizza fuori, avanzi) */}
-              <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400">oppure</p>
+              <p className="micro mt-4 text-center">Oppure</p>
               <form
                 className="mt-2 flex gap-2"
                 onSubmit={(e) => {
@@ -197,7 +197,7 @@ function MealSlotSheet({
                   onChange={(e) => setFree(e.target.value)}
                   placeholder="Scrivi tu: es. Pizza fuori, Avanzi…"
                   aria-label="Piatto libero"
-                  className="min-w-0 flex-1 border-0 border-b border-ink/20 bg-transparent py-2 text-sm text-ink outline-none placeholder:text-stone-400 focus:border-ink"
+                  className="campo min-w-0 flex-1 text-ink"
                 />
                 {free.trim() && (
                   <Button type="submit" variant="primary" size="sm">Aggiungi</Button>
@@ -237,13 +237,13 @@ export default function PlanWeek({
         <button
           onClick={() => shiftWeek(-1)}
           aria-label="Settimana precedente"
-          className="rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-100 hover:text-ink"
+          className="tondo"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-[18px] w-[18px]" />
         </button>
         <button
           onClick={() => shiftWeek(0)}
-          className="text-sm font-bold text-ink"
+          className="text-[1.3rem] font-extrabold tracking-[-0.045em] text-ink"
           title="Torna alla settimana corrente"
         >
           {weekLabel(weekStart)}
@@ -251,14 +251,14 @@ export default function PlanWeek({
         <button
           onClick={() => shiftWeek(1)}
           aria-label="Settimana successiva"
-          className="rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-100 hover:text-ink"
+          className="tondo"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-[18px] w-[18px]" />
         </button>
       </div>
 
       {/* Giorni */}
-      <div className={`mt-2 space-y-2.5 ${loadingMeals ? "opacity-60" : ""}`}>
+      <div className={`mt-3 space-y-2 ${loadingMeals ? "opacity-60" : ""}`}>
         {days.map((d) => {
           const iso = isoDate(d);
           const isToday = iso === todayIso;
@@ -268,20 +268,20 @@ export default function PlanWeek({
             // Compresso e attenuato: solo cosa c'era (e se è stato cucinato).
             const rows = SLOTS.map((s) => ({ s, meal: byKey.get(`${iso}|${s.id}`) })).filter((x) => x.meal);
             return (
-              <div key={iso} className="rounded-xl border border-hair bg-paper px-3.5 py-2 opacity-60">
+              <div key={iso} className="rounded-card bg-white/55 px-3.5 py-2">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-bold capitalize text-ink">{dayLabel(d)}</span>
-                  {rows.length === 0 && <span className="text-xs text-stone-400">—</span>}
+                  <span className="text-[0.86rem] font-bold capitalize text-ink/60">{dayLabel(d)}</span>
+                  {rows.length === 0 && <span className="text-[0.86rem] text-ink/40">–</span>}
                 </div>
                 {rows.map(({ s, meal }) => (
                   <button
                     key={s.id}
                     onClick={() => setSheet({ date: d, slot: s.id })}
-                    className="flex w-full items-center gap-1.5 py-0.5 text-left text-xs text-stone-500"
+                    className="flex w-full items-center gap-1.5 py-0.5 text-left text-[0.86rem] font-medium text-ink/60"
                   >
-                    <s.Icon className="h-3 w-3 shrink-0 text-stone-400" />
+                    <s.Icon className="h-3 w-3 shrink-0" />
                     <span className="min-w-0 flex-1 truncate">{meal.title}</span>
-                    {meal.cooked_at && <Check className="h-3.5 w-3.5 shrink-0 text-tomato" />}
+                    {meal.cooked_at && <Check className="h-3.5 w-3.5 shrink-0 text-ink" />}
                   </button>
                 ))}
               </div>
@@ -291,11 +291,11 @@ export default function PlanWeek({
           return (
             <div
               key={iso}
-              className={`rounded-xl border bg-paper px-3.5 py-2.5 ${isToday ? "border-tomato/30" : "border-hair"}`}
+              className={`rounded-card bg-white px-3.5 py-2.5 ${isToday ? "shadow-[inset_0_0_0_2px_#0a0a0a]" : ""}`}
             >
-              <div className="flex items-baseline gap-2">
-                {isToday && <span className="text-xs font-bold text-tomato">Oggi</span>}
-                <span className="text-xs font-bold capitalize text-ink">{dayLabel(d)}</span>
+              <div className="flex items-center gap-2">
+                {isToday && <span className="cartellino bg-ink text-white">Oggi</span>}
+                <span className="text-[1.05rem] font-extrabold capitalize tracking-[-0.03em] text-ink">{dayLabel(d)}</span>
               </div>
               {SLOTS.map((s) => {
                 const meal = byKey.get(`${iso}|${s.id}`);
@@ -303,19 +303,19 @@ export default function PlanWeek({
                   <button
                     key={s.id}
                     onClick={() => setSheet({ date: d, slot: s.id })}
-                    className="flex w-full items-center gap-2 py-1.5 text-left"
+                    className="flex min-h-[40px] w-full items-center gap-2 py-1 text-left"
                   >
-                    <s.Icon className="h-3.5 w-3.5 shrink-0 text-stone-400" />
-                    <span className="w-14 shrink-0 text-xs text-stone-500">{s.label}</span>
+                    <s.Icon className="h-4 w-4 shrink-0 text-ink/50" />
+                    <span className="w-14 shrink-0 text-[0.8rem] font-medium text-tenue">{s.label}</span>
                     {meal ? (
                       <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                        <span className="min-w-0 truncate rounded-lg border border-tomato/25 bg-tomato/5 px-2 py-0.5 text-xs font-semibold text-tomato">
+                        <span className="min-w-0 truncate text-[1rem] font-bold tracking-[-0.02em] text-ink">
                           {meal.title}
                         </span>
-                        {meal.cooked_at && <Check className="h-3.5 w-3.5 shrink-0 text-tomato" />}
+                        {meal.cooked_at && <Check className="h-4 w-4 shrink-0 text-ink" />}
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 rounded-lg border border-dashed border-stone-300 px-2 py-0.5 text-xs text-stone-400">
+                      <span className="flex items-center gap-1 rounded-full border-[1.5px] border-dashed border-ink/35 px-2.5 py-0.5 text-[0.8rem] font-semibold text-tenue">
                         <Plus className="h-3 w-3" /> aggiungi
                       </span>
                     )}

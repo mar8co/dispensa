@@ -18,6 +18,7 @@ import BottomNav from "../components/BottomNav.jsx";
 import AddFab from "../components/AddFab.jsx";
 import Toast from "../components/Toast.jsx";
 import Auth from "../components/Auth.jsx";
+import { mondayOf } from "../hooks/useMealPlan.jsx";
 import { usePageColor } from "../hooks/usePageColor.js";
 import { pageColorFor, PAGE_COLOR } from "../lib/colors.js";
 
@@ -164,7 +165,7 @@ export default function Anteprima() {
             onRegenerate={() => {}} onRetry={() => {}} onCustomAsk={() => {}}
             recipeContext={context} onToggleContext={(id) => setContext((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]))}
             plan={{
-              meals: [], weekStart: new Date(), shiftWeek: () => {}, loadingMeals: false,
+              meals: [], weekStart: mondayOf(new Date()), shiftWeek: () => {}, loadingMeals: false,
               planMeal: () => {}, removeMeal: () => {}, markMealCooked: () => {}, setMealServings: () => {}, onCookMeal: () => {},
             }}
             startOnPlan={PARAM_VISTA === "piano"}
