@@ -1,36 +1,21 @@
-// Oggetto simbolo dell'app: cappello da chef davanti e sacchetto della spesa
-// dietro (scelta dell'utente), come i due biglietti di Wishlist Viaggi e i due
-// scontrini di Expense Track. Griglia 48, tratto 2.6 come nelle altre app.
-// Dietro pieno (currentColor), davanti col colore `fill` della superficie.
-// Stesso disegno di public/icon.svg. (Il nome del file resta storico.)
-//
-// Lo sbuffo del cappello è l'unione di tre lobi e del corpo: si disegnano una
-// volta col tratto doppio (5.2) e poi di nuovo solo pieni, così resta il solo
-// contorno esterno da 2.6 e spariscono le linee interne tra i lobi.
-const Sbuffo = () => (
-  <>
-    <circle cx="12" cy="15.5" r="6" />
-    <circle cx="19" cy="11" r="7.2" />
-    <circle cx="26" cy="15.5" r="6" />
-    <path d="M12 15H26V35H12Z" />
-  </>
-);
-
+// Oggetto simbolo dell'app: sacchetto della spesa e cappello da chef (scelta
+// dell'utente), come i due biglietti di Wishlist e i due scontrini di Expense
+// Track. Dietro pieno (currentColor), davanti col colore `fill`. Stesso
+// disegno di public/icon.svg. (Il nome del file resta storico.)
 export default function Barattoli({ size = 48, fill = "#fff", className = "" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      {/* dietro: sacchetto della spesa col manico e l'orlo in controluce */}
-      <g transform="translate(16.5 -1.5) rotate(11 18 26)">
-        <path d="M12.5 17V12.5Q12.5 6.5 18 6.5Q23.5 6.5 23.5 12.5V17" stroke="currentColor" strokeWidth="2.6" />
-        <path d="M6.5 17H29.5L28 42.5Q27.9 44 26.4 44H9.6Q8.1 44 8 42.5Z" fill="currentColor" stroke="currentColor" strokeWidth="2.6" />
-        <path d="M9 21.5H27" stroke={fill} strokeWidth="1.8" />
+      {/* dietro: sacchetto della spesa, pieno */}
+      <g transform="translate(17 -1) rotate(9 14 26)" fill="currentColor" stroke="currentColor" strokeWidth="2.6">
+        <path d="M8 19H28L30.5 41Q30.8 43 28.8 43H7.2Q5.2 43 5.5 41Z"/>
+        <path d="M13 19V15Q13 10 18 10Q23 10 23 15V19" fill="none"/>
       </g>
-      {/* davanti: cappello da chef (sbuffo, corpo alto con pieghe, fascia) */}
-      <g transform="translate(0.5 3) rotate(-6 19 26)">
-        <g fill={fill} stroke="currentColor" strokeWidth="5.2"><Sbuffo /></g>
-        <g fill={fill}><Sbuffo /></g>
-        <rect x="10.5" y="34" width="17" height="6.5" rx="2" fill={fill} stroke="currentColor" strokeWidth="2.6" />
-        <path d="M15.5 34V21.5M22.5 34V21.5" stroke="currentColor" strokeWidth="2.2" />
+      {/* davanti: cappello da chef */}
+      <g transform="translate(1 3) rotate(-5 18 30)" stroke="currentColor">
+        <path d="M10 31V25Q4 24 4.6 17.4Q5.4 11 12 11.8Q14 5.5 19 5.5Q24 5.5 26 11.8Q32.6 11 33.4 17.4Q34 24 28 25V31Z" fill={fill} strokeWidth="2.6"/>
+        <rect x="10" y="31" width="18" height="7.5" rx="1.8" fill={fill} strokeWidth="2.6"/>
+        <path d="M15 25V20.5M23 25V20.5" strokeWidth="2.2"/>
+        <path d="M14 34.7h10" strokeWidth="1.7" strokeDasharray="1.6 2.4"/>
       </g>
     </svg>
   );
