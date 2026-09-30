@@ -11,6 +11,16 @@
   /* Colore pieno della schermata aperta (terna RGB, per le opacità Tailwind):
      lo imposta setPageColor() a ogni cambio pagina, insieme a theme-color. */
   --sfondo: 255 122 26;
+  /* Barra in basso (misure di Wishlist Viaggi): 12px dal fondo + zona sicura,
+     alta 52px. Tutto ciò che sta sopra la barra (il "+", gli avvisi, il timer,
+     la barra "Sposta in dispensa") si calcola da qui: se cambia la barra, si
+     cambiano solo questi valori. */
+  --nav-bottom: calc(12px + env(safe-area-inset-bottom));
+  --nav-h: 52px;
+  --sopra-nav: calc(var(--nav-bottom) + var(--nav-h) + 12px);
+  /* Banner pubblicitario (solo app nativa, piano gratuito): lib/ads.js lo
+     imposta quando il banner è visibile, così il "+" e gli avvisi salgono. */
+  --banner-h: 0px;
 }
 
 html {

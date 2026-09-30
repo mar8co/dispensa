@@ -44,9 +44,15 @@
   la settimana, tenue = lontana. Il nome del prodotto resta nero (sull'arancio un nome rosso/ambra
   non si leggerebbe); "finito" attenuato.
 - Icone lucide a tratto spesso (`svg.lucide { stroke-width: 2.6px }`); **categorie sempre emoji**.
-- **Barra in basso**: pillola nera con le sole parole Dispensa · Spesa · Ricette · Profilo, scheda
-  aperta in crema, numeri rossi; **"+" arancio rialzato al centro** (scelta dell'utente), solo in
-  Dispensa, con il menu a semicerchio (bollini bianchi, velo nero senza sfocatura).
+- **Barra in basso** (uguale a Wishlist Viaggi ed Expense Track, 30/09): pillola nera centrata con
+  le sole parole Dispensa · Spesa · Ricette, `.92rem` 650, `padding .7rem 1.05rem`, alta 52 px, 12 px
+  dal fondo; scheda aperta in crema; **pallino rosso** (senza numero) su Dispensa se ci sono scaduti
+  e su Spesa se c'è qualcosa da prendere.
+- **Profilo**: avatar tondo nero (36 px, iniziale del Nome o della mail) in alto a sinistra di ogni
+  scheda; accanto, "Offline" quando manca la rete.
+- **"+"**: tondo arancio col bordo nero (56 px) a destra, 12 px sopra la barra, **solo nella
+  Dispensa**; le 4 azioni salgono in colonna sopra di lui ("A mano" la più vicina), etichette a
+  sinistra, velo nero senza sfocatura.
 - **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Barra timer nera.
 - **Oggetto simbolo: sacchetto della spesa + cappello da chef** (`components/Barattoli.jsx`, stesso disegno di
   `public/icon.svg`): dietro pieno nero, davanti col colore della superficie. Usato per icona,
@@ -71,13 +77,13 @@
    fuori), unità che ripartono dal valore base, calendario scadenze dentro l'app.
 3. Spesa: tocco sul nome = modifica, cerchio = carrello, swipe ← elimina / → modifica (soglia 72
    px), "Per reparto" nel giro del supermercato, "Nel carrello", barra "Sposta in dispensa".
-4. Barra: Dispensa · Spesa · [+] · Ricette · Profilo, "+" solo in Dispensa, spazio centrale
-   riservato; numeri su Dispensa (scaduti) e Spesa (da prendere).
+4. Barra: Dispensa · Spesa · Ricette; Profilo dall'avatar in alto a sinistra; "+" solo in Dispensa;
+   pallini su Dispensa (scaduti) e Spesa (da prendere). `data-tour` di schede, avatar e "+" invariati.
 5. Tutorial: gli attributi `data-tour` restano su ogni elemento.
 6. Emoji delle categorie identiche tra Dispensa e Spesa; testi e microcopy invariati.
-7. Posizioni fisse tarate sull'altezza della barra (56 px): avviso `bottom-32` (`bottom-44` con il
-   carrello pieno), barra timer, barra "Sposta in dispensa" (`64px + safe-area`). Se cambia la
-   barra, vanno riallineate.
+7. Posizioni fisse calcolate dalle variabili della barra in `index.css` (`--nav-bottom`, `--nav-h`,
+   `--sopra-nav`, `--banner-h`): "+", avviso, timer, barra "Sposta in dispensa" (`DOCK_TOP` in
+   `Dispensa.jsx`), spazio in fondo alle pagine. Se cambia la barra, si cambiano solo le variabili.
 8. Margini laterali 16 px; campi con testo ≥ 16 px (`.testo-grande`) per evitare lo zoom di iOS.
 
 ## Come verificare l'aspetto (pagina di prova)

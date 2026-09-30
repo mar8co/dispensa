@@ -147,7 +147,20 @@ export default function Anteprima() {
 
   return (
     <div className="min-h-screen bg-sfondo text-ink">
-      <div className="mx-auto max-w-md px-4 pt-7 pb-28">
+      <div
+        className="mx-auto max-w-md px-4 pt-7"
+        style={{ paddingBottom: view === "dispensa" ? "calc(var(--sopra-nav) + var(--banner-h) + 72px)" : "calc(var(--sopra-nav) + var(--banner-h))" }}
+      >
+        <header className="mb-3.5 flex items-center gap-2.5">
+          <button
+            data-tour="tab-profilo"
+            onClick={() => setFoglio("profilo")}
+            aria-label="Profilo"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-[0.95rem] font-[750] tracking-[-0.02em] text-crema transition active:scale-95"
+          >
+            M
+          </button>
+        </header>
         {view === "dispensa" && (
           <PantryTab
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
@@ -225,17 +238,16 @@ export default function Anteprima() {
       <BottomNav
         view={view}
         setView={(v) => { setView(v); window.scrollTo(0, 0); }}
-        onProfile={() => {}}
         shoppingCount={shopping.filter((x) => !x.checked).length}
         expiredCount={expiredCount}
-        addSlot={view === "dispensa" && (
-          <AddFab
-            menuOpen={addMenuOpen}
-            setMenuOpen={setAddMenuOpen}
-            onManual={() => {}} onPhoto={() => {}} onBarcode={() => {}} onVoice={() => {}}
-          />
-        )}
       />
+      {view === "dispensa" && (
+        <AddFab
+          menuOpen={addMenuOpen}
+          setMenuOpen={setAddMenuOpen}
+          onManual={() => setFoglio("aggiungi")} onPhoto={() => {}} onBarcode={() => {}} onVoice={() => {}}
+        />
+      )}
 
       {foglio === "profilo" && (
         <ProfileSheet
@@ -270,7 +282,15 @@ export default function Anteprima() {
       )}
       {foglio === "voce" && <VoiceAddModal processing={false} onCancel={chiudi} onResult={chiudi} />}
 
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionTone={toast.actionTone} raised={view === "spesa" && shopping.some((x) => x.checked)} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          onUndo={toast.onUndo}
+          bottom={view === "spesa" && shopping.some((x) => x.checked)
+            ? "calc((var(--nav-bottom) + var(--nav-h) + var(--banner-h) + 74px) + 12px)"
+            : "calc(var(--sopra-nav) + var(--banner-h) + 68px)"}
+        />
+      )}
     </div>
   );
 }

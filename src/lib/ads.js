@@ -49,11 +49,14 @@ export async function showBanner() {
       adId: BANNER_ID,
       adSize: m.BannerAdSize.ADAPTIVE_BANNER,
       position: m.BannerAdPosition.BOTTOM_CENTER,
-      // Margine per non finire sotto la navbar fissa dell'app.
-      margin: 56,
+      // Margine (sopra la zona sicura) per restare sopra la barra in basso:
+      // 12px dal fondo + 52px di barra (--nav-bottom/--nav-h in index.css) + 6.
+      margin: 70,
       isTesting: IS_TEST,
     });
     shown = true;
+    // Il "+" e gli avvisi salgono sopra il banner (adattivo, alto ~50-60pt).
+    document.documentElement.style.setProperty("--banner-h", "66px");
   } catch (e) {
     console.warn("Banner non mostrato:", e?.message || e);
   }
@@ -65,4 +68,5 @@ export async function hideBanner() {
   if (!shown || !mod) return;
   try { await mod.AdMob.removeBanner(); } catch { /* già via */ }
   shown = false;
+  document.documentElement.style.setProperty("--banner-h", "0px");
 }

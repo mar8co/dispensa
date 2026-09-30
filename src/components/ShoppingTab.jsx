@@ -192,10 +192,10 @@ function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-20 border-t-[1.5px] border-ink bg-sfondo"
-      style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}
+      style={{ paddingBottom: "calc(var(--nav-bottom) + var(--nav-h) + var(--banner-h) + 8px)" }}
     >
-      {/* 64px: la barra in basso è alta 56 (+ il suo margine), così resta
-          ~20px d'aria tra i pulsanti e la navbar, come prima. */}
+      {/* Poggia sulla barra in basso con 16px d'aria (8 + il py-2 qui sotto).
+          Il suo bordo alto è DOCK_TOP in Dispensa.jsx: se cambi qui, allinea. */}
       <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-2">
         <Button variant="primary" className="flex-1" onClick={onMove} disabled={moving}>
           {moving
@@ -401,7 +401,7 @@ export default function ShoppingTab({
   function renderEditPanel(it) {
     const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
     return (
-      <li key={it.id} ref={panelRef} className="-mx-2 my-1.5 scroll-mb-[150px] rounded-card bg-white p-3 shadow-card">
+      <li key={it.id} ref={panelRef} className="-mx-2 my-1.5 scroll-mb-[calc(var(--nav-bottom)+var(--nav-h)+90px)] rounded-card bg-white p-3 shadow-card">
         {/* Vista prodotto standard (ProductFields), come Dispensa/Aggiungi/
             Revisione. Qui niente scadenza: è una lista della spesa. */}
         <ProductFields
@@ -610,7 +610,7 @@ export default function ShoppingTab({
           Durante la modifica un filo di spazio in più, così l'ultima riga può
           salire appena sopra il FAB (il parcheggio lo fa scroll-margin-bottom). */}
       {shopping.length > 0 && (
-        <div aria-hidden="true" style={{ height: editId ? "104px" : "calc(72px + env(safe-area-inset-bottom))" }} />
+        <div aria-hidden="true" style={{ height: editId ? "104px" : "calc(var(--nav-h) + 20px)" }} />
       )}
 
       <BottomBar

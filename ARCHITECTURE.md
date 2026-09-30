@@ -344,7 +344,7 @@ Dettagli e regole: `DESIGN-ATTUALE.md`. In breve:
 | `BarcodeScanModal.jsx` / `ReceiptScanModal.jsx` | Scanner (lazy-loaded). |
 | `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. Dal flusso voce (prop `onAddMore`) mostra "Aggiungi altri prodotti": ri-detta e accoda. |
 | `ManualAddModal.jsx` / `VoiceAddModal.jsx` | Aggiunta manuale / a voce. |
-| `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | "+" arancio rialzato, menu aggiunta a semicerchio, barra in basso (pillola nera con le parole). |
+| `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | "+" tondo a destra sopra la barra (solo Dispensa) con le 4 azioni in colonna; barra in basso come Wishlist (Dispensa · Spesa · Ricette, pallini). Il Profilo si apre dall'avatar in alto a sinistra (in `Dispensa.jsx`). |
 | `Barattoli.jsx` | Oggetto simbolo (due barattoli), stesso disegno dell'icona. |
 | `ProfileSheet.jsx` / `SettingsSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo = "chi sei" (Nome/username, Dispensa familiare, Esigenze alimentari, Svuota/Esci) con ⚙️ in alto a destra che apre **SettingsSheet** = "come si comporta l'app" (Face ID, toggle notifiche push, tutorial, privacy/elimina account). |
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |

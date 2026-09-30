@@ -34,7 +34,11 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > barattoli** come oggetto simbolo (icona, splash, accesso, dispensa vuota).
 > **Un solo tema (chiaro)**: tolti tema scuro e voce "Aspetto". Funzioni, dati,
 > gesti e testi invariati. Scelte dell'utente: primario **nero** (prima
-> pomodoro), **"+" arancio rialzato al centro** della barra come prima.
+> pomodoro). **Barra uniformata a Wishlist (30/09)**: pillola nera con 3
+> voci (Dispensa · Spesa · Ricette), pallini rossi senza numero, **Profilo =
+> avatar tondo in alto a sinistra**, **"+" tondo a destra sopra la barra**
+> (solo nella Dispensa) con le 4 azioni in colonna. Stessa barra in Expense
+> Track.
 > Dettagli, regole e cosa conservare: **`DESIGN-ATTUALE.md`**. Per vedere le
 > schermate senza login: `npm run dev` → `/anteprima.html` (dati finti).
 >
@@ -639,10 +643,9 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   g/ml/kg/l; **mai parentesi** nel qty. I cucchiaini nel **CookModal** sono scorte
   q.b. (non sottratte): `isSpoonQty`. `isStapleQb` resta per le scorte del CookModal.
 - **Carrello = campo `checked`** degli `shopping_items` (nessuna tabella nuova).
-- **Toast**: `bottom-32` (appena sopra il FAB) su tutte le schede; si alza a
-  `bottom-44` **solo** sulla Spesa quando c'è la barra "Sposta in dispensa"
-  (carrello non vuoto), per non coprirla. Condizione in `Dispensa.jsx`:
-  `raised={view === "spesa" && shopping.some(s => s.checked)}`.
+- **Toast**: sopra il "+" su tutte le schede, sopra la barra "Sposta in
+  dispensa" quando il carrello non è vuoto (prop `bottom` da `Dispensa.jsx`,
+  variabili `--sopra-nav`/`--nav-h` in `index.css`).
   Lo stepper quantità committa **subito a 0** (toast "Hai finito" immediato).
 - **View Transition serializzata** (`animateUI`, una per volta) per evitare freeze
   su iOS.

@@ -21,6 +21,7 @@ import {
   fetchShopping, deleteShoppingItems,
   fetchSavedRecipes, deleteSavedRecipe,
   ensurePersonalHousehold, setActiveHousehold, fetchHouseholds, fetchMembers,
+  getMyUsername,
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
 import { showBanner, hideBanner } from "./lib/ads.js";
@@ -521,6 +522,15 @@ export default function Dispensa({ session }) {
   // Colore pieno della schermata (fondo + barra di stato): uno per scheda, la
   // ricetta aperta in bianco. Cambia dentro la View Transition del cambio vista.
   usePageColor(pageColorFor(view, !!recipe || loadingRecipe));
+
+  // Iniziale dell'avatar in alto a sinistra (apre il Profilo): il Nome scelto
+  // nel Profilo, altrimenti la mail. Si rilegge alla chiusura del Profilo,
+  // dove il Nome si può cambiare.
+  const [myName, setMyName] = useState("");
+  useEffect(() => {
+    if (profileOpen) return;
+    getMyUsername().then((n) => setMyName(n || "")).catch(() => {});
+  }, [profileOpen]);
 
   // Pulisce/genericizza un nome alimento via AI -> { name, category }.
   async function aiCleanName(raw, signal) {
@@ -1064,6 +1074,11 @@ export default function Dispensa({ session }) {
   }
 
 
+  // Barra "Sposta in dispensa" (Spesa col carrello non vuoto) e il suo bordo
+  // alto: avviso e timer si alzano sopra di lei (vedi ShoppingTab → BottomBar).
+  const cartBar = view === "spesa" && shopping.some((s) => s.checked);
+  const DOCK_TOP = "(var(--nav-bottom) + var(--nav-h) + var(--banner-h) + 74px)";
+
   if (!loaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-sfondo">
@@ -1074,13 +1089,26 @@ export default function Dispensa({ session }) {
 
   return (
     <div className="min-h-screen bg-sfondo text-ink">
-      {!online && (
-        <div className="fixed left-1/2 top-2 z-40 -translate-x-1/2 rounded-full bg-ink px-3 py-1 text-[11px] font-bold text-crema">
-          Offline
-        </div>
-      )}
-      {/* Sulla dispensa più spazio in fondo, così il "+" non copre l'ultima categoria */}
-      <div className="mx-auto max-w-md px-4 pt-7 pb-28">
+      {/* Spazio in fondo: la barra e, sulla Dispensa, il "+" sopra di essa non
+          devono coprire l'ultima riga (le quantità stanno proprio a destra). */}
+      <div
+        className="mx-auto max-w-md px-4 pt-7"
+        style={{ paddingBottom: view === "dispensa" ? "calc(var(--sopra-nav) + var(--banner-h) + 72px)" : "calc(var(--sopra-nav) + var(--banner-h))" }}
+      >
+        {/* Testata, come in Wishlist: l'avatar del Profilo in alto a sinistra
+            (prima era una voce della barra in basso) e, accanto, "Offline"
+            quando manca la rete. */}
+        <header className="mb-3.5 flex items-center gap-2.5">
+          <button
+            data-tour="tab-profilo"
+            onClick={() => { bumpModal("profile"); setProfileOpen(true); tourSignal("profile-opened"); }}
+            aria-label="Profilo"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-[0.95rem] font-[750] tracking-[-0.02em] text-crema transition active:scale-95"
+          >
+            {(myName || session.user.email || "?").trim().charAt(0).toUpperCase()}
+          </button>
+          {!online && <span className="text-[0.72rem] font-bold text-ink">Offline</span>}
+        </header>
         {view === "dispensa" && (
           <PantryTab
             shared={sharedHousehold}
@@ -1150,13 +1178,11 @@ export default function Dispensa({ session }) {
       </div>
 
       {/* Timer attivi visibili da ogni scheda */}
+      {/* Timer attivi: sulla riga del "+" (centrato, il "+" sta a destra), o
+          sopra la barra "Sposta in dispensa" e il suo avviso quando c'è. */}
       <TimerBar
         onTap={() => changeView("ricette")}
-        bottom={view === "spesa"
-          ? (shopping.some((s) => s.checked)
-              ? "calc(192px + env(safe-area-inset-bottom))"
-              : "calc(138px + env(safe-area-inset-bottom))")
-          : "calc(86px + env(safe-area-inset-bottom))"}
+        bottom={cartBar ? `calc(${DOCK_TOP} + 68px)` : "calc(var(--sopra-nav) + var(--banner-h))"}
       />
 
       {/* Velo del menù "+": a livello di pagina (NON dentro la navbar, che ha
@@ -1171,28 +1197,26 @@ export default function Dispensa({ session }) {
         }`}
       />
 
-      {/* Navbar: Dispensa · Spesa · [+] · Ricette · Profilo. Il "+" aggiunge
-          ALLA DISPENSA, quindi compare solo lì: nella Spesa c'è già il campo
-          inline + microfono (destinazione diversa, niente ambiguità) e nelle
-          Ricette non ha un ruolo. Lo spazio centrale resta riservato, così le
-          tab non si spostano cambiando scheda. */}
+      {/* Barra in basso: Dispensa · Spesa · Ricette (come Wishlist). Il "+"
+          aggiunge ALLA DISPENSA, quindi compare solo lì, fuori dalla barra a
+          destra: nella Spesa c'è già il campo inline + microfono (destinazione
+          diversa, niente ambiguità) e nelle Ricette non ha un ruolo. */}
       <BottomNav
         view={view}
         setView={changeView}
-        onProfile={() => { bumpModal("profile"); setProfileOpen(true); tourSignal("profile-opened"); }}
         shoppingCount={shopping.filter((s) => !s.checked).length}
         expiredCount={expiredCount}
-        addSlot={view === "dispensa" && (
-          <AddFab
-            menuOpen={addMenuOpen}
-            setMenuOpen={setAddMenuOpen}
-            onManual={() => { bumpModal("manual"); setManualOpen(true); }}
-            onPhoto={() => { bumpModal("receipt"); setReceiptOpen(true); }}
-            onBarcode={() => { bumpModal("barcode"); setBarcodeOpen(true); }}
-            onVoice={() => { bumpModal("voice"); setVoiceOpen(true); }}
-          />
-        )}
       />
+      {view === "dispensa" && (
+        <AddFab
+          menuOpen={addMenuOpen}
+          setMenuOpen={setAddMenuOpen}
+          onManual={() => { bumpModal("manual"); setManualOpen(true); }}
+          onPhoto={() => { bumpModal("receipt"); setReceiptOpen(true); }}
+          onBarcode={() => { bumpModal("barcode"); setBarcodeOpen(true); }}
+          onVoice={() => { bumpModal("voice"); setVoiceOpen(true); }}
+        />
+      )}
 
       {/* Fotocamera integrata per lo scontrino (anteprima live + galleria).
           key: forza un'istanza fresca del foglio a ogni apertura, anche se il
@@ -1356,7 +1380,9 @@ export default function Dispensa({ session }) {
 
       {/* Toast alzato solo quando c'è la barra "Sposta in dispensa" (Spesa con
           carrello non vuoto), così non la copre; altrove appena sopra il FAB. */}
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} actionTone={toast.actionTone} raised={view === "spesa" && shopping.some((s) => s.checked)} />}
+      {/* Avviso: sopra il "+" (stessa altezza su tutte le schede), o sopra la
+          barra "Sposta in dispensa" quando il carrello non è vuoto. */}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} bottom={cartBar ? `calc(${DOCK_TOP} + 12px)` : "calc(var(--sopra-nav) + var(--banner-h) + 68px)"} />}
     </div>
   );
 }

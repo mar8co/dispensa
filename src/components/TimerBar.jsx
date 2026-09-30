@@ -33,7 +33,7 @@ export default function TimerBar({ onTap, bottom }) {
     >
       <Timer className="h-4 w-4 animate-pulse" />
       <span className="num text-[0.95rem] font-extrabold tracking-[-0.02em]">{fmt(left)}</span>
-      {t.label && <span className="max-w-[9rem] truncate text-xs font-semibold text-crema/70">{t.label}</span>}
+      {t.label && <span className="max-w-[7rem] truncate text-xs font-semibold text-crema/70">{t.label}</span>}
       {list.length > 1 && (
         <span className="rounded-full bg-giallo px-1.5 text-[10px] font-extrabold leading-4 text-ink">+{list.length - 1}</span>
       )}

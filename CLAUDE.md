@@ -79,10 +79,13 @@
   nero** (scelta dell'utente del 2026-09-30, prima era pomodoro).
   Restano bespoke solo i casi speciali (FAB, otturatore fotocamera, navbar,
   stepper ±, chip/pill, strisce dentro i banner).
-- **Toast** (`Toast.jsx`): `bottom-32` (appena sopra il FAB "+") su tutte le
-  schede; **eccezione** `bottom-44` solo sulla Spesa quando c'è la barra "Sposta
-  in dispensa" (carrello non vuoto), per non coprirla. La condizione vive in
-  `Dispensa.jsx`: `raised={view === "spesa" && shopping.some(s => s.checked)}`.
+- **Posizioni sopra la barra** (variabili in `src/index.css`: `--nav-bottom`
+  12px + zona sicura, `--nav-h` 52px, `--sopra-nav`, `--banner-h`): il "+"
+  della Dispensa sta a `--sopra-nav` a destra; l'**avviso** (`Toast.jsx`,
+  prop `bottom` decisa in `Dispensa.jsx`) sta sopra il "+" su tutte le schede,
+  sopra la barra "Sposta in dispensa" quando il carrello non è vuoto
+  (`cartBar`/`DOCK_TOP`); con la tastiera aperta va in alto. Se cambia la barra
+  si cambiano solo le variabili.
 - **Feedback immediato**: niente attese percepibili inutili (es. lo stepper
   committa subito quando arriva a 0, così il toast appare all'istante).
 - **Microcopy** caldo e diretto, in italiano, breve (sta in una riga su mobile).

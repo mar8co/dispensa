@@ -1,19 +1,14 @@
-// Pulsante "+" centrale della navbar. Aprendolo, le 4 azioni si dispongono a
-// SEMICERCHIO sopra il pulsante, ciascuna con icona ed etichetta leggibile.
-// L'overlay che chiude al tocco esterno è renderizzato dalla pagina (Dispensa)
-// perché un `fixed` dentro un contenitore con transform non coprirebbe lo schermo.
+// Pulsante "+" della Dispensa: un tondo a destra, appena sopra la barra in
+// basso (fuori dalla barra, come richiesto il 30/09). Aprendolo, le 4 azioni
+// salgono in COLONNA sopra il "+" (la più usata, "A mano", è la più vicina al
+// pollice), con l'etichetta a sinistra di ogni tondo: col "+" sul bordo destro
+// un ventaglio a quarto di cerchio faceva sovrapporre le etichette. Il velo che
+// chiude al tocco esterno è renderizzato dalla pagina (Dispensa.jsx).
 import { Plus, Pencil, Camera, ScanBarcode, Mic } from "lucide-react";
 import { tourSignal } from "../lib/tour.js";
 
-// Posizioni lungo un arco superiore (x orizzontale, y negativo = in alto).
-// Le due interne sono più centrate (∓33px), le esterne più larghe: ventaglio
-// simmetrico, sopra il pulsante, senza finire sotto le tab della navbar.
-const R = 106;
-const ANGLES = [146, 108, 72, 34]; // gradi, da sinistra a destra
-const pos = (deg) => ({
-  x: Math.round(R * Math.cos((deg * Math.PI) / 180)),
-  y: Math.round(-R * Math.sin((deg * Math.PI) / 180)),
-});
+// Passo verticale tra un tondo e l'altro (tondo 48px + 12px d'aria).
+const STEP = 60;
 
 export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBarcode, onVoice }) {
   const options = [
@@ -24,18 +19,20 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
   ];
 
   return (
-    <div className="relative z-40">
+    <div
+      className="fixed right-4 z-40 h-14 w-14"
+      style={{ bottom: "calc(var(--sopra-nav) + var(--banner-h))" }}
+    >
       {options.map((o, i) => {
         const Icon = o.icon;
-        const { x, y } = pos(ANGLES[i]);
         return (
           <div
             key={o.id}
-            className="absolute left-1/2 top-1/2 flex flex-col items-center gap-1"
+            className="absolute bottom-1 right-1 flex origin-right items-center gap-2"
             style={{
               transform: menuOpen
-                ? `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1)`
-                : "translate(-50%, -50%) scale(0.3)",
+                ? `translateY(${-(i + 1) * STEP}px) scale(1)`
+                : "translateY(0) scale(0.3)",
               opacity: menuOpen ? 1 : 0,
               pointerEvents: menuOpen ? "auto" : "none",
               transition: menuOpen
@@ -44,6 +41,9 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
               transitionDelay: menuOpen ? `${i * 40}ms` : `${(options.length - 1 - i) * 25}ms`,
             }}
           >
+            <span className="whitespace-nowrap rounded-full bg-ink px-2.5 py-1 text-[0.8rem] font-bold text-crema">
+              {o.label}
+            </span>
             <button
               data-tour={o.id === "manual" ? "add-manual-option" : undefined}
               onClick={() => {
@@ -56,9 +56,6 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
             >
               <Icon className="h-[21px] w-[21px]" />
             </button>
-            <span className="whitespace-nowrap rounded-full bg-ink px-2 py-0.5 text-[11px] font-bold text-crema">
-              {o.label}
-            </span>
           </div>
         );
       })}
@@ -67,7 +64,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
         data-tour="add-fab"
         onClick={() => setMenuOpen((v) => { const next = !v; if (next) tourSignal("add-menu-opened"); return next; })}
         aria-label={menuOpen ? "Chiudi" : "Aggiungi"}
-        className="relative z-40 flex h-[58px] w-[58px] items-center justify-center rounded-full border-[2.5px] border-ink bg-arancio text-ink shadow-barra transition active:scale-95"
+        className="relative flex h-14 w-14 items-center justify-center rounded-full border-[2.5px] border-ink bg-arancio text-ink shadow-barra transition active:scale-95"
       >
         <Plus className={`h-7 w-7 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} />
       </button>
