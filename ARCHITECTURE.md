@@ -1,7 +1,7 @@
 # ARCHITECTURE.md — Dispensa
 
 > Architettura completa dell'app. Collegati: `HANDOFF.md` (stato/ripresa) ·
-> `CLAUDE.md` (regole). Tutto in italiano, unità metriche.
+> `CLAUDE.md` (regole) · `DESIGN-ATTUALE.md` (veste grafica). Tutto in italiano, unità metriche.
 
 ---
 
@@ -59,9 +59,9 @@ dispensa/
 │  ├─ App/App/Info.plist    #   permessi camera/foto/microfono + solo verticale
 │  └─ App/App/StoreKitPlugin.swift  # plugin StoreKit 2 locale (IAP, fase 3)
 ├─ scripts/
-│  ├─ generate-icons.mjs    # genera i PNG PWA da icon.svg (sharp)
-│  ├─ generate-splash.mjs   # genera le splash iOS (public/splash/*): icona + wordmark (sharp)
-│  └─ assets/               # font Hanken ExtraBold (TTF + OFL) per il wordmark delle splash
+│  ├─ generate-icons.mjs    # genera i PNG PWA + AppIcon iOS da icon.svg (sharp)
+│  ├─ generate-splash.mjs   # genera le splash iOS (public/splash/* + nativa): barattoli + scritta (sharp)
+│  └─ assets/               # wordmark-dispensa.png (scritta "Dispensa" in Inter Tight 800)
 ├─ supabase/
 │  ├─ schema.sql            # tabelle base + RLS (pantry_items, user_settings)
 │  ├─ migration-2.sql       # expiry + shopping_items
@@ -75,11 +75,12 @@ dispensa/
 │  ├─ migration-10.sql      # push scadenze: push_subscriptions + save_push_subscription + cron pg_cron/pg_net
 │  └─ migration-11.sql      # piano pasti: meal_plan (RLS household, Realtime, unique per slot)
 ├─ src/
-│  ├─ main.jsx              # entry (monta App, registra SW/tema)
+│  ├─ main.jsx              # entry (carattere Inter Tight, monta App, registra SW)
 │  ├─ App.jsx               # gate auth (spinner / login / app)
 │  ├─ Dispensa.jsx          # COMPOSITION ROOT (stato, effetti, Realtime, render)
 │  ├─ constants.js          # categorie, ordini, CAT_ICON (emoji), prompt, seed
-│  ├─ index.css             # palette (variabili CSS) + CSS PWA/Vaul
+│  ├─ index.css             # veste manifesto: --sfondo, classi comuni + CSS PWA/Vaul/splash
+│  ├─ anteprima/            # pagina di prova SOLO sviluppo (anteprima.html): schermate vere, dati finti
 │  ├─ hooks/
 │  │  ├─ useAuth.js         # sessione Supabase
 │  │  ├─ useOnline.js       # stato connessione
@@ -87,7 +88,8 @@ dispensa/
 │  │  ├─ usePantry.jsx      # dominio dispensa
 │  │  ├─ useShopping.jsx    # dominio lista spesa
 │  │  ├─ useRecipes.jsx     # dominio ricette
-│  │  └─ useMealPlan.jsx    # dominio piano pasti (settimana + helper data locali)
+│  │  ├─ useMealPlan.jsx    # dominio piano pasti (settimana + helper data locali)
+│  │  └─ usePageColor.js    # colore pieno della schermata (fondo + theme-color)
 │  ├─ lib/
 │  │  ├─ supabase.js        # client Supabase (anon)
 │  │  ├─ db.js              # TUTTE le query (confine data layer)
@@ -106,7 +108,7 @@ dispensa/
 │  │  ├─ sync.js            # replay idempotente della coda + id client (uuid)
 │  │  ├─ cache.js           # cache locale (snapshot iniziale veloce)
 │  │  ├─ timers.js          # timer cottura + allarme
-│  │  ├─ theme.js           # tema chiaro/scuro/auto (localStorage)
+│  │  ├─ colors.js          # palette + PAGE_COLOR per schermata + setPageColor
 │  │  └─ tour.js            # stato + step del tutorial
 │  └─ components/           # presentazione (vedi §8)
 ├─ vite.config.js           # React + proxy dev /api/* + PWA/manifest
@@ -256,7 +258,7 @@ TestFlight).
 ## 6. Flussi principali
 
 **Avvio / Auth**
-`main.jsx` applica tema + registra SW → `App.jsx` usa `useAuth` (spinner mentre
+`main.jsx` carica il carattere + registra SW → `App.jsx` usa `useAuth` (spinner mentre
 verifica la sessione) → se assente mostra `Auth.jsx` (magic-link / Google / Apple)
 → se presente monta `Dispensa key={user.id}` (rimonta pulito al cambio utente).
 
@@ -302,22 +304,27 @@ applica `upsert`/`remove` agli stati locali.
 
 ---
 
-## 7. Stile / tema
+## 7. Stile ("manifesto svizzero", un solo tema)
 
-- **Tailwind** con colori mappati a **variabili CSS** (`tailwind.config.js`:
-  `rgb(var(--token) / <alpha-value>)`). Cambiare il tema = cambiare le variabili in
-  `index.css`, senza toccare i componenti.
-- **Token principali**: `cream` (sfondo), `paper`, `ink` (#0A0A0A), `hair`,
-  `white` (tematizzato), `tomato`/`tomato-700`, scala `stone-*`, `amber-100/700`.
-  La scala `stone` e `amber` sono **ridefinite** sui token CSS: altre scale
-  Tailwind di default (emerald, sky, ecc.) restano disponibili ma **non
-  tematizzate**.
-- **Dark mode**: `data-theme="dark"` sul `<html>` (gestito da `theme.js`); i meta
-  `theme-color` seguono. I blocchi light/dark in `index.css` devono restare
-  allineati per token.
-- **Bottom sheet**: `Sheet.jsx` (Vaul) con CSS dedicato per `prefers-reduced-
-  motion`. `panelClass`/`handleClass` per varianti (es. fotocamere su sfondo
-  scuro).
+Dettagli e regole: `DESIGN-ATTUALE.md`. In breve:
+
+- **Tailwind 3** con i token della guida in `tailwind.config.js`: `sfondo`
+  (`rgb(var(--sfondo) / <alpha-value>)`, il colore della schermata aperta),
+  `ink`, `tenue`/`riga` (nero trasparente, prende la tinta del fondo), `crema`,
+  colori pieni (`arancio`, `giallo`, `verde`, `rosa`, `sabbia`, `blu`,
+  `grigio`), `rosso` (`-azione`, `-elimina`), `errore`; raggi `foglio`/`card`,
+  ombre `card`/`popover`/`barra`.
+- **Colore per schermata**: `src/lib/colors.js` (`PAGE_COLOR`, `pageColorFor`,
+  `setPageColor`) + hook `usePageColor` in `App.jsx` e `Dispensa.jsx`: imposta
+  `--sfondo` e `<meta theme-color>` (barra di stato iOS) prima del paint.
+- **Classi comuni** in `src/index.css` (`@layer components`): `.gigante`,
+  `.titolo`, `.grande`, `.micro`, `.num`, `.sezione`, `.bottone`,
+  `.bottone-chiaro`, `.bottone-rosso`, `.pillola`, `.tondo`, `.cartellino`,
+  `.link`, `.campo`, `.evidenza`. `Button.jsx` mappa le varianti su queste.
+- **Niente tema scuro** (`color-scheme: light only`), niente `backdrop-filter`
+  né sfumature; animazioni solo `transform`/`opacity`.
+- **Bottom sheet**: `Sheet.jsx` (Vaul), bianco di default; `panelClass` per il
+  colore del foglio (sabbia, rosa, giallo, nero per le fotocamere).
 
 ---
 
@@ -337,11 +344,12 @@ applica `upsert`/`remove` agli stati locali.
 | `BarcodeScanModal.jsx` / `ReceiptScanModal.jsx` | Scanner (lazy-loaded). |
 | `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. Dal flusso voce (prop `onAddMore`) mostra "Aggiungi altri prodotti": ri-detta e accoda. |
 | `ManualAddModal.jsx` / `VoiceAddModal.jsx` | Aggiunta manuale / a voce. |
-| `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | FAB "+", menu aggiunta, navigazione. |
-| `ProfileSheet.jsx` / `SettingsSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo = "chi sei" (Nome/username, Dispensa familiare, Esigenze alimentari, Svuota/Esci) con ⚙️ in alto a destra che apre **SettingsSheet** = "come si comporta l'app" (Face ID, toggle notifiche push, tema, tutorial, privacy/elimina account). |
+| `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | "+" arancio rialzato, menu aggiunta a semicerchio, barra in basso (pillola nera con le parole). |
+| `Barattoli.jsx` | Oggetto simbolo (due barattoli), stesso disegno dell'icona. |
+| `ProfileSheet.jsx` / `SettingsSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo = "chi sei" (Nome/username, Dispensa familiare, Esigenze alimentari, Svuota/Esci) con ⚙️ in alto a destra che apre **SettingsSheet** = "come si comporta l'app" (Face ID, toggle notifiche push, tutorial, privacy/elimina account). |
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
-| `Auth.jsx` | Login a pagina intera (magic-link, Google, Apple, Face ID/passkey), stile "manifesto": headline "Cosa c'è in dispensa?" con wavy underline tomato su "dispensa" + mensole di emoji-categoria con slot "+" + sottotitolo "La tua cucina, in tasca. Meno sprechi (verde fisso `#43A047`). Zero pensieri". |
-| `SplashIntro.jsx` | **Intro splash** montata in `App.jsx`: riprende la splash nativa iOS (icona + "Dispensa") e disegna la sottolineatura ondulata tomato, poi sfuma nell'app. Animazione su tutte le piattaforme; rispetta `prefers-reduced-motion`. Stili `.splash-*` in `index.css`. |
+| `Auth.jsx` | Login a pagina intera su arancio (magic-link, Google, Apple, Face ID/passkey): barattoli, headline enorme "Cosa c'è in dispensa?" con ondina nera su "dispensa", sottotitolo con "Meno sprechi." su pillola verde, provider a pillola bianca. |
+| `SplashIntro.jsx` | **Intro splash** montata in `App.jsx`: riprende la splash nativa iOS (barattoli + "Dispensa" sull'arancio) e disegna la sottolineatura ondulata nera, poi sfuma nell'app. Animazione su tutte le piattaforme; rispetta `prefers-reduced-motion`. Stili `.splash-*` in `index.css`. |
 | `PaywallSheet.jsx` | **Paywall Premium** (fase 3): due piani affiancati, annuale evidenziato, prezzo barrato = 12 mensilità (Omnibus-safe). Prezzi/id da `lib/premium.js`. Aperto dal tab Piano Alimentare (non-Pro), da Impostazioni, dal deep-link `?view=piano`. |
 | `PushNudge.jsx` | **Soft-ask notifiche** reso da `PantryTab` sotto il banner scadenze (gated `canNudge={!tour.active}`): invita ad attivare le push nel momento contestuale. Si auto-nasconde se non supportate / già attive / già rifiutato (`dispensa-pushnudge-dismissed`). Riusa `enablePush` di `lib/push.js`. |
 | `Toast.jsx` | Toast/undo, posizione adattiva (`raised` su Spesa). |

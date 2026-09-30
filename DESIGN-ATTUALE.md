@@ -1,0 +1,90 @@
+# DESIGN-ATTUALE — Dispensa ("manifesto svizzero", dal 30/09/2026)
+
+> Veste grafica di oggi, la stessa di Wishlist Viaggi ed Expense Track (guida completa:
+> `Downloads/APP/wishlist-viaggi/docs/LINEE-GUIDA-DESIGN.md`). Separa **cosa è solo aspetto**
+> (si può cambiare) da **cosa è comportamento** (da conservare: è frutto di prove sull'iPhone
+> dell'utente). Prima c'era la veste "editoriale" (avorio, rosso pomodoro, Hanken Grotesk, tema
+> chiaro/scuro). Collegati: `CLAUDE.md` · `HANDOFF.md` · `ARCHITECTURE.md`.
+
+## Aspetto
+
+- **Un solo tema, chiaro.** Il tema scuro è stato tolto (30/09, come in Expense Track): niente più
+  voce "Aspetto" nelle Impostazioni, niente `theme.js`, `color-scheme: light only`.
+- **Un colore pieno per schermata** (fondo e barra di stato). `src/lib/colors.js` → `PAGE_COLOR` +
+  `setPageColor` (variabile `--sfondo` in terna RGB + `<meta theme-color>`), applicato da
+  `usePageColor` in `App.jsx` (accesso/caricamento) e `Dispensa.jsx` (per scheda):
+  | Schermata | Colore |
+  |---|---|
+  | Dispensa, accesso, caricamento, avvio | **arancio** `#ff7a1a` (marchio) |
+  | Spesa | **giallo** `#ffd60a` |
+  | Ricette (Idee, proposte, Piano Alimentare) | **verde** `#22b35e` |
+  | Ricetta aperta, modalità cucina | **bianco** |
+  | Profilo, Impostazioni, Privacy (fogli) | **sabbia** `#dccdb2` |
+  | Premium (paywall) | **rosa** `#ffb5d0` |
+  | Fogli dove si scrive (a mano, voce, revisione, Ho cucinato) | **bianco** (default di `Sheet`) |
+  | Conferme (Svuota, far uscire un membro, elimina account) | **giallo** |
+  | Fotocamere (scontrino, barcode) | **nero** (accento giallo) |
+- Inchiostro sempre nero `#0a0a0a` (`ink`); su nero si scrive in crema `#f3f1ec`. Testo secondario
+  `tenue` (nero al 60%), fili `riga` (nero al 16%): trasparenti, così prendono la tinta del fondo.
+  Il bianco sul colore solo sul rosso azione `#e02a0d` (ciò che toglie).
+- **Carattere Inter Tight** (`@fontsource-variable/inter-tight`, file locali importati in
+  `main.jsx`), base 500. Classi in `src/index.css` (`@layer components`): `.gigante` (titoli di
+  pagina, clamp 3.4–5.4rem, 800, −0.065em, con `word-spacing` per non incollare le parole),
+  `.titolo` (fogli e ricetta, clamp 1.9–2.3rem), `.grande`, `.micro` (etichetta piccola sopra i
+  valori, mai maiuscolo), `.num` (cifre tabellari).
+- **Righe sottili al posto delle card**: categorie con filetto nero 1.5px, righe con filo 1px. Le
+  card restano solo dove servono: pannello prodotto aperto, occasioni e proposte delle Ricette,
+  giorni del Piano, piani del Premium.
+- **Pillole e cerchi**: `.bottone` (nero, azione principale), `.bottone-chiaro` (bordo),
+  `.bottone-rosso`, `.pillola` (scelta: bordo; scelta = piena nera via `aria-pressed`), `.tondo`
+  (icone), `.cartellino` (etichette piccolissime), `.link`, `.campo` (solo la riga sotto),
+  `.evidenza` (riquadro nero). `Button.jsx` mappa le varianti su queste classi: **il primario è
+  nero** (scelta dell'utente del 30/09, prima era pomodoro).
+- **Scadenze a cartellini**: rosso pieno = scaduto, nero = oggi/entro 3 giorni, solo bordo = entro
+  la settimana, tenue = lontana. Il nome del prodotto resta nero (sull'arancio un nome rosso/ambra
+  non si leggerebbe); "finito" attenuato.
+- Icone lucide a tratto spesso (`svg.lucide { stroke-width: 2.6px }`); **categorie sempre emoji**.
+- **Barra in basso**: pillola nera con le sole parole Dispensa · Spesa · Ricette · Profilo, scheda
+  aperta in crema, numeri rossi; **"+" arancio rialzato al centro** (scelta dell'utente), solo in
+  Dispensa, con il menu a semicerchio (bollini bianchi, velo nero senza sfocatura).
+- **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Barra timer nera.
+- **Oggetto simbolo: due barattoli** (`components/Barattoli.jsx`, stesso disegno di
+  `public/icon.svg`): dietro pieno nero, davanti col colore della superficie. Usato per icona,
+  splash, accesso, dispensa vuota, "Sto analizzando la spesa" e il pulsante "Sposta in dispensa".
+- **Icona e splash**: barattoli neri sull'arancio; splash con la scritta "Dispensa" (immagine
+  pronta `scripts/assets/wordmark-dispensa.png`, Inter Tight 800 a −0.04em). Rigenerare con
+  `node scripts/generate-icons.mjs` e `node scripts/generate-splash.mjs`.
+
+## Movimento
+
+- Cambio scheda: View Transition del browser come prima (una per volta, `animateUI`); il colore
+  del fondo cambia dentro la transizione, senza animare il fondo.
+- Fogli: Vaul come prima (trascina giù, tocco fuori). Avvisi: salgono di 24 px in 0,2 s.
+- Solo `transform`/`opacity`: il tutorial non anima più posizione e misura del riquadro
+  evidenziato (si sposta di colpo). `prefers-reduced-motion` rispettato.
+
+## Da conservare in qualsiasi restyling (comportamento)
+
+1. Niente `filter: blur` / `backdrop-filter` / `mix-blend-mode` su elementi grandi o fissi; niente
+   librerie di animazione per elementi ripetuti.
+2. Pannello prodotto in linea con salvataggio automatico (tempi, "Annulla", chiusura toccando
+   fuori), unità che ripartono dal valore base, calendario scadenze dentro l'app.
+3. Spesa: tocco sul nome = modifica, cerchio = carrello, swipe ← elimina / → modifica (soglia 72
+   px), "Per reparto" nel giro del supermercato, "Nel carrello", barra "Sposta in dispensa".
+4. Barra: Dispensa · Spesa · [+] · Ricette · Profilo, "+" solo in Dispensa, spazio centrale
+   riservato; numeri su Dispensa (scaduti) e Spesa (da prendere).
+5. Tutorial: gli attributi `data-tour` restano su ogni elemento.
+6. Emoji delle categorie identiche tra Dispensa e Spesa; testi e microcopy invariati.
+7. Posizioni fisse tarate sull'altezza della barra (56 px): avviso `bottom-32` (`bottom-44` con il
+   carrello pieno), barra timer, barra "Sposta in dispensa" (`64px + safe-area`). Se cambia la
+   barra, vanno riallineate.
+8. Margini laterali 16 px; campi con testo ≥ 16 px (`.testo-grande`) per evitare lo zoom di iOS.
+
+## Come verificare l'aspetto (pagina di prova)
+
+`npm run dev` → `http://localhost:5173/anteprima.html` monta le schermate **vere** con dati finti,
+senza login né Supabase (non entra nella build). Parametri: `vista=dispensa|spesa|ricette|
+proposte|ricetta|piano|accesso`, `menu=1`, `toast=1`, `foglio=profilo|impostazioni|premium|
+privacy|svuota|aggiungi|revisione|cucinato|voce`. Misurare dal DOM a 393 e 375 px. Dopo una
+modifica a `tailwind.config.js` riavviare il server di sviluppo (le classi nuove non compaiono
+finché non riparte). Fotocamere, notifiche, gesti e app nativa si provano solo sul telefono.

@@ -24,6 +24,28 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 
 ---
 
+## Veste grafica "manifesto svizzero" (2026-09-30)
+
+> L'app ha la stessa veste di Wishlist Viaggi ed Expense Track: **un colore
+> pieno per schermata** (Dispensa arancio `#ff7a1a`, Spesa giallo, Ricette
+> verde, ricetta aperta bianca, Profilo/Impostazioni sabbia, Premium rosa,
+> conferme gialle, fotocamere nere), **Inter Tight**, titoli enormi, righe
+> sottili al posto delle card, pillole nere, icone a tratto spesso e **due
+> barattoli** come oggetto simbolo (icona, splash, accesso, dispensa vuota).
+> **Un solo tema (chiaro)**: tolti tema scuro e voce "Aspetto". Funzioni, dati,
+> gesti e testi invariati. Scelte dell'utente: primario **nero** (prima
+> pomodoro), **"+" arancio rialzato al centro** della barra come prima.
+> Dettagli, regole e cosa conservare: **`DESIGN-ATTUALE.md`**. Per vedere le
+> schermate senza login: `npm run dev` → `/anteprima.html` (dati finti).
+>
+> **Da provare sul telefono** (non verificabile dal PC): colore della barra di
+> stato che cambia con la scheda, fascia di vetro di iOS 26 sotto l'orologio,
+> gesti (swipe spesa, fogli), tastiera sopra "Aggiungi a mano", fotocamere
+> (scontrino/barcode), tutorial, notifiche, app nativa (icona, splash, banner
+> AdMob). **Nuova icona**: per vederla va reinstallata la PWA (prima aprire
+> l'app online e lasciarla sincronizzare: i dati stanno su Supabase; dopo la
+> reinstallazione riattivare le notifiche dalle Impostazioni).
+
 ## Prossimo obiettivo: STOREKIT + PRIMO BUILD SU TESTFLIGHT (Fase 3)
 
 > **Stato (agg. 2026-07-21): Fasi 1 e 2 complete e in produzione; Fase 3
@@ -401,13 +423,12 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 - **Auth** Supabase: magic-link (email), Google OAuth, Apple OAuth, **Face ID/
   passkey** (WebAuthn, vedi "in sviluppo" per Apple e passkey). Login **a pagina
-  intera** (niente card), redesign "manifesto" del 2026-07-03: headline
-  "Cosa c'è in dispensa?" con sottolineatura wavy tomato su "dispensa",
-  **due mensole di emoji-categoria** (da `CAT_ICON`) con slot "+" tratteggiato,
-  sottotitolo "La tua cucina, in tasca. **Meno sprechi.** Zero pensieri."
-  ("Meno sprechi" in verde brand fisso `#43A047`, non tematizzato), riga di
-  provider a icona (Apple/Google/**Face ID**), "OPPURE", email con CTA nero
-  pieno. Il pulsante Face ID chiama
+  intera** su arancio (veste manifesto del 2026-09-30): i due barattoli,
+  headline enorme "Cosa c'è in dispensa?" con sottolineatura ondulata nera su
+  "dispensa", sottotitolo "La tua cucina, in tasca. **Meno sprechi.** Zero
+  pensieri." ("Meno sprechi" su pillola verde: sull'arancio un testo verde non
+  si legge), provider a pillola bianca (Apple/Google/**Face ID**), "Oppure",
+  email con la sola riga sotto e pulsante nero. Il pulsante Face ID chiama
   `signInWithPasskey()`; l'attivazione della passkey vive nel **Profilo**
   (`registerPasskey()`, richiede sessione attiva). Gate in `src/App.jsx`; logout
   dal Profilo.
@@ -467,14 +488,14 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   fallimenti silenziosi: aggiunte/eliminazioni funzionano anche offline.
 - **Code-split per scheda** — le schede/scanner pesanti sono `React.lazy` in
   `Dispensa.jsx` (ZXing e affini caricati on-demand).
-- **PWA**: installabile, offline shell, tema chiaro/scuro/auto (per-dispositivo).
-  **Splash screen iOS**: `apple-touch-startup-image` in `index.html` (icona +
-  wordmark "Dispensa" su cream/dark via `prefers-color-scheme`), immagini in
-  `public/splash/*` generate da `scripts/generate-splash.mjs` (sharp; il font
-  Hanken ExtraBold è bundlato in `scripts/assets/`), escluse dal precache SW
-  (le gestisce Safari). Solo iPhone portrait. **Intro in-app** `SplashIntro.jsx`
-  (montata in `App.jsx`, stili `.splash-*` in `index.css`): riprende la splash
-  nativa e disegna la sottolineatura ondulata tomato (stile login "manifesto"),
+- **PWA**: installabile, offline shell, un solo tema (chiaro).
+  **Splash screen iOS**: `apple-touch-startup-image` in `index.html`
+  (barattoli + scritta "Dispensa" sull'arancio), immagini in `public/splash/*`
+  generate da `scripts/generate-splash.mjs` (sharp; la scritta è l'immagine
+  pronta `scripts/assets/wordmark-dispensa.png`, Inter Tight 800), escluse dal
+  precache SW (le gestisce Safari). Solo iPhone portrait. **Intro in-app**
+  `SplashIntro.jsx` (montata in `App.jsx`, stili `.splash-*` in `index.css`):
+  riprende la splash nativa e disegna la sottolineatura ondulata nera,
   poi sfuma nell'app — dà l'animazione su tutte le piattaforme; la PNG statica è
   il primo fotogramma (nessuno stacco). Rispetta `prefers-reduced-motion`.
 - **Tutorial** guidato (TourCoach).
@@ -562,14 +583,17 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/hooks/usePantry.jsx`, `useShopping.jsx`, `useRecipes.jsx` | Stato + logica dei tre domini. |
 | `src/hooks/useOnline.js`, `useTimersTicker.js`, `useAuth.js` | Hook di supporto. |
 | `src/components/Sheet.jsx` | **Bottom sheet condiviso (Vaul)**: cambiarlo cambia il drag di TUTTI i fogli. |
-| `src/components/Button.jsx` | **Bottone d'azione condiviso**: varianti `primary`/`secondary`/`cook`/`danger`. Stile unico per funzione (primario = tomato). |
+| `src/components/Button.jsx` | **Bottone d'azione condiviso**: varianti `primary`/`secondary`/`cook`/`danger` mappate sulle pillole `.bottone*` di `index.css`. Stile unico per funzione (primario = nero). |
 | `src/components/ProductFields.jsx` | **Vista prodotto condivisa** (nome · categoria-emoji→pillole · elimina / box scadenza→`ExpiryCalendar` · stepper in pill · unità): usata da pannello Dispensa, modifica Spesa, Aggiungi a mano e Revisione scansione. Riga quantità `flex-nowrap` (mai a capo). Presentazionale: la logica resta nei chiamanti. |
 | `src/components/ExpiryCalendar.jsx` | **Calendario scadenza in-app** (rimpiazza il date picker nativo iOS): niente preselezione, scorciatoie Oggi/Domani/Tra 3 gg, navigazione mese, in-flow (funziona anche nei bottom sheet). |
 | `src/constants.js` | Categorie, ordini reparto, **emoji categorie (`CAT_ICON`)**, prompt AI, seed/demo. |
-| `src/index.css` | **Palette** (variabili CSS, light + blocchi dark) e CSS PWA/Vaul. |
+| `src/index.css` | Veste manifesto: `--sfondo` (colore della schermata), classi comuni (`.gigante`, `.micro`, `.bottone`, `.pillola`, `.tondo`, `.cartellino`, `.campo`...) e CSS PWA/Vaul/splash. Token in `tailwind.config.js`. |
+| `src/lib/colors.js` + `src/hooks/usePageColor.js` | **Colore per schermata** (`PAGE_COLOR`, `pageColorFor`, `setPageColor`: `--sfondo` + `theme-color`). |
+| `src/components/Barattoli.jsx` | **Oggetto simbolo** (due barattoli), stesso disegno di `public/icon.svg`. |
+| `anteprima.html` + `src/anteprima/` | **Pagina di prova solo sviluppo**: schermate vere con dati finti, senza login (`?vista=`, `?foglio=`). Non entra nella build. |
 | `src/components/HouseholdSection.jsx` | UI **Dispensa condivisa** nel Profilo: membri (username + corona sul creatore + "Rimuovi"), inviti, entra-con-codice, switch nucleo, esci, popup conferma espulsione. |
 | `src/components/ProfileSheet.jsx` | Foglio Profilo ("chi sei"): **Nome (username)** al posto della mail, `HouseholdSection`, **Esigenze alimentari** (box 2 righe), azioni dati (Svuota dispensa `data-tour="clear-pantry"`, Esci). ⚙️ in alto a destra apre `SettingsSheet`. |
-| `src/components/SettingsSheet.jsx` | Foglio **Impostazioni** ("come si comporta l'app", dal ⚙️ del Profilo): Face ID/passkey, toggle notifiche push (avvisi automatici a 7/3/1 gg dalla scadenza), Aspetto/tema, Rivedi il tutorial, footer Privacy Policy / Elimina account. |
+| `src/components/SettingsSheet.jsx` | Foglio **Impostazioni** ("come si comporta l'app", dal ⚙️ del Profilo): Face ID/passkey, toggle notifiche push (avvisi automatici a 7/3/1 gg dalla scadenza), Rivedi il tutorial, footer Privacy Policy / Elimina account. |
 | `supabase/schema.sql` + `migration-2..10.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6/7/8` = **dispensa familiare** (schema, inviti, switch RLS a household); `migration-9` = **username + espulsione** (colonna `username`, `set_username`/`remove_member` security definer, `accept_invite` eredita lo username); `migration-10` = **push scadenze** (tabella `push_subscriptions` + `save_push_subscription` + cron pg_cron/pg_net). |
 | `server/push.js` + `api/push.js` | **Cron notifiche push** (Fase 1): ricava lo slot dall'ora di Roma, legge scadenze/subscription col service role, invia con `web-push`. Protetto da `CRON_SECRET`. |
 | `src/lib/push.js` + `public/push-sw.js` | Opt-in push lato client (subscribe/unsubscribe) + handler `push`/`notificationclick` iniettato nel SW Workbox. |
@@ -679,8 +703,9 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 - **API key nel client**: mai. Ogni nuova integrazione passa da un proxy in
   `server/` + `api/`.
 - **`src/lib/pantry.js`** senza aggiornare i test (`pantry.test.js`).
-- **Blocchi `[data-theme]` in `index.css`**: le terne RGB di light e dark devono
-  restare allineate (stessi token).
+- **Veste manifesto** (`DESIGN-ATTUALE.md` → "Da conservare"): niente sfocature
+  né filtri su elementi grandi/fissi, animazioni solo transform/opacity, un
+  colore per schermata via `PAGE_COLOR`.
 - **Serializzazione di `animateUI`** (una View Transition per volta).
 - **`Sheet.jsx` montato `open=true`** (necessario per le fotocamere).
 
@@ -702,13 +727,14 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
      progetto, senza chiedere. Branch `main`, remoto `origin`
      (github.com/mar8co/dispensa).
    - Messaggi di commit in italiano, che finiscono con:
-     `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+     la riga `Co-Authored-By:` del modello in uso (es. Claude Opus 5.5).
    - **Nota commit su Windows/PowerShell**: messaggi con virgolette/emoji rompono
      `-m` e gli here-string. Pattern collaudato: scrivere il messaggio in
      `.git/COMMIT_EDITMSG_TMP` e fare `git commit -F .git/COMMIT_EDITMSG_TMP`.
 5. **Verifica preview**: molte feature sono dietro login Supabase + camera, quindi
    spesso **non** verificabili dal preview; in quei casi fidarsi di lint/build e
-   far provare all'utente sul telefono.
+   far provare all'utente sul telefono. Per l'**aspetto** c'è la pagina di prova
+   `/anteprima.html` (schermate vere, dati finti, niente login).
 
 ---
 

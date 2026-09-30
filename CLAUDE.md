@@ -2,7 +2,8 @@
 
 > Questo file vale per **ogni** conversazione su questo repo. Leggerlo PRIMA di
 > modificare qualsiasi cosa. Collegati: `HANDOFF.md` (stato e ripresa) ·
-> `ARCHITECTURE.md` (architettura). L'app si chiama **"Dispensa"** (ex "La Mia
+> `ARCHITECTURE.md` (architettura) · `DESIGN-ATTUALE.md` (veste grafica
+> "manifesto svizzero", dal 2026-09-30). L'app si chiama **"Dispensa"** (ex "La Mia
 > Dispensa"); cartella/repo: `dispensa`.
 
 ---
@@ -20,7 +21,9 @@
    (69/69), `npm run build`. Se tocchi `pantry.js`/`history.js`, aggiorna i
    rispettivi test (`pantry.test.js` / `history.test.js`).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
-   questo progetto), senza chiedere. Branch `main`, remoto `origin`.
+   questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
+   per lavori grandi a più blocchi (es. un restyle) l'utente può chiedere un
+   ramo a parte, pubblicato su `main` solo a lavoro finito (dopo `git fetch`).
 6. **Refactor incrementali, mai big-bang.** Un cambiamento coerente per commit.
 
 ---
@@ -36,14 +39,16 @@
 - **ESLint flat config** (`eslint.config.js`): `react-hooks`, `no-unused-vars` con
   `varsIgnorePattern: ^[A-Z_]`. Quindi le variabili non usate **minuscole** danno
   errore: rimuovile (non rinominarle in maiuscolo per aggirare il lint).
-- **Nessun bianco letterale tematizzato**: per superfici/testi bianchi usa il
-  token `white` (che diventa scuro in dark mode); il **nero scrim** resta
-  letterale (`bg-black/40`, `text-[#fff]` nelle UI fotocamera su sfondo scuro).
+- **Colori solo dai token** (`tailwind.config.js`): `sfondo` (colore della
+  schermata), `ink`, `tenue`, `riga`, `crema`, i colori pieni (`arancio`,
+  `giallo`, `verde`, `rosa`, `sabbia`...) e `rosso-azione`. Niente grigi fissi
+  (`stone-*`) né nomi della veste vecchia (`cream`, `tomato`...): non esistono
+  più. Un solo tema (chiaro): niente classi `dark:`.
 - **localStorage**: chiavi sempre con prefisso `dispensa-*`, per-uid dove ha senso
-  (es. `dispensa-sort-<uid>`, `dispensa-theme`).
+  (es. `dispensa-sort-<uid>`).
 - **Commit su Windows/PowerShell**: messaggi multilinea/con emoji → scrivere in
-  `.git/COMMIT_EDITMSG_TMP` e `git commit -F`. I messaggi finiscono con
-  `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+  `.git/COMMIT_EDITMSG_TMP` e `git commit -F`. I messaggi finiscono con la riga
+  `Co-Authored-By:` del modello in uso (es. `Claude Opus 5.5 <noreply@anthropic.com>`).
 
 ---
 
@@ -51,12 +56,14 @@
 
 - **Mobile-first, iPhone Safari/PWA.** Tutto va pensato per una mano sola, target
   tocco ≥ 44px, rispetto di `env(safe-area-inset-*)`.
-- **Palette** (variabili CSS in `src/index.css`, mappate ai token Tailwind):
-  - Light: `--cream 244 241 233` (sfondo), `--ink 10 10 10` (#0A0A0A), `--tomato
-    255 67 6` (#FF4306), `--tomato-700 214 54 0`.
-  - Dark: definito nei blocchi `[data-theme="dark"]` e media query; **i token
-    devono restare allineati** a quelli light (stessi nomi).
-  - Tomato in dark: `255 96 56`.
+- **Veste "manifesto svizzero"** (dettagli in `DESIGN-ATTUALE.md`): un colore
+  pieno per schermata (`PAGE_COLOR` in `src/lib/colors.js`, applicato con
+  `usePageColor`: Dispensa arancio `#ff7a1a`, Spesa giallo, Ricette verde,
+  ricetta aperta bianca), inchiostro nero, Inter Tight, titoli `.gigante`,
+  etichette `.micro`, righe sottili al posto delle card, pillole e tondi.
+  Niente `backdrop-filter`/`filter: blur`/`mix-blend-mode`, animazioni solo
+  `transform`/`opacity`. Per vedere le schermate senza login:
+  `/anteprima.html` in `npm run dev`.
 - **Icone categoria = emoji** da `CAT_ICON` (constants.js), **identiche** tra
   Dispensa e Spesa. Non sostituirle con icone lineari.
 - **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
@@ -65,10 +72,11 @@
   unità) ovunque si mostri o modifichi un prodotto. La riga quantità è
   `flex-nowrap` (mai a capo: cede solo il box scadenza, troncato). Non ricreare
   quei campi a mano.
-- **Bottoni d'azione**: usa `Button.jsx` (varianti per funzione: `primary` pieno
-  tomato = conferma/commit · `secondary` outline = alternativa/Annulla · `cook`
-  tinta tomato = genera/cucina · `danger` = elimina). Non creare bottoni ad-hoc
-  con classi inline per le azioni standard. Il **primario è tomato** (non ink).
+- **Bottoni d'azione**: usa `Button.jsx` (varianti per funzione: `primary` nero
+  pieno = conferma/commit · `secondary` col bordo = alternativa/Annulla · `cook`
+  col bordo + icona = genera/cucina · `danger` rosso = elimina). Non creare
+  bottoni ad-hoc con classi inline per le azioni standard. Il **primario è
+  nero** (scelta dell'utente del 2026-09-30, prima era pomodoro).
   Restano bespoke solo i casi speciali (FAB, otturatore fotocamera, navbar,
   stepper ±, chip/pill, strisce dentro i banner).
 - **Toast** (`Toast.jsx`): `bottom-32` (appena sopra il FAB "+") su tutte le
@@ -92,6 +100,7 @@ PWA leggera). Approvate:
 - `lucide-react` (icone UI) + **emoji** (categorie)
 - `vaul` (+ `@radix-ui/react-dialog` transitiva) per i bottom sheet
 - `@zxing/browser`, `@zxing/library` (barcode)
+- `@fontsource-variable/inter-tight` (carattere dell'app, file locali)
 - Dev: `vite`, `vite-plugin-pwa`, `tailwindcss`, `vitest`, `eslint`, `sharp`
 
 Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto usa
@@ -120,7 +129,7 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
   scorte q.b. (mostrati, non sottratti) — vedi `isSpoonQty`/`isStapleQb`.
 - **Persistenza impostazioni**: in `user_settings` (jsonb) ciò che è cross-device
   (ordini, collassato, porzioni, preferenze); in localStorage ciò che è
-  per-dispositivo (tema) o per-uid (ultimo ordinamento spesa).
+  per-dispositivo o per-uid (ultimo ordinamento spesa).
 
 ---
 
