@@ -58,16 +58,16 @@ export default function PushNudge() {
   if (!ready || !show) return null;
 
   return (
-    <div className="mt-2 rounded-xl border border-hair bg-paper p-3">
-      <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-tomato/10 text-tomato">
-          <Bell className="h-4 w-4" />
+    <div className="mt-2 rounded-card bg-white p-3.5">
+      <div className="flex items-start gap-3">
+        <span className="tondo mt-0.5">
+          <Bell className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink">Ti avviso prima che scadano?</p>
-          <p className="text-xs text-stone-500">Un promemoria sul telefono, così non sprechi nulla.</p>
-          {err && <p className="mt-1.5 text-xs font-semibold text-tomato">{err}</p>}
-          <div className="mt-2.5 flex gap-2">
+          <p className="text-[1rem] font-[750] leading-snug tracking-[-0.02em] text-ink">Ti avviso prima che scadano?</p>
+          <p className="mt-0.5 text-[0.86rem] font-medium leading-snug text-tenue">Un promemoria sul telefono, così non sprechi nulla.</p>
+          {err && <p className="mt-1.5 text-[0.86rem] font-semibold text-errore">{err}</p>}
+          <div className="mt-3 flex gap-2">
             <Button variant="primary" size="sm" onClick={activate} disabled={busy}>
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Attiva"}
             </Button>

@@ -4,7 +4,7 @@
 // si aprono lì sotto i comandi: quantità, scadenza, modifica, elimina.
 import { useState, useRef, useEffect } from "react";
 import {
-  X, Search, ShoppingCart, AlertTriangle,
+  X, Search, ShoppingCart,
   SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
@@ -13,13 +13,19 @@ import { tourSignal } from "../lib/tour.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 import PushNudge from "./PushNudge.jsx";
+import Barattoli from "./Barattoli.jsx";
+import { PAGE_COLOR } from "../lib/colors.js";
 
+// Cartellini delle scadenze (veste manifesto): rosso pieno = scaduto, nero =
+// oggi/entro 3 giorni, solo bordo = entro la settimana, tenue = lontana.
+// L'urgenza la dice il cartellino: il nome resta nero (sull'arancio un nome
+// rosso o ambra non si leggerebbe).
 const EXP_STYLE = {
-  scaduto: "bg-tomato text-[#fff] ring-2 ring-tomato/30",
-  oggi: "bg-tomato text-[#fff]",
-  presto: "bg-tomato/10 text-tomato",
-  settimana: "bg-amber-100 text-amber-700",
-  ok: "bg-stone-100 text-stone-500",
+  scaduto: "border-rosso-azione bg-rosso-azione text-white",
+  oggi: "bg-ink text-white",
+  presto: "bg-ink text-white",
+  settimana: "",
+  ok: "border-ink/35 text-tenue",
 };
 
 function ExpiryBadge({ date, onlyUrgent = false }) {
@@ -27,7 +33,7 @@ function ExpiryBadge({ date, onlyUrgent = false }) {
   if (!st) return null;
   if (onlyUrgent && st === "ok") return null; // le date lontane non fanno rumore
   return (
-    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${EXP_STYLE[st]}`}>
+    <span className={`cartellino self-center ${EXP_STYLE[st]}`}>
       {formatExpiry(date)}
     </span>
   );
@@ -38,16 +44,6 @@ const SORTS = [
   ["nome", "A-Z"],
   ["scadenza", "Scadenza"],
 ];
-
-// Tono del nome a riposo: spento se finito, rosso se scade a brevissimo,
-// ambra se scade in settimana.
-function nameTone(it, out) {
-  if (out) return "text-stone-400";
-  const st = expiryStatus(it.expiry);
-  if (st === "scaduto" || st === "oggi" || st === "presto") return "text-tomato";
-  if (st === "settimana") return "text-amber-700";
-  return "text-ink";
-}
 
 // Quantità a riposo: i numeri puri diventano "×3", il resto resta com'è.
 const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}` : formatQtyDisplay(q));
@@ -214,17 +210,17 @@ export default function PantryTab({
 
   return (
     <div className="pt-2">
-      {/* Header editoriale (il profilo è nella navbar in basso) */}
-      <h1 className="font-display text-[40px] font-extrabold leading-[0.98] tracking-tight text-ink">Ciao 👋<br />Hai fame?</h1>
+      {/* Titolo enorme (il profilo è nella navbar in basso) */}
+      <h1 className="gigante">Ciao <span className="align-[0.08em] text-[0.72em] tracking-normal">👋</span><br />Hai fame?</h1>
 
       {/* Occhiello rosso + ricerca: bloccati insieme in alto durante lo scroll
           (con l'ordinamento dietro l'icona). */}
-      <div className="sticky top-0 z-30 -mx-4 mt-4 bg-cream/95 px-4 pb-1.5 pt-2 backdrop-blur">
-      <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">{shared ? "La nostra dispensa" : "La tua dispensa"}</div>
+      <div className="sticky top-0 z-30 -mx-4 mt-5 bg-sfondo px-4 pb-1.5 pt-2">
+      <div className="micro">{shared ? "La nostra dispensa" : "La tua dispensa"}</div>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
+        <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
         <input
-          className={`w-full border-0 border-b border-ink/20 bg-transparent py-2.5 pl-7 text-sm text-ink outline-none focus:border-ink ${searchActive ? "pr-16" : "pr-9"}`}
+          className={`campo testo-grande pl-8 text-[1.06rem] text-ink ${searchActive ? "pr-[4.5rem]" : "pr-10"}`}
           placeholder="Cerca un prodotto"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -232,35 +228,34 @@ export default function PantryTab({
         {searchActive && (
           <button
             onClick={() => setSearch("")}
-            className="absolute right-8 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 hover:bg-stone-100"
+            className="absolute right-9 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-ink"
             aria-label="Cancella ricerca"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         )}
         {grouped.length > 0 && (
           <button
             onClick={() => setSortOpen((v) => !v)}
             aria-expanded={sortOpen}
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-400 transition hover:bg-stone-100"
+            className={`absolute -right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full transition ${sortOpen ? "bg-ink text-white" : "text-ink"}`}
             aria-label="Ordinamento"
             title="Ordinamento"
           >
-            <SlidersHorizontal className="h-4 w-4" />
+            <SlidersHorizontal className="h-5 w-5" />
           </button>
         )}
       </div>
 
       {/* Chips ordinamento: compaiono solo al tocco dell'icona */}
       {sortOpen && grouped.length > 0 && (
-        <div className="animate-fade-in mt-2 flex gap-1.5">
+        <div className="animate-fade-in mt-2.5 flex gap-1.5">
           {SORTS.map(([v, l]) => (
             <button
               key={v}
               onClick={() => { setSort(v); setSortOpen(false); }}
-              className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
-                sort === v ? "border-ink bg-ink text-white" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-              }`}
+              aria-pressed={sort === v}
+              className="pillola min-h-[34px] px-3.5 text-[0.84rem]"
             >
               {l}
             </button>
@@ -269,34 +264,37 @@ export default function PantryTab({
       )}
       </div>{/* fine barra ricerca sticky */}
 
-      {/* Striscia scadenze: distingue i già scaduti (rosso) da quelli in
-          scadenza entro 7 giorni (ambra). Il filtro "mostra" li include entrambi. */}
+      {/* Riquadro scuro delle scadenze: il riassunto più utile della pagina.
+          Distingue i già scaduti (pallino rosso) da quelli in scadenza entro 7
+          giorni (pallino giallo). Il filtro "Mostra" li include entrambi. */}
       {expiredCount + expiringSoonCount > 0 && (
-        <div className="mt-3 overflow-hidden rounded-xl border border-amber-700/30 bg-amber-100/60">
+        <div className="evidenza mt-3.5 overflow-hidden">
           <button
             onClick={() => setExpFilter(!expFilter)}
-            className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+            aria-pressed={expFilter}
+            className="block w-full px-3.5 pb-2.5 pt-3 text-left"
           >
-            <AlertTriangle className={`h-4 w-4 shrink-0 ${expiredCount > 0 ? "text-tomato" : "text-amber-700"}`} />
-            <span className="flex-1 text-xs font-semibold leading-snug">
-              {expiredCount > 0 && (
-                <span className="block text-tomato">
-                  {expiredCount} {expiredCount === 1 ? "prodotto scaduto" : "prodotti scaduti"}
-                </span>
-              )}
-              {expiringSoonCount > 0 && (
-                <span className="block text-amber-700">
-                  {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza{expiredCount > 0 ? "" : " entro 7 giorni"}
-                </span>
-              )}
-            </span>
-            <span className="shrink-0 text-[11px] font-bold text-amber-700 underline">
-              {expFilter ? "mostra tutto" : "mostra"}
+            <span className="micro block">Scadenze</span>
+            {expiredCount > 0 && (
+              <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
+                <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-rosso" />
+                {expiredCount} {expiredCount === 1 ? "prodotto scaduto" : "prodotti scaduti"}
+              </span>
+            )}
+            {expiringSoonCount > 0 && (
+              <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
+                <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-giallo" />
+                {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza{expiredCount > 0 ? "" : " entro 7 giorni"}
+              </span>
+            )}
+            <span className="mt-2.5 flex justify-between border-t border-crema/20 pt-2 text-[0.88rem] font-bold">
+              <span>{expFilter ? "Mostra tutto" : "Mostra"}</span>
+              <span aria-hidden="true">→</span>
             </span>
           </button>
           {expFilter && (
-            <div className="border-t border-amber-700/20 p-2.5">
-              <Button variant="cook" size="sm" full onClick={onCookExpiring}>
+            <div className="px-3.5 pb-3.5">
+              <Button variant="primary" size="sm" full className="bg-crema text-ink" onClick={onCookExpiring}>
                 <Sparkles className="h-4 w-4" /> Cucina con {expiredCount + expiringSoonCount === 1 ? "questo prodotto" : "questi prodotti"}
               </Button>
             </div>
@@ -314,7 +312,7 @@ export default function PantryTab({
           riga visibile è la prima riga del menù espanso. Niente scorrimento
           laterale, niente numeri. */}
       {grouped.length > 1 && (
-        <div className="sticky top-[4.5rem] z-20 -mx-4 mt-3 bg-cream/95 px-4 py-2 backdrop-blur">
+        <div className="sticky top-[4.8rem] z-20 -mx-4 mt-3 bg-sfondo py-2 pl-4 pr-2.5">
           <div className="flex items-start gap-1.5">
             {/* Chiuso: riga unica scorrevole (swipe) come prima. Aperto: le
                 stesse chip vanno a capo su più righe — la prima riga coincide
@@ -325,19 +323,13 @@ export default function PantryTab({
                   ? "flex flex-wrap gap-2"
                   : "no-scrollbar flex flex-nowrap gap-1.5 overflow-x-auto"
               }`}
-              // Da chiuso, le chip sfumano sul bordo destro invece di
-              // essere troncate di netto (effetto più morbido verso la freccia).
-              style={catsExpanded ? undefined : {
-                maskImage: "linear-gradient(to right, #000 calc(100% - 20px), transparent)",
-                WebkitMaskImage: "linear-gradient(to right, #000 calc(100% - 20px), transparent)",
-              }}
             >
               {grouped.map(({ cat }) => (
                 <button
                   key={cat}
                   onClick={() => jumpTo(cat)}
                   // Stessa misura sia nella barra scorrevole sia nel menù aperto.
-                  className="shrink-0 rounded-full border border-hair bg-paper px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+                  className="pillola min-h-[34px] px-3 text-[0.84rem]"
                 >
                   {CAT_ICON[cat]} {cat}
                 </button>
@@ -346,22 +338,23 @@ export default function PantryTab({
             <button
               onClick={() => setCatsExpanded((v) => !v)}
               aria-expanded={catsExpanded}
-              className={`mt-1 shrink-0 p-1 transition ${
-                catsExpanded ? "text-tomato" : "text-stone-400 hover:text-tomato"
-              }`}
+              className={`tondo h-[34px] w-[34px] ${catsExpanded ? "bg-ink text-white" : ""}`}
               aria-label="Mostra tutti i reparti"
               title="Tutti i reparti"
             >
-              <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${catsExpanded ? "rotate-180" : ""}`} strokeWidth={2.2} />
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${catsExpanded ? "rotate-180" : ""}`} />
             </button>
           </div>
         </div>
       )}
 
       {grouped.length === 0 && (
-        <p className="py-12 text-center text-sm text-stone-500">
-          {searchActive ? "Nessun prodotto trovato." : expFilter ? "Niente in scadenza. 🎉" : "Dispensa vuota. Tocca + per aggiungere."}
-        </p>
+        <div className="flex flex-col items-center py-12 text-center">
+          {!searchActive && !expFilter && <Barattoli size={96} fill={PAGE_COLOR.dispensa} className="mb-3 text-ink" />}
+          <p className="text-[1.05rem] font-semibold text-tenue">
+            {searchActive ? "Nessun prodotto trovato." : expFilter ? "Niente in scadenza. 🎉" : "Dispensa vuota. Tocca + per aggiungere."}
+          </p>
+        </div>
       )}
 
       {/* Sezioni a tutta larghezza, con intestazione fissa */}
@@ -370,31 +363,31 @@ export default function PantryTab({
           <section
             key={cat}
             ref={(el) => { cardRefs.current[cat] = el; }}
-            style={{ scrollMarginTop: "124px" }}
+            style={{ scrollMarginTop: "132px" }}
           >
-            <div className="sticky top-12 z-10 -mx-1 flex items-center gap-2 border-b border-ink/15 bg-cream px-1 pb-2 pt-2">
-              <span className="text-base">{CAT_ICON[cat]}</span>
-              <h2 className="min-w-0 truncate font-display text-lg font-semibold text-ink">{cat}</h2>
-              <span className="font-display text-sm font-bold text-tomato">{String(list.length).padStart(2, "0")}</span>
+            <div className="sticky top-12 z-10 -mx-1 flex items-center gap-2 border-b-[1.5px] border-ink bg-sfondo px-1 pb-[7px] pt-4">
+              <span className="text-[1.15rem] leading-none">{CAT_ICON[cat]}</span>
+              <h2 className="min-w-0 truncate text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">{cat}</h2>
+              <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{String(list.length).padStart(2, "0")}</span>
               {/* Frecce per riordinare, nude e discrete: la prima categoria
                   può solo scendere, l'ultima solo salire */}
               <div className="ml-auto flex shrink-0 items-center">
                 {gi > 0 && (
                   <button
                     onClick={() => onMoveCat(cat, -1)}
-                    className="p-1.5 text-stone-400 transition hover:text-tomato active:scale-90 active:text-tomato"
+                    className="flex h-8 w-8 items-center justify-center text-ink transition active:scale-90"
                     aria-label="Sposta su"
                   >
-                    <ArrowUp className="h-[18px] w-[18px]" strokeWidth={2.2} />
+                    <ArrowUp className="h-[18px] w-[18px]" />
                   </button>
                 )}
                 {gi < grouped.length - 1 && (
                   <button
                     onClick={() => onMoveCat(cat, 1)}
-                    className="p-1.5 text-stone-400 transition hover:text-tomato active:scale-90 active:text-tomato"
+                    className="flex h-8 w-8 items-center justify-center text-ink transition active:scale-90"
                     aria-label="Sposta giù"
                   >
-                    <ArrowDown className="h-[18px] w-[18px]" strokeWidth={2.2} />
+                    <ArrowDown className="h-[18px] w-[18px]" />
                   </button>
                 )}
               </div>
@@ -410,7 +403,7 @@ export default function PantryTab({
                 if (openId === it.id) {
                   const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
                   return (
-                    <li key={it.id} ref={panelRef} className="-mx-2 my-1 scroll-mb-[128px] rounded-xl bg-stone-50 p-3">
+                    <li key={it.id} ref={panelRef} className="-mx-2 my-1.5 scroll-mb-[128px] rounded-card bg-white p-3 shadow-card">
                       {/* Vista prodotto standard (ProductFields): stessa
                           struttura di Spesa/Aggiungi a mano/Revisione. Le
                           chip "finito/sta finendo" entrano nello slot. */}
@@ -435,24 +428,24 @@ export default function PantryTab({
                         {out && (
                           <button
                             onClick={() => onToShopping(it)}
-                            className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-bold text-tomato transition hover:bg-tomato/20"
+                            className="pillola mt-3 min-h-[32px] bg-ink px-3 text-[0.8rem] text-white"
                           >
-                            <ShoppingCart className="h-3 w-3" /> Finito · Metti in lista
+                            <ShoppingCart className="h-3.5 w-3.5" /> Finito · Metti in lista
                           </button>
                         )}
                         {low && (
                           <button
                             onClick={() => onToShopping(it)}
-                            className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 transition hover:bg-amber-100/70"
+                            className="pillola mt-3 min-h-[32px] px-3 text-[0.8rem]"
                           >
-                            <ShoppingCart className="h-3 w-3" /> Sta finendo · Aggiungi
+                            <ShoppingCart className="h-3.5 w-3.5" /> Sta finendo · Aggiungi
                           </button>
                         )}
                       </ProductFields>
 
                       {/* "Cosa ci cucino?": apre le Ricette con proposte basate su
                           questo prodotto — compatto, coerente col resto del box. */}
-                      <Button variant="cook" size="sm" full className="mt-2.5" data-tour="cook-with" onClick={() => onCookWith(it.name)}>
+                      <Button variant="cook" size="sm" full className="mt-3" data-tour="cook-with" onClick={() => onCookWith(it.name)}>
                         <Sparkles className="h-4 w-4" /> Cucina con questo prodotto
                       </Button>
                     </li>
@@ -465,13 +458,13 @@ export default function PantryTab({
                     <button
                       data-tour={it.id === firstItemId ? "pantry-first-item" : undefined}
                       onClick={() => openPanel(it)}
-                      className="flex w-full items-baseline gap-2 py-[7px] text-left"
+                      className="flex w-full items-baseline gap-2 py-[9px] text-left"
                     >
-                      <span className={`min-w-0 truncate text-[15px] font-semibold ${nameTone(it, out)}`}>{it.name}</span>
+                      <span className={`min-w-0 truncate text-[1.06rem] font-[650] tracking-[-0.02em] ${out ? "text-ink/40" : "text-ink"}`}>{it.name}</span>
                       <ExpiryBadge date={it.expiry} />
-                      {out && <span className="shrink-0 text-[11px] font-bold text-tomato">finito</span>}
-                      <span aria-hidden="true" className="border-b border-dotted border-stone-300" style={{ flex: "1 0 12px" }} />
-                      <span className="shrink-0 text-xs font-medium text-stone-500">{qtyLabel(it.qty)}</span>
+                      {out && <span className="cartellino self-center">finito</span>}
+                      <span aria-hidden="true" className="-translate-y-1 border-b-2 border-dotted border-ink/35" style={{ flex: "1 0 12px" }} />
+                      <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${out ? "text-ink/40" : "text-ink"}`}>{qtyLabel(it.qty)}</span>
                     </button>
                   </li>
                 );
