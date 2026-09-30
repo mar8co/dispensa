@@ -160,6 +160,7 @@ export default function Anteprima() {
           >
             M
           </button>
+          <div id="testata-azioni" className="ml-auto flex gap-2" />
         </header>
         {view === "dispensa" && (
           <PantryTab
@@ -286,9 +287,7 @@ export default function Anteprima() {
         <Toast
           message={toast.message}
           onUndo={toast.onUndo}
-          bottom={view === "spesa" && shopping.some((x) => x.checked)
-            ? "calc((var(--nav-bottom) + var(--nav-h) + var(--banner-h) + 74px) + 12px)"
-            : "calc(var(--sopra-nav) + var(--banner-h))"}
+          bottom="calc(var(--sopra-nav) + var(--banner-h))"
         />
       )}
     </div>

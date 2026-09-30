@@ -3,13 +3,15 @@
 //   rimetterla in lista. I prodotti nel carrello si raccolgono nel reparto
 //   "Nel carrello" in fondo.
 // - In alto (sotto la barra di testo): "Per reparto" e "Seleziona tutto",
-//   sempre visibili. In basso: "Sposta in dispensa" + cestino, solo quando il
-//   carrello non è vuoto.
+//   sempre visibili. In fondo alla lista (non fissa): "Sposta in dispensa" +
+//   cestino, solo quando il carrello non è vuoto. Luce e condivisione stanno
+//   sulla riga dell'avatar (portal in #testata-azioni).
 // - Pressione lunga sulla riga: apre l'editor (quantità/reparto/nome).
 // NB sul data layer: il "carrello" è il campo persistito `checked` degli item
 // (uso solo i prop esistenti: onToggle/onToggleAll/onMoveChecked/onClearChecked).
 // Nessuna query/tabella/campo modificato.
 import { useState, useRef, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Pencil, Mic, Check, Trash2, Loader2, Store,
   Share, Lightbulb, X,
@@ -20,18 +22,19 @@ import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 import Barattoli from "./Barattoli.jsx";
 
-// --- Riga prodotto. Gesti (stesso modello della Dispensa: tap = modifica):
+// --- Riga prodotto. Gesti:
 // • tap sul nome = apre la modifica;
-// • tap sul quadratino a destra = mette/toglie dal carrello;
+// • tap sul resto della riga (o sul pallino a destra) = mette/toglie dal carrello;
 // • swipe ← (verso sinistra) = elimina;
 // • swipe → (verso destra) = apre la modifica.
-// Accessibile (role=button, tastiera; il quadratino è un bottone reale). ---
+// Accessibile (role=button, tastiera = modifica; il pallino è un bottone reale). ---
 function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
   const selected = !!it.checked;
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const start = useRef(null);
   const axis = useRef(null); // "h" | "v" | null
+  const nameRef = useRef(null); // zona "modifica" della riga
   const THRESHOLD = 72; // px oltre cui scatta l'azione
   const MAX = 104;      // limite visivo (oltre, resistenza elastica)
 
@@ -75,7 +78,11 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
       setDx(0); // sotto soglia: torna a posto
       return;
     }
-    if (wasTap) onEdit(it);
+    // Tocco: sul nome = modifica; sul resto della riga = carrello (30/09).
+    if (wasTap) {
+      if (nameRef.current?.contains(e.target)) onEdit(it);
+      else onSelect(it);
+    }
   }
   function cancel() {
     start.current = null;
@@ -106,7 +113,7 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
       </div>
 
       {/* Riga in primo piano, traslata dallo swipe (sfondo opaco = copre gli
-          hint). Il tap sulla riga apre la MODIFICA (come in Dispensa). */}
+          hint). Tap sul nome = modifica, altrove = carrello (vedi up()). */}
       <div
         role="button"
         tabIndex={0}
@@ -122,9 +129,12 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
         }}
         className="relative flex min-h-[50px] cursor-pointer select-none items-center gap-3 bg-sfondo py-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
       >
-        <span className={`min-w-0 flex-1 truncate text-[1.06rem] font-[650] tracking-[-0.02em] ${selected ? "text-ink/45 line-through" : "text-ink"}`}>
+        {/* Il nome (con un filo d'aria in più per il dito) apre la modifica; il
+            resto della riga, spazio vuoto compreso, mette nel carrello. */}
+        <span ref={nameRef} className={`min-w-0 truncate py-2 pr-4 text-[1.06rem] font-[650] tracking-[-0.02em] ${selected ? "text-ink/45 line-through" : "text-ink"}`}>
           {it.name}
         </span>
+        <span aria-hidden="true" className="flex-1 self-stretch" />
         {/* Quantità in spazio dedicato (solo se impostata, ≠ "1") */}
         {it.qty && it.qty !== "1" && (
           <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${selected ? "text-ink/45 line-through" : "text-ink"}`}>
@@ -140,7 +150,7 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
           onClick={(e) => { e.stopPropagation(); onSelect(it); }}
           aria-pressed={selected}
           aria-label={selected ? "Rimetti in lista" : "Metti nel carrello"}
-          className="-mr-[9px] flex h-11 w-11 shrink-0 items-center justify-center"
+          className="-mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center"
         >
           <span
             aria-hidden="true"
@@ -183,20 +193,14 @@ function TopControls({ byAisle, setByAisle, allSelected, onSelectAll }) {
   );
 }
 
-// --- Barra in basso: appare solo quando il carrello NON è vuoto. Solo due
-// azioni: "Sposta in dispensa" (prende tutto il pieno schermo) + cestino.
-// Niente X (annullare = ritoccare la riga). Dock fisso (la nav ci galleggia
-// sopra). ---
+// --- "Sposta in dispensa" + cestino: in fondo alla lista, dopo "Nel carrello"
+// (30/09: non più fissa sopra la barra, così non resta sempre in vista).
+// Compare solo quando il carrello NON è vuoto. ---
 function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
   if (cartCount === 0) return null;
   return (
-    <div
-      className="fixed inset-x-0 bottom-0 z-20 border-t-[1.5px] border-ink bg-sfondo"
-      style={{ paddingBottom: "calc(var(--nav-bottom) + var(--nav-h) + var(--banner-h) + 8px)" }}
-    >
-      {/* Poggia sulla barra in basso con 16px d'aria (8 + il py-2 qui sotto).
-          Il suo bordo alto è DOCK_TOP in Dispensa.jsx: se cambi qui, allinea. */}
-      <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-2">
+    <div className="mt-5">
+      <div className="flex items-center gap-2">
         <Button variant="primary" className="flex-1" onClick={onMove} disabled={moving}>
           {moving
             ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -456,11 +460,16 @@ export default function ShoppingTab({
         : <ShoppingRow key={it.id} it={it} onSelect={selectItem} onEdit={openEdit} onDelete={onDelete} />
     );
 
+  // Luce e condivisione stanno sulla riga dell'avatar (testata di
+  // Dispensa.jsx, contenitore #testata-azioni), a destra.
+  const [azioni, setAzioni] = useState(null);
+  useEffect(() => { setAzioni(document.getElementById("testata-azioni")); }, []);
+
   return (
     <div className="pt-2">
-      <div className="flex items-start justify-between">
-        <h1 className="gigante">La spesa</h1>
-        <div className="mt-2.5 flex gap-2">
+      <h1 className="gigante">La spesa</h1>
+      {azioni && createPortal(
+        <>
           {wakeSupported && shopping.length > 0 && (
             <button
               onClick={() => {
@@ -486,8 +495,9 @@ export default function ShoppingTab({
               <Share className="h-[18px] w-[18px]" />
             </button>
           )}
-        </div>
-      </div>
+        </>,
+        azioni,
+      )}
 
       {/* Occhiello + inserimento: bloccati in alto durante lo scroll. */}
       <div className="sticky top-0 z-20 -mx-4 mt-4 bg-sfondo px-4 pb-1.5 pt-2">
@@ -605,14 +615,6 @@ export default function ShoppingTab({
         )}
       </div>
 
-      {/* Spazio in fondo: l'ultimo prodotto resta visibile sopra la nav (e
-          sopra la barra "Sposta in dispensa" quando il carrello è pieno).
-          Durante la modifica un filo di spazio in più, così l'ultima riga può
-          salire appena sopra il FAB (il parcheggio lo fa scroll-margin-bottom). */}
-      {shopping.length > 0 && (
-        <div aria-hidden="true" style={{ height: editId ? "104px" : "calc(var(--nav-h) + 20px)" }} />
-      )}
-
       <BottomBar
         cartCount={cartCount}
         allInCart={allInCart}
@@ -620,6 +622,10 @@ export default function ShoppingTab({
         onMove={onMoveChecked}
         onRemove={onClearChecked}
       />
+
+      {/* Durante la modifica un filo di spazio in più, così l'ultima riga può
+          salire sopra la barra (il parcheggio lo fa scroll-margin-bottom). */}
+      {editId && <div aria-hidden="true" className="h-[104px]" />}
     </div>
   );
 }

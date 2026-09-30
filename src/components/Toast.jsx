@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 // Posizione: la decide Dispensa.jsx (`bottom`, un valore CSS): appena sopra la
-// barra (col "+") su tutte le schede, sopra "Sposta in dispensa" quando c'è.
+// barra (col "+"), alla stessa altezza su tutte le schede.
 // Eccezione: con la TASTIERA aperta (un campo di testo ha il focus) l'avviso
 // va IN ALTO: su iOS la tastiera copre gli elementi fissati in basso, e i
 // feedback con Annulla ("Modifica salvata") arrivano proprio mentre si scrive.

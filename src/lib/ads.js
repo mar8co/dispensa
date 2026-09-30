@@ -55,7 +55,7 @@ export async function showBanner() {
       isTesting: IS_TEST,
     });
     shown = true;
-    // Avvisi, timer e barra "Sposta in dispensa" salgono sopra il banner
+    // Avvisi e timer salgono sopra il banner
     // (adattivo, alto ~50-60pt), che a sua volta sta sopra la barra col "+".
     document.documentElement.style.setProperty("--banner-h", "66px");
   } catch (e) {

@@ -1074,11 +1074,6 @@ export default function Dispensa({ session }) {
   }
 
 
-  // Barra "Sposta in dispensa" (Spesa col carrello non vuoto) e il suo bordo
-  // alto: avviso e timer si alzano sopra di lei (vedi ShoppingTab → BottomBar).
-  const cartBar = view === "spesa" && shopping.some((s) => s.checked);
-  const DOCK_TOP = "(var(--nav-bottom) + var(--nav-h) + var(--banner-h) + 74px)";
-
   if (!loaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-sfondo">
@@ -1108,6 +1103,9 @@ export default function Dispensa({ session }) {
             {(myName || session.user.email || "?").trim().charAt(0).toUpperCase()}
           </button>
           {!online && <span className="text-[0.72rem] font-bold text-ink">Offline</span>}
+          {/* Azioni della scheda aperta sulla stessa riga, a destra (la Spesa ci
+              mette luce e condivisione, via portal). */}
+          <div id="testata-azioni" className="ml-auto flex gap-2" />
         </header>
         {view === "dispensa" && (
           <PantryTab
@@ -1178,11 +1176,10 @@ export default function Dispensa({ session }) {
       </div>
 
       {/* Timer attivi visibili da ogni scheda */}
-      {/* Timer attivi: sopra il posto degli avvisi, o sopra la barra "Sposta in
-          dispensa" e il suo avviso quando c'è. */}
+      {/* Timer attivi: sopra il posto degli avvisi. */}
       <TimerBar
         onTap={() => changeView("ricette")}
-        bottom={cartBar ? `calc(${DOCK_TOP} + 68px)` : "calc(var(--sopra-nav) + var(--banner-h) + 56px)"}
+        bottom="calc(var(--sopra-nav) + var(--banner-h) + 56px)"
       />
 
       {/* Velo del menù "+": a livello di pagina (NON dentro la navbar, che ha
@@ -1378,11 +1375,8 @@ export default function Dispensa({ session }) {
         <TourCoach onExit={tourExit} onComplete={tourComplete} onEmptyDemo={tourEmptyDemo} />
       )}
 
-      {/* Toast alzato solo quando c'è la barra "Sposta in dispensa" (Spesa con
-          carrello non vuoto), così non la copre; altrove appena sopra il FAB. */}
-      {/* Avviso: appena sopra la barra (stessa altezza su tutte le schede), o
-          sopra la barra "Sposta in dispensa" quando il carrello non è vuoto. */}
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} bottom={cartBar ? `calc(${DOCK_TOP} + 12px)` : "calc(var(--sopra-nav) + var(--banner-h))"} />}
+      {/* Avviso: appena sopra la barra, stessa altezza su tutte le schede. */}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} bottom="calc(var(--sopra-nav) + var(--banner-h))" />}
     </div>
   );
 }

@@ -83,9 +83,8 @@
   12px + zona sicura, `--nav-h` 52px, `--sopra-nav`, `--banner-h`): il "+"
   della Dispensa sta sulla riga della barra (slot `addSlot` di `BottomNav`);
   l'**avviso** (`Toast.jsx`, prop `bottom` decisa in `Dispensa.jsx`) sta a
-  `--sopra-nav` su tutte le schede,
-  sopra la barra "Sposta in dispensa" quando il carrello non è vuoto
-  (`cartBar`/`DOCK_TOP`); con la tastiera aperta va in alto. Se cambia la barra
+  `--sopra-nav` su tutte le schede (la barra "Sposta in dispensa" della Spesa
+  sta in fondo alla lista, non è fissa); con la tastiera aperta va in alto. Se cambia la barra
   si cambiano solo le variabili.
 - **Feedback immediato**: niente attese percepibili inutili (es. lo stepper
   committa subito quando arriva a 0, così il toast appare all'istante).

@@ -277,11 +277,13 @@ verifica la sessione) → se assente mostra `Auth.jsx` (magic-link / Google / Ap
   Facts → `ReviewScanModal`.
 
 **Lista della spesa** (`ShoppingTab`)
-Aggiunta (testo/voce) con merge duplicati → tocco riga = mette **nel carrello**
+Aggiunta (testo/voce) con merge duplicati → tocco sul nome = modifica, tocco sul
+resto della riga = mette **nel carrello**
 (`checked=true`, reparto "Nel carrello") → "Sposta in dispensa"
 (`moveCheckedToPantry`, bridge in Dispensa) crea/merge i prodotti in dispensa e
-rimuove i barrati. Controlli "Per reparto" e "Seleziona tutto" in alto; barra
-"Sposta in dispensa" + cestino in basso solo a carrello pieno.
+rimuove i barrati. Controlli "Per reparto" e "Seleziona tutto" in alto; "Sposta
+in dispensa" + cestino in fondo alla lista (non fissi) solo a carrello pieno; luce e
+condivisione sulla riga dell'avatar (portal in `#testata-azioni`).
 
 **Ricette** (`RecipesTab`)
 (Opzionale) pill di **contesto/umore** (`RECIPE_CONTEXTS`: fresco, caldo,

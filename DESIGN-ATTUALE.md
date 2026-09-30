@@ -83,8 +83,10 @@
 5. Tutorial: gli attributi `data-tour` restano su ogni elemento.
 6. Emoji delle categorie identiche tra Dispensa e Spesa; testi e microcopy invariati.
 7. Posizioni fisse calcolate dalle variabili della barra in `index.css` (`--nav-bottom`, `--nav-h`,
-   `--sopra-nav`, `--banner-h`): "+", avviso, timer, barra "Sposta in dispensa" (`DOCK_TOP` in
-   `Dispensa.jsx`), spazio in fondo alle pagine. Se cambia la barra, si cambiano solo le variabili.
+   `--sopra-nav`, `--banner-h`): "+", avviso, timer, spazio in fondo alle pagine.
+   La barra "Sposta in dispensa" + cestino della Spesa **non è fissa**: sta in fondo alla lista.
+   Spesa: tocco sul **nome** = modifica, tocco sul **resto della riga** = carrello; luce e
+   condivisione sulla riga dell'avatar (`#testata-azioni` nella testata di `Dispensa.jsx`). Se cambia la barra, si cambiano solo le variabili.
 8. Margini laterali 16 px; campi con testo ≥ 16 px (`.testo-grande`) per evitare lo zoom di iOS.
 
 ## Come verificare l'aspetto (pagina di prova)

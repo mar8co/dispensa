@@ -39,7 +39,9 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > avatar tondo in alto a sinistra**, **"+" tondo nero sulla stessa riga della
 > barra, staccato** (solo nella Dispensa; il posto resta riservato nelle altre
 > schede) con le 4 azioni in colonna. Stessa barra in Expense
-> Track.
+> Track. **Spesa (30/09)**: tocco sul nome = modifica, sul resto della riga =
+> carrello; luce e condivisione sulla riga dell'avatar; "Sposta in dispensa" +
+> cestino in fondo alla lista (non più fissi).
 > Dettagli, regole e cosa conservare: **`DESIGN-ATTUALE.md`**. Per vedere le
 > schermate senza login: `npm run dev` → `/anteprima.html` (dati finti).
 >
