@@ -1080,7 +1080,7 @@ export default function Dispensa({ session }) {
         </div>
       )}
       {/* Sulla dispensa più spazio in fondo, così il "+" non copre l'ultima categoria */}
-      <div className="mx-auto max-w-md px-5 pt-7 pb-28">
+      <div className="mx-auto max-w-md px-4 pt-7 pb-28">
         {view === "dispensa" && (
           <PantryTab
             shared={sharedHousehold}

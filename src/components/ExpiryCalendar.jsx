@@ -56,16 +56,16 @@ export default function ExpiryCalendar({ value, onPick }) {
     <div
       role="dialog"
       aria-label="Scegli la scadenza"
-      className="animate-fade-in mt-2 rounded-xl border border-hair bg-paper p-2.5"
+      className="animate-fade-in mt-3 border-t border-riga pt-3"
     >
       {/* Scorciatoie per i casi più frequenti */}
-      <div className="mb-2.5 flex gap-1.5">
+      <div className="mb-3 flex gap-1.5">
         {[["Oggi", 0], ["Domani", 1], ["Tra 3 gg", 3]].map(([lbl, n]) => (
           <button
             key={lbl}
             type="button"
             onClick={() => quick(n)}
-            className="flex-1 rounded-lg border border-hair bg-paper px-1 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-tomato hover:text-tomato"
+            className="pillola min-h-[34px] flex-1 px-1 text-[0.8rem]"
           >
             {lbl}
           </button>
@@ -73,30 +73,34 @@ export default function ExpiryCalendar({ value, onPick }) {
       </div>
 
       {/* Navigazione mese */}
-      <div className="mb-1.5 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => shiftMonth(-1)}
-          aria-label="Mese precedente"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 transition hover:bg-stone-100 hover:text-ink"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <span className="text-xs font-bold text-ink">{MESI[view.m]} {view.y}</span>
-        <button
-          type="button"
-          onClick={() => shiftMonth(1)}
-          aria-label="Mese successivo"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 transition hover:bg-stone-100 hover:text-ink"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[1.45rem] font-extrabold capitalize leading-none tracking-[-0.05em] text-ink">
+          {MESI[view.m]} <span className="text-[0.95rem] font-semibold tracking-normal text-tenue">{view.y}</span>
+        </span>
+        <span className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => shiftMonth(-1)}
+            aria-label="Mese precedente"
+            className="tondo h-[34px] w-[34px]"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => shiftMonth(1)}
+            aria-label="Mese successivo"
+            className="tondo h-[34px] w-[34px]"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </span>
       </div>
 
       {/* Intestazione giorni + celle */}
       <div className="grid grid-cols-7 gap-0.5">
         {GIORNI.map((g, i) => (
-          <span key={`h${i}`} className="flex h-6 items-center justify-center text-[11px] text-stone-400">{g}</span>
+          <span key={`h${i}`} className={`flex h-6 items-center justify-center text-[0.72rem] font-semibold ${i >= 5 ? "text-rosso-azione" : "text-tenue"}`}>{g}</span>
         ))}
         {cells.map((d, i) => {
           if (d === null) return <span key={`e${i}`} />;
@@ -111,17 +115,18 @@ export default function ExpiryCalendar({ value, onPick }) {
               onClick={() => onPick(iso)}
               aria-label={`${d} ${MESI[view.m]} ${view.y}`}
               aria-pressed={isSel}
-              className={`flex h-8 items-center justify-center rounded-lg text-[13px] transition ${
-                isSel
-                  ? "bg-tomato font-bold text-[#fff]"
-                  : isToday
-                    ? "border border-tomato/45 font-bold text-tomato hover:bg-tomato/5"
-                    : isPast
-                      ? "text-stone-300 hover:bg-stone-100"
-                      : "text-ink hover:bg-stone-100"
-              }`}
+              className="flex h-10 items-center justify-center"
             >
-              {d}
+              {/* Cerchio: scelto = pieno nero, oggi = anello rosso, passati al 30%. */}
+              <span className={`num flex h-9 w-9 items-center justify-center rounded-full text-[0.95rem] font-[650] tracking-[-0.02em] transition-transform active:scale-90 ${
+                isSel
+                  ? "bg-ink text-white"
+                  : isToday
+                    ? "text-ink shadow-[inset_0_0_0_2.2px_#e02a0d]"
+                    : isPast
+                      ? "text-ink/30"
+                      : "text-ink"
+              }`}>{d}</span>
             </button>
           );
         })}

@@ -313,11 +313,13 @@ svg.lucide {
 }
 
 /* Evita lo zoom automatico di iOS sui campi: font >= 16px su mobile.
-   !important per battere le utility Tailwind (text-sm, ecc.). */
+   !important per battere le utility Tailwind (text-sm, ecc.). I campi con
+   testo già più grande (.testo-grande, es. il nome del prodotto) restano
+   della loro misura: sopra i 16px iOS non zooma. */
 @media (max-width: 640px) {
-  input,
+  input:not(.testo-grande),
   select,
-  textarea {
+  textarea:not(.testo-grande) {
     font-size: 16px !important;
   }
 }

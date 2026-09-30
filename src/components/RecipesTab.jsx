@@ -208,7 +208,7 @@ export default function RecipesTab({
           <>
           {/* Occhiello rosso + ricerca ingredienti: bloccati insieme in alto
               mentre si scorrono occasioni e ricettario. */}
-          <div data-tour="recipe-search" className="sticky top-0 z-20 -mx-5 mt-4 bg-cream/95 px-5 pb-3 pt-2 backdrop-blur">
+          <div data-tour="recipe-search" className="sticky top-0 z-20 -mx-4 mt-4 bg-cream/95 px-4 pb-3 pt-2 backdrop-blur">
             <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">Ricette</div>
             <form
               className="relative"
@@ -355,7 +355,7 @@ export default function RecipesTab({
         <>
           {/* Header sticky: indietro + nome categoria, sempre visibile durante
               lo scroll delle proposte. */}
-          <div className="sticky top-0 z-20 -mx-5 mb-3 flex items-center gap-2 border-b border-hair bg-cream/95 px-5 py-2.5 backdrop-blur">
+          <div className="sticky top-0 z-20 -mx-4 mb-3 flex items-center gap-2 border-b border-hair bg-cream/95 px-4 py-2.5 backdrop-blur">
             <button onClick={handleBackToModes} aria-label="Torna alle occasioni" className="-ml-1 shrink-0 rounded-lg p-1 text-stone-500 transition hover:text-ink">
               <ArrowLeft className="h-5 w-5" />
             </button>

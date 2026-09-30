@@ -9,9 +9,13 @@
 //   {children: contenuto del contesto, es. suggerimenti dell'aggiunta a mano}
 //   riga 2   [scadenza?] [−  qty  +] [pz g kg l]
 //
-// La scadenza è un BOX visibile che apre il calendario nativo: l'input date
-// invisibile copre il box, così il tap lo apre senza showPicker (che su iOS
-// richiede la user-activation sincrona). La ✕ dentro il box azzera la data.
+// La scadenza è una pillola visibile che apre il calendario IN-APP
+// (ExpiryCalendar, niente picker nativo iOS). La ✕ dentro la pillola azzera
+// la data.
+//
+// Veste manifesto: nome grande su una sola riga sotto (niente scatola),
+// categoria nel cerchio, elimina nel tondo, stepper a cerchi, unità a pillole
+// (scelta = piena nera).
 import { useState } from "react";
 import { Calendar, Trash2, X } from "lucide-react";
 import { PICKER_CATS, CAT_ICON } from "../constants.js";
@@ -19,8 +23,10 @@ import { formatExpiry } from "../lib/pantry.js";
 import { tourSignal } from "../lib/tour.js";
 import ExpiryCalendar from "./ExpiryCalendar.jsx";
 
+// testo-grande: sopra i 16px iOS non zooma, quindi il minimo globale dei
+// campi (index.css) qui non serve.
 const inputCls =
-  "min-w-0 flex-1 rounded-lg border border-hair bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-stone-400 focus:ring-2 focus:ring-tomato/15";
+  "testo-grande min-w-0 flex-1 rounded-none border-0 border-b-[1.5px] border-ink bg-transparent py-1.5 text-[1.2rem] font-bold tracking-[-0.03em] text-ink outline-none placeholder:text-ink/40 focus:border-b-[3px] focus:pb-[4.5px]";
 
 export default function ProductFields({
   // riga 1 — nome
@@ -65,36 +71,33 @@ export default function ProductFields({
           aria-label="Categoria"
           aria-expanded={catOpen}
           title="Categoria"
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition ${
-            catOpen ? "border-tomato bg-tomato/5" : "border-hair bg-paper"
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink transition ${
+            catOpen ? "bg-ink/10" : "bg-white"
           }`}
         >
-          <span className="text-[17px] leading-none">{CAT_ICON[category] || "🍽️"}</span>
+          <span className="text-[19px] leading-none">{CAT_ICON[category] || "🍽️"}</span>
         </button>
         {onDelete && (
           <button
             type="button"
             onClick={onDelete}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hair bg-paper text-stone-500 transition hover:bg-tomato/10 hover:text-tomato"
+            className="tondo h-10 w-10"
             aria-label="Elimina"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-[18px] w-[18px]" />
           </button>
         )}
       </div>
 
       {/* Categorie come pillole: un tap e la scelta è fatta */}
       {catOpen && (
-        <div className="animate-fade-in mt-2.5 flex flex-wrap gap-1.5">
+        <div className="animate-fade-in mt-3 flex flex-wrap gap-1.5">
           {allowAuto && (
             <button
               type="button"
               onClick={() => pickCategory("")}
-              className={`rounded-full border px-2.5 py-1.5 text-xs font-semibold transition ${
-                isAuto
-                  ? "border-tomato bg-tomato text-[#fff]"
-                  : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
-              }`}
+              aria-pressed={isAuto}
+              className="pillola min-h-[34px] px-3 text-[0.8rem]"
             >
               ✨ Auto
             </button>
@@ -104,11 +107,8 @@ export default function ProductFields({
               key={c}
               type="button"
               onClick={() => pickCategory(c)}
-              className={`rounded-full border px-2.5 py-1.5 text-xs font-semibold transition ${
-                c === category && !(allowAuto && isAuto)
-                  ? "border-tomato bg-tomato text-[#fff]"
-                  : "border-hair bg-paper text-stone-600 hover:border-tomato hover:text-tomato"
-              }`}
+              aria-pressed={c === category && !(allowAuto && isAuto)}
+              className="pillola min-h-[34px] px-3 text-[0.8rem]"
             >
               {CAT_ICON[c]} {c}
             </button>
@@ -122,12 +122,12 @@ export default function ProductFields({
           stepper in pill · unità. flex-nowrap: la riga non si spezza MAI; se lo
           spazio è pochissimo cede solo il box scadenza (min-w-0 + testo
           troncato), mentre stepper e unità (shrink-0) restano sempre interi. */}
-      <div className="mt-2.5 flex items-center justify-between gap-x-1.5 border-t border-hair pt-2">
+      <div className="mt-3 flex items-center justify-between gap-x-1 border-t border-riga pt-2.5">
         {showExpiry && (
           <div
-            className={`flex h-9 min-w-0 items-center rounded-lg border text-xs font-semibold transition ${
-              expiry ? "border-tomato/40 bg-tomato/5 text-tomato" : "border-hair bg-paper text-stone-500"
-            }`}
+            className={`flex h-[34px] min-w-0 items-center rounded-full border-[1.5px] border-ink text-[0.8rem] font-bold transition ${
+              expOpen ? "bg-ink/10" : ""
+            } ${expiry ? "text-ink" : "text-tenue"}`}
           >
             {/* Tocco sul box = apre/chiude il calendario in-app (niente picker
                 nativo: vedi ExpiryCalendar). */}
@@ -138,7 +138,7 @@ export default function ProductFields({
               title="Scadenza"
               aria-haspopup="dialog"
               aria-expanded={expOpen}
-              className="flex h-full min-w-0 items-center gap-1.5 pl-2.5 pr-1.5"
+              className={`flex h-full min-w-0 items-center gap-1.5 pl-2.5 ${expiry ? "pr-1" : "pr-3"}`}
             >
               <Calendar className="h-4 w-4 shrink-0" />
               <span className="min-w-0 truncate">{expiry ? formatExpiry(expiry) : "Scadenza"}</span>
@@ -147,7 +147,7 @@ export default function ProductFields({
               <button
                 type="button"
                 onClick={() => { onExpiry(""); setExpOpen(false); }}
-                className="flex h-full shrink-0 items-center pl-0.5 pr-2"
+                className="flex h-full shrink-0 items-center pl-0.5 pr-2.5"
                 aria-label="Rimuovi scadenza"
               >
                 <X className="h-3.5 w-3.5" />
@@ -156,19 +156,18 @@ export default function ProductFields({
           </div>
         )}
 
-        {/* Stepper in pill (bordo + divisori tra − valore +): legge come un
-            unico controllo, coerente con le pillole delle unità. */}
-        <div data-tour="qty-stepper" className="flex h-9 shrink-0 items-center overflow-hidden rounded-lg border border-hair bg-paper">
+        {/* Stepper a cerchi: − valore + (il valore resta un campo scrivibile). */}
+        <div data-tour="qty-stepper" className="flex h-[34px] shrink-0 items-center gap-0.5">
           <button
             type="button"
             onClick={onMinus}
             disabled={minusDisabled}
-            className="flex h-full w-8 items-center justify-center text-lg leading-none text-stone-500 transition hover:text-ink active:scale-90 disabled:text-stone-300"
+            className="flex h-[30px] w-[30px] items-center justify-center rounded-full border-[1.5px] border-ink text-lg font-semibold leading-none text-ink transition active:scale-90 disabled:opacity-30"
             aria-label="Diminuisci"
           >−</button>
           <input
             inputMode="decimal"
-            className="h-full w-9 border-x border-hair bg-transparent text-center text-[15px] font-bold text-ink outline-none"
+            className="testo-grande num h-full w-10 bg-transparent text-center text-[1rem] font-extrabold tracking-[-0.03em] text-ink outline-none"
             value={qtyValue}
             onChange={(e) => onQtyInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && onEnter) onEnter(); }}
@@ -177,12 +176,12 @@ export default function ProductFields({
           <button
             type="button"
             onClick={onPlus}
-            className="flex h-full w-8 items-center justify-center text-lg leading-none text-stone-500 transition hover:text-tomato active:scale-90"
+            className="flex h-[30px] w-[30px] items-center justify-center rounded-full border-[1.5px] border-ink text-lg font-semibold leading-none text-ink transition active:scale-90"
             aria-label="Aumenta"
           >+</button>
         </div>
 
-        <div data-tour="unit-chips" className="flex shrink-0 gap-0.5">
+        <div data-tour="unit-chips" className="flex shrink-0 gap-[3px]">
           {["", "g", "kg", "l"].map((u) => {
             const active = u === "" ? unitActive === "" : unitActive === u;
             return (
@@ -191,9 +190,7 @@ export default function ProductFields({
                 type="button"
                 onClick={() => onUnit(u)}
                 aria-pressed={active}
-                className={`flex h-9 items-center rounded-lg border px-1.5 text-xs font-bold transition ${
-                  active ? "border-tomato bg-tomato text-[#fff]" : "border-hair bg-paper text-stone-500 hover:bg-stone-50"
-                }`}
+                className="pillola h-[30px] min-h-0 min-w-[30px] px-1.5 text-[0.8rem]"
               >
                 {u || "pz"}
               </button>

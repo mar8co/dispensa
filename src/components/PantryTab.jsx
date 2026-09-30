@@ -219,7 +219,7 @@ export default function PantryTab({
 
       {/* Occhiello rosso + ricerca: bloccati insieme in alto durante lo scroll
           (con l'ordinamento dietro l'icona). */}
-      <div className="sticky top-0 z-30 -mx-5 mt-4 bg-cream/95 px-5 pb-1.5 pt-2 backdrop-blur">
+      <div className="sticky top-0 z-30 -mx-4 mt-4 bg-cream/95 px-4 pb-1.5 pt-2 backdrop-blur">
       <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">{shared ? "La nostra dispensa" : "La tua dispensa"}</div>
       <div className="relative">
         <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />
@@ -314,7 +314,7 @@ export default function PantryTab({
           riga visibile è la prima riga del menù espanso. Niente scorrimento
           laterale, niente numeri. */}
       {grouped.length > 1 && (
-        <div className="sticky top-[4.5rem] z-20 -mx-5 mt-3 bg-cream/95 px-5 py-2 backdrop-blur">
+        <div className="sticky top-[4.5rem] z-20 -mx-4 mt-3 bg-cream/95 px-4 py-2 backdrop-blur">
           <div className="flex items-start gap-1.5">
             {/* Chiuso: riga unica scorrevole (swipe) come prima. Aperto: le
                 stesse chip vanno a capo su più righe — la prima riga coincide

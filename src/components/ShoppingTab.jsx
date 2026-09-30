@@ -190,7 +190,7 @@ function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
       className="fixed inset-x-0 bottom-0 z-20 border-t border-hair bg-cream"
       style={{ paddingBottom: "calc(76px + env(safe-area-inset-bottom))" }}
     >
-      <div className="mx-auto flex max-w-md items-center gap-2 px-5 py-2">
+      <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-2">
         <Button variant="primary" className="h-11 flex-1" onClick={onMove} disabled={moving}>
           {moving
             ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -484,7 +484,7 @@ export default function ShoppingTab({
       </div>
 
       {/* Occhiello + inserimento: bloccati in alto durante lo scroll. */}
-      <div className="sticky top-0 z-20 -mx-5 mt-2 bg-cream/95 px-5 pb-1.5 pt-2.5 backdrop-blur">
+      <div className="sticky top-0 z-20 -mx-4 mt-2 bg-cream/95 px-4 pb-1.5 pt-2.5 backdrop-blur">
         <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-tomato">{shared ? "La nostra lista" : "La tua lista"}</div>
         <div data-tour="shopping-input" className="relative">
           <Pencil className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-tomato" />

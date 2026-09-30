@@ -115,7 +115,7 @@ export default function Anteprima() {
 
   return (
     <div className="min-h-screen bg-sfondo text-ink">
-      <div className="mx-auto max-w-md px-5 pt-7 pb-28">
+      <div className="mx-auto max-w-md px-4 pt-7 pb-28">
         {view === "dispensa" && (
           <PantryTab
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
