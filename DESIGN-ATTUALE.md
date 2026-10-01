@@ -63,6 +63,8 @@
   ("Fresco", "Caldo"…) hanno il fondo **bianco** (nere da accese).
 - **Pannello di modifica aperto** (Dispensa, Spesa): un tocco fuori lo chiude e **non fa
   nient'altro** (`lib/outsideTap.js`; eccezioni: avvisi e tutorial).
+- **Pannelli laterali e barra di stato**: velo e pannello partono sotto la zona sicura in alto, così
+  la barra di stato resta del colore della pagina.
 - **Velo del "+"**: esiste nel DOM solo a menu aperto (se resta, iOS tiene grigia la barra di stato).
 - **Titolo Dispensa**: solo "Hai fame?" (il "Ciao 👋" è stato tolto il 01/10).
 - **Spesa, tutto nel carrello**: compare "Sposta tutto in dispensa" anche in alto, sotto "Per

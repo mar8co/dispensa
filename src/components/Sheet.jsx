@@ -88,14 +88,20 @@ export default function Sheet({ onClose, locked = false, side = false, panelClas
       direction={side ? lato : "bottom"}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/45" />
+        {/* Pannelli laterali: velo e pannello partono SOTTO la barra di stato.
+            iOS la colora guardando gli elementi fissi in cima: così resta del
+            colore della pagina e non prende quello del pannello. */}
+        <Drawer.Overlay
+          className={`fixed inset-x-0 bottom-0 z-50 bg-black/45 ${side ? "" : "top-0"}`}
+          style={side ? { top: "env(safe-area-inset-top)" } : undefined}
+        />
         <Drawer.Content
           aria-describedby={undefined}
           style={side
-            ? { paddingTop: "calc(env(safe-area-inset-top) + 14px)", paddingBottom: "env(safe-area-inset-bottom)" }
+            ? { top: "env(safe-area-inset-top)", paddingTop: "14px", paddingBottom: "env(safe-area-inset-bottom)" }
             : { paddingBottom: "env(safe-area-inset-bottom)" }}
           className={side
-            ? `fixed inset-y-0 z-50 flex w-[88%] max-w-sm flex-col outline-none ${lato === "left" ? "left-0 rounded-r-[28px]" : "right-0 rounded-l-[28px]"} ${panelClass}`
+            ? `fixed bottom-0 z-50 flex w-[88%] max-w-sm flex-col outline-none ${lato === "left" ? "left-0 rounded-r-[28px]" : "right-0 rounded-l-[28px]"} ${panelClass}`
             : `fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-foglio outline-none ${panelClass}`}
         >
           {/* Titolo nascosto: soddisfa l'accessibilità di Radix (il titolo
