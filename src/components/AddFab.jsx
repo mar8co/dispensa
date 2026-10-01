@@ -1,4 +1,5 @@
-// Pulsante "+": un tondo BIANCO con il "+" nero, su tutte le schede, sulla
+// Pulsante "+": un tondo BIANCO col bordo spesso (2,5px, come il "+" di
+// Expense Track) e il "+" nero, su tutte le schede, sulla
 // stessa riga della barra in basso, separato da lei (vive nello slot `addSlot`
 // di BottomNav, alto quanto la barra). Aggiunge sempre ALLA DISPENSA. Aprendolo, le 4 azioni
 // salgono in COLONNA sopra il "+" (la più usata, "A mano", è la più vicina al
@@ -62,9 +63,9 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
         data-tour="add-fab"
         onClick={() => setMenuOpen((v) => { const next = !v; if (next) tourSignal("add-menu-opened"); return next; })}
         aria-label={menuOpen ? "Chiudi" : "Aggiungi"}
-        className="relative flex h-full w-full items-center justify-center rounded-full border-[1.5px] border-ink bg-white text-ink shadow-barra transition active:scale-95"
+        className="relative flex h-full w-full items-center justify-center rounded-full border-[2.5px] border-ink bg-white text-ink shadow-barra transition active:scale-95"
       >
-        <Plus className={`h-7 w-7 transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} />
+        <Plus strokeWidth={3} className={`h-[26px] w-[26px] transition-transform duration-300 ${menuOpen ? "rotate-45" : ""}`} />
       </button>
     </div>
   );

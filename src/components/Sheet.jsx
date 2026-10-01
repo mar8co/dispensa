@@ -15,10 +15,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "vaul";
 
+// `side`: pannello LATERALE che entra da destra (Profilo e Impostazioni, come
+// il menu di Expense Track): alto quanto lo schermo, largo l'88%, angoli
+// interni arrotondati, niente maniglia; si chiude toccando fuori o
+// trascinandolo verso destra.
+//
 // Colore del foglio (veste manifesto): bianco per i fogli dove si scrive
 // (default); gli altri passano il loro colore pieno in `panelClass`
 // (Profilo/Impostazioni sabbia, Premium rosa, conferme gialle, fotocamere nere).
-export default function Sheet({ onClose, locked = false, panelClass = "bg-white", handleClass = "bg-ink/25", children }) {
+export default function Sheet({ onClose, locked = false, side = false, panelClass = "bg-white", handleClass = "bg-ink/25", children }) {
   // Montiamo GIÀ aperto (open=true): così il contenuto del foglio è subito nel
   // DOM. È fondamentale per i fogli con fotocamera (barcode/scontrino): l'effetto
   // che avvia la camera gira al mount e ha bisogno del <video> già presente —
@@ -78,20 +83,27 @@ export default function Sheet({ onClose, locked = false, panelClass = "bg-white"
       onAnimationEnd={(o) => { if (!o) finishClose(); }}
       dismissible={!locked}
       repositionInputs={false}
+      direction={side ? "right" : "bottom"}
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/45" />
         <Drawer.Content
           aria-describedby={undefined}
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-          className={`fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-foglio outline-none ${panelClass}`}
+          style={side
+            ? { paddingTop: "calc(env(safe-area-inset-top) + 14px)", paddingBottom: "env(safe-area-inset-bottom)" }
+            : { paddingBottom: "env(safe-area-inset-bottom)" }}
+          className={side
+            ? `fixed inset-y-0 right-0 z-50 flex w-[88%] max-w-sm flex-col rounded-l-[28px] outline-none ${panelClass}`
+            : `fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-foglio outline-none ${panelClass}`}
         >
           {/* Titolo nascosto: soddisfa l'accessibilità di Radix (il titolo
               visibile è dentro ogni foglio). */}
           <Drawer.Title className="sr-only">Pannello</Drawer.Title>
-          <div className="flex shrink-0 cursor-grab justify-center pb-1.5 pt-2.5 active:cursor-grabbing" aria-hidden="true">
-            <div className={`h-[5px] w-11 rounded-full ${handleClass}`} />
-          </div>
+          {!side && (
+            <div className="flex shrink-0 cursor-grab justify-center pb-1.5 pt-2.5 active:cursor-grabbing" aria-hidden="true">
+              <div className={`h-[5px] w-11 rounded-full ${handleClass}`} />
+            </div>
+          )}
           {/* Area scorrevole interna: se il contenuto supera l'altezza del
               foglio scorre qui dentro; Vaul evita di chiudere se non sei in
               cima (così il drag non ruba lo scroll). */}

@@ -58,7 +58,7 @@
   tocco ≥ 44px, rispetto di `env(safe-area-inset-*)`.
 - **Veste "manifesto svizzero"** (dettagli in `DESIGN-ATTUALE.md`): un colore
   pieno per schermata (`PAGE_COLOR` in `src/lib/colors.js`, applicato con
-  `usePageColor`: Dispensa arancio `#ff7a1a`, Spesa giallo, Ricette verde,
+  `usePageColor`: Dispensa arancio `#ff7a1a`, Spesa bianco, Ricette verde,
   ricetta aperta bianca), inchiostro nero, Inter Tight, titoli `.gigante`,
   etichette `.micro`, righe sottili al posto delle card, pillole e tondi.
   Niente `backdrop-filter`/`filter: blur`/`mix-blend-mode`, animazioni solo

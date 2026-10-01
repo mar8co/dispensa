@@ -564,6 +564,15 @@ export default function ShoppingTab({
             onSelectAll={onToggleAll}
           />
         )}
+        {/* Tutto nel carrello: l'azione finale sale anche qui in alto (quella
+            in fondo alla lista resta, col cestino). */}
+        {allInCart && (
+          <Button variant="primary" className="mt-3 w-full" onClick={onMoveChecked} disabled={movingChecked}>
+            {movingChecked
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <><Barattoli size={26} fill="#0a0a0a" className="-my-1 text-crema" /> Sposta tutto in dispensa</>}
+          </Button>
+        )}
       </div>
 
       {shopping.length === 0 && (

@@ -16,10 +16,10 @@
   | Schermata | Colore |
   |---|---|
   | Dispensa, accesso, caricamento, avvio | **arancio** `#ff7a1a` (marchio) |
-  | Spesa | **giallo** `#ffd60a` |
+  | Spesa | **bianco** (dal 01/10; prima giallo) |
   | Ricette (Idee, proposte, Piano Alimentare) | **verde** `#22b35e` |
   | Ricetta aperta, modalità cucina | **bianco** |
-  | Profilo, Impostazioni, Privacy (fogli) | **sabbia** `#dccdb2` |
+  | Profilo, Impostazioni (pannelli laterali da destra), Privacy (foglio) | **sabbia** `#dccdb2` |
   | Premium (paywall) | **rosa** `#ffb5d0` |
   | Fogli dove si scrive (a mano, voce, revisione, Ho cucinato) | **bianco** (default di `Sheet`) |
   | Conferme (Svuota, far uscire un membro, elimina account) | **giallo** |
@@ -48,13 +48,20 @@
   le sole parole Dispensa · Spesa · Ricette, `.92rem` 650, `padding .7rem 1.05rem`, alta 52 px, 12 px
   dal fondo; scheda aperta in crema; **pallino rosso** (senza numero) su Dispensa se ci sono scaduti
   e su Spesa se c'è qualcosa da prendere.
-- **Profilo**: avatar tondo nero (36 px, iniziale del Nome o della mail) in alto a sinistra di ogni
-  scheda; accanto, "Offline" quando manca la rete. Il foglio Profilo ha solo l'ingranaggio
-  (Impostazioni) in alto a destra: niente X e niente "Esci".
-- **Esci**: tondo con la freccia contro la barra (stessa icona di Wishlist, `IconaEsci.jsx`) in
-  alto a destra su **tutte** le schede, con foglio giallo di conferma "Vuoi uscire?". Nella Spesa
-  luce e condivisione gli stanno accanto, a sinistra.
-- **"+"**: tondo **bianco** col bordo e il "+" neri, alto quanto la barra (52 px), **sulla stessa
+- **Profilo**: avatar tondo **blu** `#3572e8` con l'iniziale bianca (36 px, Nome o mail) in alto a
+  sinistra di ogni scheda; accanto, "Offline" quando manca la rete. Lo stesso avatar (48 px) apre
+  il pannello Profilo, che ha solo l'ingranaggio in alto a destra: niente X e niente "Esci".
+- **Impostazioni**: ingranaggio in alto a destra su **tutte** le schede (nella Spesa luce e
+  condivisione gli stanno accanto, a sinistra). Dentro c'è **"Esci"**, con conferma in linea.
+- **Menu laterale**: Profilo e Impostazioni entrano **da destra** (`Sheet` con `side`, come il menu
+  di Expense Track): alti quanto lo schermo, larghi l'88%, senza maniglia né X; si chiudono
+  toccando fuori o trascinando verso destra. Gli altri fogli salgono dal basso.
+- **Pillole su fondo colorato**: quelle delle categorie in Dispensa e delle occasioni in Ricette
+  ("Fresco", "Caldo"…) hanno il fondo **bianco** (nere da accese).
+- **Titolo Dispensa**: solo "Hai fame?" (il "Ciao 👋" è stato tolto il 01/10).
+- **Spesa, tutto nel carrello**: compare "Sposta tutto in dispensa" anche in alto, sotto "Per
+  reparto"; quello in fondo alla lista resta, col cestino.
+- **"+"**: tondo **bianco** col bordo spesso (2,5 px, come Expense Track) e il "+" neri, alto quanto la barra (52 px), **sulla stessa
   riga** e staccato di 10 px; **su tutte le schede** (aggiunge sempre alla dispensa); le 4 azioni
   salgono in colonna sopra di lui ("A mano" la più vicina), etichette a sinistra, velo nero senza
   sfocatura.

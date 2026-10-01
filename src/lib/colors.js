@@ -18,7 +18,7 @@ export const INK = "#0a0a0a";
 // Colore pieno di ogni schermata: fondo della pagina e barra di stato.
 export const PAGE_COLOR = {
   dispensa: PALETTE.arancio,
-  spesa: PALETTE.giallo,
+  spesa: WHITE, // dal 01/10 (prima giallo)
   ricette: PALETTE.verde, // Idee, proposte e Piano Alimentare
   ricetta: WHITE, // ricetta aperta: si legge meglio, le foto risaltano
   accesso: PALETTE.arancio, // login e caricamento

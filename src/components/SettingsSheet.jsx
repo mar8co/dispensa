@@ -1,13 +1,15 @@
-// Foglio Impostazioni (dall'ingranaggio in alto a destra del Profilo).
-// Raccoglie il "come si comporta l'app": Face ID, notifiche push,
-// tutorial e il footer legale (privacy / elimina account). Il Profilo resta
+// Impostazioni (dall'ingranaggio in alto a destra di ogni scheda, o da quello
+// del Profilo): pannello laterale da destra, senza X. Raccoglie il "come si
+// comporta l'app": Face ID, notifiche push, tutorial, "Esci" (con conferma)
+// e il footer legale (privacy / elimina account). Il Profilo resta
 // il "chi sei": nome, dispensa familiare, esigenze alimentari e azioni dati.
 import { useState, useEffect } from "react";
 import {
-  X, GraduationCap, Loader2, Bell,
+  GraduationCap, Loader2, Bell,
   Sparkles, ChevronRight,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
+import IconaEsci from "./IconaEsci.jsx";
 import FaceIdIcon from "./FaceIdIcon.jsx";
 import { supabase } from "../lib/supabase.js";
 import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush } from "../lib/push.js";
@@ -17,9 +19,10 @@ import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush
 const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
 
 export default function SettingsSheet({
-  onClose, onReplayTour, onDeleteAccount, onOpenPrivacy,
+  onClose, onReplayTour, onDeleteAccount, onOpenPrivacy, onLogout,
   isPro = true, onOpenPaywall,
 }) {
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [delErr, setDelErr] = useState("");
@@ -127,15 +130,10 @@ export default function SettingsSheet({
   const disattiva = "pillola min-h-[34px] px-3.5 text-[0.84rem]";
 
   return (
-    <Sheet onClose={onClose} panelClass="bg-sabbia">
+    <Sheet side onClose={onClose} panelClass="bg-sabbia">
       {(close) => (
         <div className="px-[18px] pb-4 pt-1">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <h3 className="titolo">Impostazioni</h3>
-            <button onClick={close} aria-label="Chiudi" className="tondo">
-              <X className="h-[18px] w-[18px]" />
-            </button>
-          </div>
+          <h3 className="titolo mb-4">Impostazioni</h3>
 
           {/* Premium: punto d'accesso permanente al paywall (gli altri sono
               contestuali, sulle funzioni bloccate). Per un abbonato diventa
@@ -227,6 +225,23 @@ export default function SettingsSheet({
               <GraduationCap className="h-[19px] w-[19px] shrink-0 text-ink" />
               <span className={nome}>Rivedi il tutorial</span>
             </button>
+
+            {/* Esci: qui dal 01/10 (prima nel Profilo, poi in testata). */}
+            {onLogout && (confirmLogout ? (
+              <div className="flex gap-2 border-b border-riga py-3">
+                <button onClick={() => setConfirmLogout(false)} className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]">
+                  Annulla
+                </button>
+                <button onClick={onLogout} className="bottone-rosso min-h-[44px] flex-1 py-2 text-[0.92rem]">
+                  Sì, esci
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmLogout(true)} className={`${riga} text-left`}>
+                <span className="grid w-[19px] shrink-0 place-items-center text-ink"><IconaEsci /></span>
+                <span className={nome}>Esci</span>
+              </button>
+            ))}
           </div>
 
           {/* Footer discreto: privacy e cancellazione account */}

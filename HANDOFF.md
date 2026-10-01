@@ -27,7 +27,7 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 ## Veste grafica "manifesto svizzero" (2026-09-30)
 
 > L'app ha la stessa veste di Wishlist Viaggi ed Expense Track: **un colore
-> pieno per schermata** (Dispensa arancio `#ff7a1a`, Spesa giallo, Ricette
+> pieno per schermata** (Dispensa arancio `#ff7a1a`, Spesa bianco dal 01/10, Ricette
 > verde, ricetta aperta bianca, Profilo/Impostazioni sabbia, Premium rosa,
 > conferme gialle, fotocamere nere), **Inter Tight**, titoli enormi, righe
 > sottili al posto delle card, pillole nere, icone a tratto spesso e **due
@@ -37,9 +37,9 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > pomodoro). **Barra uniformata a Wishlist (30/09)**: pillola nera con 3
 > voci (Dispensa · Spesa · Ricette), pallini rossi senza numero, **Profilo =
 > avatar tondo in alto a sinistra**, **"+" tondo bianco sulla stessa riga della
-> barra, staccato** (su tutte le schede) con le 4 azioni in colonna; **Esci in
-> alto a destra** su tutte le schede (non più nel Profilo, che ha solo
-> l'ingranaggio). Stessa barra in Expense
+> barra, staccato** (su tutte le schede) con le 4 azioni in colonna; **Impostazioni in
+> alto a destra** su tutte le schede, con "Esci" dentro; **Profilo e
+> Impostazioni entrano da destra** (pannelli laterali, 01/10); avatar blu. Stessa barra in Expense
 > Track. **Spesa (30/09)**: tocco sul nome = modifica, sul resto della riga =
 > carrello; luce e condivisione sulla riga dell'avatar; "Sposta in dispensa" +
 > cestino in fondo alla lista (non più fissi); "spostato nel carrello" = avviso

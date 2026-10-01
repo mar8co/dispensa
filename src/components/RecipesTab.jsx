@@ -238,7 +238,8 @@ export default function RecipesTab({
                   key={c.id}
                   onClick={() => onToggleContext(c.id)}
                   aria-pressed={on}
-                  className="pillola min-h-[36px] px-3 text-[0.84rem]"
+                  // Fondo bianco da spenta; da accesa resta nera (.pillola).
+                  className={`pillola min-h-[36px] px-3 text-[0.84rem] ${on ? "" : "bg-white"}`}
                 >
                   <span>{c.icon}</span> {c.label}
                 </button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings } from "lucide-react";
 
 import {
   CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES, CATEGORY_PROMPT,
@@ -45,8 +45,6 @@ import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
-import ConfirmLogoutModal from "./components/ConfirmLogoutModal.jsx";
-import IconaEsci from "./components/IconaEsci.jsx";
 import SettingsSheet from "./components/SettingsSheet.jsx";
 import PaywallSheet from "./components/PaywallSheet.jsx";
 import PrivacySheet from "./components/PrivacySheet.jsx";
@@ -186,7 +184,6 @@ export default function Dispensa({ session }) {
   const [voiceReview, setVoiceReview] = useState(false); // il riepilogo aperto viene dalla voce → mostra "Aggiungi altri prodotti"
   const voiceAppendRef = useRef(false); // il prossimo risultato voce si ACCODA al riepilogo invece di sostituirlo
   const [addMenuOpen, setAddMenuOpen] = useState(false);
-  const [confirmLogout, setConfirmLogout] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
 
   // porzioni e preferenze alimentari (persistite nelle impostazioni, usate
@@ -1101,18 +1098,18 @@ export default function Dispensa({ session }) {
             data-tour="tab-profilo"
             onClick={() => { bumpModal("profile"); setProfileOpen(true); tourSignal("profile-opened"); }}
             aria-label="Profilo"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-[0.95rem] font-[750] tracking-[-0.02em] text-crema transition active:scale-95"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blu text-[0.95rem] font-[750] tracking-[-0.02em] text-white transition active:scale-95"
           >
             {(myName || session.user.email || "?").trim().charAt(0).toUpperCase()}
           </button>
           {!online && <span className="text-[0.72rem] font-bold text-ink">Offline</span>}
           {/* Azioni della scheda aperta sulla stessa riga, a destra (la Spesa ci
-              mette luce e condivisione, via portal), poi Esci. */}
+              mette luce e condivisione, via portal), poi le Impostazioni. */}
           <div id="testata-azioni" className="ml-auto flex gap-2" />
-          {/* Esci: in alto a destra su tutte le schede (come Wishlist), con
-              conferma. Nel Profilo non c'è più. */}
-          <button onClick={() => { bumpModal("logout"); setConfirmLogout(true); }} aria-label="Esci" title="Esci" className="tondo">
-            <IconaEsci />
+          {/* Impostazioni: in alto a destra su tutte le schede ("Esci" è lì
+              dentro). */}
+          <button onClick={() => { bumpModal("settings"); setSettingsOpen(true); }} aria-label="Impostazioni" title="Impostazioni" className="tondo">
+            <Settings className="h-[18px] w-[18px]" />
           </button>
         </header>
         {view === "dispensa" && (
@@ -1294,6 +1291,7 @@ export default function Dispensa({ session }) {
           onClose={() => { setSettingsOpen(false); openPendingSheet(); }}
           onReplayTour={replayTour}
           onDeleteAccount={deleteAccount}
+          onLogout={logout}
           onOpenPrivacy={() => { pendingSheetRef.current = "privacy"; }}
           isPro={isPro}
           onOpenPaywall={() => { pendingSheetRef.current = "paywall"; }}
@@ -1310,10 +1308,6 @@ export default function Dispensa({ session }) {
       )}
 
       {privacyOpen && <PrivacySheet key={modalEpoch.current.privacy} onClose={() => setPrivacyOpen(false)} />}
-
-      {confirmLogout && (
-        <ConfirmLogoutModal key={modalEpoch.current.logout} onCancel={() => setConfirmLogout(false)} onConfirm={logout} />
-      )}
 
       {confirmClear && (
         <ConfirmClearModal key={modalEpoch.current.confirmClear} onCancel={() => setConfirmClear(false)} onConfirm={clearPantry} />

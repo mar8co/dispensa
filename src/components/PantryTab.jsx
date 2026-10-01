@@ -223,7 +223,7 @@ export default function PantryTab({
   return (
     <div className="pt-2">
       {/* Titolo enorme (il profilo è nella navbar in basso) */}
-      <h1 className="gigante">Ciao <span className="align-[0.08em] text-[0.72em] tracking-normal">👋</span><br />Hai fame?</h1>
+      <h1 className="gigante">Hai fame?</h1>
 
       {/* Occhiello rosso + ricerca: bloccati insieme in alto durante lo scroll
           (con l'ordinamento dietro l'icona). */}
@@ -341,7 +341,7 @@ export default function PantryTab({
                   key={cat}
                   onClick={() => jumpTo(cat)}
                   // Stessa misura sia nella barra scorrevole sia nel menù aperto.
-                  className="pillola min-h-[34px] px-3 text-[0.84rem]"
+                  className="pillola min-h-[34px] bg-white px-3 text-[0.84rem]"
                 >
                   {CAT_ICON[cat]} {cat}
                 </button>

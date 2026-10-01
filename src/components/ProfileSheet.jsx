@@ -1,11 +1,12 @@
 // Foglio profilo (dalla navbar). Dopo lo split con Impostazioni (⚙️ in alto a
 // destra → SettingsSheet) qui resta il "chi sei": account (nome/username),
-// Dispensa familiare, Esigenze alimentari e "Svuota dispensa". Niente X (si
-// chiude trascinando giù o toccando fuori) ed "Esci" sta in alto a destra
-// nella testata dell'app, non qui. Face ID, notifiche, tutorial e footer legale vivono in
+// Dispensa familiare, Esigenze alimentari e "Svuota dispensa". Pannello
+// laterale da destra, niente X (si chiude toccando fuori o trascinando);
+// "Esci" sta nelle Impostazioni. L'avatar è lo stesso della testata (tondo blu
+// con l'iniziale). Face ID, notifiche, tutorial e footer legale vivono in
 // SettingsSheet. Veste manifesto: foglio sabbia, righe sottili, pillole.
 import { useState, useEffect } from "react";
-import { Settings, Trash2, User, Leaf, Users } from "lucide-react";
+import { Settings, Trash2, Leaf, Users } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
@@ -28,7 +29,7 @@ export default function ProfileSheet({
   }
 
   return (
-    <Sheet onClose={onClose} panelClass="bg-sabbia">
+    <Sheet side onClose={onClose} panelClass="bg-sabbia">
       {(close) => (
         <div className="px-[18px] pb-4 pt-1">
           <div className="mb-4 flex items-center justify-between gap-2">
@@ -46,8 +47,8 @@ export default function ProfileSheet({
 
           {/* Account: il Nome (username) prende il posto della mail */}
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-white text-ink">
-              <User className="h-6 w-6" />
+            <div aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-blu text-[1.25rem] font-[750] tracking-[-0.02em] text-white">
+              {(username || email || "?").trim().charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
               <input
