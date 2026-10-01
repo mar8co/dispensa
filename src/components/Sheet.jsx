@@ -24,6 +24,9 @@ import { Drawer } from "vaul";
 // Colore del foglio (veste manifesto): bianco per i fogli dove si scrive
 // (default); gli altri passano il loro colore pieno in `panelClass`
 // (Profilo blu, Impostazioni arancio, Privacy beige, Premium rosa, conferme gialle, fotocamere nere).
+// Distanza dei pannelli laterali dal bordo alto (vedi il commento sul velo).
+const STACCO = "max(env(safe-area-inset-top), 14px)";
+
 export default function Sheet({ onClose, locked = false, side = false, panelClass = "bg-white", handleClass = "bg-ink/25", children }) {
   // Montiamo GIÀ aperto (open=true): così il contenuto del foglio è subito nel
   // DOM. È fondamentale per i fogli con fotocamera (barcode/scontrino): l'effetto
@@ -88,20 +91,23 @@ export default function Sheet({ onClose, locked = false, side = false, panelClas
       direction={side ? lato : "bottom"}
     >
       <Drawer.Portal>
-        {/* Pannelli laterali: velo e pannello partono SOTTO la barra di stato.
-            iOS la colora guardando gli elementi fissi in cima: così resta del
-            colore della pagina e non prende quello del pannello. */}
+        {/* Pannelli laterali: velo e pannello NON toccano il bordo alto della
+            pagina (restano 14px sotto, o sotto la zona sicura se è più alta).
+            iOS colora la barra di stato col colore degli elementi fissi che
+            toccano quel bordo: staccandoli, resta il colore della pagina.
+            (Nell'app installata la pagina comincia già sotto la barra di
+            stato, quindi la zona sicura lì vale 0: da sola non bastava.) */}
         <Drawer.Overlay
           className={`fixed inset-x-0 bottom-0 z-50 bg-black/45 ${side ? "" : "top-0"}`}
-          style={side ? { top: "env(safe-area-inset-top)" } : undefined}
+          style={side ? { top: STACCO } : undefined}
         />
         <Drawer.Content
           aria-describedby={undefined}
           style={side
-            ? { top: "env(safe-area-inset-top)", paddingTop: "14px", paddingBottom: "env(safe-area-inset-bottom)" }
+            ? { top: STACCO, paddingTop: "10px", paddingBottom: "env(safe-area-inset-bottom)" }
             : { paddingBottom: "env(safe-area-inset-bottom)" }}
           className={side
-            ? `fixed bottom-0 z-50 flex w-[88%] max-w-sm flex-col outline-none ${lato === "left" ? "left-0 rounded-r-[28px]" : "right-0 rounded-l-[28px]"} ${panelClass}`
+            ? `fixed bottom-0 z-50 flex w-[88%] max-w-sm flex-col outline-none ${lato === "left" ? "left-0 rounded-tr-[28px] rounded-br-[28px]" : "right-0 rounded-tl-[28px] rounded-bl-[28px]"} ${panelClass}`
             : `fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-foglio outline-none ${panelClass}`}
         >
           {/* Titolo nascosto: soddisfa l'accessibilità di Radix (il titolo

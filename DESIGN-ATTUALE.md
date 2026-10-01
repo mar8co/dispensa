@@ -63,8 +63,9 @@
   ("Fresco", "Caldo"…) hanno il fondo **bianco** (nere da accese).
 - **Pannello di modifica aperto** (Dispensa, Spesa): un tocco fuori lo chiude e **non fa
   nient'altro** (`lib/outsideTap.js`; eccezioni: avvisi e tutorial).
-- **Pannelli laterali e barra di stato**: velo e pannello partono sotto la zona sicura in alto, così
-  la barra di stato resta del colore della pagina.
+- **Pannelli laterali e barra di stato**: velo e pannello restano staccati dal bordo alto
+  (14 px, o la zona sicura se maggiore): iOS colora la barra di stato con gli elementi fissi che
+  toccano quel bordo. Non rimetterli a `top: 0`.
 - **Velo del "+"**: esiste nel DOM solo a menu aperto (se resta, iOS tiene grigia la barra di stato).
 - **Titolo Dispensa**: solo "Hai fame?" (il "Ciao 👋" è stato tolto il 01/10).
 - **Spesa, tutto nel carrello**: compare "Sposta tutto in dispensa" anche in alto, sotto "Per
