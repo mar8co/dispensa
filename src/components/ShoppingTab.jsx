@@ -10,6 +10,7 @@
 // NB sul data layer: il "carrello" è il campo persistito `checked` degli item
 // (uso solo i prop esistenti: onToggle/onToggleAll/onMoveChecked/onClearChecked).
 // Nessuna query/tabella/campo modificato.
+import { onOutsideTap } from "../lib/outsideTap.js";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -391,14 +392,11 @@ export default function ShoppingTab({
     commitQtyNow(v);
   }
 
-  // Il pannello si chiude toccando un punto qualsiasi fuori da esso.
+  // Il pannello si chiude toccando un punto qualsiasi fuori da esso; quel
+  // tocco non fa nient'altro (vedi lib/outsideTap.js).
   useEffect(() => {
     if (!editId) return;
-    const onDoc = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) closeEdit();
-    };
-    document.addEventListener("pointerdown", onDoc);
-    return () => document.removeEventListener("pointerdown", onDoc);
+    return onOutsideTap(() => panelRef.current, closeEdit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId, qtyDraft, draftName]);
 

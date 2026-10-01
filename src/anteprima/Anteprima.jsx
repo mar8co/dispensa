@@ -235,18 +235,17 @@ export default function Anteprima() {
       </div>
 
       {/* Velo del menù "+", come in Dispensa.jsx */}
+      {addMenuOpen && (
       <button
         onClick={() => setAddMenuOpen(false)}
         aria-label="Chiudi menù"
-        tabIndex={addMenuOpen ? 0 : -1}
-        className={`fixed inset-0 z-30 bg-black/45 transition-opacity duration-300 ${
-          addMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className="animate-fade-in fixed inset-0 z-30 bg-black/45"
       />
+      )}
 
       <BottomNav
         view={view}
-        setView={(v) => { setView(v); window.scrollTo(0, 0); }}
+        setView={(v) => { setAddMenuOpen(false); setView(v); window.scrollTo(0, 0); }}
         shoppingCount={shopping.filter((x) => !x.checked).length}
         expiredCount={expiredCount}
         addSlot={(

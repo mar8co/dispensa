@@ -1189,15 +1189,17 @@ export default function Dispensa({ session }) {
 
       {/* Velo del menù "+": a livello di pagina (NON dentro la navbar, che ha
           transform), così copre tutto lo schermo e chiude il menù al tocco
-          esterno. Tinta piena, niente sfocatura (su iPhone rallenta). */}
+          esterno. Tinta piena, niente sfocatura (su iPhone rallenta). Esiste
+          SOLO a menù aperto: iOS colora la barra di stato guardando gli
+          elementi fissi in cima, e un velo lasciato nel DOM (anche invisibile)
+          la teneva grigia dopo il cambio di scheda. */}
+      {addMenuOpen && (
       <button
         onClick={() => setAddMenuOpen(false)}
         aria-label="Chiudi menù"
-        tabIndex={addMenuOpen ? 0 : -1}
-        className={`fixed inset-0 z-30 bg-black/45 transition-opacity duration-300 ${
-          addMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className="animate-fade-in fixed inset-0 z-30 bg-black/45"
       />
+      )}
 
       {/* Barra in basso: Dispensa · Spesa · Ricette (come Wishlist) e, sulla
           stessa riga, il "+" (su tutte le schede; aggiunge ALLA DISPENSA). */}

@@ -151,6 +151,7 @@ export function useTourState() {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+export function tourIsActive() { return state.active; }
 export function startTour(firstRun = true) { setState({ active: true, index: 0, firstRun }); }
 export function stopTour() { setState({ active: false, index: 0 }); }
 

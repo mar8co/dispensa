@@ -2,6 +2,7 @@
 // righe compatte con puntini di guida (nome ……… quantità), barra
 // salta-reparto e intestazioni fisse durante lo scroll. Toccando un prodotto
 // si aprono lì sotto i comandi: quantità, scadenza, modifica, elimina.
+import { onOutsideTap } from "../lib/outsideTap.js";
 import { useState, useRef, useEffect } from "react";
 import {
   X, Search, ShoppingCart,
@@ -191,14 +192,11 @@ export default function PantryTab({
     tourSignal("unit-changed");
   }
 
-  // Il pannello si chiude toccando un punto qualsiasi fuori da esso.
+  // Il pannello si chiude toccando un punto qualsiasi fuori da esso; quel
+  // tocco non fa nient'altro (vedi lib/outsideTap.js).
   useEffect(() => {
     if (!openId) return;
-    const onDoc = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) closePanel();
-    };
-    document.addEventListener("pointerdown", onDoc);
-    return () => document.removeEventListener("pointerdown", onDoc);
+    return onOutsideTap(() => panelRef.current, closePanel);
     // expDraft incluso: senza, chiudendo il pannello subito dopo aver scelto
     // SOLO la scadenza, il flush usava un expDraft "vecchio" e la data non
     // veniva salvata (a meno di toccare anche la quantità).

@@ -59,6 +59,9 @@
   fuori o trascinando. Nel Profilo non c'è più l'ingranaggio. Gli altri fogli salgono dal basso.
 - **Pillole su fondo colorato**: quelle delle categorie in Dispensa e delle occasioni in Ricette
   ("Fresco", "Caldo"…) hanno il fondo **bianco** (nere da accese).
+- **Pannello di modifica aperto** (Dispensa, Spesa): un tocco fuori lo chiude e **non fa
+  nient'altro** (`lib/outsideTap.js`; eccezioni: avvisi e tutorial).
+- **Velo del "+"**: esiste nel DOM solo a menu aperto (se resta, iOS tiene grigia la barra di stato).
 - **Titolo Dispensa**: solo "Hai fame?" (il "Ciao 👋" è stato tolto il 01/10).
 - **Spesa, tutto nel carrello**: compare "Sposta tutto in dispensa" anche in alto, sotto "Per
   reparto"; quello in fondo alla lista resta, col cestino.
