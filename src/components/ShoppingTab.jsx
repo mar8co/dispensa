@@ -476,7 +476,7 @@ export default function ShoppingTab({
                 onNotify(next ? "💡 Schermo sempre acceso mentre fai la spesa" : "Lo schermo può spegnersi di nuovo");
               }}
               aria-pressed={awake}
-              className={`tondo ${awake ? "bg-ink text-white" : ""}`}
+              className={`tondo ${awake ? "bg-giallo" : ""}`}
               title="Tieni lo schermo acceso"
               aria-label="Tieni lo schermo acceso"
             >
