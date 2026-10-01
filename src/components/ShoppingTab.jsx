@@ -3,8 +3,8 @@
 //   rimetterla in lista. I prodotti nel carrello si raccolgono nel reparto
 //   "Nel carrello" in fondo.
 // - In alto (sotto la barra di testo): "Per reparto" e "Seleziona tutto",
-//   sempre visibili. In fondo alla lista (non fissa): "Sposta in dispensa" +
-//   cestino, solo quando il carrello non è vuoto. Luce e condivisione stanno
+//   sempre visibili. Tra la lista e "Nel carrello" (non fissa): "Sposta in
+//   dispensa" + cestino, solo quando il carrello non è vuoto. Luce e condivisione stanno
 //   sulla riga dell'avatar (portal in #testata-azioni).
 // - Pressione lunga sulla riga: apre l'editor (quantità/reparto/nome).
 // NB sul data layer: il "carrello" è il campo persistito `checked` degli item
@@ -194,8 +194,8 @@ function TopControls({ byAisle, setByAisle, allSelected, onSelectAll }) {
   );
 }
 
-// --- "Sposta in dispensa" + cestino: in fondo alla lista, dopo "Nel carrello"
-// (30/09: non più fissa sopra la barra, così non resta sempre in vista).
+// --- "Sposta in dispensa" + cestino: tra la lista da prendere e "Nel
+// carrello" (in flusso, non fissa), una volta sola.
 // Compare solo quando il carrello NON è vuoto. ---
 function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
   if (cartCount === 0) return null;
@@ -563,15 +563,6 @@ export default function ShoppingTab({
             onSelectAll={onToggleAll}
           />
         )}
-        {/* Tutto nel carrello: l'azione finale sale anche qui in alto (quella
-            in fondo alla lista resta, col cestino). */}
-        {allInCart && (
-          <Button variant="primary" className="mt-3 w-full" onClick={onMoveChecked} disabled={movingChecked}>
-            {movingChecked
-              ? <Loader2 className="h-4 w-4 animate-spin" />
-              : <><Barattoli size={26} className="-my-1 text-crema" /> Sposta tutto in dispensa</>}
-          </Button>
-        )}
       </div>
 
       {shopping.length === 0 && (
@@ -608,6 +599,16 @@ export default function ShoppingTab({
               <p className="py-6 text-center text-[1.05rem] font-semibold text-tenue">Hai preso tutto! 🎉</p>
             )}
 
+            {/* "Sposta in dispensa" + cestino: una volta sola, tra la lista e
+                "Nel carrello" (03/10). */}
+            <BottomBar
+              cartCount={cartCount}
+              allInCart={allInCart}
+              moving={movingChecked}
+              onMove={onMoveChecked}
+              onRemove={onClearChecked}
+            />
+
             {/* Reparto "Nel carrello": gli articoli presi, barrati. */}
             {cart.length > 0 && (
               <section className="mt-4">
@@ -622,14 +623,6 @@ export default function ShoppingTab({
           </>
         )}
       </div>
-
-      <BottomBar
-        cartCount={cartCount}
-        allInCart={allInCart}
-        moving={movingChecked}
-        onMove={onMoveChecked}
-        onRemove={onClearChecked}
-      />
 
       {/* Durante la modifica un filo di spazio in più, così l'ultima riga può
           salire sopra la barra (il parcheggio lo fa scroll-margin-bottom). */}

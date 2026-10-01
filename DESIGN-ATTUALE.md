@@ -68,8 +68,8 @@
   toccano quel bordo. Non rimetterli a `top: 0`.
 - **Velo del "+"**: esiste nel DOM solo a menu aperto (se resta, iOS tiene grigia la barra di stato).
 - **Titolo Dispensa**: solo "Hai fame?" (il "Ciao 👋" è stato tolto il 01/10).
-- **Spesa, tutto nel carrello**: compare "Sposta tutto in dispensa" anche in alto, sotto "Per
-  reparto"; quello in fondo alla lista resta, col cestino.
+- **Spesa, "Sposta in dispensa" + cestino**: una volta sola, tra la lista da prendere e "Nel
+  carrello" (non in alto, non in fondo, non fissi).
 - **"+"**: tondo **bianco** col bordo spesso (2,5 px, come Expense Track) e il "+" neri, alto quanto la barra (52 px), **sulla stessa
   riga** e staccato di 10 px; **su tutte le schede** (aggiunge sempre alla dispensa); le 4 azioni
   salgono in colonna sopra di lui ("A mano" la più vicina), etichette a sinistra, velo nero senza
