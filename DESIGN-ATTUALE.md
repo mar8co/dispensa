@@ -50,12 +50,13 @@
   e su Spesa se c'è qualcosa da prendere.
 - **Profilo**: avatar tondo **blu** `#3572e8` con l'iniziale bianca (36 px, Nome o mail) in alto a
   sinistra di ogni scheda; accanto, "Offline" quando manca la rete. Lo stesso avatar (48 px) apre
-  il pannello Profilo, che ha solo l'ingranaggio in alto a destra: niente X e niente "Esci".
+  il pannello Profilo. Avatar col bordo nero di 2 px (come Wishlist).
 - **Impostazioni**: ingranaggio in alto a destra su **tutte** le schede (nella Spesa luce e
   condivisione gli stanno accanto, a sinistra). Dentro c'è **"Esci"**, con conferma in linea.
-- **Menu laterale**: Profilo e Impostazioni entrano **da destra** (`Sheet` con `side`, come il menu
-  di Expense Track): alti quanto lo schermo, larghi l'88%, senza maniglia né X; si chiudono
-  toccando fuori o trascinando verso destra. Gli altri fogli salgono dal basso.
+- **Menu laterale** (`Sheet` con `side`, come il menu di Expense Track): il **Profilo entra da
+  sinistra**, le **Impostazioni da destra**; alti quanto lo schermo, larghi l'88%, senza maniglia,
+  con la **X a tratto spesso** (`IconaChiudi.jsx`) in alto a destra; si chiudono anche toccando
+  fuori o trascinando. Nel Profilo non c'è più l'ingranaggio. Gli altri fogli salgono dal basso.
 - **Pillole su fondo colorato**: quelle delle categorie in Dispensa e delle occasioni in Ricette
   ("Fresco", "Caldo"…) hanno il fondo **bianco** (nere da accese).
 - **Titolo Dispensa**: solo "Hai fame?" (il "Ciao 👋" è stato tolto il 01/10).

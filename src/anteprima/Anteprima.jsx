@@ -157,7 +157,7 @@ export default function Anteprima() {
             data-tour="tab-profilo"
             onClick={() => setFoglio("profilo")}
             aria-label="Profilo"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blu text-[0.95rem] font-[750] tracking-[-0.02em] text-white transition active:scale-95"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink bg-blu text-[0.95rem] font-[750] tracking-[-0.02em] text-white transition active:scale-95"
           >
             M
           </button>
@@ -262,7 +262,6 @@ export default function Anteprima() {
         <ProfileSheet
           email="marco@esempio.it" itemCount={items.length} shared foodPrefs="" onSaveFoodPrefs={() => {}}
           onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
-          onOpenSettings={() => setFoglio("impostazioni")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
         />
       )}

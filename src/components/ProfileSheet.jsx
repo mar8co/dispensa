@@ -1,19 +1,20 @@
 // Foglio profilo (dalla navbar). Dopo lo split con Impostazioni (⚙️ in alto a
 // destra → SettingsSheet) qui resta il "chi sei": account (nome/username),
 // Dispensa familiare, Esigenze alimentari e "Svuota dispensa". Pannello
-// laterale da destra, niente X (si chiude toccando fuori o trascinando);
+// laterale da SINISTRA, con la X in alto a destra (si chiude anche toccando
+// fuori o trascinando);
 // "Esci" sta nelle Impostazioni. L'avatar è lo stesso della testata (tondo blu
 // con l'iniziale). Face ID, notifiche, tutorial e footer legale vivono in
 // SettingsSheet. Veste manifesto: foglio sabbia, righe sottili, pillole.
 import { useState, useEffect } from "react";
-import { Settings, Trash2, Leaf, Users } from "lucide-react";
+import { Trash2, Leaf, Users } from "lucide-react";
+import IconaChiudi from "./IconaChiudi.jsx";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
 
 export default function ProfileSheet({
   email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
-  onOpenSettings,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
 }) {
   const [username, setUsernameState] = useState("");
@@ -29,25 +30,20 @@ export default function ProfileSheet({
   }
 
   return (
-    <Sheet side onClose={onClose} panelClass="bg-sabbia">
+    <Sheet side="left" onClose={onClose} panelClass="bg-sabbia">
       {(close) => (
         <div className="px-[18px] pb-4 pt-1">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h3 className="titolo">Profilo</h3>
-            {/* Ingranaggio → Impostazioni (Face ID, notifiche, tutorial,
-                privacy/elimina): il Profilo resta identità e famiglia. */}
-            <button
-              onClick={() => { close(); onOpenSettings?.(); }}
-              aria-label="Impostazioni"
-              className="tondo"
-            >
-              <Settings className="h-[18px] w-[18px]" />
+            {/* Le Impostazioni si aprono dall'ingranaggio della testata. */}
+            <button onClick={close} aria-label="Chiudi" className="tondo">
+              <IconaChiudi />
             </button>
           </div>
 
           {/* Account: il Nome (username) prende il posto della mail */}
           <div className="flex items-center gap-3">
-            <div aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-blu text-[1.25rem] font-[750] tracking-[-0.02em] text-white">
+            <div aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-full border-2 border-ink bg-blu text-[1.25rem] font-[750] tracking-[-0.02em] text-white">
               {(username || email || "?").trim().charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">

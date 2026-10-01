@@ -1,5 +1,5 @@
-// Impostazioni (dall'ingranaggio in alto a destra di ogni scheda, o da quello
-// del Profilo): pannello laterale da destra, senza X. Raccoglie il "come si
+// Impostazioni (dall'ingranaggio in alto a destra di ogni scheda):
+// pannello laterale da destra, con la X in alto a destra. Raccoglie il "come si
 // comporta l'app": Face ID, notifiche push, tutorial, "Esci" (con conferma)
 // e il footer legale (privacy / elimina account). Il Profilo resta
 // il "chi sei": nome, dispensa familiare, esigenze alimentari e azioni dati.
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import IconaEsci from "./IconaEsci.jsx";
+import IconaChiudi from "./IconaChiudi.jsx";
 import FaceIdIcon from "./FaceIdIcon.jsx";
 import { supabase } from "../lib/supabase.js";
 import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush } from "../lib/push.js";
@@ -130,10 +131,17 @@ export default function SettingsSheet({
   const disattiva = "pillola min-h-[34px] px-3.5 text-[0.84rem]";
 
   return (
-    <Sheet side onClose={onClose} panelClass="bg-sabbia">
+    <Sheet side="right" onClose={onClose} panelClass="bg-sabbia">
       {(close) => (
         <div className="px-[18px] pb-4 pt-1">
-          <h3 className="titolo mb-4">Impostazioni</h3>
+          {/* X in alto a destra, sulla riga del titolo: è il punto dove il
+              pollice la cerca (stesso posto dell'ingranaggio che apre). */}
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="titolo">Impostazioni</h3>
+            <button onClick={close} aria-label="Chiudi" className="tondo">
+              <IconaChiudi />
+            </button>
+          </div>
 
           {/* Premium: punto d'accesso permanente al paywall (gli altri sono
               contestuali, sulle funzioni bloccate). Per un abbonato diventa

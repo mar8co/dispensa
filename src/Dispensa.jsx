@@ -1098,7 +1098,7 @@ export default function Dispensa({ session }) {
             data-tour="tab-profilo"
             onClick={() => { bumpModal("profile"); setProfileOpen(true); tourSignal("profile-opened"); }}
             aria-label="Profilo"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blu text-[0.95rem] font-[750] tracking-[-0.02em] text-white transition active:scale-95"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink bg-blu text-[0.95rem] font-[750] tracking-[-0.02em] text-white transition active:scale-95"
           >
             {(myName || session.user.email || "?").trim().charAt(0).toUpperCase()}
           </button>
@@ -1281,7 +1281,6 @@ export default function Dispensa({ session }) {
             if (tour.active) { tourEmptyDemo(); tourSignal("pantry-cleared"); }
             else { bumpModal("confirmClear"); setConfirmClear(true); }
           }}
-          onOpenSettings={() => { pendingSheetRef.current = "settings"; }}
         />
       )}
 
