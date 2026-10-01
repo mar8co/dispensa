@@ -10,7 +10,7 @@ import { PAGE_COLOR } from "./lib/colors.js";
 
 export default function App() {
   const { session, authLoading } = useAuth();
-  // Caricamento e accesso hanno l'arancio del marchio; dentro l'app il colore
+  // Caricamento e accesso hanno il beige del marchio; dentro l'app il colore
   // lo decide la scheda aperta (Dispensa.jsx).
   usePageColor(authLoading || !session ? PAGE_COLOR.accesso : null);
 

@@ -27,8 +27,8 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 ## Veste grafica "manifesto svizzero" (2026-09-30)
 
 > L'app ha la stessa veste di Wishlist Viaggi ed Expense Track: **un colore
-> pieno per schermata** (Dispensa arancio `#ff7a1a`, Spesa bianco dal 01/10, Ricette
-> verde, ricetta aperta bianca, Profilo/Impostazioni sabbia, Premium rosa,
+> pieno per schermata** (Dispensa beige `#dcceb3` e Spesa bianco dal 01/10, Ricette
+> verde, ricetta aperta bianca, Profilo blu, Impostazioni arancio, Premium rosa,
 > conferme gialle, fotocamere nere), **Inter Tight**, titoli enormi, righe
 > sottili al posto delle card, pillole nere, icone a tratto spesso e **due
 > barattoli** come oggetto simbolo (icona, splash, accesso, dispensa vuota).
@@ -432,10 +432,10 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 
 - **Auth** Supabase: magic-link (email), Google OAuth, Apple OAuth, **Face ID/
   passkey** (WebAuthn, vedi "in sviluppo" per Apple e passkey). Login **a pagina
-  intera** su arancio (veste manifesto del 2026-09-30): i sacchetto della spesa + cappello da chef,
+  intera** su beige (veste manifesto del 2026-09-30): i sacchetto della spesa + cappello da chef,
   headline enorme "Cosa c'è in dispensa?" con sottolineatura ondulata nera su
   "dispensa", sottotitolo "La tua cucina, in tasca. **Meno sprechi.** Zero
-  pensieri." ("Meno sprechi" su pillola verde: sull'arancio un testo verde non
+  pensieri." ("Meno sprechi" su pillola verde: sul fondo colorato un testo verde non
   si legge), provider a pillola bianca (Apple/Google/**Face ID**), "Oppure",
   email con la sola riga sotto e pulsante nero. Il pulsante Face ID chiama
   `signInWithPasskey()`; l'attivazione della passkey vive nel **Profilo**
@@ -499,7 +499,7 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
   `Dispensa.jsx` (ZXing e affini caricati on-demand).
 - **PWA**: installabile, offline shell, un solo tema (chiaro).
   **Splash screen iOS**: `apple-touch-startup-image` in `index.html`
-  (barattoli + scritta "Dispensa" sull'arancio), immagini in `public/splash/*`
+  (logo + scritta "Dispensa" sul beige), immagini in `public/splash/*`
   generate da `scripts/generate-splash.mjs` (sharp; la scritta è l'immagine
   pronta `scripts/assets/wordmark-dispensa.png`, Inter Tight 800), escluse dal
   precache SW (le gestisce Safari). Solo iPhone portrait. **Intro in-app**

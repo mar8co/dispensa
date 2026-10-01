@@ -205,7 +205,7 @@ function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
         <Button variant="primary" className="flex-1" onClick={onMove} disabled={moving}>
           {moving
             ? <Loader2 className="h-4 w-4 animate-spin" />
-            : <><Barattoli size={26} fill="#0a0a0a" className="-my-1 text-crema" /> {allInCart ? "Sposta tutto in dispensa" : `Sposta ${cartCount} in dispensa`}</>}
+            : <><Barattoli size={26} className="-my-1 text-crema" /> {allInCart ? "Sposta tutto in dispensa" : `Sposta ${cartCount} in dispensa`}</>}
         </Button>
         <button
           onClick={onRemove}
@@ -568,7 +568,7 @@ export default function ShoppingTab({
           <Button variant="primary" className="mt-3 w-full" onClick={onMoveChecked} disabled={movingChecked}>
             {movingChecked
               ? <Loader2 className="h-4 w-4 animate-spin" />
-              : <><Barattoli size={26} fill="#0a0a0a" className="-my-1 text-crema" /> Sposta tutto in dispensa</>}
+              : <><Barattoli size={26} className="-my-1 text-crema" /> Sposta tutto in dispensa</>}
           </Button>
         )}
       </div>

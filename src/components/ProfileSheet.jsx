@@ -5,7 +5,7 @@
 // fuori o trascinando);
 // "Esci" sta nelle Impostazioni. L'avatar è lo stesso della testata (tondo blu
 // con l'iniziale). Face ID, notifiche, tutorial e footer legale vivono in
-// SettingsSheet. Veste manifesto: foglio sabbia, righe sottili, pillole.
+// SettingsSheet. Veste manifesto: pannello blu (lo stesso dell'avatar), righe sottili, pillole.
 import { useState, useEffect } from "react";
 import { Trash2, Leaf, Users } from "lucide-react";
 import IconaChiudi from "./IconaChiudi.jsx";
@@ -30,9 +30,10 @@ export default function ProfileSheet({
   }
 
   return (
-    <Sheet side="left" onClose={onClose} panelClass="bg-sabbia">
+    <Sheet side="left" onClose={onClose} panelClass="bg-blu">
       {(close) => (
-        <div className="px-[18px] pb-4 pt-1">
+        // Sul blu i testi secondari grigi non si leggono: qui diventano neri.
+        <div className="px-[18px] pb-4 pt-1 [&_.text-tenue]:text-ink">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h3 className="titolo">Profilo</h3>
             {/* Le Impostazioni si aprono dall'ingranaggio della testata. */}
@@ -54,7 +55,7 @@ export default function ProfileSheet({
                 placeholder="Il tuo nome"
                 aria-label="Il tuo nome"
                 className={`testo-grande w-full truncate border-0 border-b-[1.5px] border-ink bg-transparent pb-0.5 text-[1.25rem] font-extrabold tracking-[-0.03em] text-ink outline-none placeholder:font-bold ${
-                  shared && !username ? "placeholder:text-ink" : "placeholder:text-ink/40"
+                  shared && !username ? "placeholder:text-ink" : "placeholder:text-ink/60"
                 }`}
               />
               <p className="mt-1 flex items-center gap-1.5 text-[0.8rem] font-medium text-tenue">

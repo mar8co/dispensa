@@ -1238,7 +1238,7 @@ export default function Dispensa({ session }) {
           aborta la richiesta (mai più di qualche secondo in ostaggio). */}
       {processing && (
         <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-5 bg-sfondo px-10 text-center">
-          <Barattoli size={112} fill={pageColorFor(view, !!recipe || loadingRecipe)} className="text-ink" />
+          <Barattoli size={112} className="text-ink" />
           <Loader2 className="h-5 w-5 animate-spin text-ink" />
           <div>
             <p className="grande">Sto analizzando la spesa…</p>

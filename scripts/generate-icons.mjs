@@ -8,8 +8,8 @@ import { dirname, join } from "node:path";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const svg = readFileSync(join(root, "public", "icon.svg"));
 const pub = join(root, "public");
-// Arancio del marchio: fondo dell'icona (uguale a public/icon.svg).
-const ARANCIO = { r: 255, g: 122, b: 26, alpha: 1 };
+// Beige del marchio (#dcceb3): fondo dell'icona (uguale a public/icon.svg).
+const FONDO = { r: 220, g: 206, b: 179, alpha: 1 };
 
 const targets = [
   { file: "pwa-192x192.png", size: 192 },
@@ -27,9 +27,9 @@ for (const t of targets) {
 }
 
 // Maskable (Android): il launcher ritaglia un cerchio/forma nell'80% centrale,
-// quindi i barattoli vanno rimpiccioliti su un fondo arancio pieno.
+// quindi il logo va rimpicciolito su un fondo beige pieno.
 const inner = await sharp(svg, { density: 300 }).resize(410, 410).png().toBuffer();
-await sharp({ create: { width: 512, height: 512, channels: 4, background: ARANCIO } })
+await sharp({ create: { width: 512, height: 512, channels: 4, background: FONDO } })
   .composite([{ input: inner, left: 51, top: 51 }])
   .png()
   .toFile(join(pub, "maskable-512x512.png"));
@@ -41,7 +41,7 @@ const iosIcon = join(root, "ios", "App", "App", "Assets.xcassets", "AppIcon.appi
 if (existsSync(dirname(iosIcon))) {
   await sharp(svg, { density: 600 })
     .resize(1024, 1024)
-    .flatten({ background: ARANCIO })
+    .flatten({ background: FONDO })
     .removeAlpha()
     .png()
     .toFile(iosIcon);

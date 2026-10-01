@@ -338,7 +338,7 @@ svg.lucide {
 
 /* Intro splash (SplashIntro.jsx): riprende la splash nativa (icona + "Dispensa")
    e disegna la sottolineatura ondulata, poi sfuma nell'app. Lo sfondo è il
-   colore della pagina (arancio all'avvio), come le PNG native. */
+   colore della pagina (beige all'avvio), come le PNG native. */
 .splash-intro {
   position: fixed;
   inset: 0;

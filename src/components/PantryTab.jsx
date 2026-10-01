@@ -360,7 +360,7 @@ export default function PantryTab({
 
       {grouped.length === 0 && (
         <div className="flex flex-col items-center py-12 text-center">
-          {!searchActive && !expFilter && <Barattoli size={96} fill={PAGE_COLOR.dispensa} className="mb-3 text-ink" />}
+          {!searchActive && !expFilter && <Barattoli size={96} className="mb-3 text-ink" />}
           <p className="text-[1.05rem] font-semibold text-tenue">
             {searchActive ? "Nessun prodotto trovato." : expFilter ? "Niente in scadenza. 🎉" : "Dispensa vuota. Tocca + per aggiungere."}
           </p>

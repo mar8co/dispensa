@@ -131,7 +131,7 @@ export default function SettingsSheet({
   const disattiva = "pillola min-h-[34px] px-3.5 text-[0.84rem]";
 
   return (
-    <Sheet side="right" onClose={onClose} panelClass="bg-sabbia">
+    <Sheet side="right" onClose={onClose} panelClass="bg-arancio">
       {(close) => (
         <div className="px-[18px] pb-4 pt-1">
           {/* X in alto a destra, sulla riga del titolo: è il punto dove il

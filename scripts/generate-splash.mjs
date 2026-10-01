@@ -1,8 +1,8 @@
 // Genera le splash screen iOS (apple-touch-startup-image) da public/icon.svg.
 // Uso: node scripts/generate-splash.mjs
 //
-// Veste manifesto: fondo arancio del marchio, i due barattoli (l'icona: il suo
-// quadrato arancio sparisce sul fondo uguale) e la scritta "Dispensa" in Inter
+// Veste manifesto: fondo beige del marchio, il logo (l'icona: il suo
+// quadrato beige sparisce sul fondo uguale) e la scritta "Dispensa" in Inter
 // Tight 800. La scritta è un'immagine già pronta (scripts/assets/
 // wordmark-dispensa.png, disegnata una volta con il carattere dell'app): così
 // qui non serve alcun file del carattere. La sottolineatura ondulata NON è
@@ -38,8 +38,8 @@ const DEVICES = [
   { w: 440, h: 956, dpr: 3, note: "iPhone 16 Pro Max" },
 ];
 
-// Arancio del marchio (= PAGE_COLOR.accesso in src/lib/colors.js e theme-color).
-const BG = { r: 255, g: 122, b: 26, alpha: 1 };
+// Beige del marchio #dcceb3 (= PAGE_COLOR.accesso in src/lib/colors.js e theme-color).
+const BG = { r: 220, g: 206, b: 179, alpha: 1 };
 
 // Lockup centrato: barattoli sopra, scritta sotto. `visibleW` = larghezza utile.
 async function lockup(width, height, visibleW, minSide) {

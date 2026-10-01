@@ -23,11 +23,11 @@ export default {
         tenue: inkA(0.6), // etichette e testi secondari
         riga: inkA(0.16), // fili sottili tra le righe
         // Colori pieni (sopra si scrive in nero; bianco solo sul rosso azione)
-        arancio: "#ff7a1a", // marchio: Dispensa, accesso, avvio, icona
+        arancio: "#ff7a1a", // Impostazioni (fino al 01/10 era il marchio)
         giallo: "#ffd60a",
         verde: "#22b35e",
         rosa: "#ffb5d0",
-        sabbia: "#dccdb2",
+        sabbia: "#dcceb3", // beige del marchio: Dispensa, accesso, avvio, icona
         blu: "#3572e8",
         grigio: "#c9c5bd",
         rosso: {

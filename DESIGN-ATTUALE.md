@@ -15,11 +15,13 @@
   `usePageColor` in `App.jsx` (accesso/caricamento) e `Dispensa.jsx` (per scheda):
   | Schermata | Colore |
   |---|---|
-  | Dispensa, accesso, caricamento, avvio | **arancio** `#ff7a1a` (marchio) |
+  | Dispensa, accesso, caricamento, avvio | **beige** `#dcceb3` (marchio, token `sabbia`; dal 01/10, prima arancio) |
   | Spesa | **bianco** (dal 01/10; prima giallo) |
   | Ricette (Idee, proposte, Piano Alimentare) | **verde** `#22b35e` |
   | Ricetta aperta, modalità cucina | **bianco** |
-  | Profilo, Impostazioni (pannelli laterali da destra), Privacy (foglio) | **sabbia** `#dccdb2` |
+  | Profilo (pannello da sinistra) | **blu** `#3572e8`, lo stesso dell'avatar (testi secondari neri) |
+  | Impostazioni (pannello da destra) | **arancio** `#ff7a1a` |
+  | Privacy (foglio) | **beige** `#dcceb3` |
   | Premium (paywall) | **rosa** `#ffb5d0` |
   | Fogli dove si scrive (a mano, voce, revisione, Ho cucinato) | **bianco** (default di `Sheet`) |
   | Conferme (Svuota, far uscire un membro, elimina account) | **giallo** |
@@ -41,7 +43,7 @@
   `.evidenza` (riquadro nero). `Button.jsx` mappa le varianti su queste classi: **il primario è
   nero** (scelta dell'utente del 30/09, prima era pomodoro).
 - **Scadenze a cartellini**: rosso pieno = scaduto, nero = oggi/entro 3 giorni, solo bordo = entro
-  la settimana, tenue = lontana. Il nome del prodotto resta nero (sull'arancio un nome rosso/ambra
+  la settimana, tenue = lontana. Il nome del prodotto resta nero (sul fondo colorato un nome rosso/ambra
   non si leggerebbe); "finito" attenuato.
 - Icone lucide a tratto spesso (`svg.lucide { stroke-width: 2.6px }`); **categorie sempre emoji**.
 - **Barra in basso** (uguale a Wishlist Viaggi ed Expense Track, 30/09): pillola nera centrata con
@@ -74,7 +76,9 @@
 - **Oggetto simbolo: sacchetto della spesa + cappello da chef** (`components/Barattoli.jsx`, stesso disegno di
   `public/icon.svg`): dietro pieno nero, davanti col colore della superficie. Usato per icona,
   splash, accesso, dispensa vuota, "Sto analizzando la spesa" e il pulsante "Sposta in dispensa".
-- **Icona e splash**: barattoli neri sull'arancio; splash con la scritta "Dispensa" (immagine
+- **Logo (01/10)**: ricalco vettoriale dell'immagine scelta dall'utente (sacchetto con pane,
+  insalata e mela + cappello da chef), un solo tracciato in `components/logoPath.js`, un solo colore.
+- **Icona e splash**: logo nero sul beige; splash con la scritta "Dispensa" (immagine
   pronta `scripts/assets/wordmark-dispensa.png`, Inter Tight 800 a −0.04em). Rigenerare con
   `node scripts/generate-icons.mjs` e `node scripts/generate-splash.mjs`.
 

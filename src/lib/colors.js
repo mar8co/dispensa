@@ -3,12 +3,12 @@
 // nero; il bianco solo sul rosso azione.
 
 export const PALETTE = {
-  arancio: "#ff7a1a", // marchio: Dispensa, accesso, avvio, icona
+  arancio: "#ff7a1a", // Impostazioni (fino al 01/10 era il marchio)
   giallo: "#ffd60a",
   verde: "#22b35e",
   rosa: "#ffb5d0",
-  sabbia: "#dccdb2",
-  blu: "#3572e8",
+  sabbia: "#dcceb3", // beige del marchio: Dispensa, accesso, avvio, icona
+  blu: "#3572e8", // avatar e pannello Profilo
   grigio: "#c9c5bd",
   rosso: "#ff3b1c",
 };
@@ -17,11 +17,11 @@ export const INK = "#0a0a0a";
 
 // Colore pieno di ogni schermata: fondo della pagina e barra di stato.
 export const PAGE_COLOR = {
-  dispensa: PALETTE.arancio,
+  dispensa: PALETTE.sabbia,
   spesa: WHITE, // dal 01/10 (prima giallo)
   ricette: PALETTE.verde, // Idee, proposte e Piano Alimentare
   ricetta: WHITE, // ricetta aperta: si legge meglio, le foto risaltano
-  accesso: PALETTE.arancio, // login e caricamento
+  accesso: PALETTE.sabbia, // login e caricamento
 };
 
 // Schermata della vista corrente (la ricetta aperta ha il suo colore).

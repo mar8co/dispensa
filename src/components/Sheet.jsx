@@ -23,7 +23,7 @@ import { Drawer } from "vaul";
 //
 // Colore del foglio (veste manifesto): bianco per i fogli dove si scrive
 // (default); gli altri passano il loro colore pieno in `panelClass`
-// (Profilo/Impostazioni sabbia, Premium rosa, conferme gialle, fotocamere nere).
+// (Profilo blu, Impostazioni arancio, Privacy beige, Premium rosa, conferme gialle, fotocamere nere).
 export default function Sheet({ onClose, locked = false, side = false, panelClass = "bg-white", handleClass = "bg-ink/25", children }) {
   // Montiamo GIÀ aperto (open=true): così il contenuto del foglio è subito nel
   // DOM. È fondamentale per i fogli con fotocamera (barcode/scontrino): l'effetto

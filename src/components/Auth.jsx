@@ -1,6 +1,6 @@
 // Schermata di accesso a pagina intera: 3 provider rapidi (Apple, Google,
 // Face ID/passkey) in alto, poi accesso via email con link magico. Veste
-// manifesto: arancio del marchio (lo imposta App.jsx), titolo enorme, i due
+// manifesto: beige del marchio (lo imposta App.jsx), titolo enorme, i due
 // barattoli, pillole bianche per i provider, campo con la sola riga sotto.
 import { useState } from "react";
 import { Loader2, Mail, Check } from "lucide-react";
@@ -115,7 +115,7 @@ export default function Auth() {
       {/* Testata: la domanda del brand, enorme, con la sottolineatura ondulata
           (la stessa che disegna l'intro) e i due barattoli. */}
       <div className="mx-auto w-full max-w-sm">
-        <Barattoli size={92} fill={PAGE_COLOR.accesso} className="-ml-1 mb-3 text-ink" />
+        <Barattoli size={92} className="-ml-1 mb-3 text-ink" />
         <h1 className="gigante">
           Cosa c&rsquo;è in{" "}
           <span className="underline decoration-rosso-azione decoration-wavy decoration-[3px] underline-offset-[10px] [text-decoration-skip-ink:none]">dispensa</span>?
