@@ -8,9 +8,11 @@ import { useState, useEffect } from "react";
 // va IN ALTO: su iOS la tastiera copre gli elementi fissati in basso, e i
 // feedback con Annulla ("Modifica salvata") arrivano proprio mentre si scrive.
 // Colore: pillola nera con l'azione gialla; `tone="verde"` (es. "spostato nel
-// carrello") = pillola verde col testo nero e l'azione sottolineata.
+// carrello") o `tone="giallo"` (avvisi della lampadina) = pillola colorata col
+// bordo e il testo neri e l'azione sottolineata.
 export default function Toast({ message, onUndo, actionLabel = "Annulla", tone, bottom = "var(--sopra-nav)" }) {
-  const verde = tone === "verde";
+  const chiaro = tone === "verde" || tone === "giallo";
+  const fondo = tone === "giallo" ? "bg-giallo" : "bg-verde";
   const [kbOpen, setKbOpen] = useState(false);
   useEffect(() => {
     const isTyping = () => {
@@ -35,10 +37,10 @@ export default function Toast({ message, onUndo, actionLabel = "Annulla", tone, 
       style={kbOpen ? undefined : { bottom }}
     >
       {/* Raggio 24px: su una riga è una pillola, se il testo va a capo resta morbido. */}
-      <div role="status" className={`animate-sale pointer-events-auto flex max-w-full items-center gap-3.5 rounded-[24px] px-[1.1rem] py-[0.7rem] text-[0.92rem] font-[650] leading-snug shadow-barra ${verde ? "border-[1.5px] border-ink bg-verde text-ink" : "bg-ink text-white"}`}>
+      <div role="status" className={`animate-sale pointer-events-auto flex max-w-full items-center gap-3.5 rounded-[24px] px-[1.1rem] py-[0.7rem] text-[0.92rem] font-[650] leading-snug shadow-barra ${chiaro ? `border-[1.5px] border-ink ${fondo} text-ink` : "bg-ink text-white"}`}>
         <span className="min-w-0 break-words">{message}</span>
         {onUndo && (
-          <button onClick={onUndo} className={`-my-2 shrink-0 py-2 text-[0.95rem] font-extrabold ${verde ? "text-ink underline underline-offset-2" : "text-giallo"}`}>
+          <button onClick={onUndo} className={`-my-2 shrink-0 py-2 text-[0.95rem] font-extrabold ${chiaro ? "text-ink underline underline-offset-2" : "text-giallo"}`}>
             {actionLabel}
           </button>
         )}

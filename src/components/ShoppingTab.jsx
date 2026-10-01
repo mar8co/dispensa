@@ -293,7 +293,7 @@ export default function ShoppingTab({
     try {
       if (localStorage.getItem("dispensa-wake-hint")) return;
       localStorage.setItem("dispensa-wake-hint", "1");
-      onNotify("💡 Tocca la lampadina in alto per tenere lo schermo acceso mentre fai la spesa");
+      onNotify("💡 Tocca la lampadina in alto per tenere lo schermo acceso mentre fai la spesa", undefined, undefined, "giallo", 3000);
     } catch { /* niente hint */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasItems]);
@@ -473,7 +473,8 @@ export default function ShoppingTab({
               onClick={() => {
                 const next = !awake;
                 setAwake(next);
-                onNotify(next ? "💡 Schermo sempre acceso mentre fai la spesa" : "Lo schermo può spegnersi di nuovo");
+                // Avvisi della lampadina: pillola gialla, brevi (2 s).
+                onNotify(next ? "💡 Schermo sempre acceso mentre fai la spesa" : "Lo schermo può spegnersi di nuovo", undefined, undefined, "giallo", 2000);
               }}
               aria-pressed={awake}
               className={`tondo ${awake ? "bg-giallo" : ""}`}

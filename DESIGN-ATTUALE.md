@@ -74,7 +74,7 @@
   salgono in colonna sopra di lui ("A mano" la più vicina), etichette a sinistra, velo nero senza
   sfocatura.
 - **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Eccezione: "X spostato nel
-  carrello" = pillola **verde** col bordo nero, 2,5 s, con "Annulla" (rimette in lista). Barra timer nera.
+  carrello" = pillola **verde** col bordo nero, 2,5 s, con "Annulla" (rimette in lista); avvisi della lampadina = pillola **gialla**, 2 s (3 s il suggerimento iniziale). Barra timer nera.
 - **Oggetto simbolo: sacchetto della spesa + cappello da chef** (`components/Barattoli.jsx`, stesso disegno di
   `public/icon.svg`): dietro pieno nero, davanti col colore della superficie. Usato per icona,
   splash, accesso, dispensa vuota, "Sto analizzando la spesa" e il pulsante "Sposta in dispensa".
