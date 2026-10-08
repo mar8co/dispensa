@@ -30,20 +30,27 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 > pieno per schermata** (Dispensa beige `#dcceb3` e Spesa bianco dal 01/10, Ricette
 > verde, ricetta aperta bianca, Profilo blu, Impostazioni arancio, Premium rosa,
 > conferme gialle, fotocamere nere), **Inter Tight**, titoli enormi, righe
-> sottili al posto delle card, pillole nere, icone a tratto spesso e **due
-> barattoli** come oggetto simbolo (icona, splash, accesso, dispensa vuota).
+> sottili al posto delle card, pillole nere, icone a tratto spesso e il **logo
+> (sacchetto della spesa + cappello da chef)** come oggetto simbolo (icona,
+> splash, accesso, dispensa vuota).
 > **Un solo tema (chiaro)**: tolti tema scuro e voce "Aspetto". Funzioni, dati,
 > gesti e testi invariati. Scelte dell'utente: primario **nero** (prima
 > pomodoro). **Barra uniformata a Wishlist (30/09)**: pillola nera con 3
 > voci (Dispensa · Spesa · Ricette), pallini rossi senza numero, **Profilo =
 > avatar tondo in alto a sinistra**, **"+" tondo bianco sulla stessa riga della
 > barra, staccato** (su tutte le schede) con le 4 azioni in colonna; **Impostazioni in
-> alto a destra** su tutte le schede, con "Esci" dentro; **Profilo e
-> Impostazioni entrano da destra** (pannelli laterali, 01/10); avatar blu. Stessa barra in Expense
+> alto a destra** su tutte le schede, con "Esci" dentro; **Profilo da sinistra (blu),
+> Impostazioni da destra (arancio)**: pannelli laterali con X a tratto spesso,
+> staccati dal bordo alto per la barra di stato di iOS; avatar blu col bordo nero. Stessa barra in Expense
 > Track. **Spesa (30/09)**: tocco sul nome = modifica, sul resto della riga =
 > carrello; luce e condivisione sulla riga dell'avatar; "Sposta in dispensa" +
-> cestino in fondo alla lista (non più fissi); "spostato nel carrello" = avviso
-> verde di 2,5 s con Annulla.
+> cestino una volta sola, tra la lista e "Nel carrello" (08/10; non fissi);
+> "spostato nel carrello" = avviso verde di 2,5 s con Annulla; lampadina
+> accesa e i suoi avvisi in giallo. Un tocco fuori dal pannello di modifica lo
+> chiude e basta (`lib/outsideTap.js`).
+> **Stato all'08/10/2026**: tutto pubblicato su `main` (`eac8dcb`), nessun
+> lavoro a metà. Cosa resta da confermare sull'iPhone: sezione "Stato" di
+> `CLAUDE.md`.
 > Dettagli, regole e cosa conservare: **`DESIGN-ATTUALE.md`**. Per vedere le
 > schermate senza login: `npm run dev` → `/anteprima.html` (dati finti).
 >
@@ -601,8 +608,8 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 | `src/components/Barattoli.jsx` | **Oggetto simbolo** (sacchetto della spesa + cappello da chef), stesso disegno di `public/icon.svg`. |
 | `anteprima.html` + `src/anteprima/` | **Pagina di prova solo sviluppo**: schermate vere con dati finti, senza login (`?vista=`, `?foglio=`). Non entra nella build. |
 | `src/components/HouseholdSection.jsx` | UI **Dispensa condivisa** nel Profilo: membri (username + corona sul creatore + "Rimuovi"), inviti, entra-con-codice, switch nucleo, esci, popup conferma espulsione. |
-| `src/components/ProfileSheet.jsx` | Foglio Profilo ("chi sei"): **Nome (username)** al posto della mail, `HouseholdSection`, **Esigenze alimentari** (box 2 righe), azioni dati (Svuota dispensa `data-tour="clear-pantry"`, Esci). ⚙️ in alto a destra apre `SettingsSheet`. |
-| `src/components/SettingsSheet.jsx` | Foglio **Impostazioni** ("come si comporta l'app", dal ⚙️ del Profilo): Face ID/passkey, toggle notifiche push (avvisi automatici a 7/3/1 gg dalla scadenza), Rivedi il tutorial, footer Privacy Policy / Elimina account. |
+| `src/components/ProfileSheet.jsx` | Foglio Profilo ("chi sei"): **Nome (username)** al posto della mail, `HouseholdSection`, **Esigenze alimentari** (box 2 righe), Svuota dispensa (`data-tour="clear-pantry"`). Pannello laterale **blu da sinistra**, avatar con l'iniziale, X in alto a destra. "Esci" e l'ingranaggio non sono più qui. |
+| `src/components/SettingsSheet.jsx` | Foglio **Impostazioni** ("come si comporta l'app", dall'ingranaggio in alto a destra di ogni scheda; pannello laterale **arancio da destra**, X in alto a destra): Face ID/passkey, toggle notifiche push (avvisi automatici a 7/3/1 gg dalla scadenza), Rivedi il tutorial, **Esci** (con conferma in linea), footer Privacy Policy / Elimina account. |
 | `supabase/schema.sql` + `migration-2..10.sql` | Schema DB completo (vedi ARCHITECTURE). `migration-6/7/8` = **dispensa familiare** (schema, inviti, switch RLS a household); `migration-9` = **username + espulsione** (colonna `username`, `set_username`/`remove_member` security definer, `accept_invite` eredita lo username); `migration-10` = **push scadenze** (tabella `push_subscriptions` + `save_push_subscription` + cron pg_cron/pg_net). |
 | `server/push.js` + `api/push.js` | **Cron notifiche push** (Fase 1): ricava lo slot dall'ora di Roma, legge scadenze/subscription col service role, invia con `web-push`. Protetto da `CRON_SECRET`. |
 | `src/lib/push.js` + `public/push-sw.js` | Opt-in push lato client (subscribe/unsubscribe) + handler `push`/`notificationclick` iniettato nel SW Workbox. |
@@ -723,7 +730,8 @@ Comandi: `npm run dev` (porta 5173, con proxy `/api/*` locale), `npm run build`,
 1. Leggi **`CLAUDE.md`** (regole/convenzioni) e **`ARCHITECTURE.md`** (mappa
    tecnica). Con questo file bastano: non serve la cronologia.
 2. **Ambiente**: Windows + PowerShell (shell primaria); disponibile anche Bash
-   (POSIX). Working dir: `C:\Users\pasqu\Downloads\dispensa`.
+   (POSIX). Working dir: `C:\Users\pasqu\Downloads\APP\dispensa` (spostata
+   a ottobre 2026; prima era `Downloads\dispensa`).
 3. **`.env.local`** già presente in locale. Servono almeno `VITE_SUPABASE_URL`,
    `VITE_SUPABASE_ANON_KEY` e, per AI/foto, `GEMINI_API_KEY` / `PEXELS_API_KEY`
    (lette dal proxy dev). Project ref Supabase: `tikcnxwqynpytysrrtaz`.

@@ -1,4 +1,4 @@
-# DESIGN-ATTUALE — Dispensa ("manifesto svizzero", dal 30/09/2026)
+# DESIGN-ATTUALE — Dispensa ("manifesto svizzero", dal 30/09/2026; aggiornato all'08/10/2026)
 
 > Veste grafica di oggi, la stessa di Wishlist Viaggi ed Expense Track (guida completa:
 > `Downloads/APP/wishlist-viaggi/docs/LINEE-GUIDA-DESIGN.md`). Separa **cosa è solo aspetto**
@@ -54,7 +54,7 @@
   sinistra di ogni scheda; accanto, "Offline" quando manca la rete. Lo stesso avatar (48 px) apre
   il pannello Profilo. Avatar col bordo nero di 2 px (come Wishlist).
 - **Impostazioni**: ingranaggio in alto a destra su **tutte** le schede (nella Spesa luce e
-  condivisione gli stanno accanto, a sinistra). Dentro c'è **"Esci"**, con conferma in linea.
+  condivisione gli stanno accanto, a sinistra; la lampadina accesa è un tondo **giallo**). Dentro c'è **"Esci"**, con conferma in linea.
 - **Menu laterale** (`Sheet` con `side`, come il menu di Expense Track): il **Profilo entra da
   sinistra**, le **Impostazioni da destra**; alti quanto lo schermo, larghi l'88%, senza maniglia,
   con la **X a tratto spesso** (`IconaChiudi.jsx`) in alto a destra; si chiudono anche toccando
@@ -76,11 +76,12 @@
   sfocatura.
 - **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Eccezione: "X spostato nel
   carrello" = pillola **verde** col bordo nero, 2,5 s, con "Annulla" (rimette in lista); avvisi della lampadina = pillola **gialla**, 2 s (3 s il suggerimento iniziale). Barra timer nera.
-- **Oggetto simbolo: sacchetto della spesa + cappello da chef** (`components/Barattoli.jsx`, stesso disegno di
-  `public/icon.svg`): dietro pieno nero, davanti col colore della superficie. Usato per icona,
-  splash, accesso, dispensa vuota, "Sto analizzando la spesa" e il pulsante "Sposta in dispensa".
-- **Logo (01/10)**: ricalco vettoriale dell'immagine scelta dall'utente (sacchetto con pane,
-  insalata e mela + cappello da chef), un solo tracciato in `components/logoPath.js`, un solo colore.
+- **Logo / oggetto simbolo (01/10)**: sacchetto della spesa con pane, insalata e mela + cappello da
+  chef. È il ricalco vettoriale dell'immagine scelta dall'utente (seconda versione, `a2f865d`): un
+  solo tracciato in `components/logoPath.js`, un solo colore (`currentColor`; i vuoti lasciano
+  vedere il fondo). Lo disegna `components/Barattoli.jsx` (nome storico) e lo stesso tracciato sta
+  in `public/icon.svg`. Usato per icona, splash, accesso, dispensa vuota, "Sto analizzando la
+  spesa" e il pulsante "Sposta in dispensa" (lì è a 26 px: i dettagli si impastano un po').
 - **Icona e splash**: logo nero sul beige; splash con la scritta "Dispensa" (immagine
   pronta `scripts/assets/wordmark-dispensa.png`, Inter Tight 800 a −0.04em). Rigenerare con
   `node scripts/generate-icons.mjs` e `node scripts/generate-splash.mjs`.
@@ -99,17 +100,19 @@
    librerie di animazione per elementi ripetuti.
 2. Pannello prodotto in linea con salvataggio automatico (tempi, "Annulla", chiusura toccando
    fuori), unità che ripartono dal valore base, calendario scadenze dentro l'app.
-3. Spesa: tocco sul nome = modifica, cerchio = carrello, swipe ← elimina / → modifica (soglia 72
-   px), "Per reparto" nel giro del supermercato, "Nel carrello", barra "Sposta in dispensa".
+3. Spesa: tocco sul **nome** = modifica, tocco sul **resto della riga** (o sul cerchio) = carrello,
+   swipe ← elimina / → modifica (soglia 72 px), "Per reparto" nel giro del supermercato, "Nel
+   carrello", "Sposta in dispensa" + cestino tra la lista e "Nel carrello".
 4. Barra: Dispensa · Spesa · Ricette; Profilo dall'avatar in alto a sinistra; "+" su tutte le schede;
    pallini su Dispensa (scaduti) e Spesa (da prendere). `data-tour` di schede, avatar e "+" invariati.
 5. Tutorial: gli attributi `data-tour` restano su ogni elemento.
 6. Emoji delle categorie identiche tra Dispensa e Spesa; testi e microcopy invariati.
 7. Posizioni fisse calcolate dalle variabili della barra in `index.css` (`--nav-bottom`, `--nav-h`,
    `--sopra-nav`, `--banner-h`): "+", avviso, timer, spazio in fondo alle pagine.
-   La barra "Sposta in dispensa" + cestino della Spesa **non è fissa**: sta in fondo alla lista.
-   Spesa: tocco sul **nome** = modifica, tocco sul **resto della riga** = carrello; luce e
-   condivisione sulla riga dell'avatar (`#testata-azioni` nella testata di `Dispensa.jsx`). Se cambia la barra, si cambiano solo le variabili.
+   "Sposta in dispensa" + cestino della Spesa **non sono fissi**: stanno in flusso tra la lista e
+   "Nel carrello". Luce e condivisione stanno sulla riga dell'avatar (`ShoppingTab` le porta con
+   un portal in `#testata-azioni`, nella testata di `Dispensa.jsx`). Se cambia la barra, si
+   cambiano solo le variabili.
 8. Margini laterali 16 px; campi con testo ≥ 16 px (`.testo-grande`) per evitare lo zoom di iOS.
 
 ## Come verificare l'aspetto (pagina di prova)
@@ -120,3 +123,10 @@ proposte|ricetta|piano|accesso`, `menu=1`, `toast=1`, `foglio=profilo|impostazio
 privacy|svuota|aggiungi|revisione|cucinato|voce`. Misurare dal DOM a 393 e 375 px. Dopo una
 modifica a `tailwind.config.js` riavviare il server di sviluppo (le classi nuove non compaiono
 finché non riparte). Fotocamere, notifiche, gesti e app nativa si provano solo sul telefono.
+
+## Ancora da confermare sull'iPhone (08/10)
+
+- Barra di stato del colore della pagina con Profilo/Impostazioni aperti (stacco di 14 px, `b46e1da`).
+- Barra di stato giusta dopo il "+" e un cambio scheda (`add07d7`).
+- Icona nuova sulla Home (togliere e riaggiungere la PWA) e splash beige.
+- Trascinamento per chiudere i pannelli laterali (Profilo verso sinistra, Impostazioni verso destra).

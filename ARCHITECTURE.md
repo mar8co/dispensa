@@ -109,6 +109,7 @@ dispensa/
 │  │  ├─ cache.js           # cache locale (snapshot iniziale veloce)
 │  │  ├─ timers.js          # timer cottura + allarme
 │  │  ├─ colors.js          # palette + PAGE_COLOR per schermata + setPageColor
+│  │  ├─ outsideTap.js      # tocco fuori dal pannello di modifica: chiude e basta
 │  │  └─ tour.js            # stato + step del tutorial
 │  └─ components/           # presentazione (vedi §8)
 ├─ vite.config.js           # React + proxy dev /api/* + PWA/manifest
@@ -262,7 +263,7 @@ TestFlight).
 verifica la sessione) → se assente mostra `Auth.jsx` (magic-link / Google / Apple)
 → se presente monta `Dispensa key={user.id}` (rimonta pulito al cambio utente).
 
-**Aggiungere un prodotto** (FAB → AddMenu)
+**Aggiungere un prodotto** (FAB "+" → menu di `AddFab`)
 - *Manuale*: `ManualAddModal` → `usePantry` (correzione nome locale + categoria
   via `categorize`).
 - *Voce*: `VoiceAddModal` → trascrizione → `callClaude` estrae prodotti →
@@ -282,7 +283,7 @@ resto della riga = mette **nel carrello**
 (`checked=true`, reparto "Nel carrello") → "Sposta in dispensa"
 (`moveCheckedToPantry`, bridge in Dispensa) crea/merge i prodotti in dispensa e
 rimuove i barrati. Controlli "Per reparto" e "Seleziona tutto" in alto; "Sposta
-in dispensa" + cestino in fondo alla lista (non fissi) solo a carrello pieno; luce e
+in dispensa" + cestino tra la lista e "Nel carrello" (in flusso, una volta sola) solo a carrello non vuoto; luce e
 condivisione sulla riga dell'avatar (portal in `#testata-azioni`).
 
 **Ricette** (`RecipesTab`)
@@ -326,7 +327,13 @@ Dettagli e regole: `DESIGN-ATTUALE.md`. In breve:
 - **Niente tema scuro** (`color-scheme: light only`), niente `backdrop-filter`
   né sfumature; animazioni solo `transform`/`opacity`.
 - **Bottom sheet**: `Sheet.jsx` (Vaul), bianco di default; `panelClass` per il
-  colore del foglio (sabbia, rosa, giallo, nero per le fotocamere).
+  colore del foglio (beige, rosa, giallo, nero per le fotocamere). Con
+  `side="left"|"right"` diventa un **pannello laterale** alto quanto lo
+  schermo (Profilo blu da sinistra, Impostazioni arancio da destra), staccato
+  dal bordo alto di 14 px per non colorare la barra di stato di iOS.
+- **Tocco fuori dai pannelli di modifica in linea**: `src/lib/outsideTap.js`
+  (ascolto in cattura sul documento: chiude il pannello e ferma il tocco;
+  eccezioni avvisi e tutorial). Usato da `PantryTab` e `ShoppingTab`.
 
 ---
 
@@ -339,16 +346,18 @@ Dettagli e regole: `DESIGN-ATTUALE.md`. In breve:
 | `RecipesTab.jsx` | Scheda Ricette: generazione AI, occasioni, preferiti/cucinate, display "q.b." (`isQbIngredient`). |
 | `CookModal.jsx` | "Ho cucinato": 3 corsie di scalatura della dispensa. |
 | `CookingMode.jsx`, `StepTimer.jsx`, `TimerBar.jsx` | Modalità cucina passo-passo + timer. |
-| `Sheet.jsx` | Bottom sheet condiviso (Vaul) — base di TUTTI i fogli. |
+| `Sheet.jsx` | Bottom sheet condiviso (Vaul) — base di TUTTI i fogli; con `side` è un pannello laterale. |
+| `IconaChiudi.jsx` / `IconaEsci.jsx` | X ed "Esci" a tratto spesso (le stesse di Wishlist Viaggi). |
+| `logoPath.js` | Tracciato unico del logo (ricalco dell'immagine scelta dall'utente), usato da `Barattoli.jsx`; copia in `public/icon.svg`. |
 | `ProductFields.jsx` | Vista prodotto condivisa (nome/categoria/scadenza/quantità/unità), usata ovunque si mostri o modifichi un prodotto. Riga quantità `flex-nowrap` (stepper in pill); il box scadenza apre `ExpiryCalendar`. |
 | `ExpiryCalendar.jsx` | Calendario scadenza **in-app** (rimpiazza il date picker nativo iOS): niente preselezione, scorciatoie Oggi/Domani/Tra 3 gg, in-flow. Usato da `ProductFields`. |
 | `CameraScanShell.jsx` | Guscio comune alle due fotocamere (barcode/scontrino). |
 | `BarcodeScanModal.jsx` / `ReceiptScanModal.jsx` | Scanner (lazy-loaded). |
 | `ReviewScanModal.jsx` | Conferma prodotti rilevati prima dell'insert. Dal flusso voce (prop `onAddMore`) mostra "Aggiungi altri prodotti": ri-detta e accoda. |
 | `ManualAddModal.jsx` / `VoiceAddModal.jsx` | Aggiunta manuale / a voce. |
-| `AddFab.jsx` / `AddMenu.jsx` / `BottomNav.jsx` | "+" tondo bianco sulla stessa riga della barra, staccato (slot `addSlot`, tutte le schede) con le 4 azioni in colonna; barra in basso come Wishlist (Dispensa · Spesa · Ricette, pallini). Il Profilo si apre dall'avatar in alto a sinistra, le Impostazioni (con "Esci") dall'ingranaggio in alto a destra (in `Dispensa.jsx`); entrambi sono pannelli laterali da destra (`Sheet side`). |
+| `AddFab.jsx` / `BottomNav.jsx` | "+" tondo bianco sulla stessa riga della barra, staccato (slot `addSlot`, tutte le schede) con le 4 azioni in colonna; barra in basso come Wishlist (Dispensa · Spesa · Ricette, pallini). Il Profilo si apre dall'avatar in alto a sinistra, le Impostazioni (con "Esci") dall'ingranaggio in alto a destra (in `Dispensa.jsx`); sono pannelli laterali (`Sheet side`): Profilo da sinistra, Impostazioni da destra. |
 | `Barattoli.jsx` | Oggetto simbolo (logo: sacchetto della spesa + cappello da chef; tracciato in `logoPath.js`), stesso disegno dell'icona. |
-| `ProfileSheet.jsx` / `SettingsSheet.jsx` / `ProfileTab.jsx` / `PrivacySheet.jsx` | Profilo = "chi sei" (Nome/username, Dispensa familiare, Esigenze alimentari, Svuota/Esci) con ⚙️ in alto a destra che apre **SettingsSheet** = "come si comporta l'app" (Face ID, toggle notifiche push, tutorial, privacy/elimina account). |
+| `ProfileSheet.jsx` / `SettingsSheet.jsx` / `PrivacySheet.jsx` | Profilo = "chi sei" (Nome/username, Dispensa familiare, Esigenze alimentari, Svuota dispensa), pannello blu da sinistra. **SettingsSheet** = "come si comporta l'app" (Face ID, toggle notifiche push, tutorial, **Esci**, privacy/elimina account), pannello arancio da destra, aperto dall'ingranaggio della testata. |
 | `HouseholdSection.jsx` | **Dispensa condivisa** nel Profilo: membri (username + corona sull'owner + "Rimuovi"), inviti/entra-con-codice, switch nucleo attivo, esci, popup conferma espulsione. |
 | `Auth.jsx` | Login a pagina intera su beige (magic-link, Google, Apple, Face ID/passkey): barattoli, headline enorme "Cosa c'è in dispensa?" con ondina nera su "dispensa", sottotitolo con "Meno sprechi." su pillola verde, provider a pillola bianca. |
 | `SplashIntro.jsx` | **Intro splash** montata in `App.jsx`: riprende la splash nativa iOS (logo + "Dispensa" sul beige) e disegna la sottolineatura ondulata nera, poi sfuma nell'app. Animazione su tutte le piattaforme; rispetta `prefers-reduced-motion`. Stili `.splash-*` in `index.css`. |

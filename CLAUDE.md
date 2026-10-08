@@ -4,7 +4,10 @@
 > modificare qualsiasi cosa. Collegati: `HANDOFF.md` (stato e ripresa) ·
 > `ARCHITECTURE.md` (architettura) · `DESIGN-ATTUALE.md` (veste grafica
 > "manifesto svizzero", dal 2026-09-30). L'app si chiama **"Dispensa"** (ex "La Mia
-> Dispensa"); cartella/repo: `dispensa`.
+> Dispensa"); repo GitHub `mar8co/dispensa`, cartella locale
+> **`C:\Users\pasqu\Downloads\APP\dispensa`** (spostata lì a ottobre 2026: non è
+> più in `Downloads\dispensa`). Online: https://la-dispensa-omega.vercel.app
+> (Vercel pubblica da solo a ogni push su `main`).
 
 ---
 
@@ -83,9 +86,21 @@
   12px + zona sicura, `--nav-h` 52px, `--sopra-nav`, `--banner-h`): il "+"
   (su tutte le schede) sta sulla riga della barra (slot `addSlot` di `BottomNav`);
   l'**avviso** (`Toast.jsx`, prop `bottom` decisa in `Dispensa.jsx`) sta a
-  `--sopra-nav` su tutte le schede (la barra "Sposta in dispensa" della Spesa
-  sta in fondo alla lista, non è fissa); con la tastiera aperta va in alto. Se cambia la barra
-  si cambiano solo le variabili.
+  `--sopra-nav` su tutte le schede ("Sposta in dispensa" + cestino della Spesa
+  stanno tra la lista e "Nel carrello", in flusso, non fissi); con la tastiera
+  aperta va in alto. Se cambia la barra si cambiano solo le variabili.
+- **Fogli e pannelli**: dal basso i fogli (`Sheet`); di lato il Profilo (da
+  sinistra, blu) e le Impostazioni (da destra, arancio) con `Sheet side="left"|
+  "right"`. Velo e pannelli laterali restano **staccati dal bordo alto** (iOS
+  colora la barra di stato con ciò che tocca quel bordo): non rimetterli a
+  `top: 0`.
+- **Pannello di modifica in linea** (Dispensa, Spesa): il tocco fuori chiude e
+  non fa altro, tramite `src/lib/outsideTap.js`. Non rimettere un semplice
+  listener `pointerdown` che lascia passare il tocco.
+- **Logo**: un solo tracciato in `src/components/logoPath.js` (ricalco
+  dell'immagine scelta dall'utente), usato da `Barattoli.jsx` e copiato in
+  `public/icon.svg`. Dopo averlo cambiato: `node scripts/generate-icons.mjs` e
+  `node scripts/generate-splash.mjs`.
 - **Feedback immediato**: niente attese percepibili inutili (es. lo stepper
   committa subito quando arriva a 0, così il toast appare all'istante).
 - **Microcopy** caldo e diretto, in italiano, breve (sta in una riga su mobile).
@@ -154,7 +169,8 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
 
 ## Modalità di lavoro nelle future conversazioni
 
-1. Leggi `HANDOFF.md` + `ARCHITECTURE.md` prima di agire.
+1. Leggi `HANDOFF.md` + `ARCHITECTURE.md` prima di agire; per l'aspetto,
+   `DESIGN-ATTUALE.md`.
 2. Per modifiche UX: punta prima il file giusto (vedi tabella in HANDOFF), fai un
    cambiamento mirato, poi lint/test/build, poi commit+push automatico.
 3. Quando una scelta è davvero dell'utente (estetica/prodotto), proponi **opzioni
@@ -162,9 +178,37 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
 4. Se l'utente segnala un comportamento "di prima", **controlla la cronologia git**
    (`git log -S "<testo>"`, `git show <commit>^:<file>`) prima di reimplementare a
    memoria: spesso il comportamento esiste già in un commit precedente.
-5. Aggiorna questi tre documenti quando cambi qualcosa di strutturale.
+5. Aggiorna questi documenti (`CLAUDE.md`, `HANDOFF.md`, `ARCHITECTURE.md`,
+   `DESIGN-ATTUALE.md`) quando cambi qualcosa di strutturale o di aspetto.
+6. Con l'utente: italiano semplice e breve, niente gergo. Dopo ogni modifica
+   dire cosa è stato verificato e **cosa non si è potuto provare sull'iPhone**;
+   se serve reinstallare la PWA, ricordarlo (i dati stanno sul suo account).
+7. Per controllare l'aspetto: `/anteprima.html` a 393 px, misure dal DOM più
+   screenshot. Se lo screenshot non riesce (finestra in secondo piano), dirlo.
 
 ---
+
+## Stato al 2026-10-08 (da qui riparte la prossima chat)
+
+- **Tutto pubblicato su `main`** (ultimo commit di codice `eac8dcb`), niente
+  lavori a metà, nessun ramo aperto.
+- **Veste attuale** (dettagli in `DESIGN-ATTUALE.md`): Dispensa e marchio beige
+  `#dcceb3`, Spesa bianca, Ricette verde; avatar blu in alto a sinistra →
+  Profilo (pannello blu da sinistra); ingranaggio in alto a destra →
+  Impostazioni (pannello arancio da destra, con "Esci"); barra nera con
+  Dispensa · Spesa · Ricette e "+" bianco su tutte le schede; logo nuovo
+  (sacchetto + cappello da chef).
+- **Da far confermare all'utente sull'iPhone** (dal PC non si vede):
+  1. con Profilo o Impostazioni aperti, la barra di stato deve restare del
+     colore della pagina. Due tentativi fatti (`30bc173`, poi `b46e1da` con lo
+     stacco di 14 px): l'utente aveva detto che il primo funzionava "solo
+     raramente", il secondo non ha ancora avuto risposta. Se non va, chiedere
+     una foto e se usa l'app dall'icona sulla Home o da Safari;
+  2. dopo il "+" e un cambio scheda la barra di stato deve prendere il colore
+     della scheda nuova (`add07d7`);
+  3. icona nuova sulla Home (va tolta e riaggiunta la PWA) e splash beige.
+- **Prossimo lavoro grande**: resta la Fase 3 (prodotti su App Store Connect,
+  firma, TestFlight): vedi `HANDOFF.md`.
 
 ## Cosa una nuova istanza di Claude deve sapere subito
 
