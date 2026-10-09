@@ -196,10 +196,10 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
     persistUpdate(id, { checked });
     // Avviso breve (2,5 s), pillola gialla, nei due versi: "Preso" quando va
-    // nel carrello, "In lista" quando torna indietro. "Annulla" rimette
+    // nel carrello, "Rimesso in lista" quando torna indietro. "Annulla" rimette
     // com'era. (Tolto il 09/10, rimesso l'11/10 ora che gli avvisi stanno in alto.)
     const it = shopping.find((x) => x.id === id);
-    if (it) showToast(<>{checked ? "Preso" : "In lista"}: <strong>{it.name}</strong></>, () => {
+    if (it) showToast(<>{checked ? "Preso" : "Rimesso in lista"}: <strong>{it.name}</strong></>, () => {
       setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked: !checked } : x)));
       persistUpdate(id, { checked: !checked });
       dismissToast();
