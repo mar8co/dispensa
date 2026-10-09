@@ -97,6 +97,17 @@ export default function Sheet({ onClose, locked = false, side = false, panelClas
             toccano quel bordo: staccandoli, resta il colore della pagina.
             (Nell'app installata la pagina comincia già sotto la barra di
             stato, quindi la zona sicura lì vale 0: da sola non bastava.) */}
+        {/* Sulla pagina BIANCA (Spesa) lo stacco da solo non bastava: senza un
+            colore "vero" in cima, iOS andava a prendere quello del pannello.
+            Questa fascia fissa, larga quanto lo schermo e del colore della
+            pagina, riempie lo stacco: è lei l'elemento che iOS trova sul bordo. */}
+        {side && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none fixed inset-x-0 top-0 z-50 bg-sfondo"
+            style={{ height: STACCO }}
+          />
+        )}
         <Drawer.Overlay
           className={`fixed inset-x-0 bottom-0 z-50 bg-black/45 ${side ? "" : "top-0"}`}
           style={side ? { top: STACCO } : undefined}

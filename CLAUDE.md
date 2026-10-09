@@ -198,15 +198,13 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
   Impostazioni (pannello arancio da destra, con "Esci"); barra nera con
   Dispensa · Spesa · Ricette e "+" bianco su tutte le schede; logo nuovo
   (sacchetto + cappello da chef).
-- **Da far confermare all'utente sull'iPhone** (dal PC non si vede):
-  1. con Profilo o Impostazioni aperti, la barra di stato deve restare del
-     colore della pagina. Due tentativi fatti (`30bc173`, poi `b46e1da` con lo
-     stacco di 14 px): l'utente aveva detto che il primo funzionava "solo
-     raramente", il secondo non ha ancora avuto risposta. Se non va, chiedere
-     una foto e se usa l'app dall'icona sulla Home o da Safari;
-  2. dopo il "+" e un cambio scheda la barra di stato deve prendere il colore
-     della scheda nuova (`add07d7`);
-  3. icona nuova sulla Home (va tolta e riaggiunta la PWA) e splash beige.
+- **Confermato dall'utente sull'iPhone (09/10)**: barra di stato giusta dopo
+  il "+", icona nuova sulla Home, barra di stato del colore della pagina con
+  Profilo/Impostazioni aperti su Dispensa e Ricette.
+- **Ancora da confermare**: la stessa cosa sulla **Spesa (pagina bianca)**, dove
+  la barra prendeva ancora il colore del menu. Tentativo del 09/10: fascia
+  fissa del colore della pagina nello stacco in cima (`Sheet.jsx`). Se non va,
+  prossima idea: un bianco non puro per la Spesa (es. `#fffffe`).
 - **Prossimo lavoro grande**: resta la Fase 3 (prodotti su App Store Connect,
   firma, TestFlight): vedi `HANDOFF.md`.
 

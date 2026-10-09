@@ -65,7 +65,8 @@
   nient'altro** (`lib/outsideTap.js`; eccezioni: avvisi e tutorial).
 - **Pannelli laterali e barra di stato**: velo e pannello restano staccati dal bordo alto
   (14 px, o la zona sicura se maggiore): iOS colora la barra di stato con gli elementi fissi che
-  toccano quel bordo. Non rimetterli a `top: 0`.
+  toccano quel bordo. Non rimetterli a `top: 0`. Nello stacco c'è una fascia fissa del colore della
+  pagina (`bg-sfondo`): serve sulla Spesa bianca, dove lo stacco da solo non bastava (09/10).
 - **Velo del "+"**: esiste nel DOM solo a menu aperto (se resta, iOS tiene grigia la barra di stato).
 - **Titolo Dispensa**: solo "Hai fame?" (il "Ciao 👋" è stato tolto il 01/10).
 - **Spesa, "Sposta in dispensa" + cestino**: una volta sola, tra la lista da prendere e "Nel
@@ -126,7 +127,7 @@ finché non riparte). Fotocamere, notifiche, gesti e app nativa si provano solo 
 
 ## Ancora da confermare sull'iPhone (08/10)
 
-- Barra di stato del colore della pagina con Profilo/Impostazioni aperti (stacco di 14 px, `b46e1da`).
-- Barra di stato giusta dopo il "+" e un cambio scheda (`add07d7`).
-- Icona nuova sulla Home (togliere e riaggiungere la PWA) e splash beige.
+- Barra di stato con Profilo/Impostazioni aperti: **confermata** su Dispensa e Ricette (09/10); sulla
+  **Spesa (bianca)** prendeva ancora il colore del menu → aggiunta la fascia fissa, da riprovare.
+- Confermati dall'utente il 09/10: barra di stato dopo il "+" e icona nuova sulla Home.
 - Trascinamento per chiudere i pannelli laterali (Profilo verso sinistra, Impostazioni verso destra).
