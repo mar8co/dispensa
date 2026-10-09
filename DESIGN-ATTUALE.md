@@ -97,15 +97,24 @@
 - **Login**: la pillola "Meno sprechi." resta **verde** `#22b35e` (scelta dell'utente del 09/10, anche con le Ricette arancio); i provider sono due
   (Apple, Google), più il link via email.
 - **"+"**: dal basso verso l'alto A mano, Voce, Barcode, Foto (09/10).
-- **Ricette, "Puoi farle adesso"**: elenco a righe sottili sopra le occasioni (titolo, tempo,
-  "hai tutto" / "manca: …", cartellino nero "usa ciò che scade"); sotto la ricerca una riga dice
-  quante richieste AI restano oggi, o che sei offline (le occasioni si attenuano).
-- **Ricette nel piano gratuito (09/10)**: il campo "Cosa ti va?" è lo stesso di Premium (scintille), ma
-  "Vai" ha il lucchetto e apre il paywall: la ricerca la fa l'AI, incrociando richiesta e dispensa. Sotto,
-  "Puoi farle adesso": al massimo 5 ricette a cui non manca nulla; se non ce n'è nessuna, le 2 più vicine col
-  titolo "Ti manca poco" e la riga "ti manca: " seguita dai nomi degli ingredienti. Mai l'elenco intero del ricettario. Le occasioni
-  restano visibili sotto "Idee su misura con l'AI" col cartellino nero "Premium"; le pillole di contesto solo
-  con Premium.
+- **Ricette, "Puoi farle con quello che hai" (09/10)**: SOLO nel piano gratuito (con Premium sparisce:
+  c'è l'AI). Elenco a righe sottili sopra le occasioni, col cartellino "Gratis" a destra del titolo:
+  al massimo 5 ricette a cui non manca nulla (titolo, tempo, "hai tutto", cartellino nero "usa ciò che
+  scade"); se non ce n'è nessuna, le 2 più vicine col titolo "Ti manca poco" e la riga "ti manca: " seguita
+  dai nomi. Ogni riga apre la ricetta completa. Mai l'elenco intero del ricettario.
+- **Ricette nel piano gratuito**: il campo "Cosa ti va?" è lo stesso di Premium (scintille), ma "Vai" ha il
+  lucchetto e apre il paywall; le occasioni restano visibili sotto "Idee su misura con l'AI" col cartellino
+  nero "Premium"; "Aggiungi al piano" nella ricetta ha il lucchetto. Le pillole di contesto solo con Premium.
+- **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
+  c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
+- **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un
+  giorno per riga con un filo chiaro tra l'uno e l'altro ("Oggi", "Domani", poi il giorno per esteso, con la
+  data piccola accanto); a destra le pillole Pranzo (sole) e Cena (luna), alte 44 px. Un pasto già
+  occupato è una pillola piena chiara con la spunta e il nome del piatto sotto il giorno; toccarla chiede
+  conferma in linea ("La sostituisco?" · Annulla / Sostituisci giallo). Se lì c'è già questa ricetta la
+  pillola è spenta.
+- **Fili nei fogli neri**: `.foglio-nero .divide-riga …` in `index.css` li rende chiari (crema al 22%);
+  prima restavano neri su nero.
 
 ## Movimento
 

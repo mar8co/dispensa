@@ -1054,7 +1054,10 @@ export default function Dispensa({ session }) {
       >
         {/* Testata, come in Wishlist: l'avatar del Profilo in alto a sinistra
             (prima era una voce della barra in basso) e, accanto, "Offline"
-            quando manca la rete. */}
+            quando manca la rete. Nelle SOTTO-PAGINE delle Ricette (proposte di
+            un'occasione, ricetta aperta) la testata non c'è: lì in alto resta
+            solo la riga con la freccia per tornare indietro (09/10). */}
+        {!(view === "ricette" && (mode || recipe || loadingRecipe)) && (
         <header className="mb-3.5 flex items-center gap-2.5">
           <button
             onClick={() => { bumpModal("profile"); setProfileOpen(true); }}
@@ -1069,6 +1072,7 @@ export default function Dispensa({ session }) {
               nel Profilo: l'ingranaggio qui non c'è più (09/10). */}
           <div id="testata-azioni" className="ml-auto flex gap-2" />
         </header>
+        )}
         {view === "dispensa" && (
           <PantryTab
             shared={sharedHousehold}

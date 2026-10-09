@@ -150,6 +150,7 @@ export default function Anteprima() {
         className="mx-auto max-w-md px-4 pt-7"
         style={{ paddingBottom: "var(--sopra-nav)" }}
       >
+        {!(view === "ricette" && (mode || recipe)) && (
         <header className="mb-3.5 flex items-center gap-2.5">
           <button
             onClick={() => setFoglio("profilo")}
@@ -160,6 +161,7 @@ export default function Anteprima() {
           </button>
           <div id="testata-azioni" className="ml-auto flex gap-2" />
         </header>
+        )}
         {view === "dispensa" && (
           <PantryTab
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
@@ -212,6 +214,11 @@ export default function Anteprima() {
             plan={{
               meals: [], weekStart: mondayOf(new Date()), shiftWeek: () => {}, loadingMeals: false,
               planMeal: () => {}, removeMeal: () => {}, markMealCooked: () => {}, setMealServings: () => {}, onCookMeal: () => {},
+              // "Aggiungi al piano": domani a cena c'è già un piatto, dopodomani a pranzo questa ricetta.
+              loadRange: async () => [
+                { id: "m1", date: inDays(1), slot: "cena", title: "Pollo al limone" },
+                { id: "m2", date: inDays(2), slot: "pranzo", title: "Pasta zucchine e menta" },
+              ],
             }}
             startOnPlan={PARAM_VISTA === "piano"}
             isPro={q.get("gratis") !== "1"}

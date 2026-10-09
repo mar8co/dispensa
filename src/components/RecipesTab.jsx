@@ -14,40 +14,14 @@ import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
 import { rankCookable } from "../lib/suggest.js";
-import { FOGLIO_NERO } from "../lib/colors.js";
 import BASE_RECIPES from "../data/ricetteBase.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
 import StepTimer from "./StepTimer.jsx";
 import CookingMode from "./CookingMode.jsx";
 import PlanWeek from "./PlanWeek.jsx";
-import { isoDate, addDays } from "../hooks/useMealPlan.jsx";
-
-// Mini-foglio "Aggiungi al piano" dal dettaglio ricetta: scegli uno dei
-// prossimi 7 giorni e lo slot (pranzo/cena). La logica resta nel chiamante.
-function PlanDaySheet({ onChoose, onClose }) {
-  const days = [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(new Date(), i));
-  return (
-    <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
-      {(close) => (
-        <div className={`px-[18px] pb-4 pt-1 ${FOGLIO_NERO}`}>
-          <h3 className="titolo">Aggiungi al piano</h3>
-          <ul className="mt-3 divide-y divide-riga border-t-[1.5px] border-ink">
-            {days.map((d, i) => (
-              <li key={i} className="flex items-center gap-2 py-2">
-                <span className="min-w-0 flex-1 text-[1.05rem] font-bold capitalize tracking-[-0.02em] text-ink">
-                  {i === 0 ? "Oggi" : d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" })}
-                </span>
-                <Button variant="secondary" size="sm" onClick={() => { close(); onChoose(d, "pranzo"); }}>Pranzo</Button>
-                <Button variant="secondary" size="sm" onClick={() => { close(); onChoose(d, "cena"); }}>Cena</Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </Sheet>
-  );
-}
+import PlanDaySheet from "./PlanDaySheet.jsx";
+import { isoDate } from "../hooks/useMealPlan.jsx";
 
 // Foto con caricamento morbido: placeholder neutro sotto, fade-in quando pronta.
 function FadeImg({ src, className = "" }) {
@@ -131,9 +105,10 @@ export default function RecipesTab({
   }, [recipe?.title]);
 
   // Dal dettaglio ricetta: mette QUESTA ricetta nel piano (giorno + slot).
-  function planCurrentRecipe(day, slot) {
+  // `existingId`: il piatto già pianificato in quel pasto, da sostituire.
+  function planCurrentRecipe(day, slot, existingId = null) {
     if (!plan || !recipe) return;
-    plan.planMeal(isoDate(day), slot, { title: recipe.title, data: recipe });
+    plan.planMeal(isoDate(day), slot, { title: recipe.title, data: recipe }, existingId);
     const label = day.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" });
     setPlannedMsg(`Nel piano: ${label} · ${slot} ✓`);
   }
@@ -311,15 +286,18 @@ export default function RecipesTab({
             </p>
           )}
 
-              {/* Dal ricettario, senza AI: al massimo 5 ricette, solo quelle che
-                  si possono fare con la dispensa di ora. Se non ce n'è nessuna
-                  se ne mostrano DUE, quelle a cui manca meno. */}
-              {cookable.length > 0 && (
+              {/* SOLO piano gratuito (con Premium c'è l'AI e la sezione sparisce):
+                  dal ricettario, senza AI, al massimo 5 ricette che si possono
+                  fare con la dispensa di ora. Se non ce n'è nessuna se ne
+                  mostrano DUE, quelle a cui manca meno. Ogni riga apre la
+                  ricetta completa, col procedimento, come le altre. */}
+              {!isPro && cookable.length > 0 && (
                 <section className="mt-6">
-                  <div className="flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
-                    <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">{doable.length ? "Puoi farle adesso" : "Ti manca poco"}</h2>
-                    <span className="micro">{doable.length ? "con quello che hai" : "le più vicine a quello che hai"}</span>
+                  <div className="flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px]">
+                    <h2 className="min-w-0 text-[1.3rem] font-extrabold leading-[1.05] tracking-[-0.04em] text-ink">{doable.length ? "Puoi farle con quello che hai" : "Ti manca poco"}</h2>
+                    <span className="cartellino ml-auto">Gratis</span>
                   </div>
+                  {!doable.length && <p className="micro mt-2">Le più vicine a quello che hai in dispensa.</p>}
                   <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
                 </section>
               )}
@@ -630,8 +608,11 @@ export default function RecipesTab({
             plannedMsg ? (
               <p className="mt-3 text-center text-[0.86rem] font-semibold text-ink">{plannedMsg}</p>
             ) : (
-              <Button variant="secondary" size="sm" full className="mt-3" onClick={() => setPlanSheet(true)}>
-                <CalendarPlus className="h-3.5 w-3.5" /> Aggiungi al piano
+              // Il Piano Alimentare è Premium: nel piano gratuito il pulsante
+              // ha il lucchetto e apre il paywall (prima aggiungeva a un piano
+              // che poi non si poteva aprire).
+              <Button variant="secondary" size="sm" full className="mt-3" onClick={() => (isPro ? setPlanSheet(true) : onNeedPro?.())}>
+                <CalendarPlus className="h-3.5 w-3.5" /> Aggiungi al piano {!isPro && <Lock className="h-3.5 w-3.5" />}
               </Button>
             )
           )}
@@ -678,6 +659,8 @@ export default function RecipesTab({
 
           {planSheet && (
             <PlanDaySheet
+              recipeTitle={recipe.title}
+              loadRange={plan?.loadRange}
               onChoose={planCurrentRecipe}
               onClose={() => setPlanSheet(false)}
             />

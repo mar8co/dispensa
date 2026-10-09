@@ -240,6 +240,13 @@ svg.lucide {
   }
 }
 
+/* Fogli neri (vedi FOGLIO_NERO in lib/colors.js): i fili tra le righe diventano
+   chiari. Stessa forma del selettore di Tailwind per `divide-*`, più la classe
+   del foglio: così vince sempre. */
+.foglio-nero .divide-riga > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(243 241 236 / 0.22);
+}
+
 /* Transizioni di vista (cambio scheda / dettaglio ricetta): dissolvenza breve. */
 ::view-transition-old(root),
 ::view-transition-new(root) {

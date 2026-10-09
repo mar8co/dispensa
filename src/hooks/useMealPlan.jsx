@@ -58,10 +58,14 @@ export function useMealPlan({ ready, householdId }) {
 
   // Pianifica (o sostituisce) il piatto di uno slot. `data` è la ricetta
   // completa (formato saved_recipes.data) oppure null per un piatto libero.
-  async function planMeal(date, slot, { title, data = null }) {
+  // `existingId`: il chiamante sa già che lo slot è occupato anche se quel
+  // giorno non è nella settimana caricata qui ("Aggiungi al piano" guarda i
+  // prossimi 7 giorni, che possono cadere nella settimana dopo): senza, si
+  // tentava un insert che il DB rifiuta (un solo piatto per giorno+pasto).
+  async function planMeal(date, slot, { title, data = null }, existingId = null) {
     const clean = String(title || "").trim();
     if (!clean) return;
-    const existing = meals.find((m) => m.date === date && m.slot === slot);
+    const existing = meals.find((m) => m.date === date && m.slot === slot) || (existingId ? { id: existingId } : null);
     if (existing) {
       const fields = { title: clean, data, cooked_at: null };
       setMeals((prev) => prev.map((m) => (m.id === existing.id ? { ...m, ...fields } : m)));

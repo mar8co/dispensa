@@ -128,7 +128,7 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
 
 **Prima il locale, poi l'AI** (dal 09/10): l'AI è l'ultima risorsa, non la
 prima. Barcode e voce passano da `src/lib/parse.js` (regole + catalogo) e
-chiamano l'AI solo per ciò che resta non riconosciuto; "Puoi farle adesso"
+chiamano l'AI solo per ciò che resta non riconosciuto; "Puoi farle con quello che hai"
 (`src/lib/suggest.js` + `src/data/ricetteBase.js`) propone ricette senza AI; le
 ricette generate restano in cache sul dispositivo; il limite giornaliero conta
 solo le risposte riuscite e il client mostra quante ne restano
@@ -255,7 +255,7 @@ una regola locale basta.
   lo **schema concreto va proposto all'utente prima**.
   Le scelte UX (mockup con opzioni) precedono sempre il codice.
   Free vs Premium (aggiornato il 09/10): free = dispensa+spesa+ricette **dal
-  ricettario** (il proprio + `data/ricetteBase.js`, solo "Puoi farle adesso": max 5 fattibili o le 2 più vicine; niente AI
+  ricettario** (il proprio + `data/ricetteBase.js`, solo "Puoi farle con quello che hai" (sezione visibile SOLO nel gratuito): max 5 fattibili o le 2 più vicine; niente AI
   per le ricette), senza pubblicità; foto/barcode/voce usano l'AI solo se serve,
   entro il tetto giornaliero. Le **idee e le ricette su misura con l'AI sono
   solo Premium** (`kind: "recipe"`, verificato in `server/claude.js`). **Premium (1,99€/mese · 14,99€/anno, 7gg prova)
