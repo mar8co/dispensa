@@ -18,6 +18,7 @@ import webpush from "web-push";
 import { apnsConfigured, createApnsSender, isDeadToken } from "./apns.js";
 import { mainIngredients } from "../src/lib/suggest.js";
 import { findMatch, norm } from "../src/lib/pantry.js";
+import { withArticle, grammar } from "../src/lib/italiano.js";
 
 // Momenti canonici, in MINUTI dall'inizio del giorno, ORA DI ROMA.
 const SLOTS = {
@@ -56,28 +57,6 @@ function romeDateISO(now, addDays = 0) {
   const d = new Date(`${parts}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + addDays);
   return d.toISOString().slice(0, 10);
-}
-
-// Articolo determinativo "best effort" per il nome di un prodotto (usato solo
-// nel titolo con UN prodotto: "Il Latte sta per scadere"). L'italiano non si
-// indovina sempre dal nome: euristiche + eccezioni per i cibi più comuni; nel
-// dubbio "Il". Sbagliare articolo è peggio che ometterlo, ma i casi coperti
-// qui sono la stragrande maggioranza di una dispensa reale.
-const ART_LE = new Set(["uova", "patate", "zucchine", "carote", "mele", "pere", "banane", "fragole", "cipolle", "melanzane", "olive", "noci", "verdure", "acciughe", "vongole", "cozze", "lenticchie", "arance", "albicocche", "uvette", "erbe"]);
-const ART_LA = new Set(["carne"]);
-const ART_I = new Set(["biscotti", "pomodori", "fagioli", "ceci", "piselli", "funghi", "peperoni", "cetrioli", "limoni", "gamberi", "wurstel"]);
-const ART_GLI = new Set(["spinaci", "gnocchi", "asparagi"]);
-function articleFor(name) {
-  const w = String(name || "").trim().toLowerCase().split(/\s+/)[0];
-  if (!w) return "";
-  if (ART_LE.has(w)) return "Le ";
-  if (ART_LA.has(w)) return "La ";
-  if (ART_I.has(w)) return "I ";
-  if (ART_GLI.has(w)) return "Gli ";
-  if (/^[aeiou]/.test(w)) return "L'";
-  if (/^(s[bcdfglmnpqrtvz]|z|gn|ps|pn|x|y)/.test(w)) return "Lo ";
-  if (/a$/.test(w)) return "La ";
-  return "Il ";
 }
 
 // Copy delle notifiche (scritto dall'utente, 2026-07-19, rifinito 2026-07-20:
@@ -126,7 +105,7 @@ function buildPayload(slot, expiringNames, meal = null) {
   if (uniq.length === 1) {
     return {
       ...cena,
-      title: `${articleFor(uniq[0])}${uniq[0]} sta per scadere 🚨`,
+      title: `${withArticle(uniq[0])} ${grammar(uniq[0]).plural ? "stanno" : "sta"} per scadere 🚨`,
       body: "Ti faccio vedere cosa possiamo cucinarci",
     };
   }

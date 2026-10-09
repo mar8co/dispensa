@@ -178,8 +178,8 @@ function MealSlotSheet({
 
 export default function PlanWeek({
   meals, weekStart, shiftWeek, loadingMeals,
-  planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal,
-  savedRecipes, hasIngredient, onAddMissing, onGoIdeas,
+  planMeal, removeMeal, markMealCooked, onCookMeal,
+  savedRecipes, onGoIdeas,
   onFillWeek, fillingWeek = false, onConnectCalendar, onOpenMeal,
 }) {
   const [sheet, setSheet] = useState(null); // { date: Date, slot: "pranzo"|"cena" }
@@ -339,12 +339,9 @@ export default function PlanWeek({
           slot={sheet.slot}
           meal={sheetMeal}
           savedRecipes={savedRecipes}
-          hasIngredient={hasIngredient}
           onPick={(v) => planMeal(isoDate(sheet.date), sheet.slot, v)}
           onCook={onCookMeal}
           onMarkCooked={(meal) => markMealCooked(meal.id)}
-          onChangeServings={(n) => sheetMeal && setMealServings(sheetMeal.id, n)}
-          onAddMissing={onAddMissing}
           onRemove={(meal) => removeMeal(meal.id)}
           onGoIdeas={onGoIdeas}
           onClose={() => setSheet(null)}

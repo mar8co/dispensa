@@ -21,7 +21,7 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (159/159), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
+   (164/164), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
    `suggest.js`, aggiorna i rispettivi test (`*.test.js` accanto al file).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
@@ -299,6 +299,13 @@ una regola locale basta.
   altrimenti "com'era la cena?". In più `server/notify.js` + `api/notify.js`:
   "X ha aggiunto alla lista" agli altri membri della dispensa condivisa (il
   client raggruppa le aggiunte per 12 s, `lib/listNotice.js`).
+  **Giro del 10/10 sera**: toccando un'occasione compaiono SUBITO fino a 5
+  ricette del ricettario adatte (`lib/occasions.js`, senza AI), le idee dell'AI
+  arrivano sotto; "Finito" → avviso "è in lista · Non serve" → se premuto,
+  secondo avviso "eliminato · Annulla" che rimette il prodotto in dispensa; il
+  riquadro "Oggi" tiene i pasti di oggi anche sfogliando altre settimane;
+  articoli e concordanze in `lib/italiano.js` (usato anche da `server/push.js`).
+  Pulizia: via `fetchIsPro`, le prop morte di `PlanWeek`/`ReviewScanModal`.
   **Restano, per scelta**: filtri di ordinamento, "Cucina con questo
   prodotto", Barcode, "Seleziona tutto", foto dei piatti, Piano dentro Ricette.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con

@@ -18,7 +18,7 @@ import { apiUrl } from "./lib/api.js";
 import { supabase } from "./lib/supabase.js";
 import {
   fetchPantry, updateItem,
-  deleteItems,
+  deleteItems, insertMany,
   fetchSettings, saveSettings,
   fetchShopping, deleteShoppingItems,
   fetchSavedRecipes,
@@ -30,7 +30,7 @@ import { stopAlarm } from "./lib/timers.js";
 import { loadCache, saveCache } from "./lib/cache.js";
 import { sortedNames } from "./lib/history.js";
 import { enqueue, flush } from "./lib/outbox.js";
-import { applyOp } from "./lib/sync.js";
+import { applyOp, newLocalId } from "./lib/sync.js";
 
 import PantryTab from "./components/PantryTab.jsx";
 // Schede non di default in lazy: alleggeriscono il bundle iniziale (caricano
@@ -54,7 +54,7 @@ import { useTimersTicker } from "./hooks/useTimersTicker.js";
 import { useRecipes } from "./hooks/useRecipes.jsx";
 import { useShopping } from "./hooks/useShopping.jsx";
 import { usePantry } from "./hooks/usePantry.jsx";
-import { useMealPlan, isoDate, addDays } from "./hooks/useMealPlan.jsx";
+import { useMealPlan, isoDate, addDays, mondayOf } from "./hooks/useMealPlan.jsx";
 import { usePageColor } from "./hooks/usePageColor.js";
 import { pageColorFor } from "./lib/colors.js";
 import Barattoli from "./components/Barattoli.jsx";
@@ -234,7 +234,7 @@ export default function Dispensa({ session }) {
   // CookModal ("Ho cucinato" dal piano) è più sotto: cookMealFromPlan.
   const {
     weekStart, shiftWeek, meals, setMeals, loadingMeals,
-    planMeal, removeMeal, markMealCooked, setMealServings,
+    planMeal, removeMeal, markMealCooked,
   } = useMealPlan({ ready: loaded, householdId: activeHouseholdId });
 
   // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
@@ -794,9 +794,17 @@ export default function Dispensa({ session }) {
     changeView("ricette");
   }
   // Riquadro "Oggi": i pasti di oggi non ancora cucinati (pranzo e cena).
-  const todayMeals = (() => {
+  // `meals` contiene solo la settimana che si sta SFOGLIANDO nel calendario:
+  // i pasti di oggi si tengono da parte ogni volta che quella settimana è la
+  // corrente, così sfogliando avanti non spariscono dal riquadro.
+  const [todayPlanned, setTodayPlanned] = useState([]);
+  useEffect(() => {
+    if (isoDate(weekStart) !== isoDate(mondayOf(new Date()))) return;
     const today = isoDate(new Date());
-    const open = meals.filter((m) => m.date === today && !m.cooked_at);
+    setTodayPlanned(meals.filter((m) => m.date === today));
+  }, [meals, weekStart]);
+  const todayMeals = (() => {
+    const open = todayPlanned.filter((m) => !m.cooked_at);
     const lunch = open.find((m) => m.slot === "pranzo");
     const dinner = open.find((m) => m.slot === "cena");
     return [
@@ -1079,14 +1087,27 @@ export default function Dispensa({ session }) {
       cookMealRef.current = null;
     }
     // I prodotti finiti vanno da soli in lista della spesa; "Non serve" li
-    // toglie dalla lista (restano finiti), come per "Finito" in dispensa.
+    // toglie dalla lista e, come per "Finito" in dispensa, apre un secondo
+    // avviso con "Annulla" che li rimette in dispensa.
     if (out.length) {
+      const gone = items.filter((x) => removals.has(x.id));
       const res = await addToShoppingMerged(out.map((r) => ({ name: r.name, qty: "1" })));
-      showToast(out.length === 1
+      const uno = out.length === 1;
+      showToast(uno
         ? <><strong>{out[0].name}</strong> finito: è in lista</>
         : `${out.length} prodotti finiti: sono in lista`,
-      () => { res?.undo?.(); dismissToast(); },
-      out.length === 1 ? "Non serve" : "Non servono");
+      () => {
+        res?.undo?.();
+        showToast(uno ? <><strong>{out[0].name}</strong> eliminato</> : `${out.length} prodotti eliminati`, () => {
+          const rows = gone.map((x) => ({ id: newLocalId(), name: x.name, qty: x.qty, category: x.category, expiry: x.expiry }));
+          setItems((prev) => [...prev, ...rows.map((r) => ({ ...r, created_at: new Date().toISOString() }))]);
+          insertMany(rows).catch(() => {
+            for (const r of rows) enqueue(uid, { table: "pantry", type: "insert", id: r.id, row: r });
+          });
+          dismissToast();
+        });
+      },
+      uno ? "Non serve" : "Non servono");
     }
   }
 
@@ -1158,9 +1179,11 @@ export default function Dispensa({ session }) {
             onRetry={retryLast}
             onCustomAsk={askCustom}
             recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
-            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek, onConnectCalendar: connectCalendar, onOpenMeal: openPlannedMeal }}
+            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek, onConnectCalendar: connectCalendar, onOpenMeal: openPlannedMeal }}
             startOnPlan={planFirst}
             online={online}
+            foodPrefs={foodPrefs}
+            expiring={expiringItems.filter((x) => !isOut(x))}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
             onDeleteSaved={removeSavedRecipe}
