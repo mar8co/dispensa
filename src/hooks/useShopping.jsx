@@ -195,7 +195,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     // avvisi stanno in alto.
     if (checked) {
       const it = shopping.find((x) => x.id === id);
-      if (it) showToast(<><strong>{it.name}</strong> spostato nel carrello</>, () => {
+      if (it) showToast(<>Preso: <strong>{it.name}</strong></>, () => {
         setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked: false } : x)));
         persistUpdate(id, { checked: false });
         dismissToast();
