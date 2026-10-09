@@ -1179,10 +1179,10 @@ export default function Dispensa({ session }) {
       </div>
 
       {/* Timer attivi visibili da ogni scheda */}
-      {/* Timer attivi: sopra il posto degli avvisi. */}
+      {/* Timer attivi: appena sopra la barra (gli avvisi ora stanno in alto). */}
       <TimerBar
         onTap={() => changeView("ricette")}
-        bottom="calc(var(--sopra-nav) + 56px)"
+        bottom="var(--sopra-nav)"
       />
 
       {/* Velo del menù "+": a livello di pagina (NON dentro la navbar, che ha
@@ -1360,8 +1360,8 @@ export default function Dispensa({ session }) {
         />
       )}
 
-      {/* Avviso: appena sopra la barra, stessa altezza su tutte le schede. */}
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} tone={toast.actionTone} bottom="var(--sopra-nav)" />}
+      {/* Avviso: in alto, nello spazio vuoto della testata (vedi Toast.jsx). */}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} tone={toast.actionTone} />}
     </div>
   );
 }

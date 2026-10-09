@@ -193,11 +193,19 @@ export function usePantry({
     });
   }
 
-  // Salvataggio automatico dal pannello prodotto: aggiorna subito, in
-  // silenzio (l'avviso "Modifica salvata" a ogni ritocco è stato tolto il 09/10).
+  // Salvataggio automatico dal pannello prodotto: aggiorna subito e mostra
+  // l'avviso "Modifica salvata" con Annulla (rimesso l'11/10, ora che gli
+  // avvisi stanno in alto e non danno fastidio). `it` è il prodotto com'era
+  // all'apertura del pannello: "Annulla" rimette quei valori.
   async function autoSaveItem(it, fields) {
+    const restore = Object.fromEntries(Object.keys(fields).map((k) => [k, it[k] ?? null]));
     setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...fields } : x)));
     persistUpdate(it.id, fields);
+    showToast(<strong>Modifica salvata</strong>, () => {
+      setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...restore } : x)));
+      persistUpdate(it.id, restore);
+      dismissToast();
+    }, "Annulla", undefined, 3500);
   }
 
   // "Finito" (riga scorsa verso sinistra, pillola "Finito" del pannello): il

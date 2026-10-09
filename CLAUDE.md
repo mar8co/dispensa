@@ -94,10 +94,12 @@
 - **Posizioni sopra la barra** (variabili in `src/index.css`: `--nav-bottom`
   12px + zona sicura, `--nav-h` 52px, `--sopra-nav`): il "+"
   (su tutte le schede) sta sulla riga della barra (slot `addSlot` di `BottomNav`);
-  l'**avviso** (`Toast.jsx`, prop `bottom` decisa in `Dispensa.jsx`) sta a
-  `--sopra-nav` su tutte le schede ("Sposta in dispensa" + cestino della Spesa
-  stanno tra la lista e "Nel carrello", in flusso, non fissi); con la tastiera
-  aperta va in alto. Se cambia la barra si cambiano solo le variabili.
+  l'**avviso** (`Toast.jsx`) dall'11/10 sta IN ALTO, fisso, nello spazio vuoto
+  della testata tra avatar e azioni (scelta dell'utente: lì non dà fastidio);
+  con quello è tornato "Modifica salvata · Annulla" per le modifiche ai
+  prodotti di Dispensa e Spesa. I timer attivi stanno a `--sopra-nav`
+  ("Sposta in dispensa" + cestino della Spesa stanno tra la lista e "Nel
+  carrello", in flusso, non fissi). Se cambia la barra si cambiano solo le variabili.
 - **Fogli e pannelli**: dal basso i fogli (`Sheet`); di lato il Profilo (da
   sinistra, blu), che contiene anche le Impostazioni (`SettingsSection`: non c'è
   più un pannello a parte né l'ingranaggio in testata), con `Sheet side="left"|

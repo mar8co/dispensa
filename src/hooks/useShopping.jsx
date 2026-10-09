@@ -126,18 +126,29 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     return { merged: res.merged > 0 };
   }
 
-  // Salvataggio automatico dal pannello di modifica della spesa (come quello
-  // della dispensa) ma SILENZIOSO: nessun toast "Modifica salvata".
-  // Nome/quantità sul DB, reparto nelle impostazioni.
-  async function autoSaveShopping(it, fields) {
+  // Salvataggio automatico dal pannello di modifica della spesa, come quello
+  // della dispensa: avviso "Modifica salvata" con Annulla (dall'11/10).
+  // Nome/quantità sul DB, reparto nelle impostazioni. `restore` = i valori
+  // all'apertura del pannello.
+  async function autoSaveShopping(it, fields, restore = {}) {
     const { category, ...rowFields } = fields;
+    const { category: oldCategory, ...oldRow } = restore;
     if (Object.keys(rowFields).length) {
       setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...rowFields } : x)));
       persistUpdate(it.id, rowFields);
     }
+    const key = norm(rowFields.name ?? it.name);
     if (CATEGORIES.includes(category)) {
-      setShopCats((prev) => ({ ...prev, [norm(rowFields.name ?? it.name)]: category }));
+      setShopCats((prev) => ({ ...prev, [key]: category }));
     }
+    showToast(<strong>Modifica salvata</strong>, () => {
+      if (Object.keys(oldRow).length) {
+        setShopping((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...oldRow } : x)));
+        persistUpdate(it.id, oldRow);
+      }
+      if (CATEGORIES.includes(oldCategory)) setShopCats((prev) => ({ ...prev, [key]: oldCategory }));
+      dismissToast();
+    }, "Annulla", undefined, 3500);
   }
 
   // Aggiunta a voce per la spesa: la frase si legge prima in locale

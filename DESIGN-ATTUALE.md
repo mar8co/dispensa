@@ -166,6 +166,9 @@
   compare. Pillole delle Ricette, in ordine: Pasta, Carne, Pollo, Uova, Riso, Insalata, Zuppa,
   Fresco, Caldo, Sostanzioso, Proteico, Pochi ingredienti, Senza cottura, Piccante (tolte Legumi e
   Al forno).
+- **Avvisi in alto (11/10)**: la pillola nera dell'avviso compare fissa in alto, all'altezza della
+  testata, tra l'avatar e le azioni (margini laterali 62px, alta 40px, testo 0,84rem, entra dall'alto
+  con `drop-in`). Non c'è più nessun avviso in basso. "Modifica salvata · Annulla" dura 3,5 secondi.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un
