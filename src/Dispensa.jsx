@@ -1140,6 +1140,7 @@ export default function Dispensa({ session }) {
             onFinish={finishItem}
             onCookWith={cookWithProduct}
             todayMeals={todayMeals}
+            expiring={expiringItems}
             onOpenMeal={openToday}
           />
         )}

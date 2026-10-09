@@ -174,7 +174,7 @@ export default function Anteprima() {
             onFinish={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> finito: è in lista</>, onUndo: () => setToast(null) }); }}
             onCookWith={() => {}}
             todayMeals={[{ label: "Pranzo", icon: "🥗", title: "Spaghetti al limone" }, { label: "Cena", icon: "🍳", title: "Frittata di zucchine" }]}
-            onOpenMeal={() => {}}
+            onOpenMeal={() => {}} expiring={items.filter((x) => { const d = daysUntilExpiry(x.expiry); return d !== null && d <= 7; })}
           />
         )}
 

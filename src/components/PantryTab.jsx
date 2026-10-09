@@ -9,7 +9,7 @@ import {
   SlidersHorizontal, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
-import { expiryStatus, formatExpiry, piecesLabel, qtyState, pieces, LOW_QTY } from "../lib/pantry.js";
+import { expiryStatus, formatExpiry, daysUntilExpiry, piecesLabel, qtyState, pieces, LOW_QTY } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 import PushNudge from "./PushNudge.jsx";
@@ -144,9 +144,14 @@ export default function PantryTab({
   onAutoSave, onSetExpiry, removeItem,
   expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
   onFinish,
-  todayMeals = [], onOpenMeal,
+  todayMeals = [], onOpenMeal, expiring = [],
 }) {
   const searchActive = search.trim() !== "";
+  // Riquadro "Oggi": con UN solo prodotto si scrive il suo nome ("Latte sta
+  // scadendo"), con più di uno il numero. Mai "in scadenza entro 7 giorni".
+  const daysOf = (x) => daysUntilExpiry(x.expiry);
+  const soonName = expiringSoonCount === 1 ? expiring.find((x) => { const d = daysOf(x); return d !== null && d >= 0; })?.name : null;
+  const expiredName = expiredCount === 1 ? expiring.find((x) => { const d = daysOf(x); return d !== null && d < 0; })?.name : null;
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
   const [sortOpen, setSortOpen] = useState(false); // chips ordinamento a comparsa
   const [expDraft, setExpDraft] = useState(""); // valore della scadenza nel pannello
@@ -322,13 +327,13 @@ export default function PantryTab({
               {expiredCount > 0 && (
                 <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
                   <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-rosso" />
-                  {expiredCount} {expiredCount === 1 ? "prodotto scaduto" : "prodotti scaduti"}
+                  <span className="min-w-0 truncate">{expiredName ? `${expiredName}: scaduto` : `${expiredCount} prodotti scaduti`}</span>
                 </span>
               )}
               {expiringSoonCount > 0 && (
                 <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
                   <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-giallo" />
-                  {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza{expiredCount > 0 ? "" : " entro 7 giorni"}
+                  <span className="min-w-0 truncate">{soonName ? `${soonName} sta scadendo` : `${expiringSoonCount} prodotti stanno scadendo`}</span>
                 </span>
               )}
             </button>
