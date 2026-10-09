@@ -250,8 +250,11 @@ una regola locale basta.
   Migration 11/12/13 sono SQL manuali (eccezione esplicita alla regola 3);
   lo **schema concreto va proposto all'utente prima**.
   Le scelte UX (mockup con opzioni) precedono sempre il codice.
-  Free vs Premium: free = dispensa+spesa+ricette con pubblicità e **5
-  generazioni AI/giorno**; **Premium (1,99€/mese · 14,99€/anno, 7gg prova)
+  Free vs Premium (aggiornato il 09/10): free = dispensa+spesa+ricette **dal
+  ricettario** (il proprio + `data/ricetteBase.js`, ricerca locale, niente AI
+  per le ricette) con pubblicità; foto/barcode/voce usano l'AI solo se serve,
+  entro il tetto giornaliero. Le **idee e le ricette su misura con l'AI sono
+  solo Premium** (`kind: "recipe"`, verificato in `server/claude.js`). **Premium (1,99€/mese · 14,99€/anno, 7gg prova)
   = Piano Alimentare + niente pubblicità + AI illimitata + invitare membri**.
   **Non confondere con "Cambusa"**, repo separato (competitor
   nativo RN/Expo di Dispensa): questa iniziativa converte *questo* codice.

@@ -18,8 +18,8 @@
   | Dispensa, accesso, caricamento, avvio | **beige** `#dcceb3` (marchio, token `sabbia`; dal 01/10, prima arancio) |
   | Spesa | **bianco** (dal 01/10; prima giallo) |
   | Ricette (Idee, proposte, Piano Alimentare) | **verde** `#22b35e` |
-  | Foglio del pasto nel Piano (scegli / azioni sul piatto) | **nero** (testo crema, azione gialla; dal 09/10) |
-  | Ricetta aperta, modalità cucina, "Aggiungi al piano" | **verde** (dal 09/10, prima bianco): tutto ciò che è Ricette o Piano Alimentare è verde; gli ingredienti stanno in una card bianca |
+  | Fogli del Piano: pasto (scegli / azioni sul piatto) e "Aggiungi al piano" | **nero** (testo crema, azione gialla; dal 09/10; classi in `FOGLIO_NERO`, `lib/colors.js`) |
+  | Ricetta aperta, modalità cucina | **verde** (dal 09/10, prima bianco): tutto ciò che è Ricette o Piano Alimentare è verde; gli ingredienti stanno in una card bianca |
   | Profilo (pannello da sinistra) | **blu** `#3572e8`, lo stesso dell'avatar (testi secondari neri) |
   | Impostazioni | dentro il Profilo (blu) dal 09/10; il pannello arancio non esiste più |
   | Privacy (foglio) | **beige** `#dcceb3` |
@@ -96,6 +96,11 @@
 - **Ricette, "Puoi farle adesso"**: elenco a righe sottili sopra le occasioni (titolo, tempo,
   "hai tutto" / "manca: …", cartellino nero "usa ciò che scade"); sotto la ricerca una riga dice
   quante richieste AI restano oggi, o che sei offline (le occasioni si attenuano).
+- **Ricette nel piano gratuito (09/10)**: il campo in alto cerca nel ricettario mentre scrivi
+  (lente al posto delle scintille, "Ricette trovate"), sotto c'è "Tutte le ricette (N)"; le
+  occasioni restano visibili sotto il titolo "Idee su misura con l'AI" col cartellino nero
+  "Premium" e aprono il paywall; le pillole di contesto compaiono solo con Premium (dove la riga
+  sulle richieste rimaste non serve più ed è stata tolta).
 
 ## Movimento
 

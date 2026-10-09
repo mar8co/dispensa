@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rankCookable } from "./suggest.js";
+import { rankCookable, searchRecipes } from "./suggest.js";
 import { findMatch } from "./pantry.js";
 import BASE from "../data/ricetteBase.js";
 
@@ -16,6 +16,20 @@ describe("ricettario di base", () => {
       expect(r.steps.length).toBeGreaterThan(0);
     }
     expect(new Set(BASE.map((r) => r.title)).size).toBe(BASE.length);
+  });
+});
+
+describe("searchRecipes", () => {
+  const titles = (q) => searchRecipes(BASE, q).map((r) => r.title);
+  it("cerca nel titolo e negli ingredienti, singolare o plurale", () => {
+    expect(titles("zucchina")).toContain("Frittata di zucchine");
+    expect(titles("qualcosa col tonno")).toEqual(expect.arrayContaining(["Pasta al tonno", "Insalata di ceci e tonno"]));
+    expect(titles("guanciale")).toEqual(["Carbonara"]);
+  });
+  it("tutte le parole devono esserci", () => {
+    expect(titles("pasta ceci")).toEqual(["Pasta e ceci"]);
+    expect(titles("xyz")).toEqual([]);
+    expect(titles("  ")).toEqual([]);
   });
 });
 

@@ -950,10 +950,15 @@ export default function Dispensa({ session }) {
   // --- Ricette: stato e logica estratti in hooks/useRecipes.jsx ---
 
   // "Cucina con questi": manda i prodotti in scadenza alle Ricette.
+  // Le idee con l'AI sono di Premium: nel piano gratuito gli stessi pulsanti
+  // portano al ricettario ("Puoi farle adesso" mette già in cima ciò che usa i
+  // prodotti in scadenza; per un prodotto si cerca il suo nome).
+  const [recipeQuery, setRecipeQuery] = useState(null);
   function cookWithExpiring() {
     const names = expiringItems.filter((x) => !isOut(x)).map((x) => x.name).slice(0, 8);
     if (!names.length) return;
     changeView("ricette");
+    if (!isPro) { backToModes(); return; }
     askCustom(`qualcosa per usare subito: ${names.join(", ")}`);
   }
   // Dal pannello prodotto: apre le Ricette con proposte basate su quel prodotto
@@ -962,6 +967,7 @@ export default function Dispensa({ session }) {
     const n = String(name || "").trim();
     if (!n) return;
     changeView("ricette");
+    if (!isPro) { backToModes(); setRecipeQuery(n); return; }
     askCustom(n);
   }
 
@@ -1196,6 +1202,8 @@ export default function Dispensa({ session }) {
             isPro={isPro}
             onNeedPro={() => openPaywall("Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola.")}
             online={online}
+            onNeedAi={() => openPaywall("Le idee su misura con l'AI fanno parte di Premium: scegli un'occasione o scrivi cosa ti va, e te le preparo con quello che hai.")}
+            localQuery={recipeQuery} onLocalQueryUsed={() => setRecipeQuery(null)}
             expiring={expiringItems.filter((x) => !isOut(x))}
             onAiLimit={() => openPaywall("Hai finito le richieste AI di oggi: con Premium non hanno limiti.")}
             savedRecipes={savedRecipes}

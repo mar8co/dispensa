@@ -12,6 +12,7 @@ import {
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { isoDate, mondayOf, addDays } from "../hooks/useMealPlan.jsx";
+import { FOGLIO_NERO } from "../lib/colors.js";
 
 const SLOTS = [
   { id: "pranzo", label: "Pranzo", Icon: Sun },
@@ -72,7 +73,7 @@ function MealSlotSheet({
         // Foglio NERO sulla pagina verde (scelta dell'utente, 09/10): come nelle
         // fotocamere si scrive in crema, i bordi sono crema e l'azione
         // principale è gialla (un bottone nero sul nero sparirebbe).
-        <div className="px-[18px] pb-4 pt-1 text-crema [&_.border-ink]:border-crema [&_.bottone-chiaro]:border-crema [&_.bottone-chiaro]:text-crema [&_.bottone]:bg-giallo [&_.bottone]:text-ink [&_.campo]:border-crema [&_.campo]:placeholder:text-crema/50 [&_.divide-riga>*]:border-crema/20 [&_.micro]:text-crema/70 [&_.text-ink]:text-crema [&_.text-tenue]:text-crema/70">
+        <div className={`px-[18px] pb-4 pt-1 ${FOGLIO_NERO}`}>
           <p className="micro capitalize">{heading}</p>
 
           {!picking && meal && (

@@ -7,13 +7,13 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
-  ChefHat, Trash2, Check, CalendarPlus, Lock,
+  ChefHat, Trash2, Check, CalendarPlus, Lock, Search, X,
 } from "lucide-react";
 import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
-import { useAiLeft } from "../lib/aiUsage.js";
-import { rankCookable } from "../lib/suggest.js";
+import { rankCookable, searchRecipes } from "../lib/suggest.js";
+import { FOGLIO_NERO } from "../lib/colors.js";
 import BASE_RECIPES from "../data/ricetteBase.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
@@ -27,9 +27,9 @@ import { isoDate, addDays } from "../hooks/useMealPlan.jsx";
 function PlanDaySheet({ onChoose, onClose }) {
   const days = [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(new Date(), i));
   return (
-    <Sheet onClose={onClose} panelClass="bg-verde">
+    <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
       {(close) => (
-        <div className="px-[18px] pb-4 pt-1">
+        <div className={`px-[18px] pb-4 pt-1 ${FOGLIO_NERO}`}>
           <h3 className="titolo">Aggiungi al piano</h3>
           <ul className="mt-3 divide-y divide-riga border-t-[1.5px] border-ink">
             {days.map((d, i) => (
@@ -97,8 +97,18 @@ export default function RecipesTab({
   isPro = true, onNeedPro, onAiLimit,
   online = true,
   expiring = [],
+  onNeedAi, localQuery = null, onLocalQueryUsed,
 }) {
-  const aiLeft = useAiLeft(); // richieste AI rimaste oggi (null = non noto)
+  const [showAll, setShowAll] = useState(false); // "Tutte le ricette" aperto
+  // Ricerca chiesta da fuori (piano gratuito: "Cucina con questo prodotto"
+  // dalla Dispensa): il nome del prodotto entra nel campo e si vedono subito
+  // le ricette del ricettario che lo usano.
+  useEffect(() => {
+    if (!localQuery) return;
+    setAsk(localQuery); setTab("idee");
+    onLocalQueryUsed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localQuery]);
   const [addedMissing, setAddedMissing] = useState(false);
   const [ask, setAsk] = useState("");          // "Cosa ti va?"
   const [shelf, setShelf] = useState("salvate"); // tab del ricettario
@@ -171,10 +181,31 @@ export default function RecipesTab({
   // "Puoi farle adesso": ricette GIÀ note (prima le tue, poi quelle di base
   // dell'app) che si possono cucinare con la dispensa di ora, al massimo con
   // un ingrediente mancante. Calcolo locale: niente AI, funziona offline.
-  const cookable = useMemo(() => {
+  const cookbook = useMemo(() => {
     const mine = (savedRecipes || []).filter((r) => r.data?.ingredients?.length).map((r) => ({ ...r.data, image: r.data.image || r.image }));
-    return rankCookable([...mine, ...BASE_RECIPES], hasIngredient, expiring, 1).slice(0, 4);
-  }, [savedRecipes, expiring, hasIngredient]);
+    return [...mine, ...BASE_RECIPES];
+  }, [savedRecipes]);
+  const allRanked = rankCookable(cookbook, hasIngredient, expiring, Infinity);
+  const cookable = allRanked.filter((x) => x.missing.length <= 1).slice(0, 4);
+  // Piano gratuito: la ricerca è locale, nel ricettario.
+  const found = !isPro && ask.trim()
+    ? rankCookable(searchRecipes(cookbook, ask), hasIngredient, expiring, Infinity)
+    : [];
+  // Riga di una ricetta del ricettario (Puoi farle adesso / Tutte / Trovate).
+  const recipeRow = ({ recipe: r, missing: miss, usesExpiring }) => (
+    <li key={r.title}>
+      <button onClick={() => onOpenSaved({ title: r.title, data: r })} className="flex min-h-[56px] w-full items-center gap-3 py-2 text-left">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>
+          <span className="block truncate text-[0.8rem] font-medium text-tenue">
+            {r.time ? `${r.time} · ` : ""}
+            {miss.length === 0 ? "hai tutto" : miss.length <= 2 ? `manca: ${miss.join(", ")}` : `mancano ${miss.length} ingredienti`}
+          </span>
+        </span>
+        {usesExpiring && <span className="cartellino bg-ink text-white">usa ciò che scade</span>}
+      </button>
+    </li>
+  );
 
   const ingredients = recipe?.ingredients || [];
   const missing = ingredients.filter((ing) => !hasIngredient(ing.name));
@@ -226,43 +257,55 @@ export default function RecipesTab({
               mentre si scorrono occasioni e ricettario. */}
           <div data-tour="recipe-search" className="sticky top-0 z-20 -mx-4 mt-4 bg-sfondo px-4 pb-2 pt-2">
             <div className="micro">Ricette</div>
-            <form
-              className="relative"
-              onSubmit={(e) => { e.preventDefault(); if (ask.trim() && online) { onCustomAsk(ask); setAsk(""); } }}
-            >
-              <Sparkles className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
-              <input
-                value={ask}
-                onChange={(e) => setAsk(e.target.value)}
-                placeholder="Cosa ti va? es. qualcosa coi funghi"
-                className={`campo testo-grande pl-8 text-[1.06rem] text-ink ${ask.trim() ? "pr-16" : "pr-2"}`}
-              />
-              {ask.trim() && (
-                <button type="submit" disabled={!online} className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-ink px-3.5 py-1.5 text-[0.84rem] font-bold text-white disabled:opacity-40">
-                  Vai
-                </button>
-              )}
-            </form>
+            {isPro ? (
+              <form
+                className="relative"
+                onSubmit={(e) => { e.preventDefault(); if (ask.trim() && online) { onCustomAsk(ask); setAsk(""); } }}
+              >
+                <Sparkles className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
+                <input
+                  value={ask}
+                  onChange={(e) => setAsk(e.target.value)}
+                  placeholder="Cosa ti va? es. qualcosa coi funghi"
+                  className={`campo testo-grande pl-8 text-[1.06rem] text-ink ${ask.trim() ? "pr-16" : "pr-2"}`}
+                />
+                {ask.trim() && (
+                  <button type="submit" disabled={!online} className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-ink px-3.5 py-1.5 text-[0.84rem] font-bold text-white disabled:opacity-40">
+                    Vai
+                  </button>
+                )}
+              </form>
+            ) : (
+              // Piano gratuito: lo stesso campo CERCA nel ricettario (il tuo +
+              // quello incluso nell'app), mentre scrivi e senza AI.
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
+                <input
+                  value={ask}
+                  onChange={(e) => setAsk(e.target.value)}
+                  placeholder="Cerca una ricetta o un ingrediente"
+                  className="campo testo-grande pl-8 pr-10 text-[1.06rem] text-ink"
+                />
+                {ask && (
+                  <button onClick={() => setAsk("")} aria-label="Cancella ricerca" className="absolute -right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-ink">
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Le idee nuove le prepara l'AI: senza rete lo si dice PRIMA del
-              tocco (le occasioni si spengono), e nel piano gratuito si vede
-              quante richieste restano oggi. Il ricettario non ne ha bisogno. */}
-          {!online ? (
+          {/* Premium, senza rete: le idee nuove le prepara l'AI, lo si dice
+              PRIMA del tocco (le occasioni si attenuano). */}
+          {isPro && !online && (
             <p className="mt-3 text-[0.9rem] font-bold leading-snug text-ink">
               Sei offline: le idee nuove tornano con la rete. Il tuo ricettario funziona lo stesso.
-            </p>
-          ) : !isPro && aiLeft !== null && (
-            <p className="mt-3 text-[0.86rem] font-semibold text-tenue">
-              {aiLeft === 0
-                ? "Per oggi hai finito le richieste AI: tornano domani."
-                : `Oggi ti ${aiLeft === 1 ? "resta 1 richiesta" : `restano ${aiLeft} richieste`} AI`}
             </p>
           )}
 
           {/* Pill di contesto/umore: l'AI le considera (oltre alla stagione)
               quando poi scegli un'occasione. Multi-select, opzionali. */}
-          <div className="mt-4 flex flex-wrap gap-2">
+          {isPro && <div className="mt-4 flex flex-wrap gap-2">
             {RECIPE_CONTEXTS.map((c) => {
               const on = recipeContext.includes(c.id);
               return (
@@ -277,48 +320,74 @@ export default function RecipesTab({
                 </button>
               );
             })}
-          </div>
+          </div>}
           {/* Feedback: le pill agiscono sulle proposte FUTURE — senza questa
               riga il toggle sembrava non fare nulla. */}
-          {recipeContext.length > 0 && (
+          {isPro && recipeContext.length > 0 && (
             <p className="animate-fade-in mt-2 text-[0.86rem] font-semibold text-tenue">
               Ne terrò conto nelle prossime proposte ✨
             </p>
           )}
 
-          {/* Puoi farle adesso: dal ricettario, senza AI. */}
-          {cookable.length > 0 && (
+          {/* Ricerca nel ricettario (piano gratuito): risultati mentre scrivi. */}
+          {!isPro && ask.trim() ? (
             <section className="mt-6">
-              <div className="flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
-                <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Puoi farle adesso</h2>
-                <span className="micro">con quello che hai</span>
+              <div className="border-b-[1.5px] border-ink pb-[7px]">
+                <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Ricette trovate</h2>
               </div>
-              <ul className="divide-y divide-riga">
-                {cookable.map(({ recipe: r, missing: miss, usesExpiring }) => (
-                  <li key={r.title}>
-                    <button onClick={() => onOpenSaved({ title: r.title, data: r })} className="flex min-h-[56px] w-full items-center gap-3 py-2 text-left">
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>
-                        <span className="block truncate text-[0.8rem] font-medium text-tenue">
-                          {r.time ? `${r.time} · ` : ""}{miss.length ? `manca: ${miss.join(", ")}` : "hai tutto"}
-                        </span>
-                      </span>
-                      {usesExpiring && <span className="cartellino bg-ink text-white">usa ciò che scade</span>}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              {found.length > 0 ? (
+                <ul className="divide-y divide-riga">{found.map(recipeRow)}</ul>
+              ) : (
+                <p className="py-5 text-center text-[0.95rem] font-semibold text-ink">
+                  Nessuna ricetta trovata nel ricettario.{" "}
+                  <button onClick={onNeedAi} className="link">Con Premium te la preparo su misura</button>
+                </p>
+              )}
             </section>
+          ) : (
+            <>
+              {/* Puoi farle adesso: dal ricettario, senza AI. */}
+              {cookable.length > 0 && !showAll && (
+                <section className="mt-6">
+                  <div className="flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
+                    <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Puoi farle adesso</h2>
+                    <span className="micro">con quello che hai</span>
+                  </div>
+                  <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
+                </section>
+              )}
+              {showAll && (
+                <section className="mt-6">
+                  <div className="flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
+                    <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Tutte le ricette</h2>
+                    <span className="micro">prima quelle che puoi fare</span>
+                  </div>
+                  <ul className="divide-y divide-riga">{allRanked.map(recipeRow)}</ul>
+                </section>
+              )}
+              <button onClick={() => setShowAll((v) => !v)} className="link mt-3 flex min-h-[44px] items-center text-[0.9rem] text-ink">
+                {showAll ? "Mostra solo quelle che puoi fare adesso" : `Tutte le ricette (${allRanked.length})`}
+              </button>
+            </>
           )}
 
+          {/* Idee su misura: le prepara l'AI, fanno parte di Premium. Nel piano
+              gratuito le occasioni restano visibili col lucchetto (si capisce
+              PRIMA del tocco) e aprono il paywall. */}
+          {!isPro && (
+            <div className="mt-7 flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px]">
+              <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Idee su misura con l&rsquo;AI</h2>
+              <span className="cartellino ml-auto inline-flex items-center gap-1 bg-ink text-white"><Lock className="h-3 w-3" /> Premium</span>
+            </div>
+          )}
           <div className="mt-5 grid grid-cols-2 gap-3">
             {orderedModes.map((m) => (
               <div
                 key={m.id}
                 ref={(el) => { modeCardRefs.current[m.id] = el; }}
-                onClick={() => online && chooseMode(m)}
-                aria-disabled={!online}
-                className={`relative cursor-pointer rounded-card bg-white p-4 text-left transition active:scale-[0.98] ${dragMode === m.id ? "ring-2 ring-ink" : ""} ${online ? "" : "opacity-50"}`}
+                onClick={() => (isPro ? online && chooseMode(m) : onNeedAi?.())}
+                aria-disabled={isPro && !online}
+                className={`relative cursor-pointer rounded-card bg-white p-4 text-left transition active:scale-[0.98] ${dragMode === m.id ? "ring-2 ring-ink" : ""} ${isPro && !online ? "opacity-50" : ""}`}
               >
                 <div className="mb-2 text-2xl">{m.icon}</div>
                 <div className="pr-5 text-[1.05rem] font-extrabold leading-tight tracking-[-0.03em] text-ink">{m.id}</div>

@@ -85,6 +85,18 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
       // col tetto del piano gratuito (nessuno resta bloccato per un errore).
       if (!proErr) pro = isPro === true;
 
+      // Idee e ricette AI (kind "recipe") sono SOLO Premium (dal 09/10): nel
+      // piano gratuito le ricette vengono dal ricettario dell'app, senza AI.
+      // Si blocca solo se lo stato Premium è stato letto davvero (se la rpc
+      // fallisce non si chiude fuori nessuno). Foto, barcode e voce restano
+      // disponibili a tutti, col tetto giornaliero qui sotto.
+      if (!proErr && !pro && body?.kind === "recipe") {
+        return {
+          status: 403,
+          json: { error: "Le ricette su misura con l'AI fanno parte di Premium.", code: "premium_only" },
+        };
+      }
+
       if (!pro) {
         const limit = Number(env.AI_DAILY_LIMIT) || 5;
         usageLimit = limit;

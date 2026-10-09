@@ -185,7 +185,7 @@ export function useRecipes({
     try {
       // Schema strutturato per blindare la forma; niente temperature bassa qui:
       // per le proposte serve varietà (default creativo del modello).
-      const parsed = await callClaude([{ type: "text", text: prompt }], 1500, { schema: RECIPES_SCHEMA });
+      const parsed = await callClaude([{ type: "text", text: prompt }], 1500, { schema: RECIPES_SCHEMA, kind: "recipe" });
       // Validazione: si tengono solo le proposte con un titolo reale (una
       // risposta parzialmente malformata non deve produrre card vuote).
       const list = (Array.isArray(parsed?.recipes) ? parsed.recipes : [])
@@ -284,7 +284,7 @@ export function useRecipes({
       `{"title":"...","servings":2,"time":"...","imageQuery":"2-4 parole IN INGLESE per la foto del piatto","ingredients":[{"name":"...","qty":"120 g"}],"steps":[{"text":"...","timer":10}]}`;
     try {
       // Spazio abbondante: le ricette lunghe troncavano il JSON (errore 502).
-      const parsed = await callClaude([{ type: "text", text: prompt }], 2500);
+      const parsed = await callClaude([{ type: "text", text: prompt }], 2500, { kind: "recipe" });
       // Validazione strutturale PRIMA dell'uso: una ricetta senza ingredienti
       // o senza passaggi non è renderizzabile né cucinabile — meglio l'errore
       // pulito (con "Riprova") che una schermata mezza vuota.

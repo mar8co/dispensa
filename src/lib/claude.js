@@ -46,6 +46,7 @@ export const AI_LIMIT_MESSAGE = "Hai finito le richieste AI di oggi. Con Premium
 export function aiErrorMessage(err, fallback) {
   if (err?.status === 0) return "Sei offline: controlla la connessione e riprova.";
   if (err?.code === "daily_limit") return AI_LIMIT_MESSAGE;
+  if (err?.code === "premium_only") return "Le ricette su misura con l'AI fanno parte di Premium.";
   if (err?.status === 429) return "Limite di richieste AI raggiunto. Attendi qualche secondo e riprova.";
   if (err?.status === 408) return "Il servizio AI non ha risposto in tempo. Riprova.";
   return fallback;
@@ -60,7 +61,7 @@ export function aiErrorMessage(err, fallback) {
 //  - signal: AbortSignal esterno (es. "Annulla" dell'utente): annulla la
 //    richiesta senza retry; l'errore ha code "cancelled" (status 499)
 export async function callClaude(content, maxTokens = 1000, opts = {}) {
-  const { schema = null, temperature, timeoutMs = 30000, retries = 2, signal: extSignal = null } = opts;
+  const { schema = null, temperature, timeoutMs = 30000, retries = 2, signal: extSignal = null, kind = null } = opts;
   // Fail-fast offline: navigator.onLine === false è affidabile (il contrario
   // no). Meglio un errore chiaro subito che 30s di attesa + retry a vuoto.
   if (typeof navigator !== "undefined" && navigator.onLine === false) {
@@ -93,6 +94,7 @@ export async function callClaude(content, maxTokens = 1000, opts = {}) {
         content,
         max_tokens: maxTokens,
         ...(schema ? { schema } : {}),
+        ...(kind ? { kind } : {}), // "recipe" = idee/ricette AI (solo Premium, lo verifica il server)
         ...(temperature != null ? { temperature } : {}),
       }),
       signal: controller.signal,

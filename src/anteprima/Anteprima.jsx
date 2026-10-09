@@ -215,8 +215,8 @@ export default function Anteprima() {
               planMeal: () => {}, removeMeal: () => {}, markMealCooked: () => {}, setMealServings: () => {}, onCookMeal: () => {},
             }}
             startOnPlan={PARAM_VISTA === "piano"}
-            isPro
-            onNeedPro={() => {}}
+            isPro={q.get("gratis") !== "1"}
+            onNeedPro={() => {}} onNeedAi={() => setFoglio("premium")}
             savedRecipes={[
               { id: "r1", title: "Pasta zucchine e menta", saved: true, cooked_count: 3, data: { time: "20 min" } },
               { id: "r2", title: "Pollo al limone", saved: true, cooked_count: 1, data: { time: "25 min" } },
