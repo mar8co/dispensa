@@ -195,17 +195,15 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   async function toggleShoppingItem(id, checked) {
     setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
     persistUpdate(id, { checked });
-    // Avviso breve (2,5 s), pillola gialla, con Annulla = rimette in lista.
-    // Tolto il 09/10 (in basso dava fastidio), rimesso l'11/10 ora che gli
-    // avvisi stanno in alto.
-    if (checked) {
-      const it = shopping.find((x) => x.id === id);
-      if (it) showToast(<>Preso: <strong>{it.name}</strong></>, () => {
-        setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked: false } : x)));
-        persistUpdate(id, { checked: false });
-        dismissToast();
-      }, undefined, "giallo", 2500);
-    }
+    // Avviso breve (2,5 s), pillola gialla, nei due versi: "Preso" quando va
+    // nel carrello, "In lista" quando torna indietro. "Annulla" rimette
+    // com'era. (Tolto il 09/10, rimesso l'11/10 ora che gli avvisi stanno in alto.)
+    const it = shopping.find((x) => x.id === id);
+    if (it) showToast(<>{checked ? "Preso" : "In lista"}: <strong>{it.name}</strong></>, () => {
+      setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked: !checked } : x)));
+      persistUpdate(id, { checked: !checked });
+      dismissToast();
+    }, undefined, "giallo", 2500);
   }
   async function removeShoppingItem(id) {
     const it = shopping.find((x) => x.id === id);
