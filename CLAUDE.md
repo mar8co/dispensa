@@ -21,7 +21,7 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (91/91), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
+   (98/98), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
    `suggest.js`, aggiorna i rispettivi test (`*.test.js` accanto al file).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
@@ -227,6 +227,13 @@ una regola locale basta.
   solo ID di prova), tutorial (con i prodotti di esempio nel database vero) e
   Face ID/passkey. Non rimetterli senza richiesta. Ordine del "+" dal basso:
   A mano, Voce, Barcode, Foto.
+  **Aggiunti il 09/10**: "finito" scorrendo verso sinistra una riga della
+  Dispensa (`PantryRow` + `finishItem`: quantità a zero e prodotto in lista,
+  con Annulla); "Sposta in dispensa" apre la revisione solo se ci sono
+  freschi; **"Riempi la settimana"** nel Piano (`fillWeek` in Dispensa.jsx +
+  `lib/planner.js`: sceglie pranzi e cene dal ricettario partendo dalla
+  dispensa, SENZA AI, e mette i mancanti in lista); invitare nella dispensa
+  condivisa è gratuito (**`supabase/migration-14.sql` va eseguita a mano**).
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con
   tocco sul nome = modifica (resta così) e "+" su tutte le schede (resta).
 - **Prossimo lavoro grande**: resta la Fase 3 (prodotti su App Store Connect,
@@ -259,6 +266,7 @@ una regola locale basta.
   per le ricette), senza pubblicità; foto/barcode/voce usano l'AI solo se serve,
   entro il tetto giornaliero. Le **idee e le ricette su misura con l'AI sono
   solo Premium** (`kind: "recipe"`, verificato in `server/claude.js`). **Premium (1,99€/mese · 14,99€/anno, 7gg prova)
-  = Piano Alimentare + ricette AI + AI illimitata + invitare membri**.
+  = Piano Alimentare (con "Riempi la settimana") + ricette AI + AI illimitata**.
+  Invitare membri è gratuito dal 09/10 (migration-14).
   **Non confondere con "Cambusa"**, repo separato (competitor
   nativo RN/Expo di Dispensa): questa iniziativa converte *questo* codice.

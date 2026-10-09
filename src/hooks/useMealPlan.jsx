@@ -56,7 +56,8 @@ export function useMealPlan({ ready, householdId }) {
     setWeekStart((prev) => (delta === 0 ? mondayOf(new Date()) : mondayOf(addDays(prev, delta * 7))));
   }
 
-  // Pianifica (o sostituisce) il piatto di uno slot. `data` è la ricetta
+  // Pianifica (o sostituisce) il piatto di uno slot. Ritorna l'id della voce,
+  // oppure null se il salvataggio non è riuscito. `data` è la ricetta
   // completa (formato saved_recipes.data) oppure null per un piatto libero.
   // `existingId`: il chiamante sa già che lo slot è occupato anche se quel
   // giorno non è nella settimana caricata qui ("Aggiungi al piano" guarda i
@@ -69,8 +70,8 @@ export function useMealPlan({ ready, householdId }) {
     if (existing) {
       const fields = { title: clean, data, cooked_at: null };
       setMeals((prev) => prev.map((m) => (m.id === existing.id ? { ...m, ...fields } : m)));
-      try { await updateMeal(existing.id, fields); } catch (e) { console.error("Piano non salvato:", e); }
-      return;
+      try { await updateMeal(existing.id, fields); } catch (e) { console.error("Piano non salvato:", e); return null; }
+      return existing.id;
     }
     // Id client-side (come pantry/shopping): la riga locale ha già l'id vero.
     const id = (crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`);
@@ -80,7 +81,9 @@ export function useMealPlan({ ready, householdId }) {
     catch (e) {
       console.error("Piano non salvato:", e);
       setMeals((prev) => prev.filter((m) => m.id !== id));
+      return null;
     }
+    return id; // chi pianifica in blocco lo usa per l'"Annulla"
   }
 
   async function removeMeal(id) {

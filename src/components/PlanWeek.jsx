@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Sun, Moon, Plus, Minus, Check, Sparkles,
-  ShoppingCart, Utensils, Trash2, RefreshCw,
+  ShoppingCart, Utensils, Trash2, RefreshCw, CalendarPlus, Loader2,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
@@ -226,6 +226,7 @@ export default function PlanWeek({
   meals, weekStart, shiftWeek, loadingMeals,
   planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal,
   savedRecipes, hasIngredient, onAddMissing, onGoIdeas,
+  onFillWeek, fillingWeek = false,
 }) {
   const [sheet, setSheet] = useState(null); // { date: Date, slot: "pranzo"|"cena" }
 
@@ -233,6 +234,8 @@ export default function PlanWeek({
   const days = [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(weekStart, i));
   const byKey = new Map(meals.map((m) => [`${m.date}|${m.slot}`, m]));
   const sheetMeal = sheet ? byKey.get(`${isoDate(sheet.date)}|${sheet.slot}`) : null;
+  // C'è almeno un pasto libero da oggi in poi? Solo allora ha senso "Riempi la settimana".
+  const canFill = days.some((d) => isoDate(d) >= todayIso && SLOTS.some((s) => !byKey.has(`${isoDate(d)}|${s.id}`)));
 
   return (
     <div className="mt-4">
@@ -260,6 +263,22 @@ export default function PlanWeek({
           <ChevronRight className="h-[18px] w-[18px]" />
         </button>
       </div>
+
+      {/* Riempi la settimana: sceglie da solo pranzi e cene per i pasti liberi
+          (dal ricettario, partendo dalla dispensa) e mette in lista ciò che
+          manca. Lo fa Dispensa.jsx (fillWeek); qui c'è solo il pulsante. */}
+      {onFillWeek && canFill && (
+        <div className="mt-3">
+          <Button variant="primary" full onClick={onFillWeek} disabled={fillingWeek || loadingMeals}>
+            {fillingWeek
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <><CalendarPlus className="h-4 w-4" /> Riempi la settimana</>}
+          </Button>
+          <p className="micro mt-1.5 text-center">
+            Scelgo pranzi e cene partendo da quello che hai. Quello che manca va nella lista della spesa.
+          </p>
+        </div>
+      )}
 
       {/* Giorni */}
       <div className={`mt-3 space-y-2 ${loadingMeals ? "opacity-60" : ""}`}>

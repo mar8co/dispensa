@@ -14,7 +14,7 @@ import { PLANS, TRIAL_DAYS } from "../lib/premium.js";
 import { storeKitAvailable } from "../lib/storekit.js";
 
 const BENEFITS = [
-  { Icon: CalendarDays, text: "Piano Alimentare settimanale" },
+  { Icon: CalendarDays, text: "Piano Alimentare: la settimana si riempie da sola" },
   { Icon: Sparkles, text: "Ricette su misura con l'AI, senza limiti" },
 ];
 

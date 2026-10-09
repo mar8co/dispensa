@@ -173,10 +173,13 @@ const classici = [
   ]),
 ];
 
-// Tipo di ogni ricetta, per i filtri di "Tutte le ricette" (RecipesTab).
+// Tipo di ogni ricetta. Serve al piano della settimana (lib/planner.js): a
+// pranzo e a cena si propongono solo i tipi che fanno un pasto, mai un
+// contorno o un dolce.
 export const RECIPE_TYPES = [
   ["primi", "Primi"], ["carne", "Carne"], ["pesce", "Pesce"],
-  ["verdure", "Uova e verdure"], ["zuppe", "Zuppe e insalate"], ["veloci", "Veloci e dolci"],
+  ["verdure", "Uova e verdure"], ["zuppe", "Zuppe e insalate"], ["veloci", "Veloci"],
+  ["contorni", "Contorni e basi"], ["dolci", "Colazione e dolci"],
 ];
 const tag = (list, tipo) => list.map((r) => ({ ...r, tipo }));
 // I classici qui sopra sono misti: il tipo di ciascuno, nell'ordine in cui sono scritti.
@@ -190,8 +193,30 @@ const TIPI_CLASSICI = [
   "veloci", "veloci", "veloci", "veloci",
 ];
 
+// Ricette che da sole NON fanno un pasto, qualunque sia il file in cui stanno:
+// contorni, salse e basi. Hanno il tipo "contorni".
+const CONTORNI = new Set([
+  "Zucchine trifolate", "Patate al forno", "Melanzane a funghetto", "Melanzane grigliate", "Caponata",
+  "Peperonata", "Zucchine alla scapece", "Zucchine gratinate", "Verdure grigliate", "Verdure al forno",
+  "Ratatouille", "Spinaci saltati", "Spinaci al burro e parmigiano", "Broccoli saltati",
+  "Cavolfiore gratinato", "Fagiolini al pomodoro", "Fagiolini in insalata", "Carote in padella",
+  "Piselli al prosciutto", "Funghi trifolati", "Finocchi gratinati", "Carciofi in padella",
+  "Cime di rapa saltate", "Cicoria ripassata", "Cavolo nero saltato", "Verza stufata", "Zucca al forno",
+  "Patate in padella", "Purè di patate", "Crocchette di patate", "Hummus di ceci",
+  "Brodo di pollo", "Insalata di patate", "Insalata di finocchi e arance",
+  "Insalata di pomodori e cipolla", "Insalata di spinacini, pere e noci", "Ragù di carne",
+]);
+// Colazioni e dolci: tipo "dolci".
+const DOLCI = new Set([
+  "Yogurt con frutta e miele", "Pancake", "Porridge di avena", "French toast", "Crêpes", "Macedonia",
+  "Mele cotte alla cannella", "Banana bread", "Torta allo yogurt", "Torta di mele", "Ciambellone",
+  "Muffin al cioccolato", "Biscotti al burro", "Tiramisù", "Panna cotta", "Budino al cioccolato",
+  "Salame di cioccolato", "Yogurt con muesli e frutta",
+]);
+export const TITOLI_SPECIALI = [...CONTORNI, ...DOLCI]; // per il test: devono esistere tutti
+
 export default [
   ...classici.map((r, i) => ({ ...r, tipo: TIPI_CLASSICI[i] })),
   ...tag(primi, "primi"), ...tag(carne, "carne"), ...tag(pesce, "pesce"),
   ...tag(verdure, "verdure"), ...tag(zuppe, "zuppe"), ...tag(veloci, "veloci"),
-];
+].map((r) => (CONTORNI.has(r.title) ? { ...r, tipo: "contorni" } : DOLCI.has(r.title) ? { ...r, tipo: "dolci" } : r));

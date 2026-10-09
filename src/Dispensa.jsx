@@ -9,7 +9,7 @@ import {
 import {
   guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  matchKey, isStapleQb, isQbQty, isSpoonQty, dateInDays,
+  norm, matchKey, isStapleQb, isQbQty, isSpoonQty, dateInDays,
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
 import { cleanBarcodeName, parseSpokenList } from "./lib/parse.js";
@@ -54,7 +54,7 @@ import { useTimersTicker } from "./hooks/useTimersTicker.js";
 import { useRecipes } from "./hooks/useRecipes.jsx";
 import { useShopping } from "./hooks/useShopping.jsx";
 import { usePantry } from "./hooks/usePantry.jsx";
-import { useMealPlan } from "./hooks/useMealPlan.jsx";
+import { useMealPlan, isoDate, addDays } from "./hooks/useMealPlan.jsx";
 import { usePageColor } from "./hooks/usePageColor.js";
 import { pageColorFor } from "./lib/colors.js";
 import Barattoli from "./components/Barattoli.jsx";
@@ -898,6 +898,51 @@ export default function Dispensa({ session }) {
     askCustom(n);
   }
 
+  // --- Piano della settimana, generato da solo ---
+  // Riempie i pasti LIBERI della settimana aperta (da oggi in poi) con ricette
+  // del ricettario scelte partendo dalla dispensa (lib/planner.js: niente AI),
+  // e mette in lista della spesa gli ingredienti che mancano. È un ponte tra
+  // piano, dispensa e lista, quindi sta qui. Ricettario e pianificatore si
+  // caricano solo al tocco (import dinamico): non pesano sull'avvio.
+  const [fillingWeek, setFillingWeek] = useState(false);
+  async function fillWeek() {
+    if (fillingWeek) return;
+    setFillingWeek(true);
+    try {
+      const [{ default: BASE }, { planWeek, freeSlots }] = await Promise.all([
+        import("./data/ricetteBase.js"), import("./lib/planner.js"),
+      ]);
+      const weekDays = [0, 1, 2, 3, 4, 5, 6].map((i) => isoDate(addDays(weekStart, i)));
+      const slots = freeSlots(weekDays, meals, isoDate(new Date()));
+      if (!slots.length) { showToast("In questa settimana non ci sono pasti liberi da riempire"); return; }
+      const mine = savedRecipes.filter((r) => r.data?.ingredients?.length).map((r) => r.data);
+      const picks = planWeek({
+        slots, recipes: [...mine, ...BASE], hasIngredient,
+        expiring: expiringItems.filter((x) => !isOut(x)),
+      });
+      // Le porzioni di casa ("a casa siamo in X"), se impostate, valgono anche qui.
+      const ids = (await Promise.all(picks.map((p) =>
+        planMeal(p.date, p.slot, { title: p.recipe.title, data: prefServings ? { ...p.recipe, planServings: prefServings } : p.recipe })
+      ))).filter(Boolean);
+      if (!ids.length) { showToast("Non sono riuscito a salvare il piano. Controlla la connessione e riprova."); return; }
+      // Mancanti in lista, una voce per prodotto (chi è già in lista si salta).
+      const seen = new Set();
+      const missing = picks.flatMap((p) => p.missing).filter((n) => { const k = norm(n); return seen.has(k) ? false : seen.add(k); });
+      const res = missing.length ? await addMissingToShopping(missing) : null;
+      const added = res?.added || 0;
+      showToast(
+        `Piano pronto: ${ids.length} ${ids.length === 1 ? "pasto" : "pasti"}${added ? ` · ${added} ${added === 1 ? "prodotto" : "prodotti"} in lista` : ""}`,
+        () => { ids.forEach((id) => removeMeal(id)); res?.undo?.(); dismissToast(); },
+        "Annulla", undefined, 9000,
+      );
+    } catch (e) {
+      console.error(e);
+      showToast("Non sono riuscito a preparare il piano. Riprova.");
+    } finally {
+      setFillingWeek(false);
+    }
+  }
+
   // --- Derivati ---
   const orderedModes = modeOrder.map((id) => MODES.find((m) => m.id === id)).filter(Boolean);
 
@@ -1128,7 +1173,7 @@ export default function Dispensa({ session }) {
             onRetry={retryLast}
             onCustomAsk={askCustom}
             recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
-            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan }}
+            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek }}
             startOnPlan={planFirst}
             isPro={isPro}
             onNeedPro={() => openPaywall("Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola.")}

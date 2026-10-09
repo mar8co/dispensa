@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { rankCookable } from "./suggest.js";
 import { findMatch } from "./pantry.js";
-import BASE, { RECIPE_TYPES } from "../data/ricetteBase.js";
+import BASE, { RECIPE_TYPES, TITOLI_SPECIALI } from "../data/ricetteBase.js";
 
 const pantry = [{ name: "Spaghetti" }, { name: "Passata di pomodoro" }, { name: "Aglio" }, { name: "Uova" }, { name: "Zucchine" }];
 const has = (n) => !!findMatch(n, pantry);
@@ -19,7 +19,11 @@ describe("ricettario di base", () => {
     const tipi = RECIPE_TYPES.map(([id]) => id);
     expect(BASE.every((r) => tipi.includes(r.tipo))).toBe(true);
     expect(BASE.find((r) => r.title === "Caprese").tipo).toBe("zuppe");
-    expect(BASE.find((r) => r.title === "Pancake").tipo).toBe("veloci");
+    expect(BASE.find((r) => r.title === "Pancake").tipo).toBe("dolci");
+    expect(BASE.find((r) => r.title === "Purè di patate").tipo).toBe("contorni");
+    // contorni e dolci sono elencati per titolo: un refuso li lascerebbe nel piano dei pasti
+    const titles = new Set(BASE.map((r) => r.title));
+    expect(TITOLI_SPECIALI.filter((t) => !titles.has(t))).toEqual([]);
   });
 });
 

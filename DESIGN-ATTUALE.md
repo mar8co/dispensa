@@ -98,13 +98,22 @@
   (Apple, Google), più il link via email.
 - **"+"**: dal basso verso l'alto A mano, Voce, Barcode, Foto (09/10).
 - **Ricette, "Puoi farle con quello che hai" (09/10)**: SOLO nel piano gratuito (con Premium sparisce:
-  c'è l'AI). Elenco a righe sottili sopra le occasioni, col cartellino "Gratis" a destra del titolo:
+  c'è l'AI). Elenco a righe sottili sopra le occasioni, col cartellino "FREE" a destra del titolo:
   al massimo 5 ricette a cui non manca nulla (titolo, tempo, "hai tutto", cartellino nero "usa ciò che
   scade"); se non ce n'è nessuna, le 2 più vicine col titolo "Ti manca poco" e la riga "ti manca: " seguita
   dai nomi. Ogni riga apre la ricetta completa. Mai l'elenco intero del ricettario.
 - **Ricette nel piano gratuito**: il campo "Cosa ti va?" è lo stesso di Premium (scintille), ma "Vai" ha il
   lucchetto e apre il paywall; le occasioni restano visibili sotto "Idee su misura con l'AI" col cartellino
   nero "Premium"; "Aggiungi al piano" nella ricetta ha il lucchetto. Le pillole di contesto solo con Premium.
+- **Dispensa, "finito" con un gesto (09/10)**: scorrendo una riga verso sinistra (soglia 72 px, come
+  nella Spesa) compare un fondo NERO con "Finito · in lista" e il carrello; al rilascio il prodotto
+  diventa "finito" e va in lista, con un solo avviso e "Annulla". Non è rosso perché non elimina nulla.
+  Un avviso, una volta sola per dispositivo, spiega il gesto.
+- **Piano, "Riempi la settimana" (09/10)**: pulsante nero pieno sotto il selettore della settimana, con
+  una riga piccola che dice cosa fa; compare solo se da oggi in poi c'è almeno un pasto libero. Alla
+  fine: avviso "Piano pronto: N pasti · M prodotti in lista" con "Annulla".
+- **Ricetta aperta dal ricettario**: prende tutta la pagina (prima compariva in fondo a "Cosa
+  cuciniamo?"); in alto il link "Indietro".
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

@@ -215,6 +215,7 @@ export default function Anteprima() {
             plan={{
               meals: [], weekStart: mondayOf(new Date()), shiftWeek: () => {}, loadingMeals: false,
               planMeal: () => {}, removeMeal: () => {}, markMealCooked: () => {}, setMealServings: () => {}, onCookMeal: () => {},
+              onFillWeek: () => notify("Piano pronto: 9 pasti · 12 prodotti in lista"), fillingWeek: false,
               // "Aggiungi al piano": domani a cena c'è già un piatto, dopodomani a pranzo questa ricetta.
               loadRange: async () => [
                 { id: "m1", date: inDays(1), slot: "cena", title: "Pollo al limone" },
