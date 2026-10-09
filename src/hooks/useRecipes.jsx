@@ -133,6 +133,12 @@ export function useRecipes({
   }
 
   async function chooseMode(m, force = false) {
+    // Dispensa vuota (o solo prodotti finiti): l'AI inventerebbe piatti con
+    // cose che non hai. Meglio dirlo, senza spendere una richiesta.
+    if (!pantryStr.trim()) {
+      showToast("La dispensa è vuota: aggiungi qualche prodotto e ti propongo cosa cucinare", undefined, undefined, undefined, 4000);
+      return;
+    }
     const gen = newGen(); // invalida le richieste precedenti ancora in volo
     scrollToTop(); // le 5 proposte partono sempre dall'alto
     // Richiesta libera ("Cosa ti va?"): niente cache, sempre fresca.

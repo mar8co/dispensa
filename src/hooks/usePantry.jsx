@@ -281,7 +281,8 @@ export function usePantry({
 
   // "Cosa mi manca": true se l'ingrediente trova corrispondenza in dispensa.
   function hasIngredient(name) {
-    return !!findMatch(name, items);
+    // I finiti (quantità 0) non contano: non li hai più.
+    return !!findMatch(name, items.filter((x) => !isOut(x)));
   }
 
   return {

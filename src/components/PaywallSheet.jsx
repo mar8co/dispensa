@@ -11,6 +11,7 @@ import { CalendarDays, Users, Sparkles, Ban, Loader2 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { PLANS, TRIAL_DAYS } from "../lib/premium.js";
+import { storeKitAvailable } from "../lib/storekit.js";
 
 const BENEFITS = [
   { Icon: CalendarDays, text: "Piano Alimentare settimanale" },
@@ -23,6 +24,9 @@ export default function PaywallSheet({ reason, onClose, onPurchase }) {
   const [plan, setPlan] = useState("yearly"); // l'annuale è l'offerta spinta
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // Sul web l'acquisto non esiste (passa da Apple, dentro l'app): si dice
+  // subito, invece di un pulsante che finisce sempre in errore.
+  const canBuy = storeKitAvailable();
 
   async function buy(close) {
     if (busy) return;
@@ -96,12 +100,20 @@ export default function PaywallSheet({ reason, onClose, onPurchase }) {
 
           {err && <p className="mt-3 text-center text-[0.9rem] font-bold text-ink">{err}</p>}
 
-          <Button variant="primary" size="lg" full className="mt-4" onClick={() => buy(close)} disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : `Provalo ${TRIAL_DAYS} giorni gratis`}
-          </Button>
-          <p className="micro mt-2 text-center">
-            Poi {PLANS[plan].price}{plan === "yearly" ? " all'anno" : " al mese"}. Disdici quando vuoi.
-          </p>
+          {canBuy ? (
+            <>
+              <Button variant="primary" size="lg" full className="mt-4" onClick={() => buy(close)} disabled={busy}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : `Provalo ${TRIAL_DAYS} giorni gratis`}
+              </Button>
+              <p className="micro mt-2 text-center">
+                Poi {PLANS[plan].price}{plan === "yearly" ? " all'anno" : " al mese"}. Disdici quando vuoi.
+              </p>
+            </>
+          ) : (
+            <p className="mt-4 rounded-card bg-white px-3.5 py-3 text-center text-[0.95rem] font-bold leading-snug text-ink">
+              Premium si attiva dall'app Dispensa per iPhone, con {TRIAL_DAYS} giorni di prova gratis.
+            </p>
+          )}
 
           <button onClick={close} className="link mt-2 block min-h-[40px] w-full text-center text-[0.9rem] text-ink">
             Non ora

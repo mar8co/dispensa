@@ -124,11 +124,6 @@ export default function Dispensa({ session }) {
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState(initialView);
   const [planFirst] = useState(initialPlanFirst); // notifica 18:30 → sotto-vista Piano
-  // Categorie CHIUSE di default: ogni categoria parte con collapsed=true.
-  // Le scelte salvate dall'utente (aperto/chiuso) vengono fuse sopra al load.
-  const [collapsed, setCollapsed] = useState(() =>
-    Object.fromEntries(CATEGORIES.map((c) => [c, true]))
-  );
   const [catOrder, setCatOrder] = useState(CATEGORIES);
   const cardRefs = useRef({});
 
@@ -258,8 +253,6 @@ export default function Dispensa({ session }) {
   } = useMealPlan({ ready: loaded, householdId: activeHouseholdId });
 
   // Applica le impostazioni (da cache o da DB) a catOrder/modeOrder.
-  // NB: lo stato "collassato" NON viene ripristinato: le categorie partono
-  // sempre chiuse a ogni apertura/ricarica dell'app (default voluto).
   function applySettings(s) {
     if (!s || typeof s !== "object") return;
     if (typeof s.byAisle === "boolean") setByAisle(s.byAisle);
@@ -331,7 +324,23 @@ export default function Dispensa({ session }) {
           const onboarded = (() => { try { return localStorage.getItem(`dispensa-onboarded-${uid}`) === "1"; } catch { return false; } })();
           const src = onboarded ? SEED_DATA : DEMO_DATA;
           rows = await insertMany(src.map(([name, qty, category, expiry]) => ({ name, qty, category, expiry: expiry || null })));
-          if (!onboarded) startTour(true);
+          if (!onboarded) {
+            // Segna che in dispensa ci sono i prodotti di ESEMPIO: se l'app
+            // viene chiusa a metà tutorial, alla riapertura si riparte da qui.
+            try { localStorage.setItem(`dispensa-tour-demo-${uid}`, "1"); } catch { /* */ }
+            startTour(true);
+          }
+        } else {
+          // Tutorial interrotto (app chiusa a metà): i prodotti di esempio sono
+          // ancora in dispensa e nessuno li toglierebbe più. Si riparte col
+          // tutorial, che alla fine li svuota come al primo accesso.
+          const demoLeft = (() => {
+            try {
+              return localStorage.getItem(`dispensa-tour-demo-${uid}`) === "1" &&
+                localStorage.getItem(`dispensa-onboarded-${uid}`) !== "1";
+            } catch { return false; }
+          })();
+          if (demoLeft) startTour(true);
         }
         // Migrazione categorie: i prodotti con etichette vecchie (es.
         // "Fresco e Verdure") vengono ri-categorizzati con le nuove regole
@@ -382,10 +391,10 @@ export default function Dispensa({ session }) {
     saveCache(session.user.id, {
       items,
       shopping,
-      settings: { collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs },
+      settings: { catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, shopping, collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
+  }, [items, shopping, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
 
   // --- Realtime: sincronizza dispensa e lista spesa tra dispositivi ---
   useEffect(() => {
@@ -441,10 +450,10 @@ export default function Dispensa({ session }) {
   // --- Persistenza impostazioni (jsonb sincronizzato) ---
   useEffect(() => {
     if (!loaded) return;
-    saveSettings({ collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs }).catch((e) =>
+    saveSettings({ catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs }).catch((e) =>
       console.error("Errore salvataggio impostazioni:", e)
     );
-  }, [collapsed, catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
+  }, [catOrder, modeOrder, byAisle, shopCats, prefServings, foodPrefs, loaded]);
 
   // Ripulisce la query del deep-link push (?view=…) dopo averla applicata allo
   // stato iniziale: un refresh riparte così dalla Dispensa, non dalla scheda
@@ -495,7 +504,9 @@ export default function Dispensa({ session }) {
     );
   });
 
-  const pantryStr = items.map((i) => `${i.name} (${i.qty})`).join(", ");
+  // I prodotti finiti (quantità 0) restano in elenco come promemoria, ma per le
+  // ricette NON ci sono: non vanno proposti all'AI come disponibili.
+  const pantryStr = items.filter((i) => !isOut(i)).map((i) => `${i.name} (${i.qty})`).join(", ");
 
   // Ricette: stato (mode/ideas/recipe/servings/ricettario) e logica (proposte,
   // ricetta completa, cache idee 24h, preferiti/cucinate) vivono in useRecipes.
@@ -589,7 +600,10 @@ export default function Dispensa({ session }) {
 
   // --- Tutorial interattivo ---
   const markOnboarded = () => {
-    try { localStorage.setItem(`dispensa-onboarded-${session.user.id}`, "1"); } catch { /* */ }
+    try {
+      localStorage.setItem(`dispensa-onboarded-${session.user.id}`, "1");
+      localStorage.removeItem(`dispensa-tour-demo-${session.user.id}`);
+    } catch { /* */ }
   };
   // Svuota dispensa e lista di esempio inserite per il tutorial.
   async function tourEmptyDemo() {
@@ -866,19 +880,12 @@ export default function Dispensa({ session }) {
     setVoiceOpen(true);
   }
 
-  // Conferma dei prodotti rivisti nella modale: vengono aggiunti alla
-  // dispensa e le categorie coinvolte si aprono, così vedi dove sono finiti.
+  // Conferma dei prodotti rivisti nella modale: vengono aggiunti alla dispensa.
   async function confirmScan(reviewed) {
     setScanOpen(false);
     const valid = (reviewed || []).filter((x) => String(x.name || "").trim());
     if (valid.length) {
       await mergeItems(valid);
-      const cats = new Set(valid.map((x) => (CATEGORIES.includes(x.category) ? x.category : "Altro")));
-      setCollapsed((prev) => {
-        const next = { ...prev };
-        for (const c of cats) next[c] = false;
-        return next;
-      });
       showToast(`${valid.length} ${valid.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"}`);
     }
     setScanItems([]);
