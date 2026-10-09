@@ -217,6 +217,23 @@ export function usePantry({
     }, "Annulla", "ink");
   }
 
+  // "Finito" con un gesto (la riga scorsa verso sinistra, vedi PantryTab): la
+  // quantità va a zero — il prodotto resta in elenco come "finito" — e in
+  // lista della spesa entra una voce. Un solo avviso, con "Annulla" che
+  // rimette com'erano sia la dispensa sia la lista.
+  async function finishItem(it) {
+    const zero = /\d/.test(String(it.qty)) ? String(it.qty).replace(/-?\d+(?:[.,]\d+)?/, "0") : "0";
+    setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: zero } : x)));
+    persistUpdate(it.id, { qty: zero });
+    const res = await addToShoppingMerged([{ name: it.name, qty: "1" }]);
+    showToast(<><strong>{it.name}</strong> finito: è in lista</>, () => {
+      setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: it.qty } : x)));
+      persistUpdate(it.id, { qty: it.qty });
+      res?.undo?.();
+      dismissToast();
+    });
+  }
+
   // Imposta/cambia la scadenza dal pannello (stesso flusso con Annulla).
   async function setItemExpiry(it, expiry) {
     await autoSaveItem(it, { expiry: expiry || null }, { expiry: it.expiry || null });
@@ -295,6 +312,6 @@ export function usePantry({
     grouped, expiringItems, expiredCount, expiringSoonCount, isOut, hasIngredient,
     // funzioni
     mergeItems, addManual, submitManual, removeItem, clearPantry,
-    autoSaveItem, setItemExpiry, moveCategory,
+    autoSaveItem, setItemExpiry, moveCategory, finishItem,
   };
 }

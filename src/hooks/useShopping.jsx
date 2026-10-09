@@ -52,8 +52,10 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   function persistDelete(id) {
     deleteShopping(id).catch(() => enqueue(uid, { table: "shopping", type: "delete", id }));
   }
+  // Ritorna la promessa: chi deve annullare l'inserimento aspetta che sia
+  // arrivato (o finito in coda) prima di cancellare.
   function persistInsertMany(rows) {
-    insertManyShopping(rows).catch(() => {
+    return insertManyShopping(rows).catch(() => {
       for (const r of rows) enqueue(uid, { table: "shopping", type: "insert", id: r.id, row: r });
     });
   }
@@ -98,10 +100,23 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
       ...newRows.map((r) => ({ ...r, checked: false, created_at: new Date().toISOString() })),
       ...prev.map((x) => (updates.has(x.id) ? { ...x, qty: updates.get(x.id) } : x)),
     ]);
+    // Quantità di prima delle righe fuse: servono ad `undo`.
+    const before = new Map([...updates.keys()].map((id) => [id, shopping.find((x) => x.id === id)?.qty]));
     for (const [id, qty] of updates) persistUpdate(id, { qty });
-    if (newRows.length) persistInsertMany(newRows);
+    const inserted = newRows.length ? persistInsertMany(newRows) : Promise.resolve();
     bumpShopHistory((entries || []).map((e) => e.name));
-    return { added: newRows.length, merged: updates.size };
+    // `undo`: rimette la lista com'era (toglie le righe nuove, ripristina le
+    // quantità di quelle fuse). Lo usano le aggiunte AUTOMATICHE che hanno un
+    // "Annulla" (prodotto finito con un gesto, piano della settimana).
+    const undo = () => {
+      const fresh = new Set(newRows.map((r) => r.id));
+      setShopping((prev) => prev
+        .filter((x) => !fresh.has(x.id))
+        .map((x) => (before.has(x.id) ? { ...x, qty: before.get(x.id) } : x)));
+      inserted.then(() => { for (const id of fresh) persistDelete(id); });
+      for (const [id, qty] of before) persistUpdate(id, { qty });
+    };
+    return { added: newRows.length, merged: updates.size, undo };
   }
 
   // Aggiunta manuale alla spesa: correzione ortografica locale (stesso
@@ -225,8 +240,8 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   async function addMissingToShopping(names) {
     const existing = new Set(shopping.map((s) => norm(s.name)));
     const toAdd = (names || []).filter(Boolean).filter((n) => !existing.has(norm(n)));
-    if (!toAdd.length) return;
-    await addToShoppingMerged(toAdd.map((name) => ({ name, qty: "1" })));
+    if (!toAdd.length) return { added: 0, merged: 0, undo: () => {} };
+    return addToShoppingMerged(toAdd.map((name) => ({ name, qty: "1" })));
   }
 
   // "Finito → in lista": dalla riga del prodotto esaurito in dispensa.

@@ -172,6 +172,7 @@ export default function Anteprima() {
             removeItem={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> eliminato</>, onUndo: () => setToast(null) }); }}
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={() => {}} isOut={isOut} onToShopping={() => notify("In lista spesa")}
+            onFinish={(it) => { setItems((l) => l.map((x) => (x.id === it.id ? { ...x, qty: String(x.qty).replace(/-?\d+(?:[.,]\d+)?/, "0") } : x))); setToast({ message: <><strong>{it.name}</strong> finito: è in lista</>, onUndo: () => setToast(null) }); }}
             onCookWith={() => {}}
           />
         )}

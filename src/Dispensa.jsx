@@ -233,7 +233,7 @@ export default function Dispensa({ session }) {
     confirmClear, setConfirmClear,
     grouped, expiringItems, expiredCount, expiringSoonCount, isOut, hasIngredient,
     mergeItems, addManual, submitManual, removeItem, clearPantry,
-    autoSaveItem, setItemExpiry, moveCategory,
+    autoSaveItem, setItemExpiry, moveCategory, finishItem,
   } = usePantry({
     session, showToast, dismissToast, catOrder, setCatOrder,
     bumpShopHistory, addToShoppingMerged,
@@ -403,6 +403,18 @@ export default function Dispensa({ session }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeHouseholdId]);
 
+  // Il gesto "finito" (scorrere la riga) non si scopre da soli: UNA volta per
+  // dispositivo, alla prima Dispensa non vuota, un avviso lo spiega.
+  const hasItems = items.length > 0;
+  useEffect(() => {
+    if (!loaded || !hasItems || view !== "dispensa") return;
+    try {
+      if (localStorage.getItem("dispensa-finito-hint")) return;
+      localStorage.setItem("dispensa-finito-hint", "1");
+    } catch { return; }
+    showToast("Quando finisci un prodotto scorri la riga verso sinistra: va nella lista della spesa", undefined, undefined, undefined, 5000);
+  }, [loaded, hasItems, view]);
+
   // Pulisce il timer del toast allo smontaggio.
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
@@ -566,16 +578,18 @@ export default function Dispensa({ session }) {
 
   // --- Lista della spesa: stato e logica estratti in hooks/useShopping.jsx ---
   // Resta qui solo il bridge verso la dispensa (scrive pantry_items).
-  // "Sposta in dispensa" non scrive subito: apre la revisione con i prodotti
-  // del carrello, il loro reparto e — per i freschi — una scadenza PROPOSTA
-  // (durata tipica della categoria), da correggere o togliere. Così la data
-  // entra nel percorso normale, senza riaprire ogni prodotto dopo. Se in
-  // dispensa c'è già lo stesso prodotto con una sua scadenza, non si propone
-  // nulla (non va sovrascritta con una stima).
-  function moveCheckedToPantry() {
+  // "Sposta in dispensa". Se nel carrello ci sono dei FRESCHI si apre la
+  // revisione, con una scadenza PROPOSTA per ciascuno (durata tipica della
+  // categoria) da correggere o togliere: così la data entra nel percorso
+  // normale, senza riaprire ogni prodotto dopo. Se di freschi non ce ne sono
+  // (pasta, conserve, bevande…) non c'è nulla da rivedere: si sposta subito,
+  // come prima, senza un passo in più. Se in dispensa c'è già lo stesso
+  // prodotto con una sua scadenza non si propone nulla (non va sovrascritta
+  // con una stima).
+  async function moveCheckedToPantry() {
     const checked = shopping.filter((x) => x.checked);
     if (!checked.length) return;
-    setScanItems(checked.map((x) => {
+    const list = checked.map((x) => {
       const category = catForShopping(x.name);
       const days = SHELF_LIFE_DAYS[category];
       const existing = items.find((i) => matchKey(i.name) === matchKey(x.name));
@@ -583,11 +597,30 @@ export default function Dispensa({ session }) {
         name: x.name, qty: x.qty, category,
         expiry: days && !existing?.expiry ? dateInDays(days) : "",
       };
-    }));
-    setFromShopping(checked.map((x) => x.id));
+    });
+    const ids = checked.map((x) => x.id);
+    if (!list.some((x) => x.expiry)) {
+      await mergeItems(list);
+      leaveShopping(ids);
+      showToast(`${list.length} ${list.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`);
+      return;
+    }
+    setScanItems(list);
+    setFromShopping(ids);
     setVoiceReview(false);
     bumpModal("scan");
     setScanOpen(true);
+  }
+  // Gli articoli spostati in dispensa escono dalla lista (subito a schermo,
+  // in coda se offline) ed entrano nello storico degli acquisti.
+  function leaveShopping(idList) {
+    const ids = new Set(idList);
+    const moved = shopping.filter((x) => ids.has(x.id));
+    setShopping((prev) => prev.filter((x) => !ids.has(x.id)));
+    deleteShoppingItems([...ids]).catch(() => {
+      for (const id of ids) enqueue(session.user.id, { table: "shopping", type: "delete", id });
+    });
+    bumpShopHistory(moved.map((x) => x.name)); // acquisti completati
   }
   // --- Riordino generico (categorie e occasioni) ---
   function moveInOrder(setOrder, dragged, target) {
@@ -823,15 +856,7 @@ export default function Dispensa({ session }) {
     }
     // Dalla spesa: gli articoli del carrello escono dalla lista (anche quelli
     // tolti a mano nella revisione: erano comunque stati presi).
-    if (fromShopping?.length) {
-      const ids = new Set(fromShopping);
-      const moved = shopping.filter((x) => ids.has(x.id));
-      setShopping((prev) => prev.filter((x) => !ids.has(x.id)));
-      deleteShoppingItems([...ids]).catch(() => {
-        for (const id of ids) enqueue(session.user.id, { table: "shopping", type: "delete", id });
-      });
-      bumpShopHistory(moved.map((x) => x.name)); // acquisti completati
-    }
+    if (fromShopping?.length) leaveShopping(fromShopping);
     setFromShopping(null);
     setScanItems([]);
     setVoiceReview(false);
@@ -1082,6 +1107,8 @@ export default function Dispensa({ session }) {
             onAutoSave={autoSaveItem} onSetExpiry={setItemExpiry} removeItem={removeItem}
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
+            // Riga scorsa verso sinistra: "finito" (se lo era già, solo in lista).
+            onFinish={(it) => (isOut(it) ? finishedToShopping(it) : finishItem(it))}
             onCookWith={cookWithProduct}
           />
         )}

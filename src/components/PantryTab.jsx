@@ -39,6 +39,90 @@ function ExpiryBadge({ date, onlyUrgent = false }) {
   );
 }
 
+// --- Riga prodotto a riposo. Gesti:
+// • tocco = apre il pannello di modifica;
+// • scorrimento ← oltre la soglia = "finito": quantità a zero e prodotto in
+//   lista della spesa (lo fa `onFinish`, con "Annulla" nell'avviso).
+// Stessa soglia e stessa resa delle righe della Spesa (là a sinistra si
+// elimina, qui non si elimina nulla: il fondo è nero, non rosso).
+function PantryRow({ it, out, onOpen, onFinish }) {
+  const [dx, setDx] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const start = useRef(null);
+  const axis = useRef(null);    // "h" | "v" | null
+  const swiped = useRef(false); // il click che segue uno scorrimento va ignorato
+  const THRESHOLD = 72;         // px oltre cui scatta l'azione
+  const MAX = 104;              // limite visivo (oltre, resistenza elastica)
+
+  function down(e) {
+    start.current = { x: e.clientX, y: e.clientY };
+    axis.current = null;
+    swiped.current = false;
+    setDragging(true);
+  }
+  function move(e) {
+    if (!start.current) return;
+    const ddx = e.clientX - start.current.x;
+    const ddy = e.clientY - start.current.y;
+    if (axis.current == null) {
+      if (Math.abs(ddx) < 8 && Math.abs(ddy) < 8) return;
+      axis.current = Math.abs(ddx) > Math.abs(ddy) ? "h" : "v";
+      if (axis.current === "h") {
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
+      }
+    }
+    if (axis.current !== "h") return;
+    swiped.current = true;
+    // Solo verso sinistra; oltre MAX la riga "tira" sempre meno.
+    setDx(ddx >= 0 ? 0 : ddx < -MAX ? -MAX + (ddx + MAX) * 0.25 : ddx);
+  }
+  function up(e) {
+    const ddx = start.current ? e.clientX - start.current.x : 0;
+    const wasH = axis.current === "h";
+    start.current = null;
+    setDragging(false);
+    setDx(0);
+    if (wasH && ddx <= -THRESHOLD) onFinish?.(it);
+  }
+  function cancel() {
+    start.current = null;
+    axis.current = null;
+    setDragging(false);
+    setDx(0);
+  }
+
+  return (
+    <li className="relative overflow-hidden">
+      {/* Fondo dell'azione, visibile solo mentre la riga è spostata. */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 flex items-center justify-end gap-1.5 pr-3 text-[0.9rem] font-extrabold tracking-[-0.01em] ${dx < -4 ? "bg-ink text-crema" : "opacity-0"}`}
+      >
+        {out ? "In lista" : "Finito · in lista"} <ShoppingCart className="h-4 w-4" />
+      </div>
+      <button
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={cancel}
+        onClick={() => { if (swiped.current) { swiped.current = false; return; } onOpen(it); }}
+        style={{
+          touchAction: "pan-y",
+          transform: `translateX(${dx}px)`,
+          transition: dragging ? "none" : "transform 0.2s ease",
+        }}
+        className="relative flex w-full select-none items-baseline gap-2 bg-sfondo py-[9px] text-left"
+      >
+        <span className={`min-w-0 truncate text-[1.06rem] font-[650] tracking-[-0.02em] ${out ? "text-tenue" : "text-ink"}`}>{it.name}</span>
+        <ExpiryBadge date={it.expiry} />
+        {out && <span className="cartellino self-center">finito</span>}
+        <span aria-hidden="true" className="-translate-y-1 border-b-2 border-dotted border-ink/35" style={{ flex: "1 0 12px" }} />
+        <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${out ? "text-tenue" : "text-ink"}`}>{qtyLabel(it.qty)}</span>
+      </button>
+    </li>
+  );
+}
+
 const SORTS = [
   ["recenti", "Recenti"],
   ["nome", "A-Z"],
@@ -52,6 +136,7 @@ export default function PantryTab({
   grouped, cardRefs,
   onMoveCat, onAutoSave, onSetExpiry, removeItem,
   expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
+  onFinish,
 }) {
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
@@ -453,21 +538,9 @@ export default function PantryTab({
                   );
                 }
 
-                // A riposo: nome ……… quantità (puntini di guida)
-                return (
-                  <li key={it.id}>
-                    <button
-                      onClick={() => openPanel(it)}
-                      className="flex w-full items-baseline gap-2 py-[9px] text-left"
-                    >
-                      <span className={`min-w-0 truncate text-[1.06rem] font-[650] tracking-[-0.02em] ${out ? "text-tenue" : "text-ink"}`}>{it.name}</span>
-                      <ExpiryBadge date={it.expiry} />
-                      {out && <span className="cartellino self-center">finito</span>}
-                      <span aria-hidden="true" className="-translate-y-1 border-b-2 border-dotted border-ink/35" style={{ flex: "1 0 12px" }} />
-                      <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${out ? "text-tenue" : "text-ink"}`}>{qtyLabel(it.qty)}</span>
-                    </button>
-                  </li>
-                );
+                // A riposo: nome ……… quantità (puntini di guida); scorrendola
+                // verso sinistra il prodotto è "finito" (vedi PantryRow).
+                return <PantryRow key={it.id} it={it} out={out} onOpen={openPanel} onFinish={onFinish} />;
               })}
             </ul>
           </section>
