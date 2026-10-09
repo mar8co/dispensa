@@ -1,5 +1,6 @@
-// Schermata di accesso a pagina intera: 3 provider rapidi (Apple, Google,
-// Face ID/passkey) in alto, poi accesso via email con link magico. Veste
+// Schermata di accesso a pagina intera: 2 provider rapidi (Apple, Google) in
+// alto, poi accesso via email con link magico. Il Face ID/passkey è stato
+// tolto il 09/10: serviva solo dopo un "Esci" sullo stesso telefono. Veste
 // manifesto: beige del marchio (lo imposta App.jsx), titolo enorme, i due
 // barattoli, pillole bianche per i provider, campo con la sola riga sotto.
 import { useState } from "react";
@@ -7,27 +8,13 @@ import { Loader2, Mail, Check } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
 import { authRedirectUrl } from "../lib/native.js";
 import PrivacySheet from "./PrivacySheet.jsx";
-import FaceIdIcon from "./FaceIdIcon.jsx";
 import Barattoli from "./Barattoli.jsx";
 import { PAGE_COLOR } from "../lib/colors.js";
 
-// WebAuthn/passkey disponibile solo su contesti sicuri con l'API credenziali
-// (iPhone Safari/PWA la supporta). Se manca, nascondiamo il pulsante Face ID.
-const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
-
 export default function Auth() {
-  // Il pulsante Face ID compare SOLO se su questo dispositivo è stata
-  // registrata una passkey (flag scritto dal Profilo alla registrazione):
-  // un pulsante che fallisce al primo tocco per chi non l'ha mai attivata
-  // è peggio di nessun pulsante. Letto al mount: il login si monta fresco.
-  const [hasDevicePasskey] = useState(() => {
-    try { return localStorage.getItem("dispensa-passkey-device") === "1"; } catch { return false; }
-  });
-  const showPasskey = CAN_USE_PASSKEY && hasDevicePasskey;
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false); // link email inviato
-  const [passkeyBusy, setPasskeyBusy] = useState(false); // ceremony Face ID in corso
   // Spinner sul provider premuto: OAuth reindirizza la pagina, quindi al
   // successo lo spinner resta acceso fino al redirect (si azzera solo su errore).
   const [oauthBusy, setOauthBusy] = useState(null); // "apple" | "google" | null
@@ -91,25 +78,6 @@ export default function Auth() {
     }
   }
 
-  // Accesso con Face ID/Touch ID (passkey già registrata dal Profilo su questo
-  // dispositivo). Il prompt lo mostra il sistema; al successo l'auth listener
-  // dell'app monta la schermata principale.
-  async function signInPasskey() {
-    if (passkeyBusy) return;
-    setProvErr(""); setPasskeyBusy(true);
-    try {
-      const { error } = await supabase.auth.signInWithPasskey();
-      if (error) throw error;
-    } catch (e2) {
-      // L'utente ha annullato il prompt di sistema: niente da segnalare.
-      if (e2?.name === "NotAllowedError" || e2?.name === "AbortError") return;
-      console.error(e2);
-      setProvErr("Accesso con Face ID non riuscito. Entra con email o Google, poi riattivalo dal Profilo.");
-    } finally {
-      setPasskeyBusy(false);
-    }
-  }
-
   return (
     <div className="flex min-h-[100svh] flex-col bg-sfondo px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+2rem)]">
       {/* Testata: la domanda del brand, enorme, con la sottolineatura ondulata
@@ -153,18 +121,13 @@ export default function Auth() {
         ) : (
           // Schermata principale: provider rapidi + OPPURE + email
           <>
-            <div className={`grid gap-2 ${showPasskey ? "grid-cols-3" : "grid-cols-2"}`}>
+            <div className="grid grid-cols-2 gap-2">
               <SocialButton label="Continua con Apple" onClick={signInApple} busy={oauthBusy === "apple"}>
                 <AppleIcon />
               </SocialButton>
               <SocialButton label="Continua con Google" onClick={signInGoogle} busy={oauthBusy === "google"}>
                 <GoogleIcon />
               </SocialButton>
-              {showPasskey && (
-                <SocialButton label="Accedi con Face ID" onClick={signInPasskey} busy={passkeyBusy}>
-                  <FaceIdIcon className="h-[23px] w-[23px] text-ink" />
-                </SocialButton>
-              )}
             </div>
             {/* Errore dei provider: adiacente ai pulsanti, non in fondo pagina */}
             {provErr && <p className="mt-3 text-center text-[0.9rem] font-bold text-ink">{provErr}</p>}

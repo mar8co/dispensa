@@ -1,6 +1,6 @@
 // Impostazioni DENTRO il Profilo (dal 09/10: prima erano un pannello a parte,
 // aperto dall'ingranaggio in alto a destra, tolto su richiesta). Raccoglie il
-// "come si comporta l'app": Premium, Face ID, notifiche push, tutorial, "Esci"
+// "come si comporta l'app": Premium, notifiche push, "Esci"
 // (con conferma) e il footer legale (privacy / elimina account). `children` =
 // righe del Profilo da mettere subito prima di "Esci" (es. "Svuota dispensa").
 // `close` chiude il pannello del Profilo.
@@ -10,13 +10,7 @@ import {
   Sparkles, ChevronRight,
 } from "lucide-react";
 import IconaEsci from "./IconaEsci.jsx";
-import FaceIdIcon from "./FaceIdIcon.jsx";
-import { supabase } from "../lib/supabase.js";
 import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush } from "../lib/push.js";
-
-// WebAuthn/passkey disponibile solo dove esiste l'API credenziali (iPhone
-// Safari/PWA la supporta). Se manca, la riga Face ID non compare.
-const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
 
 export default function SettingsSection({
   close, onDeleteAccount, onOpenPrivacy, onLogout,
@@ -26,10 +20,6 @@ export default function SettingsSection({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [delErr, setDelErr] = useState("");
-  const [uid, setUid] = useState(null);              // id utente (chiave localStorage passkey)
-  const [passkeyActive, setPasskeyActive] = useState(false); // Face ID attivo su questo device
-  const [passkeyBusy, setPasskeyBusy] = useState(false);
-  const [passkeyErr, setPasskeyErr] = useState("");
   // Notifiche push (avvisi scadenze): stato per QUESTO dispositivo.
   const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
@@ -37,63 +27,12 @@ export default function SettingsSection({
   const canPush = pushSupported();
   const iosHint = isIosNotInstalled();
 
-  // Recupera l'uid e legge se il Face ID è già stato attivato su questo
-  // dispositivo (flag locale per-utente scritto al momento della registrazione).
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const id = data?.user?.id;
-      if (!id) return;
-      setUid(id);
-      const active = localStorage.getItem(`dispensa-passkey-${id}`) === "1";
-      setPasskeyActive(active);
-      // Auto-riparazione: chi ha attivato Face ID PRIMA dell'introduzione del
-      // flag di dispositivo ha solo quello per-utente — senza questo riallineo
-      // il pulsante "Accedi con Face ID" non comparirebbe mai nel login.
-      if (active) { try { localStorage.setItem("dispensa-passkey-device", "1"); } catch { /* */ } }
-    }).catch(() => {});
-  }, []);
-
   // Legge se le notifiche sono già attive su questo dispositivo (esiste una
   // subscription registrata nel browser).
   useEffect(() => {
     if (!canPush) return;
     getPushState().then((s) => setPushOn(s.enabled)).catch(() => {});
   }, [canPush]);
-
-  // Registra una passkey (Face ID/Touch ID) per l'utente loggato: richiede una
-  // sessione attiva. Al successo salviamo il flag locale così il login mostrerà
-  // il pulsante "Accedi con Face ID" su questo dispositivo.
-  async function activatePasskey() {
-    if (passkeyBusy) return;
-    setPasskeyErr(""); setPasskeyBusy(true);
-    try {
-      const { error } = await supabase.auth.registerPasskey();
-      if (error) throw error;
-      if (uid) localStorage.setItem(`dispensa-passkey-${uid}`, "1");
-      // Flag a livello DISPOSITIVO (non per-utente): il login lo usa per
-      // mostrare il pulsante Face ID solo dove una passkey esiste davvero.
-      localStorage.setItem("dispensa-passkey-device", "1");
-      setPasskeyActive(true);
-    } catch (e) {
-      // Prompt di sistema annullato dall'utente: nessun errore da mostrare.
-      if (e?.name === "NotAllowedError" || e?.name === "AbortError") return;
-      console.error(e);
-      setPasskeyErr("Attivazione non riuscita. Riprova.");
-    } finally {
-      setPasskeyBusy(false);
-    }
-  }
-
-  // Disattiva il Face ID su QUESTO dispositivo: rimuove i flag locali, così il
-  // pulsante sparisce dal login. La passkey resta nel portachiavi (innocua);
-  // riattivando, iOS riusa o aggiorna la credenziale esistente.
-  function deactivatePasskey() {
-    try {
-      if (uid) localStorage.removeItem(`dispensa-passkey-${uid}`);
-      localStorage.removeItem("dispensa-passkey-device");
-    } catch { /* */ }
-    setPasskeyActive(false);
-  }
 
   // Toggle notifiche: attiva (chiede permesso + iscrive) o disattiva.
   async function togglePush() {
@@ -159,28 +98,6 @@ export default function SettingsSection({
           )}
 
           <div className="mt-4 border-t-[1.5px] border-ink">
-            {/* Face ID / passkey: attivazione dell'accesso rapido su questo
-                dispositivo (visibile solo dove WebAuthn è supportato) */}
-            {CAN_USE_PASSKEY && (
-              <div className={riga}>
-                <FaceIdIcon className="h-[19px] w-[19px] shrink-0 text-ink" />
-                <span className="min-w-0 flex-1">
-                  <span className={nome}>Face ID</span>
-                  <span className={stato}>
-                    {passkeyActive ? "Attivo su questo dispositivo" : "Accesso rapido su questo dispositivo"}
-                  </span>
-                </span>
-                {passkeyBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-ink" />
-                ) : passkeyActive ? (
-                  <button onClick={deactivatePasskey} className={disattiva}>Disattiva</button>
-                ) : (
-                  <button onClick={activatePasskey} className={attiva}>Attiva</button>
-                )}
-              </div>
-            )}
-            {passkeyErr && <p className="border-b border-riga py-2 text-[0.86rem] font-bold text-ink">{passkeyErr}</p>}
-
             {/* Notifiche push: avvisi scadenze (opt-in per dispositivo). Visibile
                 solo dove le push sono supportate; su iPhone non installato mostra
                 l'invito ad aggiungere l'app alla Home. */}
