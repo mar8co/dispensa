@@ -227,6 +227,9 @@ export const RECIPE_CONTEXTS = [
   { id: "pesce", icon: "🐟", label: "Pesce", hint: "l'ingrediente principale del piatto deve essere il pesce" },
   { id: "verdure", icon: "🥬", label: "Verdure", hint: "il piatto deve essere a base di verdure, senza carne né pesce" },
   { id: "legumi", icon: "🫘", label: "Legumi", hint: "l'ingrediente principale del piatto devono essere i legumi" },
+  // Si combinano con le altre (pasta al pesce, frittata di verdure): nessun conflitto.
+  { id: "pasta", icon: "🍝", label: "Pasta", hint: "il piatto deve essere una pasta" },
+  { id: "uova", icon: "🥚", label: "Uova", hint: "il piatto deve essere a base di uova" },
 ];
 
 // Regole condivise per ottenere il NOME GENERICO dell'alimento (usate da
