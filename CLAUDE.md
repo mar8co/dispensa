@@ -270,6 +270,14 @@ una regola locale basta.
   pranzo è nel calendario) e alle 18:30 la cena in calendario ha la
   precedenza (**`supabase/migration-15.sql` va eseguita a mano** per l'orario
   delle 11:00).
+  **Giro del 10/10**: riquadro nero **"Oggi"** in cima alla Dispensa
+  (scadenze + pasto di oggi dal calendario + quanti prodotti in lista; le due
+  righe sotto portano al Calendario e alla Spesa); nel Profilo il riquadro
+  bianco lo ha SOLO il campo delle esigenze alimentari (scelta dell'utente:
+  non rimettere riquadri bianchi alle altre sezioni); il calendario del
+  telefono non passa più da un file: **calendario in abbonamento**
+  (`server/calendar.js` + `api/calendar.js`, indirizzo `webcal://` firmato con
+  HMAC, nessuna tabella nuova; bottone "Collega al calendario del telefono").
   **Restano, per scelta**: filtri di ordinamento, "Cucina con questo
   prodotto", Barcode, "Seleziona tutto", foto dei piatti, Piano dentro Ricette.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con

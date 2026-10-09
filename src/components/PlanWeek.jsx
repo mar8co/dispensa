@@ -9,7 +9,6 @@ import {
   ChevronLeft, ChevronRight, Sun, Moon, Plus, Minus, Check, Sparkles,
   ShoppingCart, Utensils, Trash2, RefreshCw, CalendarPlus, CalendarDays, Loader2,
 } from "lucide-react";
-import { mealsToIcs } from "../lib/ics.js";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { isoDate, mondayOf, addDays } from "../hooks/useMealPlan.jsx";
@@ -181,7 +180,7 @@ export default function PlanWeek({
   meals, weekStart, shiftWeek, loadingMeals,
   planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal,
   savedRecipes, hasIngredient, onAddMissing, onGoIdeas,
-  onFillWeek, fillingWeek = false,
+  onFillWeek, fillingWeek = false, onConnectCalendar,
 }) {
   const [sheet, setSheet] = useState(null); // { date: Date, slot: "pranzo"|"cena" }
 
@@ -191,34 +190,6 @@ export default function PlanWeek({
   const sheetMeal = sheet ? byKey.get(`${isoDate(sheet.date)}|${sheet.slot}`) : null;
   // C'è almeno un pasto libero da oggi in poi? Solo allora ha senso "Riempi la settimana".
   const canFill = days.some((d) => isoDate(d) >= todayIso && SLOTS.some((s) => !byKey.has(`${isoDate(d)}|${s.id}`)));
-
-  // Pasti da mandare al calendario del telefono: quelli della settimana
-  // mostrata, da oggi in poi.
-  const weekIso = new Set(days.map((d) => isoDate(d)));
-  const exportable = meals.filter((m) => weekIso.has(m.date) && m.date >= todayIso);
-  // Il file .ics si passa al foglio di condivisione (su iPhone: "Calendario");
-  // dove non si può condividere un file lo si scarica/apre, e il telefono
-  // propone di aggiungere gli eventi.
-  async function saveToPhoneCalendar() {
-    const ics = mealsToIcs(exportable);
-    const file = new File([ics], "calendario-alimentare.ics", { type: "text/calendar" });
-    try {
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "Calendario Alimentare" });
-        return;
-      }
-    } catch (e) {
-      if (e?.name === "AbortError") return; // condivisione annullata
-    }
-    const url = URL.createObjectURL(file);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  }
 
   return (
     <div className="mt-4">
@@ -333,12 +304,18 @@ export default function PlanWeek({
         })}
       </div>
 
-      {/* Nel calendario del telefono (Apple, Google…): un evento "tutto il
-          giorno" per ogni pasto della settimana, da oggi in poi. */}
-      {exportable.length > 0 && (
-        <Button variant="secondary" full className="mt-3" onClick={saveToPhoneCalendar}>
-          <CalendarDays className="h-4 w-4" /> Salva nel calendario del telefono
-        </Button>
+      {/* Collega il calendario del telefono (Apple, Google…): un abbonamento
+          fatto una volta sola, poi i pasti compaiono e si aggiornano da soli
+          (lo apre Dispensa.jsx: connectCalendar). */}
+      {onConnectCalendar && (
+        <div className="mt-3">
+          <Button variant="secondary" full onClick={onConnectCalendar}>
+            <CalendarDays className="h-4 w-4" /> Collega al calendario del telefono
+          </Button>
+          <p className="micro mt-1.5 text-center">
+            Si fa una volta sola: poi pranzi e cene compaiono da soli nel tuo calendario.
+          </p>
+        </div>
       )}
 
       {sheet && (

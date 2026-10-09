@@ -26,6 +26,7 @@ export function mealsToIcs(meals, now = new Date()) {
     "PRODID:-//Dispensa//Calendario Alimentare//IT",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
+    "X-WR-CALNAME:Calendario Alimentare", // nome mostrato dal calendario in abbonamento
   ];
   for (const m of meals) {
     if (!m?.date || !m?.title) continue;

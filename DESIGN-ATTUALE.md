@@ -150,6 +150,12 @@
   Privacy / Elimina account. Ricette: "Puoi farle con quello che hai" è un'intestazione-bottone con
   numero e freccina, chiusa di serie. La scheda si chiama "Calendario Alimentare"; in fondo alla
   settimana il bottone col bordo "Salva nel calendario del telefono".
+- **Giro del 10/10**: in cima alla Dispensa il riquadro nero si chiama "Oggi" ed è sempre presente:
+  scadenze (o "Niente in scadenza"), poi due righe con filo sottile e freccia — "🍳 Stasera: piatto"
+  (o "A pranzo: …", o "Oggi niente in calendario") e "🛒 N prodotti in lista". Profilo: un solo
+  riquadro bianco (esigenze alimentari); notifiche, dispensa condivisa e ordine delle categorie sono
+  righe sul blu. Calendario: in fondo alla settimana "Collega al calendario del telefono" con una
+  riga piccola di spiegazione.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

@@ -58,7 +58,9 @@ export function NotificationsSection() {
   return (
     <>
       <div className="sezione mt-6">Notifiche</div>
-      <div className="mt-2 rounded-card bg-white px-3.5 py-3">
+      {/* Niente riquadro bianco (nel Profilo lo ha solo il campo delle
+          esigenze alimentari, che è l'unico in cui si scrive): riga sul blu. */}
+      <div className="py-3">
         <div className="flex items-start gap-3">
           <Bell className="mt-0.5 h-[18px] w-[18px] shrink-0 text-ink" />
           <span className="min-w-0 flex-1">

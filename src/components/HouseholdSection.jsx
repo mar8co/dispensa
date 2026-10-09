@@ -101,8 +101,8 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         <span className="micro">{members.length} {members.length === 1 ? "membro" : "membri"}</span>
       </div>
 
-      {/* Nucleo attivo + membri: riquadro bianco, come le altre sezioni del Profilo */}
-      <div className="mt-2 rounded-card bg-white px-3.5 py-2.5">
+      {/* Nucleo attivo + membri: righe sottili sul blu, niente riquadro */}
+      <div className="pt-2.5">
         <div className="flex items-center gap-2">
           <Users className="h-[18px] w-[18px] text-ink" />
           <span className="min-w-0 truncate text-[1rem] font-bold tracking-[-0.01em] text-ink">{members.length > 1 ? "La nostra dispensa" : "La tua dispensa"}</span>

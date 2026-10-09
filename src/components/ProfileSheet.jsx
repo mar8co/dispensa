@@ -78,7 +78,8 @@ export default function ProfileSheet({
               1. Esigenze alimentari (cambiano ogni ricetta proposta)
               2. Notifiche  3. Dispensa condivisa  4. Ordine delle categorie
               (a scomparsa)  5. Esci e, in piccolo, privacy / elimina account.
-              Tutte uguali: intestazione `.sezione` + riquadro bianco. */}
+              Tutte uguali: intestazione `.sezione` + righe sul blu. Il riquadro
+              bianco lo ha SOLO il campo delle esigenze (scelta dell'utente, 10/10). */}
           {/* Esigenze alimentari: box da 2 righe sempre visibile (le ricette ne
               tengono conto — è "chi sei a tavola", per questo resta nel Profilo) */}
           <div className="sezione mt-6">Esigenze alimentari</div>
@@ -127,7 +128,7 @@ export default function ProfileSheet({
             <ChevronDown className={`h-[18px] w-[18px] transition-transform duration-200 ${catsOpen ? "rotate-180" : ""}`} />
           </button>
           {catsOpen && (
-            <ul className="animate-fade-in mt-2 divide-y divide-riga rounded-card bg-white px-3.5">
+            <ul className="animate-fade-in divide-y divide-riga">
               {catOrder.map((c, i) => (
                 <li key={c} className="flex min-h-[44px] items-center gap-2.5">
                   <span className="text-[1.05rem] leading-none">{CAT_ICON[c]}</span>

@@ -173,6 +173,8 @@ export default function Anteprima() {
             onCookExpiring={() => {}} isOut={isOut} onToShopping={() => notify("In lista spesa")}
             onFinish={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> finito: è in lista</>, onUndo: () => setToast(null) }); }}
             onCookWith={() => {}}
+            todayMeal={{ label: "Stasera", title: "Frittata di zucchine" }} shoppingCount={shopping.filter((s) => !s.checked).length}
+            onOpenPlan={() => {}} onOpenShopping={() => setView("spesa")}
           />
         )}
 
@@ -213,7 +215,7 @@ export default function Anteprima() {
             plan={{
               meals: [{ id: "m1", date: inDays(0), slot: "cena", title: "Frittata di zucchine" }, { id: "m2", date: inDays(1), slot: "pranzo", title: "Spaghetti al limone" }], weekStart: mondayOf(new Date()), shiftWeek: () => {}, loadingMeals: false,
               planMeal: () => {}, removeMeal: () => {}, markMealCooked: () => {}, setMealServings: () => {}, onCookMeal: () => {},
-              onFillWeek: () => notify("Piano pronto: 9 pasti · 12 prodotti in lista"), fillingWeek: false,
+              onFillWeek: () => notify("Piano pronto: 9 pasti · 12 prodotti in lista"), fillingWeek: false, onConnectCalendar: () => {},
               // "Aggiungi al piano": domani a cena c'è già un piatto, dopodomani a pranzo questa ricetta.
               loadRange: async () => [
                 { id: "m1", date: inDays(1), slot: "cena", title: "Pollo al limone" },

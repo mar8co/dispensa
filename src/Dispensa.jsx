@@ -118,7 +118,9 @@ function initialPlanFirst() {
 export default function Dispensa({ session }) {
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState(initialView);
-  const [planFirst] = useState(initialPlanFirst); // notifica 18:30 → sotto-vista Piano
+  // Aprire le Ricette direttamente sul Calendario: dalla notifica (?view=piano)
+  // o dal riquadro "Oggi" della Dispensa. Si azzera uscendo dalle Ricette.
+  const [planFirst, setPlanFirst] = useState(initialPlanFirst);
   const [catOrder, setCatOrder] = useState(CATEGORIES);
   const cardRefs = useRef({});
 
@@ -784,7 +786,47 @@ export default function Dispensa({ session }) {
   // rimasto "aperto" lascerebbe l'overlay scuro senza le opzioni.
   function changeView(v) {
     setAddMenuOpen(false);
+    if (v !== "ricette") setPlanFirst(false);
     if (v !== view) { animateUI(() => setView(v)); scrollToTop(); }
+  }
+  function openPlan() {
+    setPlanFirst(true);
+    changeView("ricette");
+  }
+  // Riquadro "Oggi": il prossimo pasto di oggi non ancora cucinato (il pranzo
+  // fino alle 15, poi la cena).
+  const todayMeal = (() => {
+    const today = isoDate(new Date());
+    const open = meals.filter((m) => m.date === today && !m.cooked_at);
+    const lunch = open.find((m) => m.slot === "pranzo");
+    const dinner = open.find((m) => m.slot === "cena");
+    if (lunch && new Date().getHours() < 15) return { label: "A pranzo", title: lunch.title };
+    return dinner ? { label: "Stasera", title: dinner.title } : null;
+  })();
+
+  // Calendario del telefono: chiede al server l'indirizzo personale del
+  // Calendario Alimentare e lo apre come calendario in ABBONAMENTO. Su iPhone
+  // e Mac "webcal://" apre l'app Calendario con "Abbonati"; altrove si passa
+  // da Google Calendar. Si fa una volta: poi si aggiorna da solo.
+  async function connectCalendar() {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+      const res = await fetch(apiUrl("/api/calendar"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const j = await res.json().catch(() => null);
+      if (!res.ok || !j?.path) throw new Error(j?.error || "no path");
+      const u = new URL(apiUrl(j.path), window.location.origin);
+      const webcal = `webcal://${u.host}${u.pathname}${u.search}`;
+      const apple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+      if (apple) window.location.href = webcal;
+      else window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`, "_blank", "noopener");
+    } catch (e) {
+      console.error(e);
+      showToast("Non sono riuscito a collegare il calendario. Controlla la connessione e riprova.");
+    }
   }
 
   // --- Ricette: stato e logica estratti in hooks/useRecipes.jsx ---
@@ -1062,6 +1104,10 @@ export default function Dispensa({ session }) {
             // Riga scorsa verso sinistra o pillola "Finito": via dalla dispensa, in lista.
             onFinish={finishItem}
             onCookWith={cookWithProduct}
+            todayMeal={todayMeal}
+            shoppingCount={shopping.filter((s) => !s.checked).length}
+            onOpenPlan={openPlan}
+            onOpenShopping={() => changeView("spesa")}
           />
         )}
 
@@ -1078,7 +1124,7 @@ export default function Dispensa({ session }) {
             onRetry={retryLast}
             onCustomAsk={askCustom}
             recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
-            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek }}
+            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek, onConnectCalendar: connectCalendar }}
             startOnPlan={planFirst}
             online={online}
             foodPrefs={foodPrefs}
