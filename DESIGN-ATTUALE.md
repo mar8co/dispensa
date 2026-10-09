@@ -169,6 +169,11 @@
 - **Avvisi in alto (11/10)**: la pillola nera dell'avviso compare fissa in alto, all'altezza della
   testata, tra l'avatar e le azioni (margini laterali 62px, alta 40px, testo 0,84rem, entra dall'alto
   con `drop-in`). Non c'è più nessun avviso in basso. "Modifica salvata · Annulla" dura 3,5 secondi.
+- **"Aggiungi al calendario" alleggerito (11/10)**: foglio nero in due passi. In alto l'occhiello
+  "Aggiungi al calendario" e il nome della ricetta (1,5rem); una striscia di 7 caselle uguali (giorno
+  abbreviato + numero; scelta = piena crema; puntino giallo = quel giorno ha già un piatto); sotto,
+  il giorno per esteso e due righe senza bordo, Pranzo e Cena, con "Libero" / "C'è già: …" e a destra
+  l'azione in giallo ("Aggiungi" / "Sostituisci"). Niente più 14 pillole col bordo.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un
