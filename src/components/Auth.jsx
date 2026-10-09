@@ -89,11 +89,11 @@ export default function Auth() {
           <span className="underline decoration-rosso-azione decoration-wavy decoration-[3px] underline-offset-[10px] [text-decoration-skip-ink:none]">dispensa</span>?
         </h1>
 
-        {/* Sottotitolo: la promessa. "Meno sprechi" su pillola arancio (il colore delle Ricette; prima il verde
+        {/* Sottotitolo: la promessa. "Meno sprechi" su pillola VERDE (scelta dell'utente: resta verde anche ora che le Ricette sono arancio; il verde
             del brand: sull'arancio un testo verde non si leggerebbe). */}
         <p className="mt-6 text-[1.05rem] font-semibold leading-relaxed text-ink">
           La tua cucina, in tasca.{" "}
-          <span className="whitespace-nowrap rounded-full bg-arancio px-2 py-0.5 font-extrabold">Meno sprechi.</span>{" "}
+          <span className="whitespace-nowrap rounded-full bg-verde px-2 py-0.5 font-extrabold">Meno sprechi.</span>{" "}
           Zero pensieri.
         </p>
       </div>

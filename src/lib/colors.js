@@ -29,7 +29,8 @@ export const PAGE_COLOR = {
   dispensa: PALETTE.sabbia,
   spesa: WHITE, // dal 01/10 (prima giallo)
   // Ricette: ARANCIO dal 09/10 (prima verde). Per cambiarlo basta questa riga:
-  // ricetta aperta, modalità cucina e pillola del login lo seguono da soli.
+  // ricetta aperta e modalità cucina lo seguono da soli. La pillola "Meno
+  // sprechi." del login NON lo segue: resta verde (scelta dell'utente).
   ricette: PALETTE.arancio, // Idee, proposte e Piano Alimentare
   ricetta: PALETTE.arancio, // ricetta aperta: stesso colore di tutto ciò che è Ricette
   accesso: PALETTE.sabbia, // login e caricamento

@@ -94,7 +94,7 @@
   destra, poi le cinque unità (pz · g · kg · ml · l) larghe uguali; tutti i comandi alti 44 px.
 - **Testo secondario sui colori saturi** (arancio delle Ricette, verde): `--tenue-a` passa da 0.6 a
   0.8 (lo imposta `setPageColor`), perché il nero al 60% lì non raggiunge il contrasto leggibile.
-- **Login**: la pillola "Meno sprechi." prende il colore delle Ricette (arancio); i provider sono due
+- **Login**: la pillola "Meno sprechi." resta **verde** `#22b35e` (scelta dell'utente del 09/10, anche con le Ricette arancio); i provider sono due
   (Apple, Google), più il link via email.
 - **"+"**: dal basso verso l'alto A mano, Voce, Barcode, Foto (09/10).
 - **Ricette, "Puoi farle adesso"**: elenco a righe sottili sopra le occasioni (titolo, tempo,
