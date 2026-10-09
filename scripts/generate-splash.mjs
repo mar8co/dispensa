@@ -38,7 +38,7 @@ const DEVICES = [
   { w: 440, h: 956, dpr: 3, note: "iPhone 16 Pro Max" },
 ];
 
-// Beige del marchio #dcceb3 (= PAGE_COLOR.accesso in src/lib/colors.js e theme-color).
+// Beige del marchio #dccdb2 (= PAGE_COLOR.accesso in src/lib/colors.js e theme-color).
 const BG = { r: 220, g: 206, b: 179, alpha: 1 };
 
 // Lockup centrato: barattoli sopra, scritta sotto. `visibleW` = larghezza utile.

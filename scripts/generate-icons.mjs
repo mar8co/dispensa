@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const svg = readFileSync(join(root, "public", "icon.svg"));
 const pub = join(root, "public");
-// Beige del marchio (#dcceb3): fondo dell'icona (uguale a public/icon.svg).
+// Beige del marchio (#dccdb2): fondo dell'icona (uguale a public/icon.svg).
 const FONDO = { r: 220, g: 206, b: 179, alpha: 1 };
 
 const targets = [

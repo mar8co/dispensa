@@ -7,7 +7,7 @@ export const PALETTE = {
   giallo: "#ffd60a",
   verde: "#22b35e",
   rosa: "#ffb5d0",
-  sabbia: "#dcceb3", // beige del marchio: Dispensa, accesso, avvio, icona
+  sabbia: "#dccdb2", // beige del marchio: Dispensa, accesso, avvio, icona
   blu: "#3572e8", // avatar e pannello Profilo
   grigio: "#c9c5bd",
   rosso: "#ff3b1c",

@@ -247,6 +247,27 @@ svg.lucide {
   border-color: rgb(243 241 236 / 0.22);
 }
 
+/* "Sul blu tutto bianco" (pannello Profilo): testi, fili e bordi bianchi, come
+   nelle altre due app della famiglia. I pulsanti pieni neri restano neri. */
+.su-blu { color: #fff; }
+.su-blu .text-ink { color: #fff; }
+.su-blu .text-tenue,
+.su-blu .micro { color: rgb(255 255 255 / 0.85); }
+.su-blu .sezione { border-bottom-color: #fff; }
+.su-blu .border-ink { border-color: #fff; }
+.su-blu .tondo,
+.su-blu .bottone-chiaro,
+.su-blu .pillola:not(.bg-ink) { border-color: #fff; color: #fff; }
+.su-blu .campo { border-bottom-color: #fff; color: #fff; }
+.su-blu input::placeholder { color: rgb(255 255 255 / 0.7); }
+.su-blu .border-riga,
+.su-blu .divide-riga > :not([hidden]) ~ :not([hidden]) { border-color: rgb(255 255 255 / 0.35); }
+/* Dentro i riquadri chiari (bianchi, gialli) si torna al nero. */
+.su-blu :is(.bg-white, .bg-giallo) { color: #0a0a0a; }
+.su-blu :is(.bg-white, .bg-giallo) .text-ink { color: #0a0a0a; }
+.su-blu :is(.bg-white, .bg-giallo) :is(.text-tenue, .micro) { color: rgb(10 10 10 / 0.6); }
+.su-blu :is(.bg-white, .bg-giallo) :is(.tondo, .bottone-chiaro, .pillola:not(.bg-ink)) { border-color: #0a0a0a; color: #0a0a0a; }
+
 /* Transizioni di vista (cambio scheda / dettaglio ricetta): dissolvenza breve. */
 ::view-transition-old(root),
 ::view-transition-new(root) {

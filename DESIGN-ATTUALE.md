@@ -15,14 +15,14 @@
   `usePageColor` in `App.jsx` (accesso/caricamento) e `Dispensa.jsx` (per scheda):
   | Schermata | Colore |
   |---|---|
-  | Dispensa, accesso, caricamento, avvio | **beige** `#dcceb3` (marchio, token `sabbia`; dal 01/10, prima arancio) |
+  | Dispensa, accesso, caricamento, avvio | **beige** `#dccdb2` (marchio, token `sabbia`; dal 01/10, prima arancio) |
   | Spesa | **bianco** (dal 01/10; prima giallo) |
   | Ricette (Idee, proposte, Piano Alimentare) | **arancio** `#ff7a1a` (dal 09/10, prima verde `#22b35e`; si cambia in una riga: `PAGE_COLOR.ricette` in `lib/colors.js`) |
   | Fogli del Piano (pasto, "Aggiungi al piano") e "Aggiorna la dispensa" (Ho cucinato) | **nero** (testo crema, azione gialla; dal 09/10; classi in `FOGLIO_NERO`, `lib/colors.js`) |
   | Ricetta aperta, modalità cucina | **stesso colore delle Ricette** (dal 09/10, prima bianco); gli ingredienti stanno in una card bianca |
   | Profilo (pannello da sinistra) | **blu** `#3572e8`, lo stesso dell'avatar (testi secondari neri) |
   | Impostazioni | dentro il Profilo (blu) dal 09/10; il pannello arancio non esiste più |
-  | Privacy (foglio) | **beige** `#dcceb3` |
+  | Privacy (foglio) | **beige** `#dccdb2` |
   | Premium (paywall) | **rosa** `#ffb5d0` |
   | Fogli dove si scrive (a mano, voce, revisione) | **bianco** (default di `Sheet`) |
   | Conferme (Svuota, far uscire un membro, elimina account) | **giallo** |
@@ -174,6 +174,13 @@
   abbreviato + numero; scelta = piena crema; puntino giallo = quel giorno ha già un piatto); sotto,
   il giorno per esteso e due righe senza bordo, Pranzo e Cena, con "Libero" / "C'è già: …" e a destra
   l'azione in giallo ("Aggiungi" / "Sostituisci"). Niente più 14 pillole col bordo.
+- **Coerenza con Expense Track e Wishlist (10/10)**: le tre app condividono tavolozza e regole (guida
+  madre: `Downloads/APP/wandelister/docs/LINEE-GUIDA-DESIGN.md`). Allineati: sabbia `#dccdb2` (prima
+  `#dcceb3`; le icone PNG e lo splash NON sono stati rigenerati, differenza invisibile); **sul blu
+  tutto bianco** nel Profilo (classe `.su-blu` in `index.css`: testi, fili, bordi bianchi; nero solo
+  dentro i riquadri bianchi e gialli; i pulsanti pieni neri restano neri); **avvisi sempre a pillola
+  nera** con "Annulla" giallo, il tono è un pallino colorato davanti al testo ("Preso: …" ha il
+  pallino giallo).
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

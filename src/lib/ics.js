@@ -63,7 +63,7 @@ export function mealsToIcs(meals, now = new Date()) {
     // solo un SUGGERIMENTO: la cadenza vera la decide il telefono.
     "X-WR-CALNAME:Dispensa",
     "X-WR-TIMEZONE:Europe/Rome",
-    "X-APPLE-CALENDAR-COLOR:#DCCEB3",
+    "X-APPLE-CALENDAR-COLOR:#DCCDB2",
     "REFRESH-INTERVAL;VALUE=DURATION:PT15M",
     "X-PUBLISHED-TTL:PT15M",
     ...FUSO,

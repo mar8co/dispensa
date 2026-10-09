@@ -61,7 +61,7 @@
   tocco ≥ 44px, rispetto di `env(safe-area-inset-*)`.
 - **Veste "manifesto svizzero"** (dettagli in `DESIGN-ATTUALE.md`): un colore
   pieno per schermata (`PAGE_COLOR` in `src/lib/colors.js`, applicato con
-  `usePageColor`: Dispensa beige `#dcceb3` (token `sabbia`), Spesa bianco, Ricette ROSA
+  `usePageColor`: Dispensa beige `#dccdb2` (token `sabbia`), Spesa bianco, Ricette ROSA
   (dal 09/10 sera; prima arancio, prima ancora verde), ricetta aperta dello stesso colore), inchiostro nero, Inter Tight, titoli `.gigante`,
   etichette `.micro`, righe sottili al posto delle card, pillole e tondi.
   Niente `backdrop-filter`/`filter: blur`/`mix-blend-mode`, animazioni solo
@@ -217,7 +217,7 @@ una regola locale basta.
 - **Tutto pubblicato su `main`** (ultimo commit di codice `eac8dcb`), niente
   lavori a metà, nessun ramo aperto.
 - **Veste attuale** (dettagli in `DESIGN-ATTUALE.md`): Dispensa e marchio beige
-  `#dcceb3`, Spesa bianca, Ricette arancio; avatar blu in alto a sinistra →
+  `#dccdb2`, Spesa bianca, Ricette arancio; avatar blu in alto a sinistra →
   Profilo (pannello blu da sinistra), l'unico menu: dentro ci sono anche le
   Impostazioni e "Esci" (l'ingranaggio in testata è stato tolto il 09/10);
   tutto ciò che è Ricette o Piano è arancio, ricetta aperta compresa; barra nera con
@@ -290,7 +290,7 @@ una regola locale basta.
   sulla sua ricetta (riquadro "Oggi" e Calendario Alimentare), le azioni
   cucinato/cambia/rimuovi stanno dietro i tre puntini; il riquadro "Oggi"
   senza scadenze non scrive nulla; il calendario in abbonamento si chiama
-  "Dispensa", colore `#DCCEB3`, aggiornamento suggerito ogni 15 minuti; dall'11/10 gli eventi hanno un orario (pranzo 13:00, cena 20:30, inizio = fine) e un avviso che parte in tempo per cucinare (`reminderMinutes`: tempo della ricetta + 10 min, tra 30 min e 2 ore).
+  "Dispensa", colore `#DCCDB2`, aggiornamento suggerito ogni 15 minuti; dall'11/10 gli eventi hanno un orario (pranzo 13:00, cena 20:30, inizio = fine) e un avviso che parte in tempo per cucinare (`reminderMinutes`: tempo della ricetta + 10 min, tra 30 min e 2 ore).
   **Notifiche (dall'11/10)**, tutte in `server/push.js` (`userPayloads`) sugli
   orari del cron già esistenti: 11:00 pranzo in calendario (+ il sabato "la
   lista ha N prodotti"); 14:30 "hai mangiato?" (la domenica, a calendario

@@ -27,7 +27,7 @@ personale), risponde in **italiano**: UI e commenti del codice sono in italiano.
 ## Veste grafica "manifesto svizzero" (2026-09-30)
 
 > L'app ha la stessa veste di Wishlist Viaggi ed Expense Track: **un colore
-> pieno per schermata** (Dispensa beige `#dcceb3` e Spesa bianco dal 01/10, Ricette
+> pieno per schermata** (Dispensa beige `#dccdb2` e Spesa bianco dal 01/10, Ricette
 > verde, ricetta aperta bianca, Profilo blu, Impostazioni arancio, Premium rosa,
 > conferme gialle, fotocamere nere), **Inter Tight**, titoli enormi, righe
 > sottili al posto delle card, pillole nere, icone a tratto spesso e il **logo

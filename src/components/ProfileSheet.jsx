@@ -39,8 +39,10 @@ export default function ProfileSheet({
   return (
     <Sheet side="left" onClose={onClose} panelClass="bg-blu">
       {(close) => (
-        // Sul blu i testi secondari grigi non si leggono: qui diventano neri.
-        <div className="px-[18px] pb-4 pt-1 [&_.micro]:text-ink [&_.text-tenue]:text-ink">
+        // "Sul blu tutto bianco" (regola delle tre app: Wishlist, Expense
+        // Track, Dispensa): testi, fili e bordi bianchi; restano neri solo i
+        // contenuti dei riquadri chiari. Vedi `.su-blu` in index.css.
+        <div className="su-blu px-[18px] pb-4 pt-1">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h3 className="titolo">Profilo</h3>
             <button onClick={close} aria-label="Chiudi" className="tondo">
