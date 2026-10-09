@@ -278,6 +278,14 @@ una regola locale basta.
   telefono non passa più da un file: **calendario in abbonamento**
   (`server/calendar.js` + `api/calendar.js`, indirizzo `webcal://` firmato con
   HMAC, nessuna tabella nuova; bottone "Collega al calendario del telefono").
+  **Giro del 10/10 (secondo)**: nelle Ricette TOLTE la sezione "Puoi farle con
+  quello che hai" e l'intestazione "Idee su misura" (commit `7619403`: se
+  l'utente dice "riattiva la modalità premium" va fatto il revert ANCHE di
+  questo, la sezione era la parte free); un piatto del calendario si apre
+  sulla sua ricetta (riquadro "Oggi" e Calendario Alimentare), le azioni
+  cucinato/cambia/rimuovi stanno dietro i tre puntini; il riquadro "Oggi"
+  senza scadenze non scrive nulla; il calendario in abbonamento si chiama
+  "Dispensa", colore `#DCCEB3`, aggiornamento suggerito ogni 15 minuti.
   **Restano, per scelta**: filtri di ordinamento, "Cucina con questo
   prodotto", Barcode, "Seleziona tutto", foto dei piatti, Piano dentro Ricette.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con

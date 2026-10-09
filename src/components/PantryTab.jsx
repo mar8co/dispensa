@@ -388,10 +388,8 @@ export default function PantryTab({
             </div>
           </>
         ) : (
-          <div className="px-3.5 pb-2.5 pt-3">
-            <span className="micro block">Oggi</span>
-            <p className="mt-1 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">Niente in scadenza</p>
-          </div>
+          // Niente in scadenza: non si scrive nulla, resta solo il titolo.
+          <span className="micro block px-3.5 pb-2 pt-3">Oggi</span>
         )}
         {onOpenPlan && (
           <button onClick={onOpenPlan} className="flex min-h-[44px] w-full items-center gap-2.5 border-t border-crema/20 px-3.5 py-2 text-left text-[0.95rem] font-bold">

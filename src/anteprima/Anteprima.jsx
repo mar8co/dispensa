@@ -213,9 +213,9 @@ export default function Anteprima() {
             onRegenerate={() => {}} onRetry={() => {}} onCustomAsk={() => {}}
             recipeContext={context} onToggleContext={(id) => setContext((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]))}
             plan={{
-              meals: [{ id: "m1", date: inDays(0), slot: "cena", title: "Frittata di zucchine" }, { id: "m2", date: inDays(1), slot: "pranzo", title: "Spaghetti al limone" }], weekStart: mondayOf(new Date()), shiftWeek: () => {}, loadingMeals: false,
+              meals: [{ id: "m1", date: inDays(0), slot: "cena", title: "Frittata di zucchine", data: RECIPE }, { id: "m2", date: inDays(1), slot: "pranzo", title: "Spaghetti al limone" }], weekStart: mondayOf(new Date()), shiftWeek: () => {}, loadingMeals: false,
               planMeal: () => {}, removeMeal: () => {}, markMealCooked: () => {}, setMealServings: () => {}, onCookMeal: () => {},
-              onFillWeek: () => notify("Piano pronto: 9 pasti · 12 prodotti in lista"), fillingWeek: false, onConnectCalendar: () => {},
+              onFillWeek: () => notify("Piano pronto: 9 pasti · 12 prodotti in lista"), fillingWeek: false, onConnectCalendar: () => {}, onOpenMeal: () => setRecipe(RECIPE),
               // "Aggiungi al piano": domani a cena c'è già un piatto, dopodomani a pranzo questa ricetta.
               loadRange: async () => [
                 { id: "m1", date: inDays(1), slot: "cena", title: "Pollo al limone" },

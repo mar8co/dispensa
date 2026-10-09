@@ -156,6 +156,11 @@
   riquadro bianco (esigenze alimentari); notifiche, dispensa condivisa e ordine delle categorie sono
   righe sul blu. Calendario: in fondo alla settimana "Collega al calendario del telefono" con una
   riga piccola di spiegazione.
+- **Giro del 10/10 (secondo)**: Ricette = campo "Cosa ti va?", pillole e subito la griglia delle
+  occasioni (niente "Puoi farle con quello che hai", niente titolo "Idee su misura"). Nel Calendario
+  la riga di un piatto con ricetta ha a destra tre puntini (tondo da 40px, senza bordo): tocco sul
+  piatto = ricetta, puntini = foglio nero delle azioni. Riquadro "Oggi" senza scadenze: solo il
+  titolo e le due righe.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

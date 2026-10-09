@@ -26,7 +26,13 @@ export function mealsToIcs(meals, now = new Date()) {
     "PRODID:-//Dispensa//Calendario Alimentare//IT",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:Calendario Alimentare", // nome mostrato dal calendario in abbonamento
+    // Calendario in abbonamento: nome, colore (il beige del marchio; lo
+    // rispettano i calendari Apple) e ogni quanto rileggerlo. Quest'ultimo è
+    // solo un SUGGERIMENTO: la cadenza vera la decide il telefono.
+    "X-WR-CALNAME:Dispensa",
+    "X-APPLE-CALENDAR-COLOR:#DCCEB3",
+    "REFRESH-INTERVAL;VALUE=DURATION:PT15M",
+    "X-PUBLISHED-TTL:PT15M",
   ];
   for (const m of meals) {
     if (!m?.date || !m?.title) continue;

@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Sun, Moon, Plus, Minus, Check, Sparkles,
-  ShoppingCart, Utensils, Trash2, RefreshCw, CalendarPlus, CalendarDays, Loader2,
+  ShoppingCart, Utensils, Trash2, RefreshCw, CalendarPlus, CalendarDays, Loader2, MoreHorizontal,
 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
@@ -180,7 +180,7 @@ export default function PlanWeek({
   meals, weekStart, shiftWeek, loadingMeals,
   planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal,
   savedRecipes, hasIngredient, onAddMissing, onGoIdeas,
-  onFillWeek, fillingWeek = false, onConnectCalendar,
+  onFillWeek, fillingWeek = false, onConnectCalendar, onOpenMeal,
 }) {
   const [sheet, setSheet] = useState(null); // { date: Date, slot: "pranzo"|"cena" }
 
@@ -276,11 +276,15 @@ export default function PlanWeek({
               </div>
               {SLOTS.map((s) => {
                 const meal = byKey.get(`${iso}|${s.id}`);
+                // Tocco sul piatto = apre la RICETTA (dal 10/10); le azioni
+                // (cucinato, cambia, rimuovi) stanno dietro i tre puntini. I
+                // piatti liberi e gli slot vuoti aprono il foglio, come prima.
+                const hasRecipe = !!meal?.data && !!onOpenMeal;
                 return (
+                  <div key={s.id} className="flex items-center gap-1">
                   <button
-                    key={s.id}
-                    onClick={() => setSheet({ date: d, slot: s.id })}
-                    className="flex min-h-[40px] w-full items-center gap-2 py-1 text-left"
+                    onClick={() => (hasRecipe ? onOpenMeal(meal) : setSheet({ date: d, slot: s.id }))}
+                    className="flex min-h-[40px] min-w-0 flex-1 items-center gap-2 py-1 text-left"
                   >
                     <s.Icon className="h-4 w-4 shrink-0 text-ink/50" />
                     <span className="w-14 shrink-0 text-[0.8rem] font-medium text-tenue">{s.label}</span>
@@ -297,6 +301,16 @@ export default function PlanWeek({
                       </span>
                     )}
                   </button>
+                  {hasRecipe && (
+                    <button
+                      onClick={() => setSheet({ date: d, slot: s.id })}
+                      aria-label={`Azioni per ${meal.title}`}
+                      className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink transition active:scale-90"
+                    >
+                      <MoreHorizontal className="h-[18px] w-[18px]" />
+                    </button>
+                  )}
+                  </div>
                 );
               })}
             </div>

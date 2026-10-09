@@ -800,9 +800,23 @@ export default function Dispensa({ session }) {
     const open = meals.filter((m) => m.date === today && !m.cooked_at);
     const lunch = open.find((m) => m.slot === "pranzo");
     const dinner = open.find((m) => m.slot === "cena");
-    if (lunch && new Date().getHours() < 15) return { label: "A pranzo", title: lunch.title };
-    return dinner ? { label: "Stasera", title: dinner.title } : null;
+    if (lunch && new Date().getHours() < 15) return { label: "A pranzo", title: lunch.title, meal: lunch };
+    return dinner ? { label: "Stasera", title: dinner.title, meal: dinner } : null;
   })();
+  // Un piatto del calendario si apre sulla sua RICETTA (dal riquadro "Oggi" e
+  // dal Calendario Alimentare). Ci si ricorda da quale pasto si è partiti:
+  // "Ho cucinato" da lì segna cucinato anche il pasto. I piatti liberi
+  // ("Pizza fuori") non hanno ricetta: per loro resta il foglio delle azioni.
+  const plannedOpenRef = useRef(null); // { id, title } | null
+  function openPlannedMeal(meal) {
+    if (!meal?.data) return;
+    plannedOpenRef.current = { id: meal.id, title: meal.title };
+    openSavedRecipe({ title: meal.title, data: meal.data });
+  }
+  function openToday() {
+    openPlan(); // tornando indietro dalla ricetta si è sul calendario
+    if (todayMeal?.meal?.data) openPlannedMeal(todayMeal.meal);
+  }
 
   // Calendario del telefono: chiede al server l'indirizzo personale del
   // Calendario Alimentare e lo apre come calendario in ABBONAMENTO. Su iPhone
@@ -991,7 +1005,10 @@ export default function Dispensa({ session }) {
   function openCookModal() {
     if (!recipe) return;
     cookRecipeRef.current = recipe;
-    cookMealRef.current = null;
+    // Ricetta aperta da un pasto del calendario: a cottura confermata si
+    // segna cucinato anche quello.
+    const from = plannedOpenRef.current;
+    cookMealRef.current = from && from.title === recipe.title ? from.id : null;
     setCookRows(buildCookRows(recipe));
     bumpModal("cook");
     setCookOpen(true);
@@ -1106,7 +1123,7 @@ export default function Dispensa({ session }) {
             onCookWith={cookWithProduct}
             todayMeal={todayMeal}
             shoppingCount={shopping.filter((s) => !s.checked).length}
-            onOpenPlan={openPlan}
+            onOpenPlan={openToday}
             onOpenShopping={() => changeView("spesa")}
           />
         )}
@@ -1124,7 +1141,7 @@ export default function Dispensa({ session }) {
             onRetry={retryLast}
             onCustomAsk={askCustom}
             recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
-            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek, onConnectCalendar: connectCalendar }}
+            plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek, onConnectCalendar: connectCalendar, onOpenMeal: openPlannedMeal }}
             startOnPlan={planFirst}
             online={online}
             savedRecipes={savedRecipes}
