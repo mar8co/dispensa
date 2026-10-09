@@ -14,7 +14,7 @@ import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
 import { rankCookable, searchRecipes } from "../lib/suggest.js";
 import { FOGLIO_NERO } from "../lib/colors.js";
-import BASE_RECIPES from "../data/ricetteBase.js";
+import BASE_RECIPES, { RECIPE_TYPES } from "../data/ricetteBase.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
 import StepTimer from "./StepTimer.jsx";
@@ -100,6 +100,7 @@ export default function RecipesTab({
   onNeedAi, localQuery = null, onLocalQueryUsed,
 }) {
   const [showAll, setShowAll] = useState(false); // "Tutte le ricette" aperto
+  const [tipo, setTipo] = useState("");          // filtro per tipo ("" = tutte)
   // Ricerca chiesta da fuori (piano gratuito: "Cucina con questo prodotto"
   // dalla Dispensa): il nome del prodotto entra nel campo e si vedono subito
   // le ricette del ricettario che lo usano.
@@ -191,6 +192,19 @@ export default function RecipesTab({
   const found = !isPro && ask.trim()
     ? rankCookable(searchRecipes(cookbook, ask), hasIngredient, expiring, Infinity)
     : [];
+  // Filtro per tipo (Tutte le ricette / Ricette trovate). Le ricette salvate
+  // dall'utente non hanno un tipo: compaiono solo con "Tutte".
+  const byTipo = (list) => (tipo ? list.filter((x) => x.recipe.tipo === tipo) : list);
+  const tipoChips = (
+    <div className="no-scrollbar -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4">
+      {[["", "Tutte"], ...RECIPE_TYPES].map(([id, label]) => (
+        <button key={id} onClick={() => setTipo(id)} aria-pressed={tipo === id} className={`pillola min-h-[36px] px-3 text-[0.84rem] ${tipo === id ? "" : "bg-white"}`}>
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+  const nessuna = <p className="py-5 text-center text-[0.95rem] font-semibold text-ink">Nessuna ricetta di questo tipo.</p>;
   // Riga di una ricetta del ricettario (Puoi farle adesso / Tutte / Trovate).
   const recipeRow = ({ recipe: r, missing: miss, usesExpiring }) => (
     <li key={r.title}>
@@ -336,7 +350,10 @@ export default function RecipesTab({
                 <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Ricette trovate</h2>
               </div>
               {found.length > 0 ? (
-                <ul className="divide-y divide-riga">{found.map(recipeRow)}</ul>
+                <>
+                  {tipoChips}
+                  {byTipo(found).length ? <ul className="mt-1 divide-y divide-riga">{byTipo(found).map(recipeRow)}</ul> : nessuna}
+                </>
               ) : (
                 <p className="py-5 text-center text-[0.95rem] font-semibold text-ink">
                   Nessuna ricetta trovata nel ricettario.{" "}
@@ -362,7 +379,8 @@ export default function RecipesTab({
                     <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Tutte le ricette</h2>
                     <span className="micro">prima quelle che puoi fare</span>
                   </div>
-                  <ul className="divide-y divide-riga">{allRanked.map(recipeRow)}</ul>
+                  {tipoChips}
+                  {byTipo(allRanked).length ? <ul className="mt-1 divide-y divide-riga">{byTipo(allRanked).map(recipeRow)}</ul> : nessuna}
                 </section>
               )}
               <button onClick={() => setShowAll((v) => !v)} className="link mt-3 flex min-h-[44px] items-center text-[0.9rem] text-ink">

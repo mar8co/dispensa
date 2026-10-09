@@ -173,4 +173,25 @@ const classici = [
   ]),
 ];
 
-export default [...classici, ...primi, ...carne, ...pesce, ...verdure, ...zuppe, ...veloci];
+// Tipo di ogni ricetta, per i filtri di "Tutte le ricette" (RecipesTab).
+export const RECIPE_TYPES = [
+  ["primi", "Primi"], ["carne", "Carne"], ["pesce", "Pesce"],
+  ["verdure", "Uova e verdure"], ["zuppe", "Zuppe e insalate"], ["veloci", "Veloci e dolci"],
+];
+const tag = (list, tipo) => list.map((r) => ({ ...r, tipo }));
+// I classici qui sopra sono misti: il tipo di ciascuno, nell'ordine in cui sono scritti.
+const TIPI_CLASSICI = [
+  "primi", "primi", "primi", "primi", "primi", "primi", "primi", "primi", "primi", "primi",
+  "verdure", "verdure", "verdure",
+  "carne", "carne", "carne", "carne", "carne",
+  "pesce", "pesce",
+  "zuppe", "zuppe", "zuppe", "primi", "zuppe", "zuppe",
+  "verdure", "verdure",
+  "veloci", "veloci", "veloci", "veloci",
+];
+
+export default [
+  ...classici.map((r, i) => ({ ...r, tipo: TIPI_CLASSICI[i] })),
+  ...tag(primi, "primi"), ...tag(carne, "carne"), ...tag(pesce, "pesce"),
+  ...tag(verdure, "verdure"), ...tag(zuppe, "zuppe"), ...tag(veloci, "veloci"),
+];

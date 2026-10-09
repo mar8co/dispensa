@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { rankCookable, searchRecipes } from "./suggest.js";
 import { findMatch } from "./pantry.js";
-import BASE from "../data/ricetteBase.js";
+import BASE, { RECIPE_TYPES } from "../data/ricetteBase.js";
 
 const pantry = [{ name: "Spaghetti" }, { name: "Passata di pomodoro" }, { name: "Aglio" }, { name: "Uova" }, { name: "Zucchine" }];
 const has = (n) => !!findMatch(n, pantry);
@@ -16,6 +16,10 @@ describe("ricettario di base", () => {
       expect(r.steps.length).toBeGreaterThan(0);
     }
     expect(new Set(BASE.map((r) => r.title)).size).toBe(BASE.length);
+    const tipi = RECIPE_TYPES.map(([id]) => id);
+    expect(BASE.every((r) => tipi.includes(r.tipo))).toBe(true);
+    expect(BASE.find((r) => r.title === "Caprese").tipo).toBe("zuppe");
+    expect(BASE.find((r) => r.title === "Pancake").tipo).toBe("veloci");
   });
 });
 
