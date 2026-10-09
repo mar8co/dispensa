@@ -800,8 +800,8 @@ export default function Dispensa({ session }) {
     const lunch = open.find((m) => m.slot === "pranzo");
     const dinner = open.find((m) => m.slot === "cena");
     return [
-      lunch && { label: "A pranzo", icon: "🥗", title: lunch.title, meal: lunch },
-      dinner && { label: "Stasera", icon: "🍳", title: dinner.title, meal: dinner },
+      lunch && { label: "Pranzo", icon: "🥗", title: lunch.title, meal: lunch },
+      dinner && { label: "Cena", icon: "🍳", title: dinner.title, meal: dinner },
     ].filter(Boolean);
   })();
   // Un piatto del calendario si apre sulla sua RICETTA (dal riquadro "Oggi" e

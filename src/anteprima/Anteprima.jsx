@@ -173,7 +173,7 @@ export default function Anteprima() {
             onCookExpiring={() => {}} isOut={isOut} onToShopping={() => notify("In lista spesa")}
             onFinish={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> finito: è in lista</>, onUndo: () => setToast(null) }); }}
             onCookWith={() => {}}
-            todayMeals={[{ label: "A pranzo", icon: "🥗", title: "Spaghetti al limone" }, { label: "Stasera", icon: "🍳", title: "Frittata di zucchine" }]}
+            todayMeals={[{ label: "Pranzo", icon: "🥗", title: "Spaghetti al limone" }, { label: "Cena", icon: "🍳", title: "Frittata di zucchine" }]}
             onOpenMeal={() => {}}
           />
         )}
