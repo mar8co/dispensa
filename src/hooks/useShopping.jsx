@@ -22,6 +22,7 @@ import {
 } from "../lib/db.js";
 import { loadHistory, saveHistory, bumpedHistory } from "../lib/history.js";
 import { tourSignal } from "../lib/tour.js";
+import { parseSpokenList } from "../lib/parse.js";
 
 export function useShopping({ session, showToast, dismissToast, shopCats, setShopCats }) {
   const uid = session.user.id;
@@ -126,32 +127,40 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     }
   }
 
-  // Aggiunta a voce per la spesa: estrae i prodotti dalla frase e li
-  // aggiunge alla lista (con merge dei duplicati).
+  // Aggiunta a voce per la spesa: la frase si legge prima in locale
+  // (lib/parse.js, senza AI); l'AI serve solo se qualcosa non è stato
+  // riconosciuto, e se non risponde si tiene comunque la lettura locale.
   async function handleShoppingVoice(transcript) {
     if (!transcript) { setShopVoiceOpen(false); return; }
-    setShopVoiceProcessing(true);
-    try {
-      const prompt =
-        `Questa è una frase detta a voce che elenca cose da comprare: "${transcript}". ` +
-        `Estrai TUTTI i prodotti citati. ${NAME_RULES} ` +
-        `Per la quantità: se indicata ("6 uova", "due litri di latte") mettila nel campo "qty" ` +
-        `(numero oppure unità metriche come "500 g"/"1 l"), MAI nel nome; altrimenti "1". ` +
-        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"..."}]}`;
-      const parsed = await callClaude([{ type: "text", text: prompt }], 600);
-      const list = Array.isArray(parsed?.items) ? parsed.items : [];
+    const local = parseSpokenList(transcript);
+    let list = local.items;
+    if (!list.length || local.unknown > 0) {
+      setShopVoiceProcessing(true);
+      try {
+        const prompt =
+          `Questa è una frase detta a voce che elenca cose da comprare: "${transcript}". ` +
+          `Estrai TUTTI i prodotti citati. ${NAME_RULES} ` +
+          `Per la quantità: se indicata ("6 uova", "due litri di latte") mettila nel campo "qty" ` +
+          `(numero oppure unità metriche come "500 g"/"1 l"), MAI nel nome; altrimenti "1". ` +
+          `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"..."}]}`;
+        const parsed = await callClaude([{ type: "text", text: prompt }], 600);
+        if (Array.isArray(parsed?.items) && parsed.items.length) list = parsed.items;
+      } catch (e) {
+        console.error(e);
+        if (!list.length) {
+          setShopVoiceProcessing(false);
+          setShopVoiceOpen(false);
+          showToast(aiErrorMessage(e, "Errore nell'elaborare la voce. Riprova."));
+          return;
+        }
+      }
       setShopVoiceProcessing(false);
-      setShopVoiceOpen(false);
-      if (!list.length) { showToast("Non ho riconosciuto prodotti. Riprova."); return; }
-      const res = await addToShoppingMerged(list);
-      const tot = res.added + res.merged;
-      showToast(`${tot} ${tot === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista`);
-    } catch (e) {
-      console.error(e);
-      setShopVoiceProcessing(false);
-      setShopVoiceOpen(false);
-      showToast(aiErrorMessage(e, "Errore nell'elaborare la voce. Riprova."));
     }
+    setShopVoiceOpen(false);
+    if (!list.length) { showToast("Non ho riconosciuto prodotti. Riprova."); return; }
+    const res = await addToShoppingMerged(list);
+    const tot = res.added + res.merged;
+    showToast(`${tot} ${tot === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista`);
   }
   // Nessun avviso (tolto il 09/10: uno per ogni prodotto era rumore mentre si
   // fa la spesa). La riga barrata scende in "Nel carrello": per annullare

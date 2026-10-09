@@ -83,7 +83,12 @@ async function lookupProduct(code) {
       const p = data.product;
       const name = String(p.product_name_it || p.product_name || "").trim();
       const qty = String(p.quantity || "1").trim() || "1";
-      return { found: !!name, barcode: code, name, qty, category: offCategory(p.categories_tags) };
+      // Marca e denominazione generica servono alla pulizia LOCALE del nome
+      // (lib/parse.js): così di norma non serve l'AI.
+      return {
+        found: !!name, barcode: code, name, qty, category: offCategory(p.categories_tags),
+        brands: String(p.brands || ""), generic: String(p.generic_name_it || p.generic_name || "").trim(),
+      };
     }
   } catch {
     // rete assente, timeout o errore: trattiamo come "non trovato"
@@ -137,7 +142,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
     setStatus("Cerco il prodotto…");
     lookupProduct(code).then((item) => {
       setTray((prev) => prev.map((t) =>
-        t.code === code ? { ...t, name: item.name, baseQty: item.qty || "1", category: item.category, found: item.found, status: "ready" } : t
+        t.code === code ? { ...t, name: item.name, baseQty: item.qty || "1", category: item.category, found: item.found, brands: item.brands, generic: item.generic, status: "ready" } : t
       ));
       setStatus(item.found ? `✓ ${item.name}` : "Codice non trovato: sistemi il nome dopo");
     });
@@ -161,6 +166,8 @@ export default function BarcodeScanModal({ onClose, onResult }) {
       qty: t.count > 1 ? normalizeWeight(scaleQty(t.baseQty || "1", t.count)) : (t.baseQty || "1"),
       category: t.category,
       found: t.found,
+      brands: t.brands,
+      generic: t.generic,
     })));
   }
 

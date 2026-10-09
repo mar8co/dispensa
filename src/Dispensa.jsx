@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 import {
   CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES, CATEGORY_PROMPT,
-  ITEMS_SCHEMA, NAME_SCHEMA, SHELF_LIFE_DAYS,
+  ITEMS_SCHEMA, SHELF_LIFE_DAYS,
 } from "./constants.js";
 import {
   guessCategory, categorize,
@@ -12,6 +12,7 @@ import {
   norm, matchKey, isStapleQb, isQbQty, isSpoonQty, dateInDays,
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
+import { cleanBarcodeName, parseSpokenList } from "./lib/parse.js";
 import { apiUrl } from "./lib/api.js";
 import { supabase } from "./lib/supabase.js";
 import {
@@ -543,15 +544,21 @@ export default function Dispensa({ session }) {
     getMyUsername().then((n) => setMyName(n || "")).catch(() => {});
   }, [profileOpen]);
 
-  // Pulisce/genericizza un nome alimento via AI -> { name, category }.
-  async function aiCleanName(raw, signal) {
+  // Nomi commerciali che le regole locali non hanno saputo ripulire (barcode):
+  // UNA sola richiesta AI per tutti, invece di una per prodotto (cinque codici
+  // consumavano da soli le richieste gratuite della giornata).
+  // Ritorna [{ name, category }] nello stesso ordine, oppure null.
+  async function aiCleanNames(rawNames, signal) {
     const prompt =
-      `Sei un assistente per una dispensa italiana. Dall'input dell'utente ricava il nome dell'alimento. ` +
+      `Sei un assistente per una dispensa italiana. Per OGNI nome commerciale dell'elenco ricava il nome dell'alimento. ` +
       `${NAME_RULES} ` +
-      `Assegna anche la categoria corretta seguendo queste istruzioni:\n${CATEGORY_PROMPT}\n` +
-      `Input: "${raw}". ` +
-      `Rispondi SOLO con JSON valido senza markdown: {"name":"...","category":"..."}`;
-    return callClaude([{ type: "text", text: prompt }], 256, { schema: NAME_SCHEMA, temperature: 0.1, signal });
+      `Restituisci le voci nello STESSO ordine e nello stesso numero dell'elenco, con "qty" sempre "1". ` +
+      `Elenco:\n${rawNames.map((n, i) => `${i + 1}. ${n}`).join("\n")}\n` +
+      `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"1","category":"..."}]}\n` +
+      `${CATEGORY_PROMPT}`;
+    const parsed = await callClaude([{ type: "text", text: prompt }], 1200, { schema: ITEMS_SCHEMA, temperature: 0.1, signal });
+    const list = Array.isArray(parsed?.items) ? parsed.items : [];
+    return list.length === rawNames.length ? list : null;
   }
 
   // Apre l'overlay di analisi con un AbortController fresco; ritorna il signal.
@@ -769,62 +776,70 @@ export default function Dispensa({ session }) {
     }
   }
 
-  // Risultato della raffica barcode (array dal vassoio): genericizza i nomi
-  // trovati (AI in parallelo, con Annulla) e apre la revisione unica.
+  // Risultato della raffica barcode (array dal vassoio). I nomi si ripuliscono
+  // PRIMA in locale (marca, peso, formato → catalogo: lib/parse.js): istantaneo,
+  // anche offline, senza richieste. Solo per quelli che le regole non
+  // riconoscono si chiede all'AI, tutti insieme e con Annulla; se l'AI non
+  // risponde si tiene il nome ripulito, da sistemare nella revisione.
   async function handleBarcodeResult(items) {
     setBarcodeOpen(false);
     const batch = Array.isArray(items) ? items : [items];
     if (!batch.length) return;
-    const signal = beginProcessing();
-    try {
-      const cleaned = await Promise.all(batch.map(async (item) => {
-        const raw = String(item?.name || "").trim();
-        let name = raw;
-        let aiCategory = null;
-        if (raw) {
-          try {
-            const parsed = await aiCleanName(raw, signal);
-            if (parsed && parsed.name) {
-              name = String(parsed.name).trim();
-              aiCategory = parsed.category;
-            }
-          } catch (e) {
-            if (e?.code === "cancelled") throw e; // interrompe tutto il batch
-            console.error(e); // non fatale: si tiene il nome grezzo
-          }
-        }
-        name = name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
-        // Dizionario-first: le varianti note finiscono nella categoria giusta;
-        // come fallback l'AI, poi la categoria dedotta dai tag Open Food Facts
-        // (gratis, già nel risultato del lookup) quando l'AI non ha una categoria.
-        return {
-          name,
-          qty: normalizeWeight(String(item?.qty || "1")),
-          category: categorize(name, aiCategory || item?.category),
-          found: !!item?.found,
-        };
-      }));
-      setScanItems(cleaned.map(({ name, qty, category }) => ({ name, qty, category })));
-      setVoiceReview(false); // barcode: niente tasto "Aggiungi altri prodotti"
-      bumpModal("scan");
-      setScanOpen(true);
-      const missing = cleaned.filter((x) => !x.found).length;
-      if (missing) {
-        showToast(missing === 1
-          ? "Un codice non trovato: inserisci il nome del prodotto."
-          : `${missing} codici non trovati: inserisci i nomi.`);
+    const cleaned = batch.map((item) => {
+      // Due candidati da Open Food Facts: il nome del prodotto e, se serve,
+      // la denominazione generica ("pasta di semola di grano duro").
+      let local = cleanBarcodeName(item?.name, item?.brands);
+      if (!local.resolved && item?.generic) {
+        const alt = cleanBarcodeName(item.generic, item?.brands);
+        if (alt.resolved) local = alt;
       }
-    } catch (e) {
-      // Annullata dall'utente: niente revisione, nessun toast.
-      if (e?.code !== "cancelled") console.error(e);
-    } finally {
+      return {
+        raw: String(item?.name || "").trim(),
+        name: local.name,
+        resolved: local.resolved,
+        qty: normalizeWeight(String(item?.qty || "1")),
+        // Dizionario-first; poi la categoria dedotta dai tag Open Food Facts.
+        category: categorize(local.name, item?.category),
+        found: !!item?.found,
+      };
+    });
+    const doubt = cleaned.filter((x) => !x.resolved && x.raw);
+    if (doubt.length && online) {
+      const signal = beginProcessing();
+      try {
+        const fixed = await aiCleanNames(doubt.map((x) => x.raw), signal);
+        if (fixed) {
+          doubt.forEach((x, i) => {
+            const n = String(fixed[i]?.name || "").trim();
+            if (!n) return;
+            x.name = n.charAt(0).toUpperCase() + n.slice(1).toLowerCase();
+            x.category = categorize(x.name, fixed[i]?.category);
+          });
+        }
+      } catch (e) {
+        if (e?.code === "cancelled") { endProcessing(); return; } // niente revisione
+        console.error(e); // non fatale: restano i nomi ripuliti in locale
+      }
       endProcessing();
+    }
+    setScanItems(cleaned.map(({ name, qty, category }) => ({ name, qty, category })));
+    setVoiceReview(false); // barcode: niente tasto "Aggiungi altri prodotti"
+    bumpModal("scan");
+    setScanOpen(true);
+    const missing = cleaned.filter((x) => !x.found).length;
+    if (missing) {
+      showToast(missing === 1
+        ? "Un codice non trovato: inserisci il nome del prodotto."
+        : `${missing} codici non trovati: inserisci i nomi.`);
     }
   }
 
-  // Aggiunta a voce: la frase trascritta viene passata all'AI che estrae e
-  // categorizza gli alimenti, poi si apre la revisione (come per le foto). Dal
-  // riepilogo si può "Aggiungi altri prodotti": ri-detta e ACCODA (append).
+  // Aggiunta a voce: la frase si legge PRIMA in locale (lib/parse.js: virgole
+  // ed "e", numeri e unità in italiano, catalogo dei prodotti) — niente attesa,
+  // niente richieste. Solo se qualcosa non è stato riconosciuto si chiede
+  // all'AI; se l'AI non risponde (offline, limite) si tiene la lettura locale.
+  // Poi si apre la revisione (come per le foto). Dal riepilogo si può "Aggiungi
+  // altri prodotti": ri-detta e ACCODA (append).
   async function handleVoiceResult(transcript) {
     // "append" = si arriva dal riepilogo ("Aggiungi altri prodotti"): i nuovi
     // prodotti si ACCODANO a quelli già riconosciuti invece di sostituirli.
@@ -835,44 +850,50 @@ export default function Dispensa({ session }) {
       if (append) { bumpModal("scan"); setScanOpen(true); } // torna al riepilogo intatto
       return;
     }
-    setVoiceProcessing(true);
-    try {
-      const prompt =
-        `Sei un assistente per la dispensa italiana. Questa è una frase detta a voce ` +
-        `che elenca alimenti da aggiungere: "${transcript}". Estrai TUTTI gli alimenti citati. ` +
-        `${NAME_RULES} ` +
-        `Per la quantità: se l'utente indica un numero o una confezione ("6 uova", "un pacco di pasta", ` +
-        `"due litri di latte"), mettila nel campo "qty" (numero oppure unità metriche come "500 g"/"1 l"), ` +
-        `MAI nel nome; altrimenti "1". ` +
-        `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"...","category":"..."}]}\n` +
-        `${CATEGORY_PROMPT}`;
-      const parsed = await callClaude([{ type: "text", text: prompt }], 1200, { schema: ITEMS_SCHEMA, temperature: 0.1 });
-      const raw = Array.isArray(parsed?.items) ? parsed.items : [];
-      // Dizionario-first sulla categoria: le varianti note (es. formati di
-      // pasta) vengono corrette anche se l'AI le sbaglia; l'utente può poi
-      // modificarle nella revisione.
-      const list = raw.map((it) => ({
-        ...it,
-        category: categorize(String(it?.name || ""), it?.category),
-      }));
-      setVoiceProcessing(false);
-      setVoiceOpen(false);
-      if (!list.length) {
-        showToast("Non ho riconosciuto alimenti. Riprova.");
-        if (append) { bumpModal("scan"); setScanOpen(true); } // riapri il riepilogo con quanto già c'era
-        return;
+    const local = parseSpokenList(transcript);
+    let list = local.items;
+    if (!list.length || local.unknown > 0) {
+      setVoiceProcessing(true);
+      try {
+        const prompt =
+          `Sei un assistente per la dispensa italiana. Questa è una frase detta a voce ` +
+          `che elenca alimenti da aggiungere: "${transcript}". Estrai TUTTI gli alimenti citati. ` +
+          `${NAME_RULES} ` +
+          `Per la quantità: se l'utente indica un numero o una confezione ("6 uova", "un pacco di pasta", ` +
+          `"due litri di latte"), mettila nel campo "qty" (numero oppure unità metriche come "500 g"/"1 l"), ` +
+          `MAI nel nome; altrimenti "1". ` +
+          `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"...","category":"..."}]}\n` +
+          `${CATEGORY_PROMPT}`;
+        const parsed = await callClaude([{ type: "text", text: prompt }], 1200, { schema: ITEMS_SCHEMA, temperature: 0.1 });
+        const raw = Array.isArray(parsed?.items) ? parsed.items : [];
+        // Dizionario-first sulla categoria: le varianti note (es. formati di
+        // pasta) vengono corrette anche se l'AI le sbaglia.
+        if (raw.length) {
+          list = raw.map((it) => ({ ...it, category: categorize(String(it?.name || ""), it?.category) }));
+        }
+      } catch (e) {
+        console.error(e);
+        // Senza AI resta la lettura locale; se è vuota, si dice perché.
+        if (!list.length) {
+          setVoiceProcessing(false);
+          setVoiceOpen(false);
+          showToast(aiErrorMessage(e, "Errore nell'elaborare la voce. Riprova."));
+          if (append) { bumpModal("scan"); setScanOpen(true); } // non perdere quanto già riconosciuto
+          return;
+        }
       }
-      setVoiceReview(true); // il riepilogo mostrerà "Aggiungi altri prodotti"
-      setScanItems((prev) => (append ? [...prev, ...list] : list));
-      bumpModal("scan");
-      setScanOpen(true);
-    } catch (e) {
-      console.error(e);
       setVoiceProcessing(false);
-      setVoiceOpen(false);
-      showToast(aiErrorMessage(e, "Errore nell'elaborare la voce. Riprova."));
-      if (append) { bumpModal("scan"); setScanOpen(true); } // non perdere quanto già riconosciuto
     }
+    setVoiceOpen(false);
+    if (!list.length) {
+      showToast("Non ho riconosciuto alimenti. Riprova.");
+      if (append) { bumpModal("scan"); setScanOpen(true); } // riapri il riepilogo con quanto già c'era
+      return;
+    }
+    setVoiceReview(true); // il riepilogo mostrerà "Aggiungi altri prodotti"
+    setScanItems((prev) => (append ? [...prev, ...list] : list));
+    bumpModal("scan");
+    setScanOpen(true);
   }
 
   // Dal riepilogo voce: "Aggiungi altri prodotti" → riapre la dettatura senza
