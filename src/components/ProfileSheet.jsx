@@ -128,7 +128,7 @@ export default function ProfileSheet({
             <ChevronDown className={`h-[18px] w-[18px] transition-transform duration-200 ${catsOpen ? "rotate-180" : ""}`} />
           </button>
           {catsOpen && (
-            <ul className="animate-fade-in divide-y divide-riga">
+            <ul className="animate-fade-in divide-y divide-riga border-b-[1.5px] border-ink">
               {catOrder.map((c, i) => (
                 <li key={c} className="flex min-h-[44px] items-center gap-2.5">
                   <span className="text-[1.05rem] leading-none">{CAT_ICON[c]}</span>

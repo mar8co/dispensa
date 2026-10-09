@@ -100,9 +100,10 @@ export default function SettingsSection({ close, onDeleteAccount, onOpenPrivacy,
 
   return (
     <>
-      {/* Esci (con conferma in linea): in fondo, staccato dal resto. */}
+      {/* Esci (con conferma in linea): in fondo. Niente filo sopra: c'è già
+          quello di "Ordine delle categorie" (due fili vicini davano fastidio). */}
       {onLogout && (
-        <div className="mt-7 border-t-[1.5px] border-ink">
+        <div className="mt-2">
           {confirmLogout ? (
             <div className="flex gap-2 py-3">
               <button onClick={() => setConfirmLogout(false)} className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]">
