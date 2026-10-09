@@ -1196,6 +1196,7 @@ export default function Dispensa({ session }) {
             isPro={isPro}
             onNeedPro={() => openPaywall("Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola.")}
             online={online}
+            expiring={expiringItems.filter((x) => !isOut(x))}
             onAiLimit={() => openPaywall("Hai finito le richieste AI di oggi: con Premium non hanno limiti.")}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}

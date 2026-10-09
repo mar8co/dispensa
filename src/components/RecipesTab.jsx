@@ -3,7 +3,7 @@
 // card bianca (il rosso di "manca" sul verde non si leggerebbe).
 // griglia occasioni -> 5 proposte -> ricetta completa con grammature, "cosa mi
 // manca", timer e "Ho cucinato questa ricetta".
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
@@ -13,6 +13,8 @@ import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
 import { useAiLeft } from "../lib/aiUsage.js";
+import { rankCookable } from "../lib/suggest.js";
+import BASE_RECIPES from "../data/ricetteBase.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
 import StepTimer from "./StepTimer.jsx";
@@ -94,6 +96,7 @@ export default function RecipesTab({
   startOnPlan = false,
   isPro = true, onNeedPro, onAiLimit,
   online = true,
+  expiring = [],
 }) {
   const aiLeft = useAiLeft(); // richieste AI rimaste oggi (null = non noto)
   const [addedMissing, setAddedMissing] = useState(false);
@@ -164,6 +167,14 @@ export default function RecipesTab({
   const cookedList = (savedRecipes || [])
     .filter((r) => r.cooked_count > 0)
     .sort((a, b) => String(b.last_cooked_at || "").localeCompare(String(a.last_cooked_at || "")));
+
+  // "Puoi farle adesso": ricette GIÀ note (prima le tue, poi quelle di base
+  // dell'app) che si possono cucinare con la dispensa di ora, al massimo con
+  // un ingrediente mancante. Calcolo locale: niente AI, funziona offline.
+  const cookable = useMemo(() => {
+    const mine = (savedRecipes || []).filter((r) => r.data?.ingredients?.length).map((r) => ({ ...r.data, image: r.data.image || r.image }));
+    return rankCookable([...mine, ...BASE_RECIPES], hasIngredient, expiring, 1).slice(0, 4);
+  }, [savedRecipes, expiring, hasIngredient]);
 
   const ingredients = recipe?.ingredients || [];
   const missing = ingredients.filter((ing) => !hasIngredient(ing.name));
@@ -273,6 +284,31 @@ export default function RecipesTab({
             <p className="animate-fade-in mt-2 text-[0.86rem] font-semibold text-tenue">
               Ne terrò conto nelle prossime proposte ✨
             </p>
+          )}
+
+          {/* Puoi farle adesso: dal ricettario, senza AI. */}
+          {cookable.length > 0 && (
+            <section className="mt-6">
+              <div className="flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
+                <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Puoi farle adesso</h2>
+                <span className="micro">con quello che hai</span>
+              </div>
+              <ul className="divide-y divide-riga">
+                {cookable.map(({ recipe: r, missing: miss, usesExpiring }) => (
+                  <li key={r.title}>
+                    <button onClick={() => onOpenSaved({ title: r.title, data: r })} className="flex min-h-[56px] w-full items-center gap-3 py-2 text-left">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>
+                        <span className="block truncate text-[0.8rem] font-medium text-tenue">
+                          {r.time ? `${r.time} · ` : ""}{miss.length ? `manca: ${miss.join(", ")}` : "hai tutto"}
+                        </span>
+                      </span>
+                      {usesExpiring && <span className="cartellino bg-ink text-white">usa ciò che scade</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
 
           <div className="mt-5 grid grid-cols-2 gap-3">
