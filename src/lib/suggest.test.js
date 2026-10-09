@@ -8,7 +8,7 @@ const has = (n) => !!findMatch(n, pantry);
 
 describe("ricettario di base", () => {
   it("ogni ricetta ha titolo, ingredienti con dose e passaggi", () => {
-    expect(BASE.length).toBeGreaterThan(25);
+    expect(BASE.length).toBe(300);
     for (const r of BASE) {
       expect(r.title).toBeTruthy();
       expect(r.ingredients.length).toBeGreaterThan(1);
@@ -24,7 +24,7 @@ describe("searchRecipes", () => {
   it("cerca nel titolo e negli ingredienti, singolare o plurale", () => {
     expect(titles("zucchina")).toContain("Frittata di zucchine");
     expect(titles("qualcosa col tonno")).toEqual(expect.arrayContaining(["Pasta al tonno", "Insalata di ceci e tonno"]));
-    expect(titles("guanciale")).toEqual(["Carbonara"]);
+    expect(titles("guanciale")).toContain("Carbonara");
   });
   it("tutte le parole devono esserci", () => {
     expect(titles("pasta ceci")).toEqual(["Pasta e ceci"]);

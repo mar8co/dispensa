@@ -1,29 +1,23 @@
-// Ricettario di BASE incluso nell'app: piatti di casa semplici, scritti a mano,
-// nello stesso formato delle ricette generate ({ title, servings, time,
+// Ricettario di BASE incluso nell'app: 300 piatti di casa, scritti a mano, nello
+// stesso formato delle ricette generate ({ title, servings, time,
 // ingredients:[{name, qty}], steps:[{text, timer}] }). Servono a "Puoi farle
-// adesso" (RecipesTab): proposte calcolate sul dispositivo confrontando gli
-// ingredienti con la dispensa — niente AI, niente rete, niente richieste.
-// Dosi per 2 porzioni; olio/sale/pepe e spezie sono "q.b." (non contano tra
-// gli ingredienti mancanti). Per aggiungerne una: una riga R(...) in più.
+// adesso", alla ricerca e a "Tutte le ricette" (RecipesTab): tutto calcolato
+// sul dispositivo confrontando gli ingredienti con la dispensa — niente AI,
+// niente rete. Dosi per 2 porzioni; olio/sale/pepe e spezie sono "q.b." (non
+// contano tra gli ingredienti mancanti).
 //
-// Forma compatta: R(titolo, tempo, "Nome:dose|Nome:dose", ["passaggio@minuti"]).
-function R(title, time, ingredients, steps) {
-  return {
-    title, time, servings: 2,
-    ingredients: ingredients.split("|").map((s) => {
-      const i = s.lastIndexOf(":");
-      return { name: s.slice(0, i), qty: s.slice(i + 1) };
-    }),
-    steps: steps.map((s) => {
-      const [text, timer] = s.split("@");
-      return { text, timer: timer ? Number(timer) : null };
-    }),
-  };
-}
+// Qui sotto i primi classici; il resto è diviso per tipo in ./ricette/*.js.
+// Per aggiungerne una: una riga R(...) in più nel file giusto (vedi ricetta.js)
+// e aggiornare il conteggio nel test (suggest.test.js). I titoli sono unici.
+import { R, QB } from "./ricetta.js";
+import primi from "./ricette/primi.js";
+import carne from "./ricette/carne.js";
+import pesce from "./ricette/pesce.js";
+import verdure from "./ricette/verdure.js";
+import zuppe from "./ricette/zuppe.js";
+import veloci from "./ricette/veloci.js";
 
-const QB = "Olio EVO:q.b.|Sale:q.b.";
-
-export default [
+const classici = [
   R("Spaghetti al pomodoro", "20 min", `Spaghetti:180 g|Passata di pomodoro:300 g|Aglio:1|Basilico:q.b.|${QB}`, [
     "Scalda un filo d'olio con l'aglio schiacciato, versa la passata, sala e fai restringere a fuoco basso.@10",
     "Cuoci gli spaghetti in acqua bollente salata e scolali al dente.@9",
@@ -178,3 +172,5 @@ export default [
     "Gira quando in superficie compaiono le bollicine e cuoci l'altro lato.@2",
   ]),
 ];
+
+export default [...classici, ...primi, ...carne, ...pesce, ...verdure, ...zuppe, ...veloci];
