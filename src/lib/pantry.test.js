@@ -412,6 +412,43 @@ describe("findMatch", () => {
   it("null se nessun prodotto compatibile", () => {
     expect(findMatch("Zucchine", items)).toBeNull();
   });
+  const has = (ing, ...names) => !!findMatch(ing, names.map((name) => ({ name })));
+  it("una parola in comune non basta più", () => {
+    expect(has("Prosciutto cotto", "Prosciutto crudo")).toBe(false);
+    expect(has("Tonno fresco", "Tonno in scatola")).toBe(false);
+    expect(has("Petto di pollo", "Cosce di pollo")).toBe(false);
+    expect(has("Vino bianco", "Vino rosso")).toBe(false);
+    expect(has("Pane", "Pangrattato")).toBe(false);
+  });
+  it("il generico vale per lo specifico e viceversa", () => {
+    expect(has("Prosciutto cotto", "Prosciutto")).toBe(true);
+    expect(has("Tonno", "Tonno in scatola")).toBe(true);
+    expect(has("Tonno", "Tonno all'olio")).toBe(true);
+    expect(has("Ceci in scatola", "Ceci")).toBe(true);
+    expect(has("Cipolla", "Cipolle rosse")).toBe(true);
+    expect(has("Parmigiano", "Parmigiano Reggiano grattugiato")).toBe(true);
+    expect(has("Grana Padano", "Parmigiano")).toBe(true);
+    expect(has("Olio EVO", "Olio extravergine di oliva")).toBe(true);
+  });
+  it("un prodotto trasformato non è la materia prima", () => {
+    expect(has("Pomodori", "Passata di pomodoro")).toBe(false);
+    expect(has("Passata di pomodoro", "Pomodori")).toBe(false);
+    expect(has("Latte", "Latte di cocco")).toBe(false);
+    expect(has("Aglio", "Aglio in polvere")).toBe(false);
+    expect(has("Arance", "Succo di arancia")).toBe(false);
+    expect(has("Passata di pomodoro", "Passata")).toBe(true);
+  });
+  it("i formati di pasta secca valgono tutti pasta", () => {
+    expect(has("Rigatoni", "Spaghetti")).toBe(true);
+    expect(has("Pasta", "Penne")).toBe(true);
+    expect(has("Penne", "Pasta integrale")).toBe(true);
+    expect(has("Tagliatelle", "Spaghetti")).toBe(false);
+    expect(has("Gnocchi", "Pasta")).toBe(false);
+  });
+  it("preferisce il nome uguale a quello solo compatibile", () => {
+    const list = [{ name: "Latte fresco" }, { name: "Latte" }];
+    expect(findMatch("Latte", list)).toBe(list[1]);
+  });
 });
 
 describe("scadenze", () => {

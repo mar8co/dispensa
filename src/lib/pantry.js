@@ -690,19 +690,70 @@ export function formatExpiry(dateStr) {
   return d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" });
 }
 
-export function findMatch(ingName, items) {
-  // matchKey: singolare/plurale unificati, così "pomodori" (ricetta) trova
-  // "Pomodoro" (dispensa) e viceversa.
-  const a = matchKey(ingName);
-  if (!a) return null;
-  const aw = a.split(" ").filter((w) => w.length >= 4);
-  let weak = null;
-  for (const it of items) {
-    const b = matchKey(it.name);
-    if (!b) continue;
-    if (a === b || a.includes(b) || b.includes(a)) return it;
-    const bw = b.split(" ").filter((w) => w.length >= 4);
-    if (aw.some((w) => bw.includes(w))) weak = weak || it;
+// --- Confronto ingrediente ↔ prodotto (più severo dal 09/10) ---
+// Prima bastava UNA parola in comune (o una sottostringa): "Prosciutto cotto"
+// risultava "ce l'hai" col crudo in dispensa, "Pomodori" con la passata. Ora
+// si confrontano gli INSIEMI di parole: i due nomi sono lo stesso alimento
+// solo se tutte le parole del più corto stanno nel più lungo ("Latte" ↔ "Latte
+// intero", "Ceci" ↔ "Ceci in scatola") e ciò che il più lungo ha in più non lo
+// trasforma in un altro prodotto ("Latte di cocco", "Passata di pomodoro",
+// "Aglio in polvere").
+
+// Parole che non distinguono un alimento: preposizioni e descrizioni.
+const MATCH_IGNORE = new Set([
+  "di", "del", "della", "dei", "delle", "da", "in", "al", "allo", "alla", "alle", "con", "e", "per", "a", "all", "sott", "d", "l",
+  "grattugiato", "grattugiata", "intero", "intera", "tritato", "tritata", "affettato", "affettata",
+  "sgusciato", "sgusciati", "sgusciate", "bio", "misto", "mista", "classico", "classica",
+  "reggiano", "padano", "romano", "evo", "extravergine", "vergine", "oliva",
+]);
+// Sinonimi ricondotti a una parola sola. I formati di pasta SECCA valgono
+// tutti "pasta": per una ricetta che dice "rigatoni" vanno bene gli spaghetti.
+const MATCH_SYNONYM = {
+  grana: "parmigiano",
+  spaghetti: "pasta", spaghettoni: "pasta", spaghettini: "pasta", penne: "pasta", pennette: "pasta",
+  fusilli: "pasta", rigatoni: "pasta", tortiglioni: "pasta", farfalle: "pasta", linguine: "pasta",
+  bavette: "pasta", bucatini: "pasta", vermicelli: "pasta", ditalini: "pasta", orecchiette: "pasta",
+  trofie: "pasta", conchiglie: "pasta", paccheri: "pasta", sedanini: "pasta", maccheroni: "pasta",
+  casarecce: "pasta", caserecce: "pasta", gemelli: "pasta",
+};
+// Parole che, se sono "in più", indicano un prodotto DIVERSO dalla materia
+// prima: il succo d'arancia non è un'arancia, il latte di cocco non è latte.
+const MATCH_TRANSFORM = new Set([
+  "passata", "concentrato", "polpa", "succo", "salsa", "sugo", "crema", "brodo", "farina",
+  "aceto", "latte", "pesto", "marmellata", "confettura", "yogurt", "gelato", "sciroppo", "pasta",
+  "secco", "secca", "secchi", "secche", "pelati", "polvere", "cocco", "soia", "avena", "mandorla",
+]);
+
+// Parole significative di un nome (singolare/plurale uniti, sinonimi applicati).
+export function matchWords(name) {
+  const out = [];
+  for (const w of matchKey(name).split(" ")) {
+    const t = MATCH_SYNONYM[w] || w;
+    if (t && !MATCH_IGNORE.has(t) && !out.includes(t)) out.push(t);
   }
-  return weak;
+  return out;
+}
+
+// 2 = stesso nome · 1 = uno contiene l'altro senza cambiarne la natura · 0 = no.
+function matchLevel(aw, bw) {
+  if (!aw.length || !bw.length) return 0;
+  const [short, long] = aw.length <= bw.length ? [aw, bw] : [bw, aw];
+  if (!short.every((w) => long.includes(w))) return 0;
+  const extra = long.filter((w) => !short.includes(w));
+  if (!extra.length) return 2;
+  return extra.some((w) => MATCH_TRANSFORM.has(w)) ? 0 : 1;
+}
+
+// Il prodotto della lista che corrisponde all'ingrediente: prima quello col
+// nome uguale, altrimenti il primo compatibile; null se non c'è.
+export function findMatch(ingName, items) {
+  const aw = matchWords(ingName);
+  if (!aw.length) return null;
+  let partial = null;
+  for (const it of items) {
+    const level = matchLevel(aw, matchWords(it.name));
+    if (level === 2) return it;
+    if (level === 1 && !partial) partial = it;
+  }
+  return partial;
 }
