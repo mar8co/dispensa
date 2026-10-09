@@ -287,7 +287,7 @@ una regola locale basta.
   sulla sua ricetta (riquadro "Oggi" e Calendario Alimentare), le azioni
   cucinato/cambia/rimuovi stanno dietro i tre puntini; il riquadro "Oggi"
   senza scadenze non scrive nulla; il calendario in abbonamento si chiama
-  "Dispensa", colore `#DCCEB3`, aggiornamento suggerito ogni 15 minuti.
+  "Dispensa", colore `#DCCEB3`, aggiornamento suggerito ogni 15 minuti; dall'11/10 gli eventi hanno un orario (pranzo 13:00, cena 20:30, inizio = fine) e un avviso che parte in tempo per cucinare (`reminderMinutes`: tempo della ricetta + 10 min, tra 30 min e 2 ore).
   **Restano, per scelta**: filtri di ordinamento, "Cucina con questo
   prodotto", Barcode, "Seleziona tutto", foto dei piatti, Piano dentro Ricette.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con

@@ -52,7 +52,7 @@ export async function handleCalendarFeed({ query = {}, env, now = new Date() }) 
   const hhIds = (mem || []).map((m) => m.household_id).filter(Boolean);
   // Dall'ultima settimana in poi: il passato lontano non serve nel calendario.
   const from = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);
-  let q = admin.from("meal_plan").select("id, date, slot, title").gte("date", from).order("date").limit(400);
+  let q = admin.from("meal_plan").select("id, date, slot, title, time:data->>time").gte("date", from).order("date").limit(400);
   q = hhIds.length
     ? q.or(`household_id.in.(${hhIds.join(",")}),and(household_id.is.null,user_id.eq.${uid})`)
     : q.is("household_id", null).eq("user_id", uid);
