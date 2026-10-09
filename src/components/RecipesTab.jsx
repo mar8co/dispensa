@@ -1,6 +1,7 @@
-// Scheda Ricette (veste manifesto): TUTTO verde, anche la ricetta aperta, la
-// modalità cucina e i fogli del piano; sul verde gli ingredienti stanno in una
-// card bianca (il rosso di "manca" sul verde non si leggerebbe).
+// Scheda Ricette (veste manifesto): un solo colore pieno (PAGE_COLOR.ricette,
+// oggi arancio) anche per la ricetta aperta e la modalità cucina; sul colore
+// gli ingredienti stanno in una card bianca (il rosso di "manca" non si
+// leggerebbe). I fogli del Piano e "Aggiorna la dispensa" sono neri.
 // griglia occasioni -> 5 proposte -> ricetta completa con grammature, "cosa mi
 // manca", timer e "Ho cucinato questa ricetta".
 import { useState, useEffect, useMemo } from "react";
@@ -584,7 +585,7 @@ export default function RecipesTab({
             <h3 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Ingredienti</h3>
             <span className="flex items-center gap-1 text-[0.72rem] font-medium text-ink"><CheckCircle2 className="h-3.5 w-3.5 text-ink" /> ce l'hai · <Circle className="h-3.5 w-3.5 text-ink" /> manca · tocca e depenni</span>
           </div>
-          {/* Card bianca: sul verde il rosso di "manca" non si leggerebbe. */}
+          {/* Card bianca: sul colore pieno il rosso di "manca" non si leggerebbe. */}
           <div className="mt-3 rounded-card bg-white px-3.5">
             <ul className="divide-y divide-riga">
               {ingredients.map((ing, i) => {

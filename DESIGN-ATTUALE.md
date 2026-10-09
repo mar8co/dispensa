@@ -17,9 +17,9 @@
   |---|---|
   | Dispensa, accesso, caricamento, avvio | **beige** `#dcceb3` (marchio, token `sabbia`; dal 01/10, prima arancio) |
   | Spesa | **bianco** (dal 01/10; prima giallo) |
-  | Ricette (Idee, proposte, Piano Alimentare) | **verde** `#22b35e` |
+  | Ricette (Idee, proposte, Piano Alimentare) | **arancio** `#ff7a1a` (dal 09/10, prima verde `#22b35e`; si cambia in una riga: `PAGE_COLOR.ricette` in `lib/colors.js`) |
   | Fogli del Piano (pasto, "Aggiungi al piano") e "Aggiorna la dispensa" (Ho cucinato) | **nero** (testo crema, azione gialla; dal 09/10; classi in `FOGLIO_NERO`, `lib/colors.js`) |
-  | Ricetta aperta, modalità cucina | **verde** (dal 09/10, prima bianco): tutto ciò che è Ricette o Piano Alimentare è verde; gli ingredienti stanno in una card bianca |
+  | Ricetta aperta, modalità cucina | **stesso colore delle Ricette** (dal 09/10, prima bianco); gli ingredienti stanno in una card bianca |
   | Profilo (pannello da sinistra) | **blu** `#3572e8`, lo stesso dell'avatar (testi secondari neri) |
   | Impostazioni | dentro il Profilo (blu) dal 09/10; il pannello arancio non esiste più |
   | Privacy (foglio) | **beige** `#dcceb3` |
@@ -54,8 +54,9 @@
 - **Profilo**: avatar tondo **blu** `#3572e8` con l'iniziale bianca (36 px, Nome o mail) in alto a
   sinistra di ogni scheda; accanto, "Offline" quando manca la rete. Lo stesso avatar (48 px) apre
   il pannello Profilo. Avatar col bordo nero di 2 px (come Wishlist).
-- **Impostazioni**: dal 09/10 stanno **dentro il Profilo** (`SettingsSection`: Premium, Face ID,
-  notifiche, tutorial, "Svuota dispensa", "Esci" con conferma in linea, privacy / elimina account).
+- **Impostazioni**: dal 09/10 stanno **dentro il Profilo** (`SettingsSection`: Premium,
+  notifiche, "Svuota dispensa", "Esci" con conferma in linea, privacy / elimina account). Face ID e
+  "Rivedi il tutorial" sono stati tolti il 09/10.
   L'ingranaggio in testata è stato tolto: in alto a destra restano solo luce e condivisione della Spesa.
 - **Menu laterale** (`Sheet` con `side`, come il menu di Expense Track): il **Profilo entra da
   sinistra** ed è l'unico pannello laterale; alto quanto lo schermo, largo l'88%, senza maniglia,
@@ -64,7 +65,7 @@
 - **Pillole su fondo colorato**: quelle delle categorie in Dispensa e delle occasioni in Ricette
   ("Fresco", "Caldo"…) hanno il fondo **bianco** (nere da accese).
 - **Pannello di modifica aperto** (Dispensa, Spesa): un tocco fuori lo chiude e **non fa
-  nient'altro** (`lib/outsideTap.js`; eccezioni: avvisi e tutorial).
+  nient'altro** (`lib/outsideTap.js`; eccezione: gli avvisi).
 - **Pannelli laterali e barra di stato**: velo e pannello restano staccati dal bordo alto
   (14 px, o la zona sicura se maggiore): iOS colora la barra di stato con gli elementi fissi che
   toccano quel bordo. Non rimetterli a `top: 0`. Nello stacco c'è una fascia fissa del colore della
@@ -91,8 +92,11 @@
 
 - **Pannello prodotto (09/10)**: zona quantità su due righe — scadenza a sinistra e stepper a
   destra, poi le cinque unità (pz · g · kg · ml · l) larghe uguali; tutti i comandi alti 44 px.
-- **Testo secondario sul verde**: `--tenue-a` passa da 0.6 a 0.8 (lo imposta `setPageColor`), perché
-  il nero al 60% sul verde non raggiungeva il contrasto leggibile.
+- **Testo secondario sui colori saturi** (arancio delle Ricette, verde): `--tenue-a` passa da 0.6 a
+  0.8 (lo imposta `setPageColor`), perché il nero al 60% lì non raggiunge il contrasto leggibile.
+- **Login**: la pillola "Meno sprechi." prende il colore delle Ricette (arancio); i provider sono due
+  (Apple, Google), più il link via email.
+- **"+"**: dal basso verso l'alto A mano, Voce, Barcode, Foto (09/10).
 - **Ricette, "Puoi farle adesso"**: elenco a righe sottili sopra le occasioni (titolo, tempo,
   "hai tutto" / "manca: …", cartellino nero "usa ciò che scade"); sotto la ricerca una riga dice
   quante richieste AI restano oggi, o che sei offline (le occasioni si attenuano).
@@ -121,11 +125,12 @@
    swipe ← elimina / → modifica (soglia 72 px), "Per reparto" nel giro del supermercato, "Nel
    carrello", "Sposta in dispensa" + cestino tra la lista e "Nel carrello".
 4. Barra: Dispensa · Spesa · Ricette; Profilo dall'avatar in alto a sinistra; "+" su tutte le schede;
-   pallini su Dispensa (scaduti) e Spesa (da prendere). `data-tour` di schede, avatar e "+" invariati.
-5. Tutorial: gli attributi `data-tour` restano su ogni elemento.
+   pallini su Dispensa (scaduti) e Spesa (da prendere). 
+5. (Il tutorial e gli attributi `data-tour` sono stati tolti il 09/10: al primo accesso la dispensa
+   è vuota e la schermata vuota dice come aggiungere i prodotti.)
 6. Emoji delle categorie identiche tra Dispensa e Spesa; testi e microcopy invariati.
 7. Posizioni fisse calcolate dalle variabili della barra in `index.css` (`--nav-bottom`, `--nav-h`,
-   `--sopra-nav`, `--banner-h`): "+", avviso, timer, spazio in fondo alle pagine.
+   `--sopra-nav`): "+", avviso, timer, spazio in fondo alle pagine.
    "Sposta in dispensa" + cestino della Spesa **non sono fissi**: stanno in flusso tra la lista e
    "Nel carrello". Luce e condivisione stanno sulla riga dell'avatar (`ShoppingTab` le porta con
    un portal in `#testata-azioni`, nella testata di `Dispensa.jsx`). Se cambia la barra, si

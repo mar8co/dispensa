@@ -96,7 +96,6 @@ dispensa/
 │  │  ├─ push.js            # opt-in notifiche push (web + APNs nel nativo)
 │  │  ├─ api.js             # base URL proxy /api/* (vuota sul web, dominio nel nativo)
 │  │  ├─ native.js          # ponte Capacitor: isNative, deep link login
-│  │  ├─ ads.js             # AdMob banner (solo nativo, solo free) — fase 3
 │  │  ├─ premium.js         # piani/prezzi/id abbonamento — fase 3
 │  │  ├─ storekit.js        # ponte JS al plugin StoreKit 2 + syncReceipt — fase 3
 │  │  ├─ claude.js          # client AI/foto (→ /api/*)

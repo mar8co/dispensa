@@ -61,8 +61,8 @@
   tocco ≥ 44px, rispetto di `env(safe-area-inset-*)`.
 - **Veste "manifesto svizzero"** (dettagli in `DESIGN-ATTUALE.md`): un colore
   pieno per schermata (`PAGE_COLOR` in `src/lib/colors.js`, applicato con
-  `usePageColor`: Dispensa beige `#dcceb3` (token `sabbia`), Spesa bianco, Ricette verde,
-  ricetta aperta verde come il resto delle Ricette), inchiostro nero, Inter Tight, titoli `.gigante`,
+  `usePageColor`: Dispensa beige `#dcceb3` (token `sabbia`), Spesa bianco, Ricette arancio
+  (dal 09/10, prima verde), ricetta aperta dello stesso colore), inchiostro nero, Inter Tight, titoli `.gigante`,
   etichette `.micro`, righe sottili al posto delle card, pillole e tondi.
   Niente `backdrop-filter`/`filter: blur`/`mix-blend-mode`, animazioni solo
   `transform`/`opacity`. Per vedere le schermate senza login:
@@ -84,7 +84,7 @@
   Restano bespoke solo i casi speciali (FAB, otturatore fotocamera, navbar,
   stepper ±, chip/pill, strisce dentro i banner).
 - **Posizioni sopra la barra** (variabili in `src/index.css`: `--nav-bottom`
-  12px + zona sicura, `--nav-h` 52px, `--sopra-nav`, `--banner-h`): il "+"
+  12px + zona sicura, `--nav-h` 52px, `--sopra-nav`): il "+"
   (su tutte le schede) sta sulla riga della barra (slot `addSlot` di `BottomNav`);
   l'**avviso** (`Toast.jsx`, prop `bottom` decisa in `Dispensa.jsx`) sta a
   `--sopra-nav` su tutte le schede ("Sposta in dispensa" + cestino della Spesa
@@ -204,10 +204,10 @@ una regola locale basta.
 - **Tutto pubblicato su `main`** (ultimo commit di codice `eac8dcb`), niente
   lavori a metà, nessun ramo aperto.
 - **Veste attuale** (dettagli in `DESIGN-ATTUALE.md`): Dispensa e marchio beige
-  `#dcceb3`, Spesa bianca, Ricette verde; avatar blu in alto a sinistra →
+  `#dcceb3`, Spesa bianca, Ricette arancio; avatar blu in alto a sinistra →
   Profilo (pannello blu da sinistra), l'unico menu: dentro ci sono anche le
   Impostazioni e "Esci" (l'ingranaggio in testata è stato tolto il 09/10);
-  tutto ciò che è Ricette o Piano è verde, ricetta aperta compresa; barra nera con
+  tutto ciò che è Ricette o Piano è arancio, ricetta aperta compresa; barra nera con
   Dispensa · Spesa · Ricette e "+" bianco su tutte le schede; logo nuovo
   (sacchetto + cappello da chef).
 - **Confermato dall'utente sull'iPhone (09/10)**: barra di stato giusta dopo
@@ -223,6 +223,10 @@ una regola locale basta.
   dispensa" apre la revisione con scadenza proposta per i freschi
   (`SHELF_LIFE_DAYS`); niente più avviso a ogni prodotto nel carrello; "Cucina
   con questi prodotti" sempre visibile; foglio del pasto nel Piano nero.
+  **Tolti il 09/10**: pubblicità (AdMob e richiesta di tracciamento: erano
+  solo ID di prova), tutorial (con i prodotti di esempio nel database vero) e
+  Face ID/passkey. Non rimetterli senza richiesta. Ordine del "+" dal basso:
+  A mano, Voce, Barcode, Foto.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con
   tocco sul nome = modifica (resta così) e "+" su tutte le schede (resta).
 - **Prossimo lavoro grande**: resta la Fase 3 (prodotti su App Store Connect,
@@ -245,16 +249,16 @@ una regola locale basta.
   verde su CI macOS GitHub Actions), push APNs (migration-12), deep link
   login (`dispensa://auth`), splash nativa, entitlements Premium
   (migration-13, `is_pro`, Premium **per-nucleo**), paywall (`PaywallSheet`),
-  AdMob banner + ATT. **Prossimo obiettivo = StoreKit 2 + verifica ricevute
+  (AdMob + ATT c'erano, tolti il 09/10). **Prossimo obiettivo = StoreKit 2 + verifica ricevute
   + primo build su TestFlight** (sbloccato dall'account Apple Developer).
   Migration 11/12/13 sono SQL manuali (eccezione esplicita alla regola 3);
   lo **schema concreto va proposto all'utente prima**.
   Le scelte UX (mockup con opzioni) precedono sempre il codice.
   Free vs Premium (aggiornato il 09/10): free = dispensa+spesa+ricette **dal
   ricettario** (il proprio + `data/ricetteBase.js`, solo "Puoi farle adesso": max 5 fattibili o le 2 più vicine; niente AI
-  per le ricette) con pubblicità; foto/barcode/voce usano l'AI solo se serve,
+  per le ricette), senza pubblicità; foto/barcode/voce usano l'AI solo se serve,
   entro il tetto giornaliero. Le **idee e le ricette su misura con l'AI sono
   solo Premium** (`kind: "recipe"`, verificato in `server/claude.js`). **Premium (1,99€/mese · 14,99€/anno, 7gg prova)
-  = Piano Alimentare + niente pubblicità + AI illimitata + invitare membri**.
+  = Piano Alimentare + ricette AI + AI illimitata + invitare membri**.
   **Non confondere con "Cambusa"**, repo separato (competitor
   nativo RN/Expo di Dispensa): questa iniziativa converte *questo* codice.

@@ -2,7 +2,7 @@
 // sinistra). Pannello laterale da SINISTRA, blu come l'avatar, con la X in alto
 // a destra (si chiude anche toccando fuori o trascinando). Dentro: account
 // (nome), Dispensa condivisa, Esigenze alimentari e, dal 09/10, anche le
-// Impostazioni (SettingsSection: Premium, Face ID, notifiche, tutorial, "Svuota
+// Impostazioni (SettingsSection: Premium, notifiche, "Svuota
 // dispensa", "Esci", privacy / elimina account). L'ingranaggio in testata non
 // c'è più. Veste manifesto: righe sottili, pillole.
 import { useState, useEffect } from "react";

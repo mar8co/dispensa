@@ -3,7 +3,7 @@
 // nero; il bianco solo sul rosso azione.
 
 export const PALETTE = {
-  arancio: "#ff7a1a", // Impostazioni (fino al 01/10 era il marchio)
+  arancio: "#ff7a1a", // Ricette (dal 09/10; fino al 01/10 era il marchio)
   giallo: "#ffd60a",
   verde: "#22b35e",
   rosa: "#ffb5d0",
@@ -28,12 +28,14 @@ export const FOGLIO_NERO =
 export const PAGE_COLOR = {
   dispensa: PALETTE.sabbia,
   spesa: WHITE, // dal 01/10 (prima giallo)
-  ricette: PALETTE.verde, // Idee, proposte e Piano Alimentare
-  ricetta: PALETTE.verde, // ricetta aperta: verde come tutto ciò che è Ricette (dal 09/10, prima bianca)
+  // Ricette: ARANCIO dal 09/10 (prima verde). Per cambiarlo basta questa riga:
+  // ricetta aperta, modalità cucina e pillola del login lo seguono da soli.
+  ricette: PALETTE.arancio, // Idee, proposte e Piano Alimentare
+  ricetta: PALETTE.arancio, // ricetta aperta: stesso colore di tutto ciò che è Ricette
   accesso: PALETTE.sabbia, // login e caricamento
 };
 
-// Schermata della vista corrente (la ricetta aperta ha la sua voce, oggi verde).
+// Schermata della vista corrente (la ricetta aperta ha la sua voce, oggi uguale alle Ricette).
 export function pageColorFor(view, recipeOpen = false) {
   if (view === "ricette" && recipeOpen) return PAGE_COLOR.ricetta;
   return PAGE_COLOR[view] || PAGE_COLOR.dispensa;
@@ -48,8 +50,10 @@ export function setPageColor(hex) {
   const n = parseInt(hex.replace("#", ""), 16);
   const rgb = `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
   document.documentElement.style.setProperty("--sfondo", rgb);
-  // Sul verde il testo secondario (nero al 60%) non regge il contrasto: più scuro.
-  document.documentElement.style.setProperty("--tenue-a", hex === PALETTE.verde ? "0.8" : "0.6");
+  // Sui colori pieni e saturi (arancio, verde) il testo secondario, nero al
+  // 60%, non regge il contrasto (3,6-3,7:1): lì diventa più scuro.
+  const saturo = hex === PALETTE.arancio || hex === PALETTE.verde;
+  document.documentElement.style.setProperty("--tenue-a", saturo ? "0.8" : "0.6");
   let meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) {
     meta = document.createElement("meta");

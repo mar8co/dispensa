@@ -70,7 +70,7 @@ function MealSlotSheet({
   return (
     <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
       {(close) => (
-        // Foglio NERO sulla pagina verde (scelta dell'utente, 09/10): come nelle
+        // Foglio NERO sulla pagina delle Ricette (scelta dell'utente, 09/10): come nelle
         // fotocamere si scrive in crema, i bordi sono crema e l'azione
         // principale è gialla (un bottone nero sul nero sparirebbe).
         <div className={`px-[18px] pb-4 pt-1 ${FOGLIO_NERO}`}>
