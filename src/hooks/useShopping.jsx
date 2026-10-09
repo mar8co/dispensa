@@ -195,7 +195,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   async function toggleShoppingItem(id, checked) {
     setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked } : x)));
     persistUpdate(id, { checked });
-    // Avviso breve (2,5 s), pillola verde, con Annulla = rimette in lista.
+    // Avviso breve (2,5 s), pillola gialla, con Annulla = rimette in lista.
     // Tolto il 09/10 (in basso dava fastidio), rimesso l'11/10 ora che gli
     // avvisi stanno in alto.
     if (checked) {
@@ -204,7 +204,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
         setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked: false } : x)));
         persistUpdate(id, { checked: false });
         dismissToast();
-      }, undefined, "verde", 2500);
+      }, undefined, "giallo", 2500);
     }
   }
   async function removeShoppingItem(id) {
