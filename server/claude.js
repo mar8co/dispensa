@@ -75,6 +75,7 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
   // risposta valida (vedi `countUsage` in fondo): errori, timeout e i tentativi
   // automatici del client non consumano più le richieste del giorno.
   let countUsage = null;
+  let usageLimit = null;
   if (env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -86,6 +87,7 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
 
       if (!pro) {
         const limit = Number(env.AI_DAILY_LIMIT) || 5;
+        usageLimit = limit;
         // `day` è una date del DB (current_date, UTC su Supabase).
         const today = new Date().toISOString().slice(0, 10);
         const { data: row, error } = await admin
@@ -177,7 +179,15 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
   }
 
   // Risposta valida: solo ora la richiesta conta nel limite giornaliero.
-  if (countUsage) { try { await countUsage(); } catch { /* best-effort */ } }
+  // Il nuovo conteggio torna al client (`usage`), che mostra quante richieste
+  // restano oggi invece di farlo scoprire con un errore.
+  let usage = null;
+  if (countUsage) {
+    try {
+      const { data: used, error } = await countUsage();
+      if (!error && typeof used === "number") usage = { used, limit: usageLimit };
+    } catch { /* best-effort */ }
+  }
 
-  return { status: 200, json: { content: [{ type: "text", text }] } };
+  return { status: 200, json: { content: [{ type: "text", text }], ...(usage ? { usage } : {}) } };
 }

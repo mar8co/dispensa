@@ -59,11 +59,27 @@ export function useRecipes({
   const retryRef = useRef(null);
   const retryLast = () => retryRef.current?.();
 
-  // Cache di sessione delle ricette generate (per titolo normalizzato):
-  // riaprire la STESSA idea deve dare la STESSA ricetta (e foto), non una
-  // rigenerazione diversa da quella che la card prometteva. In più: zero
-  // attesa e zero quota AI alla seconda apertura.
-  const recipeCacheRef = useRef({});
+  // Cache delle ricette generate (per titolo normalizzato): riaprire la STESSA
+  // idea deve dare la STESSA ricetta (e foto), non una rigenerazione diversa da
+  // quella che la card prometteva. In più: zero attesa e zero quota AI alla
+  // seconda apertura. Dal 09/10 è salvata sul dispositivo (ultime 40): prima
+  // viveva solo in memoria e a ogni riavvio dell'app si ripagava la richiesta.
+  const RECIPES_MAX = 40;
+  const recipesKey = `dispensa-recipes-${uid}`;
+  const recipeCacheRef = useRef(null);
+  if (recipeCacheRef.current === null) {
+    try { recipeCacheRef.current = JSON.parse(localStorage.getItem(recipesKey)) || {}; }
+    catch { recipeCacheRef.current = {}; }
+  }
+  function cacheRecipe(title, value) {
+    const all = recipeCacheRef.current;
+    const k = norm(title);
+    delete all[k]; // reinserita in fondo: le chiavi restano in ordine d'uso
+    all[k] = value;
+    const keys = Object.keys(all);
+    for (const old of keys.slice(0, Math.max(0, keys.length - RECIPES_MAX))) delete all[old];
+    try { localStorage.setItem(recipesKey, JSON.stringify(all)); } catch { /* niente cache */ }
+  }
 
   // Riga di preferenze alimentari iniettata in tutti i prompt di cucina.
   const prefLine = foodPrefs.trim()
@@ -286,12 +302,12 @@ export function useRecipes({
         ...parsed,
         ingredients: parsed.ingredients.map((ing) => ({ ...ing, name: stripParens(ing?.name) })),
       };
-      recipeCacheRef.current[norm(title)] = clean; // stessa idea → stessa ricetta
+      cacheRecipe(title, clean); // stessa idea → stessa ricetta
       if (!isCurrent(gen)) return; // l'utente ha già cambiato vista
       animateUI(() => { setRecipe(clean); setServings(initialServings(clean)); setLoadingRecipe(false); });
       fetchPhotos([parsed.imageQuery || parsed.title]).then((urls) => {
         if (!urls[0]) return;
-        recipeCacheRef.current[norm(title)] = { ...clean, image: urls[0] }; // cache con la foto
+        cacheRecipe(title, { ...clean, image: urls[0] }); // cache con la foto
         if (isCurrent(gen)) {
           setRecipe((prev) => (prev && prev.title === parsed.title ? { ...prev, image: urls[0] } : prev));
         }

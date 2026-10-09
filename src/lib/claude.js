@@ -3,6 +3,7 @@
 // (invariato) e il token Supabase dell'utente per autenticare la richiesta.
 import { supabase } from "./supabase.js";
 import { apiUrl } from "./api.js";
+import { setAiUsage, setAiExhausted } from "./aiUsage.js";
 
 export function fileToBase64(file) {
   return new Promise((res, rej) => {
@@ -103,10 +104,12 @@ export async function callClaude(content, maxTokens = 1000, opts = {}) {
       const err = new Error((info?.error || `API ${res.status}`) + (detail ? `: ${detail}` : ""));
       err.status = res.status;
       err.code = info?.code; // es. "daily_limit": non ritentare
+      if (err.code === "daily_limit") setAiExhausted();
       throw err;
     }
 
     const payload = await res.json();
+    if (payload.usage) setAiUsage(payload.usage); // richieste rimaste oggi (piano gratuito)
     const text = (payload.content || [])
       .filter((b) => b.type === "text")
       .map((b) => b.text)

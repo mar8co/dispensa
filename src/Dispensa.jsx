@@ -1174,6 +1174,7 @@ export default function Dispensa({ session }) {
             startOnPlan={planFirst}
             isPro={isPro}
             onNeedPro={() => openPaywall("Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola.")}
+            online={online}
             onAiLimit={() => openPaywall("Hai finito le richieste AI di oggi: con Premium non hanno limiti.")}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
@@ -1242,6 +1243,7 @@ export default function Dispensa({ session }) {
           <AddFab
             menuOpen={addMenuOpen}
             setMenuOpen={setAddMenuOpen}
+            online={online}
             onManual={() => { bumpModal("manual"); setManualOpen(true); }}
             onPhoto={() => { bumpModal("receipt"); setReceiptOpen(true); }}
             onBarcode={() => { bumpModal("barcode"); setBarcodeOpen(true); }}

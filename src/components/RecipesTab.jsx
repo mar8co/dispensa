@@ -12,6 +12,7 @@ import {
 import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
+import { useAiLeft } from "../lib/aiUsage.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
 import StepTimer from "./StepTimer.jsx";
@@ -92,7 +93,9 @@ export default function RecipesTab({
   plan = null,
   startOnPlan = false,
   isPro = true, onNeedPro, onAiLimit,
+  online = true,
 }) {
+  const aiLeft = useAiLeft(); // richieste AI rimaste oggi (null = non noto)
   const [addedMissing, setAddedMissing] = useState(false);
   const [ask, setAsk] = useState("");          // "Cosa ti va?"
   const [shelf, setShelf] = useState("salvate"); // tab del ricettario
@@ -214,7 +217,7 @@ export default function RecipesTab({
             <div className="micro">Ricette</div>
             <form
               className="relative"
-              onSubmit={(e) => { e.preventDefault(); if (ask.trim()) { onCustomAsk(ask); setAsk(""); } }}
+              onSubmit={(e) => { e.preventDefault(); if (ask.trim() && online) { onCustomAsk(ask); setAsk(""); } }}
             >
               <Sparkles className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
               <input
@@ -224,12 +227,27 @@ export default function RecipesTab({
                 className={`campo testo-grande pl-8 text-[1.06rem] text-ink ${ask.trim() ? "pr-16" : "pr-2"}`}
               />
               {ask.trim() && (
-                <button type="submit" className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-ink px-3.5 py-1.5 text-[0.84rem] font-bold text-white">
+                <button type="submit" disabled={!online} className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-ink px-3.5 py-1.5 text-[0.84rem] font-bold text-white disabled:opacity-40">
                   Vai
                 </button>
               )}
             </form>
           </div>
+
+          {/* Le idee nuove le prepara l'AI: senza rete lo si dice PRIMA del
+              tocco (le occasioni si spengono), e nel piano gratuito si vede
+              quante richieste restano oggi. Il ricettario non ne ha bisogno. */}
+          {!online ? (
+            <p className="mt-3 text-[0.9rem] font-bold leading-snug text-ink">
+              Sei offline: le idee nuove tornano con la rete. Il tuo ricettario funziona lo stesso.
+            </p>
+          ) : !isPro && aiLeft !== null && (
+            <p className="mt-3 text-[0.86rem] font-semibold text-tenue">
+              {aiLeft === 0
+                ? "Per oggi hai finito le richieste AI: tornano domani."
+                : `Oggi ti ${aiLeft === 1 ? "resta 1 richiesta" : `restano ${aiLeft} richieste`} AI`}
+            </p>
+          )}
 
           {/* Pill di contesto/umore: l'AI le considera (oltre alla stagione)
               quando poi scegli un'occasione. Multi-select, opzionali. */}
@@ -262,8 +280,9 @@ export default function RecipesTab({
               <div
                 key={m.id}
                 ref={(el) => { modeCardRefs.current[m.id] = el; }}
-                onClick={() => chooseMode(m)}
-                className={`relative cursor-pointer rounded-card bg-white p-4 text-left transition active:scale-[0.98] ${dragMode === m.id ? "ring-2 ring-ink" : ""}`}
+                onClick={() => online && chooseMode(m)}
+                aria-disabled={!online}
+                className={`relative cursor-pointer rounded-card bg-white p-4 text-left transition active:scale-[0.98] ${dragMode === m.id ? "ring-2 ring-ink" : ""} ${online ? "" : "opacity-50"}`}
               >
                 <div className="mb-2 text-2xl">{m.icon}</div>
                 <div className="pr-5 text-[1.05rem] font-extrabold leading-tight tracking-[-0.03em] text-ink">{m.id}</div>
@@ -415,7 +434,7 @@ export default function RecipesTab({
           </div>
 
           {ideas.length > 0 && !loadingIdeas && (
-            <Button variant="cook" full className="mt-4 mb-8" onClick={onRegenerate}>
+            <Button variant="cook" full className="mt-4 mb-8" onClick={onRegenerate} disabled={!online}>
               <RefreshCw className="h-4 w-4" /> Altre idee
             </Button>
           )}
