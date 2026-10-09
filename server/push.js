@@ -16,6 +16,8 @@
 import { createClient } from "@supabase/supabase-js";
 import webpush from "web-push";
 import { apnsConfigured, createApnsSender, isDeadToken } from "./apns.js";
+import { mainIngredients } from "../src/lib/suggest.js";
+import { findMatch, norm } from "../src/lib/pantry.js";
 
 // Momenti canonici, in MINUTI dall'inizio del giorno, ORA DI ROMA.
 const SLOTS = {
@@ -181,6 +183,164 @@ async function fetchPlannedMeal(admin, userId, hhIds, dateIso, mealSlot) {
   return data?.[0] || null;
 }
 
+// Che giorno è a Roma: 0 = domenica … 6 = sabato.
+function romeWeekday(now) {
+  const d = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Rome", weekday: "short" }).format(now);
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(d);
+}
+
+// Tutta la dispensa visibile all'utente (per "cosa manca per domani").
+async function fetchPantryAll(admin, userId, hhIds) {
+  const { data } = await scopeToUser(admin.from("pantry_items").select("name, qty"), hhIds, userId);
+  return data || [];
+}
+
+// Per i pasti di DOMANI che hanno una ricetta: gli ingredienti veri (non olio,
+// sale, spezie) che in dispensa non ci sono. Stesso confronto dell'app.
+async function fetchMissingForTomorrow(admin, userId, hhIds, dateIso) {
+  const q = admin.from("meal_plan").select("data").eq("date", dateIso).is("cooked_at", null).not("data", "is", null);
+  const { data: meals } = await scopeToUser(q, hhIds, userId);
+  if (!meals?.length) return [];
+  const pantry = (await fetchPantryAll(admin, userId, hhIds)).filter((p) => String(p.qty).trim() !== "0");
+  const missing = new Map();
+  for (const m of meals) {
+    for (const ing of mainIngredients(m.data || {})) {
+      if (!findMatch(ing.name, pantry)) missing.set(norm(ing.name), ing.name);
+    }
+  }
+  return [...missing.values()];
+}
+
+// Quanti prodotti ci sono ancora da prendere in lista.
+async function countShopping(admin, userId, hhIds) {
+  const q = admin.from("shopping_items").select("id", { count: "exact", head: true }).eq("checked", false);
+  const { count } = await scopeToUser(q, hhIds, userId);
+  return count || 0;
+}
+
+// Il calendario dei prossimi 7 giorni è vuoto?
+async function nextWeekEmpty(admin, userId, hhIds, now) {
+  const q = admin.from("meal_plan").select("id", { count: "exact", head: true })
+    .gte("date", romeDateISO(now, 1)).lte("date", romeDateISO(now, 7));
+  const { count } = await scopeToUser(q, hhIds, userId);
+  return !count;
+}
+
+// Le notifiche di UN utente per lo slot corrente (di solito una, a volte due
+// o nessuna). Dall'11/10 oltre alle quattro di base:
+//  - sabato alle 11:00: "la lista ha N prodotti";
+//  - domenica alle 14:30: "organizziamo la settimana?" se il calendario è vuoto;
+//  - alle 21:45: "per domani ti manca…" se ai pasti di domani manca qualcosa.
+async function userPayloads(admin, userId, slot, now) {
+  const hhIds = await fetchHouseholdIds(admin, userId);
+  const out = [];
+  if (slot === "mattina") {
+    const meal = await fetchPlannedMeal(admin, userId, hhIds, romeDateISO(now, 0), "pranzo");
+    if (meal) out.push(buildPayload(slot, [], meal));
+    if (romeWeekday(now) === 6) {
+      const n = await countShopping(admin, userId, hhIds);
+      if (n > 0) out.push({
+        title: `La lista ha ${n} ${n === 1 ? "prodotto" : "prodotti"} 🛒`,
+        body: "È sabato: buon momento per fare la spesa",
+        url: "/?view=spesa", tag: "dispensa-lista",
+      });
+    }
+    return out;
+  }
+  if (slot === "sera") {
+    const missing = await fetchMissingForTomorrow(admin, userId, hhIds, romeDateISO(now, 1));
+    if (missing.length) {
+      return [{
+        title: `Per domani ti manca: ${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""} 🛒`,
+        body: "Apri la ricetta e metti in lista quello che serve",
+        url: "/?view=piano", tag: "dispensa-domani",
+      }];
+    }
+  }
+  if (slot === "pranzo" && romeWeekday(now) === 0 && await nextWeekEmpty(admin, userId, hhIds, now)) {
+    return [{
+      title: "Organizziamo la settimana? 📅",
+      body: "Riempio io il calendario partendo da quello che hai in dispensa",
+      url: "/?view=piano", tag: "dispensa-settimana",
+    }];
+  }
+  const pantry = await fetchUserPantry(admin, userId, hhIds);
+  let expiringNames = [];
+  let meal = null;
+  if (slot === "cena") {
+    meal = await fetchPlannedMeal(admin, userId, hhIds, romeDateISO(now, 0), "cena");
+    // Cadenza AUTOMATICA: un prodotto viene menzionato a 7, 3 e 1 giorno
+    // dalla scadenza — tre richiami ben distanziati invece della
+    // ripetizione quotidiana, e nessuna impostazione da configurare.
+    const targets = new Set([romeDateISO(now, 1), romeDateISO(now, 3), romeDateISO(now, 7)]);
+    expiringNames = pantry.filter((p) => p.expiry && targets.has(p.expiry)).map((p) => p.name);
+  }
+  // Niente promemoria su una dispensa vuota (sarebbe rumore inutile), a
+  // meno che ci sia una cena in calendario da ricordare.
+  if (!pantry.length && !meal) return [];
+  return [buildPayload(slot, expiringNames, meal)];
+}
+
+// --- Invio (condiviso con server/notify.js) ---
+
+// Le subscription di tutti (o dei soli `userIds`). `platform`/`apns_token`
+// esistono dalla migration-12: se non è ancora stata eseguita la select
+// fallisce, quindi si ripiega sulle sole colonne web.
+export async function fetchSubscriptions(admin, userIds = null) {
+  const run = (cols) => {
+    const q = admin.from("push_subscriptions").select(cols);
+    return userIds ? q.in("user_id", userIds) : q;
+  };
+  const full = await run("id, user_id, endpoint, p256dh, auth, platform, apns_token");
+  if (!full.error) return { subs: full.data || [] };
+  const legacy = await run("id, user_id, endpoint, p256dh, auth");
+  if (!legacy.error) console.warn("push: migration-12 non applicata, solo Web Push");
+  return { subs: legacy.data || [], error: legacy.error };
+}
+
+// Un "postino" per un giro di invii: stesso contenuto su due canali (APNs per
+// l'app iOS, Web Push per la PWA). Toglie da solo le subscription morte.
+export function createPushSender(env, admin, subs) {
+  webpush.setVapidDetails(
+    env.VAPID_SUBJECT || "mailto:mar8co@gmail.com",
+    env.VAPID_PUBLIC_KEY,
+    env.VAPID_PRIVATE_KEY
+  );
+  // Canale APNs aperto una sola volta (se configurato e se serve).
+  const hasIos = subs.some((s) => s.platform === "ios" && s.apns_token);
+  const apns = hasIos && apnsConfigured(env) ? createApnsSender(env) : null;
+  if (hasIos && !apns) console.warn("push: dispositivi iOS presenti ma APNs non configurato");
+  const stats = { sent: 0, removed: 0 };
+  async function send(s, payload) {
+    if (s.platform === "ios") {
+      if (!apns) return;
+      const res = await apns.send(s.apns_token, payload);
+      if (res.ok) stats.sent++;
+      else if (isDeadToken(res)) {
+        await admin.from("push_subscriptions").delete().eq("id", s.id);
+        stats.removed++;
+      } else {
+        console.error("push: APNs fallito", res.status, res.reason);
+      }
+      return;
+    }
+    try {
+      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload));
+      stats.sent++;
+    } catch (e) {
+      // 404/410 = subscription non più valida (app disinstallata / permesso
+      // revocato): la rimuoviamo per non riprovare all'infinito.
+      if (e?.statusCode === 404 || e?.statusCode === 410) {
+        await admin.from("push_subscriptions").delete().eq("id", s.id);
+        stats.removed++;
+      } else {
+        console.error("push: invio fallito", s.endpoint, e?.statusCode || e?.message || e);
+      }
+    }
+  }
+  return { send, stats, close: () => apns?.close() };
+}
+
 export async function handlePushCron({ headers = {}, env, now = new Date() }) {
   // 1) Autorizzazione: segreto del cron.
   const got = headers["x-cron-secret"] || headers["X-Cron-Secret"];
@@ -198,39 +358,12 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
   const slot = currentSlot(now);
   if (!slot) return { status: 200, json: { skipped: true, reason: "fuori orario" } };
 
-  webpush.setVapidDetails(
-    env.VAPID_SUBJECT || "mailto:mar8co@gmail.com",
-    env.VAPID_PUBLIC_KEY,
-    env.VAPID_PRIVATE_KEY
-  );
-
   const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-
-  // `platform`/`apns_token` esistono dalla migration-12: se non è ancora stata
-  // eseguita la select fallisce, quindi si ripiega sulle sole colonne web e le
-  // notifiche PWA continuano a partire (nessuna regressione).
-  let subs, subsErr;
-  {
-    const full = await admin.from("push_subscriptions")
-      .select("id, user_id, endpoint, p256dh, auth, platform, apns_token");
-    if (full.error) {
-      const legacy = await admin.from("push_subscriptions")
-        .select("id, user_id, endpoint, p256dh, auth");
-      subs = legacy.data;
-      subsErr = legacy.error;
-      if (!legacy.error) console.warn("push: migration-12 non applicata, solo Web Push");
-    } else {
-      subs = full.data;
-    }
-  }
+  const { subs, error: subsErr } = await fetchSubscriptions(admin);
   if (subsErr) return { status: 500, json: { error: "Lettura subscription fallita.", detail: subsErr.message } };
-  if (!subs?.length) return { status: 200, json: { slot, sent: 0, removed: 0 } };
+  if (!subs.length) return { status: 200, json: { slot, sent: 0, removed: 0 } };
 
-  // Canale APNs aperto una sola volta per tutto il giro (se configurato e se
-  // c'è almeno un dispositivo iOS da servire).
-  const hasIos = subs.some((s) => s.platform === "ios" && s.apns_token);
-  const apns = hasIos && apnsConfigured(env) ? createApnsSender(env) : null;
-  if (hasIos && !apns) console.warn("push: dispositivi iOS presenti ma APNs non configurato");
+  const sender = createPushSender(env, admin, subs);
 
   // Raggruppo le subscription per utente (un utente può avere più dispositivi).
   const byUser = new Map();
@@ -239,75 +372,21 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
     byUser.get(s.user_id).push(s);
   }
 
-  let sent = 0, removed = 0;
-
   for (const [userId, userSubs] of byUser) {
-    // Payload calcolato UNA volta per utente, poi inviato a tutti i suoi device.
-    let payload;
+    // Notifiche calcolate UNA volta per utente, poi inviate a tutti i suoi device.
+    let payloads;
     try {
-      const hhIds = await fetchHouseholdIds(admin, userId);
-      let expiringNames = [];
-      let meal = null;
-      if (slot === "mattina") {
-        // Promemoria del pranzo: parte solo se oggi a pranzo c'è un piatto nel
-        // calendario (non ancora cucinato). Niente piatto, niente notifica.
-        meal = await fetchPlannedMeal(admin, userId, hhIds, romeDateISO(now, 0), "pranzo");
-        if (!meal) continue;
-      } else {
-        const pantry = await fetchUserPantry(admin, userId, hhIds);
-        if (slot === "cena") {
-          meal = await fetchPlannedMeal(admin, userId, hhIds, romeDateISO(now, 0), "cena");
-          // Cadenza AUTOMATICA: un prodotto viene menzionato a 7, 3 e 1 giorno
-          // dalla scadenza — tre richiami ben distanziati invece della
-          // ripetizione quotidiana, e nessuna impostazione da configurare.
-          const targets = new Set([romeDateISO(now, 1), romeDateISO(now, 3), romeDateISO(now, 7)]);
-          expiringNames = pantry
-            .filter((p) => p.expiry && targets.has(p.expiry))
-            .map((p) => p.name);
-        }
-        // Niente promemoria su una dispensa vuota (sarebbe rumore inutile), a
-        // meno che ci sia una cena in calendario da ricordare.
-        if (!pantry.length && !meal) continue;
-      }
-      payload = buildPayload(slot, expiringNames, meal);
+      payloads = await userPayloads(admin, userId, slot, now);
     } catch (e) {
       // Un utente che fallisce non deve bloccare gli altri.
       console.error("push: preparazione utente fallita", userId, e?.message || e);
       continue;
     }
-
-    const body = JSON.stringify(payload);
-    for (const s of userSubs) {
-      // Stesso contenuto, due canali: APNs per l'app iOS, Web Push per la PWA.
-      if (s.platform === "ios") {
-        if (!apns) continue;
-        const res = await apns.send(s.apns_token, payload);
-        if (res.ok) sent++;
-        else if (isDeadToken(res)) {
-          await admin.from("push_subscriptions").delete().eq("id", s.id);
-          removed++;
-        } else {
-          console.error("push: APNs fallito", res.status, res.reason);
-        }
-        continue;
-      }
-      const subscription = { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } };
-      try {
-        await webpush.sendNotification(subscription, body);
-        sent++;
-      } catch (e) {
-        // 404/410 = subscription non più valida (app disinstallata / permesso
-        // revocato): la rimuoviamo per non riprovare all'infinito.
-        if (e?.statusCode === 404 || e?.statusCode === 410) {
-          await admin.from("push_subscriptions").delete().eq("id", s.id);
-          removed++;
-        } else {
-          console.error("push: invio fallito", s.endpoint, e?.statusCode || e?.message || e);
-        }
-      }
+    for (const payload of payloads) {
+      for (const s of userSubs) await sender.send(s, payload);
     }
   }
 
-  apns?.close();
-  return { status: 200, json: { slot, sent, removed } };
+  sender.close();
+  return { status: 200, json: { slot, ...sender.stats } };
 }

@@ -107,7 +107,7 @@ export default function PlanDaySheet({ recipeTitle = "", onChoose, onClose, load
                     <span className="min-w-0 flex-1">
                       <span className="block text-[1.15rem] font-extrabold tracking-[-0.03em] text-ink">{label}</span>
                       <span className="block truncate text-[0.8rem] font-medium text-tenue">
-                        {already ? "Questa ricetta è già qui" : meal ? `C'è già: ${meal.title}` : "Libero"}
+                        {already ? "Questa ricetta è già qui" : meal ? meal.title : "Libero"}
                       </span>
                     </span>
                     {already

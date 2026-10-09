@@ -288,6 +288,14 @@ una regola locale basta.
   cucinato/cambia/rimuovi stanno dietro i tre puntini; il riquadro "Oggi"
   senza scadenze non scrive nulla; il calendario in abbonamento si chiama
   "Dispensa", colore `#DCCEB3`, aggiornamento suggerito ogni 15 minuti; dall'11/10 gli eventi hanno un orario (pranzo 13:00, cena 20:30, inizio = fine) e un avviso che parte in tempo per cucinare (`reminderMinutes`: tempo della ricetta + 10 min, tra 30 min e 2 ore).
+  **Notifiche (dall'11/10)**, tutte in `server/push.js` (`userPayloads`) sugli
+  orari del cron già esistenti: 11:00 pranzo in calendario (+ il sabato "la
+  lista ha N prodotti"); 14:30 "hai mangiato?" (la domenica, a calendario
+  vuoto, "organizziamo la settimana?"); 18:30 cena in calendario / scadenze;
+  21:45 "per domani ti manca…" se ai pasti di domani manca qualcosa,
+  altrimenti "com'era la cena?". In più `server/notify.js` + `api/notify.js`:
+  "X ha aggiunto alla lista" agli altri membri della dispensa condivisa (il
+  client raggruppa le aggiunte per 12 s, `lib/listNotice.js`).
   **Restano, per scelta**: filtri di ordinamento, "Cucina con questo
   prodotto", Barcode, "Seleziona tutto", foto dei piatti, Piano dentro Ricette.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con

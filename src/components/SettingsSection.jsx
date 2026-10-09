@@ -69,7 +69,7 @@ export function NotificationsSection() {
             <span className={stato}>
               {iosHint
                 ? "Installa Dispensa sulla Home (Condividi → «Aggiungi a Home») per riceverli."
-                : "Prodotti in scadenza, cosa c'è a pranzo e a cena nel calendario, e un promemoria dopo i pasti per aggiornare la dispensa."}
+                : "Scadenze, pasti del calendario, cosa manca per domani, la lista della spesa e un promemoria dopo i pasti."}
             </span>
           </span>
           {canPush && (pushBusy ? (

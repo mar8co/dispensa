@@ -22,6 +22,7 @@ import {
 } from "../lib/db.js";
 import { loadHistory, saveHistory, bumpedHistory } from "../lib/history.js";
 import { parseSpokenList } from "../lib/parse.js";
+import { queueListNotice, cancelListNotice } from "../lib/listNotice.js";
 
 export function useShopping({ session, showToast, dismissToast, shopCats, setShopCats }) {
   const uid = session.user.id;
@@ -108,7 +109,11 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     // `undo`: rimette la lista com'era (toglie le righe nuove, ripristina le
     // quantità di quelle fuse). Lo usano le aggiunte AUTOMATICHE che hanno un
     // "Annulla" (prodotto finito con un gesto, piano della settimana).
+    // Dispensa condivisa: gli altri membri ricevono una notifica (una sola
+    // per più aggiunte ravvicinate, vedi lib/listNotice.js).
+    queueListNotice(newRows.map((r) => r.name));
     const undo = () => {
+      cancelListNotice(newRows.map((r) => r.name));
       const fresh = new Set(newRows.map((r) => r.id));
       setShopping((prev) => prev
         .filter((x) => !fresh.has(x.id))
