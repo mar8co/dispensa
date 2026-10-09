@@ -14,7 +14,7 @@ import { onOutsideTap } from "../lib/outsideTap.js";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
-  Pencil, Mic, Check, Trash2, Loader2, Store,
+  Pencil, Plus, Mic, Check, Trash2, Loader2, Store,
   Share, Lightbulb, X,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
@@ -501,7 +501,7 @@ export default function ShoppingTab({
       <div className="sticky top-0 z-20 -mx-4 mt-4 bg-sfondo px-4 pb-1.5 pt-2">
         <div className="micro">{shared ? "La nostra lista" : "La tua lista"}</div>
         <div data-tour="shopping-input" className="relative">
-          <Pencil className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
+          <Plus className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
           <input
             ref={inputRef}
             value={name}
