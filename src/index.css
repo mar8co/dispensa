@@ -18,9 +18,6 @@
   --nav-bottom: calc(12px + env(safe-area-inset-bottom));
   --nav-h: 52px;
   --sopra-nav: calc(var(--nav-bottom) + var(--nav-h) + 12px);
-  /* Banner pubblicitario (solo app nativa, piano gratuito): lib/ads.js lo
-     imposta quando il banner è visibile, così avvisi e timer salgono. */
-  --banner-h: 0px;
 }
 
 html {

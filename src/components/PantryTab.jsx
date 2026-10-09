@@ -404,7 +404,7 @@ export default function PantryTab({
                 if (openId === it.id) {
                   const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
                   return (
-                    <li key={it.id} ref={panelRef} className="-mx-2 my-1.5 scroll-mb-[calc(var(--sopra-nav)+var(--banner-h)+8px)] rounded-card bg-white p-3 shadow-card">
+                    <li key={it.id} ref={panelRef} className="-mx-2 my-1.5 scroll-mb-[calc(var(--sopra-nav)+8px)] rounded-card bg-white p-3 shadow-card">
                       {/* Vista prodotto standard (ProductFields): stessa
                           struttura di Spesa/Aggiungi a mano/Revisione. Le
                           chip "finito/sta finendo" entrano nello slot. */}

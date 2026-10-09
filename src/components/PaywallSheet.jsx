@@ -7,7 +7,7 @@
 // Quando ci sarà App Store Connect si potrà configurare un'offerta
 // introduttiva vera e cambiare solo le costanti qui sotto.
 import { useState } from "react";
-import { CalendarDays, Users, Sparkles, Ban, Loader2 } from "lucide-react";
+import { CalendarDays, Users, Sparkles, Loader2 } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { PLANS, TRIAL_DAYS } from "../lib/premium.js";
@@ -16,8 +16,7 @@ import { storeKitAvailable } from "../lib/storekit.js";
 const BENEFITS = [
   { Icon: CalendarDays, text: "Piano Alimentare settimanale" },
   { Icon: Users, text: "Invita la famiglia nella dispensa" },
-  { Icon: Sparkles, text: "Ricette AI senza limiti" },
-  { Icon: Ban, text: "Nessuna pubblicità" },
+  { Icon: Sparkles, text: "Ricette su misura con l'AI, senza limiti" },
 ];
 
 export default function PaywallSheet({ reason, onClose, onPurchase }) {

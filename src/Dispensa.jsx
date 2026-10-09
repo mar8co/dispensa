@@ -25,7 +25,6 @@ import {
   getMyUsername,
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
-import { showBanner, hideBanner } from "./lib/ads.js";
 import { storeKitAvailable, purchaseProduct, syncReceipt, onTransactionUpdate } from "./lib/storekit.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
@@ -435,15 +434,6 @@ export default function Dispensa({ session }) {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
-
-  // Banner pubblicitario (solo nativo, solo piano gratuito): visibile su
-  // Dispensa e Spesa, nascosto su Ricette/Piano e per i Premium. Il layer
-  // ads.js è inerte sul web, quindi qui non serve alcun guard aggiuntivo.
-  useEffect(() => {
-    const wantsAd = !isPro && (view === "dispensa" || view === "spesa");
-    if (wantsAd) showBanner();
-    else hideBanner();
-  }, [isPro, view]);
 
   // Transazioni che arrivano FUORI da un acquisto esplicito (rinnovi mentre
   // l'app è aperta, Ask-to-Buy approvato, acquisto su un altro dispositivo):
@@ -1060,7 +1050,7 @@ export default function Dispensa({ session }) {
           l'ultima riga. */}
       <div
         className="mx-auto max-w-md px-4 pt-7"
-        style={{ paddingBottom: "calc(var(--sopra-nav) + var(--banner-h))" }}
+        style={{ paddingBottom: "var(--sopra-nav)" }}
       >
         {/* Testata, come in Wishlist: l'avatar del Profilo in alto a sinistra
             (prima era una voce della barra in basso) e, accanto, "Offline"
@@ -1154,7 +1144,7 @@ export default function Dispensa({ session }) {
       {/* Timer attivi: sopra il posto degli avvisi. */}
       <TimerBar
         onTap={() => changeView("ricette")}
-        bottom="calc(var(--sopra-nav) + var(--banner-h) + 56px)"
+        bottom="calc(var(--sopra-nav) + 56px)"
       />
 
       {/* Velo del menù "+": a livello di pagina (NON dentro la navbar, che ha
@@ -1340,7 +1330,7 @@ export default function Dispensa({ session }) {
       )}
 
       {/* Avviso: appena sopra la barra, stessa altezza su tutte le schede. */}
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} tone={toast.actionTone} bottom="calc(var(--sopra-nav) + var(--banner-h))" />}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} tone={toast.actionTone} bottom="var(--sopra-nav)" />}
     </div>
   );
 }

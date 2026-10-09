@@ -148,7 +148,7 @@ export default function Anteprima() {
     <div className="min-h-screen bg-sfondo text-ink">
       <div
         className="mx-auto max-w-md px-4 pt-7"
-        style={{ paddingBottom: "calc(var(--sopra-nav) + var(--banner-h))" }}
+        style={{ paddingBottom: "var(--sopra-nav)" }}
       >
         <header className="mb-3.5 flex items-center gap-2.5">
           <button
@@ -284,7 +284,7 @@ export default function Anteprima() {
           message={toast.message}
           onUndo={toast.onUndo}
           tone={toast.actionTone}
-          bottom="calc(var(--sopra-nav) + var(--banner-h))"
+          bottom="var(--sopra-nav)"
         />
       )}
     </div>

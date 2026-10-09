@@ -152,7 +152,7 @@ export default function SettingsSection({
               <Sparkles className="h-[18px] w-[18px] shrink-0 text-ink" />
               <span className="min-w-0 flex-1">
                 <span className={nome}>Passa a Premium</span>
-                <span className="block text-[0.8rem] font-medium leading-snug text-ink/70">Piano Alimentare, AI illimitata, niente pubblicità</span>
+                <span className="block text-[0.8rem] font-medium leading-snug text-ink/70">Piano Alimentare e ricette su misura con l'AI</span>
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-ink" />
             </button>
