@@ -278,11 +278,12 @@ export default function Anteprima() {
       {foglio === "cucinato" && (
         <CookModal
           rows={[
-            { itemId: "a", name: "Spaghetti", state: "ok" },
-            { itemId: "b", name: "Zucchine", state: "low" },
-            { itemId: "c", name: "Olio EVO", state: "out" },
+            { itemId: "a", name: "Spaghetti", kind: "state", state: "ok" },
+            { itemId: "b", name: "Uova", kind: "count", before: 4, used: 2, after: 2 },
+            { itemId: "d", name: "Limoni", kind: "count", before: 2, used: 2, after: 0 },
+            { itemId: "c", name: "Olio EVO", kind: "state", state: "low" },
           ]}
-          onClose={chiudi} onSetState={() => {}} onApply={chiudi}
+          onClose={chiudi} onSetState={() => {}} onSetAfter={() => {}} onApply={chiudi}
         />
       )}
       {foglio === "piano-pronto" && (

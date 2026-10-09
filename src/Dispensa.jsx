@@ -8,7 +8,7 @@ import {
 } from "./constants.js";
 import {
   guessCategory, categorize,
-  normalizeWeight, mergeQty, findMatch, LOW_QTY,
+  normalizeWeight, mergeQty, findMatch, LOW_QTY, cookRow,
   matchKey,
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
@@ -986,16 +986,18 @@ export default function Dispensa({ session }) {
   // --- "Ho cucinato questo" ---
 
   // Le righe del CookModal: un prodotto della dispensa per ogni ingrediente
-  // della ricetta che ci corrisponde (una volta sola), tutti su "ce n'è
-  // ancora". Niente conti: cosa è cambiato lo dice chi ha cucinato.
-  function buildCookRows(rec) {
+  // della ricetta che ci corrisponde (una volta sola). Ciò che si conta a
+  // pezzi viene già scalato (4 uova − 2 = 2); per il resto lo dice chi ha
+  // cucinato (vedi cookRow in pantry.js). `f` = porzioni cucinate / porzioni
+  // della ricetta.
+  function buildCookRows(rec, f = 1) {
     const rows = [];
     const seen = new Set();
     for (const ing of (rec.ingredients || [])) {
       const match = findMatch(ing.name, items);
       if (!match || seen.has(match.id)) continue;
       seen.add(match.id);
-      rows.push({ itemId: match.id, name: match.name, state: "ok" });
+      rows.push(cookRow(match, ing, f));
     }
     return rows;
   }
@@ -1010,7 +1012,7 @@ export default function Dispensa({ session }) {
     // segna cucinato anche quello.
     const from = plannedOpenRef.current;
     cookMealRef.current = from && from.title === recipe.title ? from.id : null;
-    setCookRows(buildCookRows(recipe));
+    setCookRows(buildCookRows(recipe, factor));
     bumpModal("cook");
     setCookOpen(true);
   }
@@ -1020,7 +1022,8 @@ export default function Dispensa({ session }) {
   // ingrediente è in dispensa non c'è nulla da scalare: si marca e basta.
   function cookMealFromPlan(meal) {
     if (!meal?.data) return;
-    const rows = buildCookRows(meal.data);
+    const base = Number(meal.data.servings) || 2;
+    const rows = buildCookRows(meal.data, (Number(meal.data.planServings) || base) / base);
     if (!rows.length) {
       markMealCooked(meal.id);
       showToast(<><strong>{meal.title}</strong> segnata come cucinata</>);
@@ -1032,20 +1035,28 @@ export default function Dispensa({ session }) {
     bumpModal("cook");
     setCookOpen(true);
   }
+  function setRowAfter(idx, after) {
+    setCookRows((rows) => rows.map((r, i) => (i === idx ? { ...r, after: Math.max(0, after) } : r)));
+  }
   function setRowState(idx, state) {
     setCookRows((rows) => rows.map((r, i) => (i === idx ? { ...r, state } : r)));
   }
   async function applyCooked() {
     const low = new Set(cookRows.filter((r) => r.state === "low").map((r) => r.itemId));
-    const out = cookRows.filter((r) => r.state === "out");
+    // Finiti: scelti a mano, oppure contati fino a zero.
+    const out = cookRows.filter((r) => r.state === "out" || (r.kind === "count" && r.after <= 0));
     const removals = new Set(out.map((r) => r.itemId));
+    // Contati: i pezzi che restano (solo se sono cambiati).
+    const counts = new Map(cookRows
+      .filter((r) => r.kind === "count" && r.after > 0 && r.after !== r.before)
+      .map((r) => [r.itemId, String(r.after)]));
     // Come il resto della dispensa: stato aggiornato SUBITO, scrittura in
     // background e, se fallisce (offline), in coda per il ritorno online.
     const uid = session.user.id;
     setItems((prev) =>
       prev
         .filter((x) => !removals.has(x.id))
-        .map((x) => (low.has(x.id) ? { ...x, qty: LOW_QTY } : x))
+        .map((x) => (low.has(x.id) ? { ...x, qty: LOW_QTY } : counts.has(x.id) ? { ...x, qty: counts.get(x.id) } : x))
     );
     if (removals.size) {
       deleteItems([...removals]).catch(() => {
@@ -1056,7 +1067,10 @@ export default function Dispensa({ session }) {
       updateItem(id, { qty: LOW_QTY }).catch(() => enqueue(uid, { table: "pantry", type: "update", id, fields: { qty: LOW_QTY } }));
     }
     setCookOpen(false);
-    const n = low.size + removals.size;
+    for (const [id, qty] of counts) {
+      updateItem(id, { qty }).catch(() => enqueue(uid, { table: "pantry", type: "update", id, fields: { qty } }));
+    }
+    const n = low.size + removals.size + counts.size;
     setCookDone(n ? `Dispensa aggiornata: ${n} ${n === 1 ? "prodotto" : "prodotti"}.` : "Segnata come cucinata.");
     recordCookedRecipe(cookRecipeRef.current || undefined); // storico "cucinate di recente"
     // Cottura partita dal piano pasti: marca anche la voce del piano.
@@ -1310,6 +1324,7 @@ export default function Dispensa({ session }) {
           rows={cookRows}
           onClose={() => setCookOpen(false)}
           onSetState={setRowState}
+          onSetAfter={setRowAfter}
           onApply={applyCooked}
         />
       )}

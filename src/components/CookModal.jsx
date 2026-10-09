@@ -1,8 +1,10 @@
 // Foglio "Ho cucinato questo": aggiorna la dispensa dopo aver cucinato.
-// Dal 09/10 NON fa più conti (niente grammi sottratti): per ogni prodotto
-// della dispensa usato dalla ricetta si dice solo com'è rimasto, con tre
-// pillole — "Ce n'è ancora" (già scelta: se non si tocca nulla non cambia
-// nulla), "Sta finendo", "Finito" (esce dalla dispensa ed entra in lista).
+// Dal 09/10 niente grammi sottratti. Due tipi di riga (vedi cookRow in
+// pantry.js): ciò che si CONTA a pezzi (4 uova, ne usi 2) è già scalato
+// dall'app e si corregge con − e +; per tutto il resto si dice solo com'è
+// rimasto, con tre pillole — "Ce n'è ancora" (già scelta: se non si tocca
+// nulla non cambia nulla), "Sta finendo", "Finito" (esce dalla dispensa ed
+// entra in lista).
 // La ricetta continua a mostrare i grammi: servono a cucinare, non a contare.
 import { X, Check } from "lucide-react";
 import Sheet from "./Sheet.jsx";
@@ -15,8 +17,9 @@ const STATES = [
   ["out", "Finito"],
 ];
 
-// rows: [{ itemId, name, state: "ok" | "low" | "out" }]
-export default function CookModal({ rows, onClose, onSetState, onApply }) {
+// rows: [{ itemId, name, kind: "state", state: "ok" | "low" | "out" }
+//      | { itemId, name, kind: "count", before, used, after }]
+export default function CookModal({ rows, onClose, onSetState, onSetAfter, onApply }) {
   return (
     <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
       {(close) => (
@@ -36,13 +39,36 @@ export default function CookModal({ rows, onClose, onSetState, onApply }) {
             ) : (
               <>
                 <p className="mb-1 text-[0.86rem] font-medium leading-snug text-tenue">
-                  Tocca solo ciò che è cambiato. I prodotti finiti vanno nella lista della spesa.
+                  I pezzi li ho già contati io: correggi se serve. Per il resto tocca solo ciò che è cambiato. I finiti vanno in lista.
                 </p>
                 <ul className="divide-y divide-riga">
                   {rows.map((r, i) => (
                     <li key={r.itemId} className="py-3">
                       <p className="truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.name}</p>
-                      {/* Scelta = pillola gialla (sul foglio nero la piena nera sparirebbe). */}
+                      {r.kind === "count" ? (
+                        // Si conta a pezzi: il conto è già fatto, qui lo si corregge.
+                        <div className="mt-1.5 flex items-center gap-3">
+                          <p className="min-w-0 flex-1 text-[0.8rem] font-medium text-tenue">
+                            Ne avevi {r.before}, usati {r.used}
+                            {r.after <= 0 && <> · <span className="font-bold text-giallo">finito, va in lista</span></>}
+                          </p>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <button
+                              onClick={() => onSetAfter(i, r.after - 1)}
+                              disabled={r.after <= 0}
+                              aria-label={`Meno ${r.name}`}
+                              className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-crema/60 text-xl font-semibold leading-none text-crema transition active:scale-90 disabled:opacity-30"
+                            >−</button>
+                            <span className="num w-9 text-center text-[1.2rem] font-extrabold text-ink" aria-label="Rimasti">{Math.max(0, r.after)}</span>
+                            <button
+                              onClick={() => onSetAfter(i, r.after + 1)}
+                              aria-label={`Più ${r.name}`}
+                              className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-crema/60 text-xl font-semibold leading-none text-crema transition active:scale-90"
+                            >+</button>
+                          </div>
+                        </div>
+                      ) : (
+                      // Scelta = pillola gialla (sul foglio nero la piena nera sparirebbe).
                       <div className="mt-2 grid grid-cols-3 gap-1.5">
                         {STATES.map(([id, label]) => (
                           <button
@@ -57,6 +83,7 @@ export default function CookModal({ rows, onClose, onSetState, onApply }) {
                           </button>
                         ))}
                       </div>
+                      )}
                     </li>
                   ))}
                 </ul>

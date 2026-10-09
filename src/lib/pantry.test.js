@@ -4,7 +4,7 @@ import {
   subtractQty, qtyStep, adjustQty, atMinQty, changeUnit, shoppingQty, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, matchKey, findMatch,
   toCookFraction, isSpoonQty, formatRecipeQty,
   daysUntilExpiry, expiryStatus, formatExpiry,
-  qtyState, pieces, mergePieces, piecesLabel, LOW_QTY,
+  qtyState, pieces, mergePieces, piecesLabel, LOW_QTY, cookRow,
 } from "./pantry.js";
 
 // Data ISO (YYYY-MM-DD) a +N giorni da oggi, per test stabili sulle scadenze.
@@ -520,5 +520,26 @@ describe("pezzi e stato", () => {
     expect(piecesLabel("3")).toBe("×3");
     expect(piecesLabel("500 g")).toBe("");
     expect(piecesLabel(LOW_QTY)).toBe("");
+  });
+});
+
+describe("cookRow (dopo aver cucinato)", () => {
+  const uova = { id: "u", name: "Uova", qty: "4" };
+  it("ciò che si conta viene scalato", () => {
+    expect(cookRow(uova, { name: "Uova", qty: "2" })).toMatchObject({ kind: "count", before: 4, used: 2, after: 2 });
+    // porzioni doppie: 4 uova usate, finite
+    expect(cookRow(uova, { name: "Uova", qty: "2" }, 2)).toMatchObject({ kind: "count", used: 4, after: 0 });
+    // mezzo limone conta per uno
+    expect(cookRow({ id: "l", name: "Limoni", qty: "3" }, { name: "Limone", qty: "½" })).toMatchObject({ used: 1, after: 2 });
+  });
+  it("il resto lo dice chi ha cucinato", () => {
+    // ricetta a grammi
+    expect(cookRow({ id: "p", name: "Spaghetti", qty: "2" }, { name: "Spaghetti", qty: "180 g" })).toMatchObject({ kind: "state", state: "ok" });
+    // un pezzo solo può voler dire "ne ho": non si scala da soli
+    expect(cookRow({ id: "z", name: "Zucchine", qty: "1" }, { name: "Zucchine", qty: "2" }).kind).toBe("state");
+    // q.b. e cucchiaini
+    expect(cookRow(uova, { name: "Uova", qty: "q.b." }).kind).toBe("state");
+    // sta finendo
+    expect(cookRow({ id: "x", name: "Uova", qty: LOW_QTY }, { name: "Uova", qty: "2" }).kind).toBe("state");
   });
 });

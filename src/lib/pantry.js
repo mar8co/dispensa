@@ -535,6 +535,24 @@ export function mergePieces(have, incoming) {
   const add = pieces(incoming);
   return String(qtyState(have) === "ok" ? pieces(have) + add : add);
 }
+// Riga del foglio "Com'è rimasto?" dopo aver cucinato, per UN prodotto della
+// dispensa usato dalla ricetta. Due casi:
+//  - si CONTA (in dispensa ce ne sono almeno 2 e la ricetta ne chiede un
+//    numero: "2 uova" su 4): il conto lo fa l'app → kind "count", con quanti
+//    ne restano (0 = finito). Mezzo limone conta per uno.
+//  - tutto il resto (pasta a grammi, olio, un pezzo solo che può voler dire
+//    "ne ho"): non si può contare → kind "state", lo dice chi ha cucinato.
+export function cookRow(item, ing, factor = 1) {
+  const base = { itemId: item.id, name: item.name };
+  const need = isQbQty(ing?.qty) || isSpoonQty(ing?.qty) ? null : parseRecipeQty(ing?.qty);
+  const before = pieces(item.qty);
+  if (need && need.family === "count" && need.base > 0 && qtyState(item.qty) === "ok" && before >= 2) {
+    const used = Math.max(1, Math.ceil(need.base * (factor || 1) - 1e-9));
+    return { ...base, kind: "count", before, used, after: Math.max(0, before - used) };
+  }
+  return { ...base, kind: "state", state: "ok" };
+}
+
 // A riposo nella riga della Dispensa: "×3" solo da due pezzi in su (uno è il
 // caso normale, non serve scriverlo).
 export function piecesLabel(qty) {
