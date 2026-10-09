@@ -222,6 +222,11 @@ export const RECIPE_CONTEXTS = [
   { id: "sostanzioso", icon: "🔋", label: "Sostanzioso", hint: "il piatto deve essere sostanzioso e saziante" },
   { id: "senzacottura", icon: "🌯", label: "Senza cottura", hint: "la ricetta NON deve richiedere alcuna cottura, né fornelli né forno: solo ingredienti crudi o già pronti da assemblare (insalate, piatti freddi, ecc.)" },
   { id: "proteico", icon: "🏋️", label: "Proteico", hint: "il piatto deve essere ricco di proteine" },
+  // Ingrediente principale: se ne sceglie uno solo (vedi CONTEXT_CONFLICTS in useRecipes).
+  { id: "carne", icon: "🥩", label: "Carne", hint: "l'ingrediente principale del piatto deve essere la carne" },
+  { id: "pesce", icon: "🐟", label: "Pesce", hint: "l'ingrediente principale del piatto deve essere il pesce" },
+  { id: "verdure", icon: "🥬", label: "Verdure", hint: "il piatto deve essere a base di verdure, senza carne né pesce" },
+  { id: "legumi", icon: "🫘", label: "Legumi", hint: "l'ingrediente principale del piatto devono essere i legumi" },
 ];
 
 // Regole condivise per ottenere il NOME GENERICO dell'alimento (usate da

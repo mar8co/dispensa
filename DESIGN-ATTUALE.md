@@ -120,6 +120,9 @@
 - **Ricetta aperta, riga fissa in alto (09/10)**: tondo con la freccia + "Altre proposte" (o
   "Indietro"); scorrendo, quando il titolo grande esce dallo schermo, al posto della scritta compare
   il nome del piatto più piccolo (1,25rem, una riga, troncato) e sotto la riga un filo nero.
+- **Pillole di contesto delle Ricette (Premium)**: una riga sola che scorre di lato; alle cinque di
+  prima si aggiungono Carne, Pesce, Verdure, Legumi (una sola alla volta). Sotto, da accese: "Ne tengo
+  conto nella ricetta".
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

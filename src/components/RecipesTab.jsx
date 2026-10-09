@@ -291,7 +291,9 @@ export default function RecipesTab({
 
           {/* Pill di contesto/umore: l'AI le considera (oltre alla stagione)
               quando poi scegli un'occasione. Multi-select, opzionali. */}
-          {isPro && <div className="mt-4 flex flex-wrap gap-2">
+          {/* Una riga sola che scorre di lato (prima andavano a capo): con le
+              pillole dell'ingrediente principale sono nove. */}
+          {isPro && <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
             {RECIPE_CONTEXTS.map((c) => {
               const on = recipeContext.includes(c.id);
               return (
@@ -311,7 +313,7 @@ export default function RecipesTab({
               riga il toggle sembrava non fare nulla. */}
           {isPro && recipeContext.length > 0 && (
             <p className="animate-fade-in mt-2 text-[0.86rem] font-semibold text-tenue">
-              Ne terrò conto nelle prossime proposte ✨
+              Ne tengo conto nella ricetta
             </p>
           )}
 

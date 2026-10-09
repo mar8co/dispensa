@@ -95,6 +95,11 @@ export function useRecipes({
     fresco: ["caldo"],
     caldo: ["fresco", "senzacottura"],
     senzacottura: ["caldo"],
+    // Ingrediente principale: uno alla volta.
+    carne: ["pesce", "verdure", "legumi"],
+    pesce: ["carne", "verdure", "legumi"],
+    verdure: ["carne", "pesce", "legumi"],
+    legumi: ["carne", "pesce", "verdure"],
   };
   function toggleRecipeContext(id) {
     setRecipeContext((prev) => {
