@@ -15,13 +15,14 @@ export const PALETTE = {
 export const WHITE = "#ffffff";
 export const INK = "#0a0a0a";
 
-// Classi per il CONTENUTO di un foglio nero (i due fogli del Piano Alimentare:
-// `Sheet panelClass="bg-ink"`): testo e bordi crema, azione principale gialla
+// Classi per il CONTENUTO di un foglio nero (i due fogli del Piano Alimentare e
+// "Aggiorna la dispensa": `Sheet panelClass="bg-ink"`): testo e bordi crema, azione principale gialla
 // (un bottone nero sul nero sparirebbe), come nelle fotocamere.
 export const FOGLIO_NERO =
   "text-crema [&_.border-ink]:border-crema [&_.bottone-chiaro]:border-crema [&_.bottone-chiaro]:text-crema " +
   "[&_.bottone]:bg-giallo [&_.bottone]:text-ink [&_.campo]:border-crema [&_.campo]:placeholder:text-crema/50 " +
-  "[&_.divide-riga>*]:border-crema/20 [&_.micro]:text-crema/70 [&_.text-ink]:text-crema [&_.text-tenue]:text-crema/70";
+  "[&_.divide-riga>*]:border-crema/20 [&_.micro]:text-crema/70 [&_.text-ink]:text-crema [&_.text-tenue]:text-crema/70 " +
+  "[&_.tondo]:border-crema [&_.tondo]:text-crema [&_.pillola]:border-crema [&_.pillola]:text-crema [&_.cartellino]:border-crema/60";
 
 // Colore pieno di ogni schermata: fondo della pagina e barra di stato.
 export const PAGE_COLOR = {

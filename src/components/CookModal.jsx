@@ -11,13 +11,14 @@ import { X, Check, ShoppingCart } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { adjustQty, formatQtyDisplay } from "../lib/pantry.js";
+import { FOGLIO_NERO } from "../lib/colors.js";
 
 // Etichette "parlate" delle 3 corsie (i nomi tecnici exact/pack/qb restano
 // nel codice): "sottratto per te" = matematica fatta dall'app, "quanto
 // resta?" = lo dice l'utente con lo stepper, "q.b." = scorta non toccata.
 const TAGS = {
-  exact: { label: "sottratto per te", cls: "border-ink/35 text-tenue" },
-  pack: { label: "quanto resta?", cls: "bg-ink text-white" },
+  exact: { label: "sottratto per te", cls: "text-tenue" },
+  pack: { label: "quanto resta?", cls: "bg-giallo text-ink" }, // sul foglio nero il cartellino nero sparirebbe
   qb: { label: "q.b.", cls: "" },
 };
 
@@ -26,9 +27,9 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
   const [added, setAdded] = useState(() => new Set());
 
   return (
-    <Sheet onClose={onClose}>
+    <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
       {(close) => (
-        <>
+        <div className={FOGLIO_NERO}>
           <div className="flex items-center justify-between gap-2 border-b-[1.5px] border-ink px-[18px] pb-3 pt-1">
             <h3 className="titolo">Aggiorna la dispensa</h3>
             <button onClick={close} className="tondo" aria-label="Chiudi">
@@ -102,7 +103,7 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
                             </div>
                             <button
                               onClick={() => onRemoveRow(i)}
-                              className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-ink/40 active:text-ink"
+                              className="ml-auto flex h-11 w-11 items-center justify-center rounded-full text-tenue"
                               aria-label="Ignora"
                             >
                               <X className="h-4 w-4" />
@@ -128,7 +129,7 @@ export default function CookModal({ rows, onClose, onSetAfter, onRemoveRow, onAp
               <Check className="h-4 w-4" /> Conferma
             </Button>
           </div>
-        </>
+        </div>
       )}
     </Sheet>
   );
