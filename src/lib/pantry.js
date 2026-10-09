@@ -657,6 +657,15 @@ export function daysUntilExpiry(dateStr) {
   return Math.round((d.getTime() - today.getTime()) / 86400000);
 }
 
+// Data "YYYY-MM-DD" (ora locale) a +N giorni da oggi.
+export function dateInDays(n) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + n);
+  const p = (v) => String(v).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 // Stato: null (nessuna data) | "scaduto" | "oggi" | "presto" (<=3gg) |
 // "settimana" (<=7gg) | "ok".
 export function expiryStatus(dateStr) {

@@ -28,6 +28,14 @@ export const PICKER_CATS = (() => {
   return arr;
 })();
 
+// Durata tipica (giorni) dei freschi, per PROPORRE una scadenza quando la
+// spesa passa in dispensa. È solo un suggerimento modificabile: gli scaffali
+// (pasta, conserve, surgelati…) non ne hanno, la data vera è sulla confezione.
+export const SHELF_LIFE_DAYS = {
+  "Verdura": 5, "Frutta": 7, "Carne": 3, "Salumi": 7, "Pesce": 2,
+  "Latticini": 7, "Pane e Forno": 3,
+};
+
 export const CAT_ICON = {
   "Verdura": "🥬", "Frutta": "🍎", "Carne": "🥩", "Salumi": "🥓",
   "Pesce": "🐟", "Latticini": "🧀", "Pane e Forno": "🍞",

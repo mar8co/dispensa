@@ -14,7 +14,15 @@ function tmpId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-export default function ReviewScanModal({ initialItems, onCancel, onConfirm, onAddMore }) {
+// `kicker`/`title`/`hint`: testi dell'intestazione (di serie quelli della
+// scansione). `keepOnClose`: chiudere non butta via nulla (es. revisione dalla
+// spesa: i prodotti restano nel carrello), quindi niente conferma di scarto.
+export default function ReviewScanModal({
+  initialItems, onCancel, onConfirm, onAddMore,
+  kicker = "Revisione", title = "Prodotti riconosciuti",
+  hint = "Controlla nome, quantità e categoria, poi conferma.",
+  keepOnClose = false,
+}) {
   const [items, setItems] = useState(() =>
     (initialItems || []).map((it) => ({
       id: tmpId(),
@@ -29,7 +37,7 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm, onA
   // Col foglio "pieno" il drag-to-dismiss è bloccato (locked) e X/Annulla
   // aprono questa conferma; a foglio vuoto si chiude normalmente.
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const dirty = items.length > 0;
+  const dirty = items.length > 0 && !keepOnClose;
 
   function update(id, field, val) {
     setItems((arr) => arr.map((x) => (x.id === id ? { ...x, [field]: val } : x)));
@@ -51,9 +59,9 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm, onA
       <>
         <div className="flex items-start justify-between gap-2 px-[18px] pb-3 pt-1">
           <div>
-            <p className="micro">Revisione</p>
-            <h3 className="titolo mt-1">Prodotti riconosciuti</h3>
-            <p className="mt-2 text-[0.9rem] font-medium leading-snug text-tenue">Controlla nome, quantità e categoria, poi conferma.</p>
+            <p className="micro">{kicker}</p>
+            <h3 className="titolo mt-1">{title}</h3>
+            <p className="mt-2 text-[0.9rem] font-medium leading-snug text-tenue">{hint}</p>
           </div>
           <button
             onClick={() => (dirty ? setConfirmDiscard(true) : close())}

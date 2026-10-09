@@ -4,12 +4,12 @@ import { Loader2 } from "lucide-react";
 
 import {
   CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES, CATEGORY_PROMPT,
-  ITEMS_SCHEMA, NAME_SCHEMA,
+  ITEMS_SCHEMA, NAME_SCHEMA, SHELF_LIFE_DAYS,
 } from "./constants.js";
 import {
   guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  norm, matchKey, isStapleQb, isQbQty, isSpoonQty,
+  norm, matchKey, isStapleQb, isQbQty, isSpoonQty, dateInDays,
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
 import { apiUrl } from "./lib/api.js";
@@ -177,6 +177,9 @@ export default function Dispensa({ session }) {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [voiceReview, setVoiceReview] = useState(false); // il riepilogo aperto viene dalla voce → mostra "Aggiungi altri prodotti"
   const voiceAppendRef = useRef(false); // il prossimo risultato voce si ACCODA al riepilogo invece di sostituirlo
+  // Revisione aperta da "Sposta in dispensa": id degli articoli della lista da
+  // togliere alla conferma (null = la revisione viene da foto/barcode/voce).
+  const [fromShopping, setFromShopping] = useState(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
 
@@ -219,7 +222,7 @@ export default function Dispensa({ session }) {
   // showToast/dismissToast sono dichiarazioni di funzione (hoisted), quindi
   // disponibili anche se definite più sotto.
   const {
-    shopping, setShopping, movingChecked, setMovingChecked,
+    shopping, setShopping, movingChecked,
     shopHist, shopVoiceOpen, setShopVoiceOpen, shopVoiceProcessing,
     bumpShopHistory, catForShopping, addToShoppingMerged, addShoppingItem,
     autoSaveShopping, handleShoppingVoice, toggleShoppingItem, removeShoppingItem,
@@ -652,25 +655,28 @@ export default function Dispensa({ session }) {
 
   // --- Lista della spesa: stato e logica estratti in hooks/useShopping.jsx ---
   // Resta qui solo il bridge verso la dispensa (scrive pantry_items).
-  async function moveCheckedToPantry() {
+  // "Sposta in dispensa" non scrive subito: apre la revisione con i prodotti
+  // del carrello, il loro reparto e — per i freschi — una scadenza PROPOSTA
+  // (durata tipica della categoria), da correggere o togliere. Così la data
+  // entra nel percorso normale, senza riaprire ogni prodotto dopo. Se in
+  // dispensa c'è già lo stesso prodotto con una sua scadenza, non si propone
+  // nulla (non va sovrascritta con una stima).
+  function moveCheckedToPantry() {
     const checked = shopping.filter((x) => x.checked);
     if (!checked.length) return;
-    setMovingChecked(true);
-    try {
-      // mergeItems è ottimistico e resiliente (outbox); la rimozione dalla
-      // lista segue lo stesso schema: subito a schermo, coda se offline.
-      // Il reparto è quello che l'articolo aveva in lista (corretto a mano o
-      // stimato): senza, i prodotti nuovi finivano tutti in "Altro".
-      await mergeItems(checked.map((x) => ({ name: x.name, qty: x.qty, category: catForShopping(x.name) })));
-      setShopping((prev) => prev.filter((x) => !x.checked));
-      deleteShoppingItems(checked.map((x) => x.id)).catch(() => {
-        for (const x of checked) enqueue(session.user.id, { table: "shopping", type: "delete", id: x.id });
-      });
-      bumpShopHistory(checked.map((x) => x.name)); // acquisti completati
-      showToast(`${checked.length} ${checked.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`);
-    } finally {
-      setMovingChecked(false);
-    }
+    setScanItems(checked.map((x) => {
+      const category = catForShopping(x.name);
+      const days = SHELF_LIFE_DAYS[category];
+      const existing = items.find((i) => matchKey(i.name) === matchKey(x.name));
+      return {
+        name: x.name, qty: x.qty, category,
+        expiry: days && !existing?.expiry ? dateInDays(days) : "",
+      };
+    }));
+    setFromShopping(checked.map((x) => x.id));
+    setVoiceReview(false);
+    bumpModal("scan");
+    setScanOpen(true);
   }
   // --- Riordino generico (categorie e occasioni) ---
   function moveInOrder(setOrder, dragged, target) {
@@ -886,8 +892,22 @@ export default function Dispensa({ session }) {
     const valid = (reviewed || []).filter((x) => String(x.name || "").trim());
     if (valid.length) {
       await mergeItems(valid);
-      showToast(`${valid.length} ${valid.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"}`);
+      showToast(fromShopping
+        ? `${valid.length} ${valid.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`
+        : `${valid.length} ${valid.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"}`);
     }
+    // Dalla spesa: gli articoli del carrello escono dalla lista (anche quelli
+    // tolti a mano nella revisione: erano comunque stati presi).
+    if (fromShopping?.length) {
+      const ids = new Set(fromShopping);
+      const moved = shopping.filter((x) => ids.has(x.id));
+      setShopping((prev) => prev.filter((x) => !ids.has(x.id)));
+      deleteShoppingItems([...ids]).catch(() => {
+        for (const id of ids) enqueue(session.user.id, { table: "shopping", type: "delete", id });
+      });
+      bumpShopHistory(moved.map((x) => x.name)); // acquisti completati
+    }
+    setFromShopping(null);
     setScanItems([]);
     setVoiceReview(false);
   }
@@ -1336,8 +1356,14 @@ export default function Dispensa({ session }) {
         <ReviewScanModal
           key={modalEpoch.current.scan}
           initialItems={scanItems}
-          onCancel={() => { setScanOpen(false); setScanItems([]); setVoiceReview(false); }}
+          onCancel={() => { setScanOpen(false); setScanItems([]); setVoiceReview(false); setFromShopping(null); }}
           onConfirm={confirmScan}
+          {...(fromShopping ? {
+            kicker: "Dalla spesa",
+            title: "Metti in dispensa",
+            hint: "Ai freschi ho proposto una scadenza tipica: correggila o toglila, poi conferma.",
+            keepOnClose: true,
+          } : {})}
           onAddMore={voiceReview ? handleReviewAddMore : undefined}
         />
       )}

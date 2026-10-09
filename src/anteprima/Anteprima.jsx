@@ -181,8 +181,6 @@ export default function Anteprima() {
             onAdd={async (name, qty) => { setShopping((l) => [{ id: `n${Date.now()}`, name, qty, checked: false }, ...l]); return {}; }}
             onToggle={(id, checked) => {
               setShopping((l) => l.map((x) => (x.id === id ? { ...x, checked } : x)));
-              const it = shopping.find((x) => x.id === id);
-              if (checked && it) setToast({ message: <><strong>{it.name}</strong> spostato nel carrello</>, actionTone: "verde", onUndo: () => { setShopping((l) => l.map((x) => (x.id === id ? { ...x, checked: false } : x))); setToast(null); } });
             }}
             onDelete={(id) => setShopping((l) => l.filter((x) => x.id !== id))}
             onToggleAll={() => setShopping((l) => { const all = l.every((x) => x.checked); return l.map((x) => ({ ...x, checked: !all })); })}

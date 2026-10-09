@@ -302,13 +302,13 @@ export default function PantryTab({
               <span aria-hidden="true">→</span>
             </span>
           </button>
-          {expFilter && (
-            <div className="px-3.5 pb-3.5">
-              <Button variant="primary" size="sm" full className="bg-crema text-ink" onClick={onCookExpiring}>
-                <Sparkles className="h-4 w-4" /> Cucina con {expiredCount + expiringSoonCount === 1 ? "questo prodotto" : "questi prodotti"}
-              </Button>
-            </div>
-          )}
+          {/* Sempre visibile (prima compariva solo dopo "Mostra"): è l'azione
+              più utile quando qualcosa sta per scadere. */}
+          <div className="px-3.5 pb-3.5">
+            <Button variant="primary" size="sm" full className="bg-crema text-ink" onClick={onCookExpiring}>
+              <Sparkles className="h-4 w-4" /> Cucina con {expiredCount + expiringSoonCount === 1 ? "questo prodotto" : "questi prodotti"}
+            </Button>
+          </div>
         </div>
       )}
 
