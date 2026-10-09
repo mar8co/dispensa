@@ -215,6 +215,11 @@ export default function PantryTab({
     });
   }
 
+  // Le intestazioni di categoria si fermano SOTTO la ricerca e la barra dei
+  // reparti (alta 50px, presente solo con più di una categoria). Prima si
+  // fermavano a 48px fissi: finivano nascoste dietro le due barre.
+  const headTop = searchH - 1 + (grouped.length > 1 ? 49 : 0);
+
   // Primo prodotto in assoluto: bersaglio dello spotlight nel tutorial.
   const firstItemId = grouped[0]?.list?.[0]?.id;
 
@@ -373,9 +378,9 @@ export default function PantryTab({
           <section
             key={cat}
             ref={(el) => { cardRefs.current[cat] = el; }}
-            style={{ scrollMarginTop: "132px" }}
+            style={{ scrollMarginTop: headTop }}
           >
-            <div className="sticky top-12 z-10 -mx-1 flex items-center gap-2 border-b-[1.5px] border-ink bg-sfondo px-1 pb-[7px] pt-4">
+            <div style={{ top: headTop }} className="sticky z-10 -mx-1 flex items-center gap-2 border-b-[1.5px] border-ink bg-sfondo px-1 pb-[7px] pt-4">
               <span className="text-[1.15rem] leading-none">{CAT_ICON[cat]}</span>
               <h2 className="min-w-0 truncate text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">{cat}</h2>
               <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{String(list.length).padStart(2, "0")}</span>

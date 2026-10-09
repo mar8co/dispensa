@@ -648,7 +648,9 @@ export default function Dispensa({ session }) {
     try {
       // mergeItems è ottimistico e resiliente (outbox); la rimozione dalla
       // lista segue lo stesso schema: subito a schermo, coda se offline.
-      await mergeItems(checked.map((x) => ({ name: x.name, qty: x.qty })));
+      // Il reparto è quello che l'articolo aveva in lista (corretto a mano o
+      // stimato): senza, i prodotti nuovi finivano tutti in "Altro".
+      await mergeItems(checked.map((x) => ({ name: x.name, qty: x.qty, category: catForShopping(x.name) })));
       setShopping((prev) => prev.filter((x) => !x.checked));
       deleteShoppingItems(checked.map((x) => x.id)).catch(() => {
         for (const x of checked) enqueue(session.user.id, { table: "shopping", type: "delete", id: x.id });
@@ -880,7 +882,7 @@ export default function Dispensa({ session }) {
         for (const c of cats) next[c] = false;
         return next;
       });
-      showToast(`${valid.length} prodotti aggiunti.`);
+      showToast(`${valid.length} ${valid.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"}`);
     }
     setScanItems([]);
     setVoiceReview(false);
@@ -1037,16 +1039,23 @@ export default function Dispensa({ session }) {
       if (v === "" || isZero) removals.add(r.itemId);
       else updates[r.itemId] = v;
     }
-    try {
-      if (removals.size) await deleteItems([...removals]);
-      for (const [id, qty] of Object.entries(updates)) await updateItem(id, { qty });
-      setItems((prev) =>
-        prev
-          .filter((x) => !removals.has(x.id))
-          .map((x) => (updates[x.id] !== undefined ? { ...x, qty: updates[x.id] } : x))
-      );
-    } catch (e) {
-      console.error("Errore aggiornamento dopo cottura:", e);
+    // Come il resto della dispensa: stato aggiornato SUBITO, scrittura in
+    // background e, se fallisce (offline), in coda per il ritorno online.
+    // Prima si aspettava il DB: offline non cambiava nulla ma il messaggio
+    // diceva lo stesso "Dispensa aggiornata".
+    const uid = session.user.id;
+    setItems((prev) =>
+      prev
+        .filter((x) => !removals.has(x.id))
+        .map((x) => (updates[x.id] !== undefined ? { ...x, qty: updates[x.id] } : x))
+    );
+    if (removals.size) {
+      deleteItems([...removals]).catch(() => {
+        for (const id of removals) enqueue(uid, { table: "pantry", type: "delete", id });
+      });
+    }
+    for (const [id, qty] of Object.entries(updates)) {
+      updateItem(id, { qty }).catch(() => enqueue(uid, { table: "pantry", type: "update", id, fields: { qty } }));
     }
     setCookOpen(false);
     const n = Object.keys(updates).length + removals.size;
@@ -1145,6 +1154,7 @@ export default function Dispensa({ session }) {
             startOnPlan={planFirst}
             isPro={isPro}
             onNeedPro={() => openPaywall("Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola.")}
+            onAiLimit={() => openPaywall("Hai finito le richieste AI di oggi: con Premium non hanno limiti.")}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
             onDeleteSaved={removeSavedRecipe}
@@ -1241,9 +1251,9 @@ export default function Dispensa({ session }) {
           <Barattoli size={112} className="text-ink" />
           <Loader2 className="h-5 w-5 animate-spin text-ink" />
           <div>
-            <p className="grande">Sto analizzando la spesa…</p>
+            <p className="grande">Riconosco i prodotti…</p>
             <p className="mx-auto mt-2 max-w-xs text-[0.95rem] font-medium text-tenue">
-              Identifico i prodotti e li aggiungo alla dispensa.
+              Tra un attimo li controlli e li aggiungi alla dispensa.
             </p>
           </div>
           <button onClick={() => processAbortRef.current?.abort()} className="bottone-chiaro">

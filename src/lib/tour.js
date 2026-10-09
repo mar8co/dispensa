@@ -91,7 +91,7 @@ export const STEPS = [
   },
   {
     id: "cook-with", view: "dispensa", overlay: "spotlight", target: '[data-tour="cook-with"]',
-    title: "Cucina con questo", text: "Da ogni prodotto puoi selezionare\n“Cucina con questo” e ti propongo una ricetta con ogni ingrediente che vuoi.",
+    title: "Cucina con questo", text: "Da ogni prodotto puoi selezionare\n“Cucina con questo prodotto” e ti propongo una ricetta con ogni ingrediente che vuoi.",
     advance: "next",
   },
   {
@@ -101,7 +101,7 @@ export const STEPS = [
   },
   {
     id: "add-modes", view: "dispensa", overlay: "banner", pos: "bottom",
-    title: "4 modi per aggiungere la spesa", text: "A mano, scannerizzando il codice a barre, fotografando lo scontrino o la spesa: come preferisci.",
+    title: "4 modi per aggiungere la spesa", text: "A mano, col codice a barre, fotografando lo scontrino o la spesa, oppure a voce: come preferisci.",
     advance: "next",
   },
   {
@@ -126,7 +126,7 @@ export const STEPS = [
   },
   {
     id: "done", view: "dispensa", overlay: "card",
-    title: "Tutto pronto! 🎉", text: "Aggiungi gli ingredienti che hai in casa e ti aiuterò a trovare ricette e idee per sfruttarli al meglio. Per svuotare la dispensa vai in Profilo e tocca su “Svuota dispensa”.\n\nVuoi rivedere il tutorial? Lo trovi sempre in Profilo → ⚙️ Impostazioni → “Rivedi il tutorial”.",
+    title: "Tutto pronto! 🎉", text: "Aggiungi gli ingredienti che hai in casa e ti aiuterò a trovare ricette e idee per sfruttarli al meglio. Per svuotare la dispensa vai in Profilo e tocca su “Svuota dispensa”.\n\nVuoi rivedere il tutorial? Lo trovi sempre nel Profilo (il tondo con la tua iniziale, in alto a sinistra) → “Rivedi il tutorial”.",
     advance: "finish", cta: "Inizia ora",
   },
 ];

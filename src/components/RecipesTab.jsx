@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
+import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
 import StepTimer from "./StepTimer.jsx";
@@ -88,7 +89,7 @@ export default function RecipesTab({
   savedRecipes, onOpenSaved, onDeleteSaved, isSaved, onToggleSave,
   plan = null,
   startOnPlan = false,
-  isPro = true, onNeedPro,
+  isPro = true, onNeedPro, onAiLimit,
 }) {
   const [addedMissing, setAddedMissing] = useState(false);
   const [ask, setAsk] = useState("");          // "Cosa ti va?"
@@ -369,7 +370,10 @@ export default function RecipesTab({
               {recipeErr}
               {/* Riprova ripete l'AZIONE fallita (ricetta o proposte), non
                   rigenera a caso le idee dell'occasione. */}
-              <button onClick={onRetry} className="bottone mt-3 w-full">Riprova</button>
+              {/* Limite giornaliero: riprovare non può funzionare, si offre Premium. */}
+              {recipeErr === AI_LIMIT_MESSAGE
+                ? onAiLimit && <button onClick={onAiLimit} className="bottone mt-3 w-full">Scopri Premium</button>
+                : <button onClick={onRetry} className="bottone mt-3 w-full">Riprova</button>}
             </div>
           )}
 

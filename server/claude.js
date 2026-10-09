@@ -70,6 +70,11 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
   // Premium (migration-13): nessun tetto. Il controllo è QUI, lato server, non
   // nel client: è l'unico posto dove non è aggirabile. `is_pro` va chiamata
   // passando l'uid esplicito, perché col service role auth.uid() è NULL.
+  //
+  // Il contatore si LEGGE prima della chiamata e si INCREMENTA solo dopo una
+  // risposta valida (vedi `countUsage` in fondo): errori, timeout e i tentativi
+  // automatici del client non consumano più le richieste del giorno.
+  let countUsage = null;
   if (env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -81,14 +86,19 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
 
       if (!pro) {
         const limit = Number(env.AI_DAILY_LIMIT) || 5;
-        const { data: count, error } = await admin.rpc("bump_ai_usage", { p_uid: userData.user.id });
-        if (!error && typeof count === "number" && count > limit) {
+        // `day` è una date del DB (current_date, UTC su Supabase).
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: row, error } = await admin
+          .from("ai_usage").select("count")
+          .eq("user_id", userData.user.id).eq("day", today).maybeSingle();
+        countUsage = () => admin.rpc("bump_ai_usage", { p_uid: userData.user.id });
+        if (!error && typeof row?.count === "number" && row.count >= limit) {
           // code: "daily_limit" → il client NON ritenta (il limite è giornaliero,
           // ritentare sprecherebbe solo attese). Diverso da un 429 transitorio Gemini.
           return {
             status: 429,
             json: {
-              error: "Hai finito le ricette AI di oggi. Passa a Premium per usarle senza limiti, o riprova domani.",
+              error: "Hai finito le richieste AI di oggi. Con Premium non hanno limiti, oppure riprova domani.",
               code: "daily_limit",
             },
           };
@@ -104,7 +114,9 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
     return { status: 413, json: { error: "Richiesta troppo grande." } };
   }
   // max_tokens confinato a un intervallo ragionevole.
-  const maxTokens = Math.min(Math.max(Number(body?.max_tokens) || 1000, 1), 2048);
+  // Tetto a 4096: le ricette complete ne chiedono 2500 e col vecchio tetto
+  // (2048) le più lunghe tornavano col JSON troncato.
+  const maxTokens = Math.min(Math.max(Number(body?.max_tokens) || 1000, 1), 4096);
 
   // 4) Chiamata all'API Gemini con la chiave server.
   const model = env.GEMINI_MODEL || DEFAULT_MODEL;
@@ -163,6 +175,9 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
   if (!text) {
     return { status: 502, json: { error: "Risposta AI vuota.", detail: data } };
   }
+
+  // Risposta valida: solo ora la richiesta conta nel limite giornaliero.
+  if (countUsage) { try { await countUsage(); } catch { /* best-effort */ } }
 
   return { status: 200, json: { content: [{ type: "text", text }] } };
 }

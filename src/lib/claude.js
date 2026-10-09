@@ -38,9 +38,13 @@ export async function fetchPhotos(queries) {
 // Messaggio utente per un errore AI: i casi noti (offline, limiti, timeout)
 // hanno testi specifici, il resto usa il fallback del chiamante. Tenuto qui
 // così tutti i flussi AI (ricette, voce, scontrino, barcode) parlano uguale.
+// Limite giornaliero del piano gratuito: riprovare non serve (si azzera
+// l'indomani), quindi chi mostra l'errore offre Premium al posto di "Riprova".
+export const AI_LIMIT_MESSAGE = "Hai finito le richieste AI di oggi. Con Premium non hanno limiti, oppure riprova domani.";
+
 export function aiErrorMessage(err, fallback) {
   if (err?.status === 0) return "Sei offline: controlla la connessione e riprova.";
-  if (err?.code === "daily_limit") return "Limite giornaliero AI raggiunto. Riprova domani.";
+  if (err?.code === "daily_limit") return AI_LIMIT_MESSAGE;
   if (err?.status === 429) return "Limite di richieste AI raggiunto. Attendi qualche secondo e riprova.";
   if (err?.status === 408) return "Il servizio AI non ha risposto in tempo. Riprova.";
   return fallback;
