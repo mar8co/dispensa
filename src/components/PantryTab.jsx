@@ -12,6 +12,7 @@ import { CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, daysUntilExpiry, piecesLabel, qtyState, pieces, LOW_QTY } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
+import { expiringPhrase, expiredPhrase } from "../lib/italiano.js";
 import PushNudge from "./PushNudge.jsx";
 import Barattoli from "./Barattoli.jsx";
 import { PAGE_COLOR } from "../lib/colors.js";
@@ -147,8 +148,9 @@ export default function PantryTab({
   todayMeals = [], onOpenMeal, expiring = [],
 }) {
   const searchActive = search.trim() !== "";
-  // Riquadro "Oggi": con UN solo prodotto si scrive il suo nome ("Latte sta
-  // scadendo"), con più di uno il numero. Mai "in scadenza entro 7 giorni".
+  // Riquadro "Oggi": con UN solo prodotto si scrive il suo nome, con articolo
+  // e verbo concordati ("Il latte sta scadendo", "Le uova stanno scadendo":
+  // lib/italiano.js), con più di uno il numero. Mai "in scadenza entro 7 giorni".
   const daysOf = (x) => daysUntilExpiry(x.expiry);
   const soonName = expiringSoonCount === 1 ? expiring.find((x) => { const d = daysOf(x); return d !== null && d >= 0; })?.name : null;
   const expiredName = expiredCount === 1 ? expiring.find((x) => { const d = daysOf(x); return d !== null && d < 0; })?.name : null;
@@ -327,13 +329,13 @@ export default function PantryTab({
               {expiredCount > 0 && (
                 <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
                   <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-rosso" />
-                  <span className="min-w-0 truncate">{expiredName ? `${expiredName}: scaduto` : `${expiredCount} prodotti scaduti`}</span>
+                  <span className="min-w-0 truncate">{expiredName ? expiredPhrase(expiredName) : `${expiredCount} prodotti scaduti`}</span>
                 </span>
               )}
               {expiringSoonCount > 0 && (
                 <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
                   <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-giallo" />
-                  <span className="min-w-0 truncate">{soonName ? `${soonName} sta scadendo` : `${expiringSoonCount} prodotti stanno scadendo`}</span>
+                  <span className="min-w-0 truncate">{soonName ? expiringPhrase(soonName) : `${expiringSoonCount} prodotti stanno scadendo`}</span>
                 </span>
               )}
             </button>
