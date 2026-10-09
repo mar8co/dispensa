@@ -793,15 +793,16 @@ export default function Dispensa({ session }) {
     setPlanFirst(true);
     changeView("ricette");
   }
-  // Riquadro "Oggi": il prossimo pasto di oggi non ancora cucinato (il pranzo
-  // fino alle 15, poi la cena).
-  const todayMeal = (() => {
+  // Riquadro "Oggi": i pasti di oggi non ancora cucinati (pranzo e cena).
+  const todayMeals = (() => {
     const today = isoDate(new Date());
     const open = meals.filter((m) => m.date === today && !m.cooked_at);
     const lunch = open.find((m) => m.slot === "pranzo");
     const dinner = open.find((m) => m.slot === "cena");
-    if (lunch && new Date().getHours() < 15) return { label: "A pranzo", title: lunch.title, meal: lunch };
-    return dinner ? { label: "Stasera", title: dinner.title, meal: dinner } : null;
+    return [
+      lunch && { label: "A pranzo", icon: "🥗", title: lunch.title, meal: lunch },
+      dinner && { label: "Stasera", icon: "🍳", title: dinner.title, meal: dinner },
+    ].filter(Boolean);
   })();
   // Un piatto del calendario si apre sulla sua RICETTA (dal riquadro "Oggi" e
   // dal Calendario Alimentare). Ci si ricorda da quale pasto si è partiti:
@@ -813,9 +814,9 @@ export default function Dispensa({ session }) {
     plannedOpenRef.current = { id: meal.id, title: meal.title };
     openSavedRecipe({ title: meal.title, data: meal.data });
   }
-  function openToday() {
+  function openToday(entry) {
     openPlan(); // tornando indietro dalla ricetta si è sul calendario
-    if (todayMeal?.meal?.data) openPlannedMeal(todayMeal.meal);
+    if (entry?.meal?.data) openPlannedMeal(entry.meal);
   }
 
   // Calendario del telefono: chiede al server l'indirizzo personale del
@@ -1121,10 +1122,8 @@ export default function Dispensa({ session }) {
             // Riga scorsa verso sinistra o pillola "Finito": via dalla dispensa, in lista.
             onFinish={finishItem}
             onCookWith={cookWithProduct}
-            todayMeal={todayMeal}
-            shoppingCount={shopping.filter((s) => !s.checked).length}
-            onOpenPlan={openToday}
-            onOpenShopping={() => changeView("spesa")}
+            todayMeals={todayMeals}
+            onOpenMeal={openToday}
           />
         )}
 

@@ -161,6 +161,11 @@
   la riga di un piatto con ricetta ha a destra tre puntini (tondo da 40px, senza bordo): tocco sul
   piatto = ricetta, puntini = foglio nero delle azioni. Riquadro "Oggi" senza scadenze: solo il
   titolo e le due righe.
+- **Giro dell'11/10**: il riquadro nero "Oggi" sta SOPRA la ricerca, subito sotto "Hai fame?", e
+  contiene solo scadenze e pasti di oggi (🥗 "A pranzo: …", 🍳 "Stasera: …"); se non c'è nulla non
+  compare. Pillole delle Ricette, in ordine: Pasta, Carne, Pollo, Uova, Riso, Insalata, Zuppa,
+  Fresco, Caldo, Sostanzioso, Proteico, Pochi ingredienti, Senza cottura, Piccante (tolte Legumi e
+  Al forno).
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

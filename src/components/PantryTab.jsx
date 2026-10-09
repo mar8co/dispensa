@@ -144,7 +144,7 @@ export default function PantryTab({
   onAutoSave, onSetExpiry, removeItem,
   expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
   onFinish,
-  todayMeal = null, shoppingCount = 0, onOpenPlan, onOpenShopping,
+  todayMeals = [], onOpenMeal,
 }) {
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
@@ -298,6 +298,62 @@ export default function PantryTab({
       {/* Titolo enorme (il profilo è nella navbar in basso) */}
       <h1 className="gigante">Hai fame?</h1>
 
+      {/* Riquadro scuro "Oggi", PRIMA della ricerca (11/10): è il riassunto
+          della giornata, si legge appena aperta l'app. Dentro solo due cose
+          (scelta dell'utente): ciò che scade — scaduti col pallino rosso,
+          entro 7 giorni col giallo; "Mostra" filtra l'elenco — e i pasti di
+          oggi dal Calendario Alimentare. Se non c'è né l'uno né l'altro il
+          riquadro non compare. */}
+      {(expiredCount + expiringSoonCount > 0 || todayMeals.length > 0) && (
+      <div className="evidenza mt-4 overflow-hidden">
+        {expiredCount + expiringSoonCount > 0 ? (
+          <>
+            {/* Tutta la parte alta è il bottone del filtro; "Mostra →" sta in
+                alto a destra, sulla riga di "Oggi". */}
+            <button
+              onClick={() => setExpFilter(!expFilter)}
+              aria-pressed={expFilter}
+              className="block w-full px-3.5 pb-3 pt-3 text-left"
+            >
+              <span className="flex items-baseline justify-between gap-3">
+                <span className="micro">Oggi</span>
+                <span className="text-[0.88rem] font-bold">{expFilter ? "Mostra tutto" : "Mostra"} <span aria-hidden="true">→</span></span>
+              </span>
+              {expiredCount > 0 && (
+                <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
+                  <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-rosso" />
+                  {expiredCount} {expiredCount === 1 ? "prodotto scaduto" : "prodotti scaduti"}
+                </span>
+              )}
+              {expiringSoonCount > 0 && (
+                <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
+                  <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-giallo" />
+                  {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza{expiredCount > 0 ? "" : " entro 7 giorni"}
+                </span>
+              )}
+            </button>
+            <div className="px-3.5 pb-3">
+              <Button variant="primary" size="sm" full className="bg-crema text-ink" onClick={onCookExpiring}>
+                <Sparkles className="h-4 w-4" /> Cucina con {expiredCount + expiringSoonCount === 1 ? "questo prodotto" : "questi prodotti"}
+              </Button>
+            </div>
+          </>
+        ) : (
+          // Niente in scadenza: non si scrive nulla, resta solo il titolo.
+          <span className="micro block px-3.5 pb-2 pt-3">Oggi</span>
+        )}
+        {/* I pasti di oggi nel calendario, non ancora cucinati: il tocco apre
+            la ricetta (o il calendario, per un piatto senza ricetta). */}
+        {todayMeals.map((t) => (
+          <button key={t.label} onClick={() => onOpenMeal?.(t)} className="flex min-h-[44px] w-full items-center gap-2.5 border-t border-crema/20 px-3.5 py-2 text-left text-[0.95rem] font-bold">
+            <span aria-hidden="true">{t.icon}</span>
+            <span className="min-w-0 flex-1 truncate">{t.label}: {t.title}</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        ))}
+      </div>
+      )}
+
       {/* Occhiello rosso + ricerca: bloccati insieme in alto durante lo scroll
           (con l'ordinamento dietro l'icona). */}
       <div ref={searchRef} className="sticky top-0 z-30 -mx-4 mt-5 bg-sfondo px-4 pb-1.5 pt-2">
@@ -348,68 +404,6 @@ export default function PantryTab({
         </div>
       )}
       </div>{/* fine barra ricerca sticky */}
-
-      {/* Riquadro scuro "Oggi" (dal 10/10): tre risposte senza toccare nulla —
-          cosa scade, cosa si mangia oggi, quante cose ci sono in lista. Le
-          scadenze distinguono i già scaduti (pallino rosso) da quelli entro 7
-          giorni (giallo); il filtro "Mostra" li include entrambi. Le due
-          righe sotto portano al Calendario Alimentare e alla Spesa. */}
-      <div className="evidenza mt-3.5 overflow-hidden">
-        {expiredCount + expiringSoonCount > 0 ? (
-          <>
-            {/* Tutta la parte alta è il bottone del filtro; "Mostra →" sta in
-                alto a destra, sulla riga di "Oggi". */}
-            <button
-              onClick={() => setExpFilter(!expFilter)}
-              aria-pressed={expFilter}
-              className="block w-full px-3.5 pb-3 pt-3 text-left"
-            >
-              <span className="flex items-baseline justify-between gap-3">
-                <span className="micro">Oggi</span>
-                <span className="text-[0.88rem] font-bold">{expFilter ? "Mostra tutto" : "Mostra"} <span aria-hidden="true">→</span></span>
-              </span>
-              {expiredCount > 0 && (
-                <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
-                  <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-rosso" />
-                  {expiredCount} {expiredCount === 1 ? "prodotto scaduto" : "prodotti scaduti"}
-                </span>
-              )}
-              {expiringSoonCount > 0 && (
-                <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
-                  <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-giallo" />
-                  {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza{expiredCount > 0 ? "" : " entro 7 giorni"}
-                </span>
-              )}
-            </button>
-            <div className="px-3.5 pb-3">
-              <Button variant="primary" size="sm" full className="bg-crema text-ink" onClick={onCookExpiring}>
-                <Sparkles className="h-4 w-4" /> Cucina con {expiredCount + expiringSoonCount === 1 ? "questo prodotto" : "questi prodotti"}
-              </Button>
-            </div>
-          </>
-        ) : (
-          // Niente in scadenza: non si scrive nulla, resta solo il titolo.
-          <span className="micro block px-3.5 pb-2 pt-3">Oggi</span>
-        )}
-        {onOpenPlan && (
-          <button onClick={onOpenPlan} className="flex min-h-[44px] w-full items-center gap-2.5 border-t border-crema/20 px-3.5 py-2 text-left text-[0.95rem] font-bold">
-            <span aria-hidden="true">🍳</span>
-            <span className="min-w-0 flex-1 truncate">
-              {todayMeal ? <>{todayMeal.label}: {todayMeal.title}</> : "Oggi niente in calendario"}
-            </span>
-            <span aria-hidden="true">→</span>
-          </button>
-        )}
-        {onOpenShopping && (
-          <button onClick={onOpenShopping} className="flex min-h-[44px] w-full items-center gap-2.5 border-t border-crema/20 px-3.5 py-2 text-left text-[0.95rem] font-bold">
-            <span aria-hidden="true">🛒</span>
-            <span className="min-w-0 flex-1 truncate">
-              {shoppingCount > 0 ? `${shoppingCount} ${shoppingCount === 1 ? "prodotto" : "prodotti"} in lista` : "Lista della spesa vuota"}
-            </span>
-            <span aria-hidden="true">→</span>
-          </button>
-        )}
-      </div>
 
       {/* Soft-ask notifiche: proprio quando c'è il banner scadenze (e fuori dal
           tutorial) invitiamo ad attivare gli avvisi. Il componente decide da sé

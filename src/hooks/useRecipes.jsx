@@ -94,14 +94,12 @@ export function useRecipes({
   const CONTEXT_CONFLICTS = {
     fresco: ["caldo"],
     caldo: ["fresco", "senzacottura", "insalata"],
-    senzacottura: ["caldo", "forno", "zuppa"],
-    forno: ["senzacottura", "insalata"],
+    senzacottura: ["caldo", "zuppa"],
     zuppa: ["senzacottura", "insalata"],
-    insalata: ["caldo", "forno", "zuppa"],
+    insalata: ["caldo", "zuppa"],
     // Ingrediente principale: uno alla volta.
-    carne: ["legumi", "pollo"],
-    pollo: ["carne", "legumi"],
-    legumi: ["carne", "pollo"],
+    carne: ["pollo"],
+    pollo: ["carne"],
   };
   function toggleRecipeContext(id) {
     setRecipeContext((prev) => {
