@@ -27,7 +27,7 @@ export default function PlanReadySheet({ picks, added = 0, swapping = null, onSw
       {(close) => (
         <div className={FOGLIO_NERO}>
           <div className="px-[18px] pb-3 pt-1">
-            <h3 className="titolo">Piano pronto</h3>
+            <h3 className="titolo">Calendario pronto</h3>
             <p className="mt-2 text-[0.95rem] font-semibold leading-snug text-tenue">
               {picks.length} {picks.length === 1 ? "pasto aggiunto" : "pasti aggiunti"}
               {added > 0 && <> · {added} {added === 1 ? "prodotto" : "prodotti"} in lista</>}.

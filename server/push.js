@@ -1,6 +1,8 @@
-// Core delle notifiche push per le scadenze (FASE 1), indipendente dal
-// framework. Usato dalla serverless function Vercel (api/push.js), invocata
-// dal cron pg_cron (migration-10) tre volte al giorno.
+// Core delle notifiche push, indipendente dal framework. Usato dalla
+// serverless function Vercel (api/push.js), invocata dal cron pg_cron
+// (migration-10, più l'orario delle 11:00 della migration-15) in quattro
+// momenti: 11:00 pranzo in calendario · 14:30 "hai mangiato?" · 18:30 cena in
+// calendario / scadenze · 21:45 "com'era la cena?".
 //
 // Sicurezza / design:
 //  - Endpoint SOLO per il cron: protetto da un segreto condiviso
@@ -17,6 +19,7 @@ import { apnsConfigured, createApnsSender, isDeadToken } from "./apns.js";
 
 // Momenti canonici, in MINUTI dall'inizio del giorno, ORA DI ROMA.
 const SLOTS = {
+  mattina: 11 * 60,     // 660  → "a pranzo c'è…" (solo se è nel calendario; migration-15)
   pranzo: 14 * 60 + 30, // 870  → "hai cucinato? aggiorna la dispensa"
   cena:   18 * 60 + 30, // 1110 → scadenze / "cosa cuciniamo stasera"
   sera:   21 * 60 + 45, // 1305 → "com'era la cena? aggiorna la dispensa"
@@ -78,9 +81,9 @@ function articleFor(name) {
 // Copy delle notifiche (scritto dall'utente, 2026-07-19, rifinito 2026-07-20:
 // amichevole, tono "noi" — la dispensa parla come una compagna di cucina, non
 // da assistente — e invoglia ad aprire). `url` = deep-link PWA.
-// `dinner` = cena di stasera dal Piano Alimentare (solo slot cena, solo se
-// niente scadenze): in quel caso la notifica apre direttamente il Piano.
-function buildPayload(slot, expiringNames, dinner = null) {
+// `meal` = il pasto di oggi nel Calendario Alimentare (pranzo per lo slot
+// mattina, cena per lo slot cena): la notifica lo ricorda e apre il calendario.
+function buildPayload(slot, expiringNames, meal = null) {
   if (slot === "pranzo") {
     return {
       title: "Hai mangiato? 🍽️",
@@ -95,10 +98,29 @@ function buildPayload(slot, expiringNames, dinner = null) {
       url: "/", tag: "dispensa-sera",
     };
   }
-  // cena: se c'è qualcosa in scadenza lo mettiamo in primo piano, altrimenti
-  // l'invito generico a cucinare. Entrambe aprono le Ricette.
+  // mattina (11:00): solo se il pranzo di oggi è nel Calendario Alimentare.
+  if (slot === "mattina") {
+    return {
+      title: `A pranzo c'è ${meal?.title} 🥗`,
+      body: "Tra un paio d'ore si mangia: apri la ricetta e controlla di avere tutto",
+      url: "/?view=piano", tag: "dispensa-pranzo-calendario",
+    };
+  }
+  // cena (18:30, un paio d'ore prima): se la cena è nel calendario si ricorda
+  // QUELLA (e, se qualcosa scade, lo si dice nella seconda riga). Altrimenti
+  // le scadenze in primo piano, o l'invito generico a cucinare.
   const uniq = [...new Set(expiringNames.map((n) => String(n || "").trim()).filter(Boolean))];
   const cena = { url: "/?view=ricette", tag: "dispensa-cena" };
+  if (meal?.title) {
+    return {
+      ...cena,
+      url: "/?view=piano",
+      title: `Stasera c'è ${meal.title} 🍳`,
+      body: uniq.length
+        ? `Occhio alle scadenze: ${uniq.slice(0, 3).join(", ")}${uniq.length > 3 ? "…" : ""}`
+        : "Tutto già deciso: apri e mettiamoci ai fornelli",
+    };
+  }
   if (uniq.length === 1) {
     return {
       ...cena,
@@ -118,14 +140,6 @@ function buildPayload(slot, expiringNames, dinner = null) {
       ...cena,
       title: `${uniq[0]}, ${uniq[1]} e altri ${uniq.length - 2} stanno per scadere 🚨`,
       body: "Ci sono un po' di cose da usare, vediamo cosa possiamo combinare",
-    };
-  }
-  if (dinner?.title) {
-    return {
-      ...cena,
-      url: "/?view=piano",
-      title: `Stasera c'è ${dinner.title} 👨‍🍳`,
-      body: "Tutto già deciso: apri e mettiamoci ai fornelli",
     };
   }
   return {
@@ -158,11 +172,11 @@ async function fetchUserPantry(admin, userId, hhIds) {
   return data || [];
 }
 
-// La cena di STASERA nel Piano Alimentare (se pianificata e non ancora
-// cucinata): la notifica delle 18:30 la mette in primo piano e apre il Piano.
-async function fetchTonightDinner(admin, userId, hhIds, dateIso) {
+// Il pasto di OGGI nel Calendario Alimentare (se pianificato e non ancora
+// cucinato), per lo slot indicato ("pranzo" | "cena").
+async function fetchPlannedMeal(admin, userId, hhIds, dateIso, mealSlot) {
   const q = admin.from("meal_plan").select("title")
-    .eq("date", dateIso).eq("slot", "cena").is("cooked_at", null).limit(1);
+    .eq("date", dateIso).eq("slot", mealSlot).is("cooked_at", null).limit(1);
   const { data } = await scopeToUser(q, hhIds, userId);
   return data?.[0] || null;
 }
@@ -232,28 +246,30 @@ export async function handlePushCron({ headers = {}, env, now = new Date() }) {
     let payload;
     try {
       const hhIds = await fetchHouseholdIds(admin, userId);
-      const pantry = await fetchUserPantry(admin, userId, hhIds);
-      // Niente promemoria su una dispensa vuota (sarebbe rumore inutile).
-      if (!pantry.length) continue;
-
       let expiringNames = [];
-      let dinner = null;
-      if (slot === "cena") {
-        // Cadenza AUTOMATICA: un prodotto viene menzionato a 7, 3 e 1 giorno
-        // dalla scadenza — tre richiami ben distanziati invece della
-        // ripetizione quotidiana, e nessuna impostazione da configurare
-        // (il selettore 1/3/7 è stato rimosso, decisione 2026-07-20).
-        const targets = new Set([romeDateISO(now, 1), romeDateISO(now, 3), romeDateISO(now, 7)]);
-        expiringNames = pantry
-          .filter((p) => p.expiry && targets.has(p.expiry))
-          .map((p) => p.name);
-        // Le scadenze hanno la precedenza (anima anti-spreco dell'app); se non
-        // ce ne sono e la cena è già nel piano, la notifica apre il Piano.
-        if (!expiringNames.length) {
-          dinner = await fetchTonightDinner(admin, userId, hhIds, romeDateISO(now, 0));
+      let meal = null;
+      if (slot === "mattina") {
+        // Promemoria del pranzo: parte solo se oggi a pranzo c'è un piatto nel
+        // calendario (non ancora cucinato). Niente piatto, niente notifica.
+        meal = await fetchPlannedMeal(admin, userId, hhIds, romeDateISO(now, 0), "pranzo");
+        if (!meal) continue;
+      } else {
+        const pantry = await fetchUserPantry(admin, userId, hhIds);
+        if (slot === "cena") {
+          meal = await fetchPlannedMeal(admin, userId, hhIds, romeDateISO(now, 0), "cena");
+          // Cadenza AUTOMATICA: un prodotto viene menzionato a 7, 3 e 1 giorno
+          // dalla scadenza — tre richiami ben distanziati invece della
+          // ripetizione quotidiana, e nessuna impostazione da configurare.
+          const targets = new Set([romeDateISO(now, 1), romeDateISO(now, 3), romeDateISO(now, 7)]);
+          expiringNames = pantry
+            .filter((p) => p.expiry && targets.has(p.expiry))
+            .map((p) => p.name);
         }
+        // Niente promemoria su una dispensa vuota (sarebbe rumore inutile), a
+        // meno che ci sia una cena in calendario da ricordare.
+        if (!pantry.length && !meal) continue;
       }
-      payload = buildPayload(slot, expiringNames, dinner);
+      payload = buildPayload(slot, expiringNames, meal);
     } catch (e) {
       // Un utente che fallisce non deve bloccare gli altri.
       console.error("push: preparazione utente fallita", userId, e?.message || e);

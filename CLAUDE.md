@@ -21,7 +21,7 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (123/123), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
+   (126/126), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
    `suggest.js`, aggiorna i rispettivi test (`*.test.js` accanto al file).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
@@ -259,6 +259,17 @@ una regola locale basta.
   rimuovi); l'ordine delle categorie si cambia dal Profilo ("Ordine delle
   categorie", a scomparsa) e non più dalle intestazioni; "Svuota dispensa" sta
   dietro "Elimina account"; Ricette rosa; titoli `.gigante` più bassi.
+  **Giro del 09/10 notte**: il "Piano Alimentare" si chiama **"Calendario
+  Alimentare"** in tutti i testi (nel codice restano `plan`/`meal_plan`/
+  `?view=piano`); "Salva nel calendario del telefono" (`lib/ics.js` + bottone in
+  `PlanWeek`: file .ics, eventi tutto il giorno, 🥗 pranzo e 🍳 cena);
+  "Puoi farle con quello che hai" è a scomparsa, chiusa di serie; Profilo
+  riordinato per uso (Esigenze alimentari → Notifiche → Dispensa condivisa →
+  Ordine delle categorie → Esci), ogni sezione = intestazione + riquadro
+  bianco; notifiche: nuovo orario delle 11:00 "A pranzo c'è…" (solo se il
+  pranzo è nel calendario) e alle 18:30 la cena in calendario ha la
+  precedenza (**`supabase/migration-15.sql` va eseguita a mano** per l'orario
+  delle 11:00).
   **Restano, per scelta**: filtri di ordinamento, "Cucina con questo
   prodotto", Barcode, "Seleziona tutto", foto dei piatti, Piano dentro Ricette.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con

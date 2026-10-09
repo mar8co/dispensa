@@ -52,7 +52,7 @@ export default function PlanDaySheet({ recipeTitle = "", onChoose, onClose, load
     <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
       {(close) => (
         <div className={`px-[18px] pb-4 pt-1 ${FOGLIO_NERO}`}>
-          <h3 className="titolo">Aggiungi al piano</h3>
+          <h3 className="titolo">Aggiungi al calendario</h3>
           {recipeTitle && (
             <p className="mt-1.5 truncate text-[0.95rem] font-semibold text-tenue">{recipeTitle}</p>
           )}

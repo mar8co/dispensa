@@ -7,8 +7,9 @@
 import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Sun, Moon, Plus, Minus, Check, Sparkles,
-  ShoppingCart, Utensils, Trash2, RefreshCw, CalendarPlus, Loader2,
+  ShoppingCart, Utensils, Trash2, RefreshCw, CalendarPlus, CalendarDays, Loader2,
 } from "lucide-react";
+import { mealsToIcs } from "../lib/ics.js";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { isoDate, mondayOf, addDays } from "../hooks/useMealPlan.jsx";
@@ -82,7 +83,7 @@ function MealSlotSheet({
                 </p>
               ) : (
                 <p className="mt-2 text-[0.86rem] font-semibold text-tenue">
-                  {meal.data ? "Ricetta nel piano" : "Piatto libero"}
+                  {meal.data ? "Ricetta nel calendario" : "Piatto libero"}
                 </p>
               )}
 
@@ -96,7 +97,7 @@ function MealSlotSheet({
                   <RefreshCw className="h-4 w-4" /> Cambia piatto
                 </Button>
                 <Button variant="danger" full onClick={() => { close(); onRemove(meal); }}>
-                  <Trash2 className="h-4 w-4" /> Rimuovi dal piano
+                  <Trash2 className="h-4 w-4" /> Rimuovi dal calendario
                 </Button>
               </div>
             </>
@@ -190,6 +191,34 @@ export default function PlanWeek({
   const sheetMeal = sheet ? byKey.get(`${isoDate(sheet.date)}|${sheet.slot}`) : null;
   // C'è almeno un pasto libero da oggi in poi? Solo allora ha senso "Riempi la settimana".
   const canFill = days.some((d) => isoDate(d) >= todayIso && SLOTS.some((s) => !byKey.has(`${isoDate(d)}|${s.id}`)));
+
+  // Pasti da mandare al calendario del telefono: quelli della settimana
+  // mostrata, da oggi in poi.
+  const weekIso = new Set(days.map((d) => isoDate(d)));
+  const exportable = meals.filter((m) => weekIso.has(m.date) && m.date >= todayIso);
+  // Il file .ics si passa al foglio di condivisione (su iPhone: "Calendario");
+  // dove non si può condividere un file lo si scarica/apre, e il telefono
+  // propone di aggiungere gli eventi.
+  async function saveToPhoneCalendar() {
+    const ics = mealsToIcs(exportable);
+    const file = new File([ics], "calendario-alimentare.ics", { type: "text/calendar" });
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Calendario Alimentare" });
+        return;
+      }
+    } catch (e) {
+      if (e?.name === "AbortError") return; // condivisione annullata
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
 
   return (
     <div className="mt-4">
@@ -303,6 +332,14 @@ export default function PlanWeek({
           );
         })}
       </div>
+
+      {/* Nel calendario del telefono (Apple, Google…): un evento "tutto il
+          giorno" per ogni pasto della settimana, da oggi in poi. */}
+      {exportable.length > 0 && (
+        <Button variant="secondary" full className="mt-3" onClick={saveToPhoneCalendar}>
+          <CalendarDays className="h-4 w-4" /> Salva nel calendario del telefono
+        </Button>
+      )}
 
       {sheet && (
         <MealSlotSheet

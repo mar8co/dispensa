@@ -143,6 +143,13 @@
 - **Senza Premium (09/10 sera)**: nessun lucchetto, nessun cartellino "FREE"/"Premium", niente
   riquadro Premium nel Profilo. Nelle Ricette, in ordine: campo "Cosa ti va?", pillole, "Puoi farle
   con quello che hai" (per tutti), intestazione "Idee su misura" e le occasioni.
+- **Giro del 09/10 notte**: Profilo in quest'ordine — nome, Esigenze alimentari, Notifiche (riquadro
+  bianco: campanella, "Promemoria e avvisi", cosa arriva, pillola Attiva/Disattiva), Dispensa
+  condivisa (riquadro bianco coi membri; sotto due pillole PICCOLE "Entra con codice" e "Invita",
+  36px, testo 0,8rem), Ordine delle categorie (a scomparsa), poi un filo nero e "Esci", in fondo
+  Privacy / Elimina account. Ricette: "Puoi farle con quello che hai" è un'intestazione-bottone con
+  numero e freccina, chiusa di serie. La scheda si chiama "Calendario Alimentare"; in fondo alla
+  settimana il bottone col bordo "Salva nel calendario del telefono".
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

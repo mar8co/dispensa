@@ -101,19 +101,19 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         <span className="micro">{members.length} {members.length === 1 ? "membro" : "membri"}</span>
       </div>
 
-      {/* Nucleo attivo + membri: righe sottili, niente scatola */}
-      <div>
-        <div className="flex items-center gap-2 pt-2.5">
+      {/* Nucleo attivo + membri: riquadro bianco, come le altre sezioni del Profilo */}
+      <div className="mt-2 rounded-card bg-white px-3.5 py-2.5">
+        <div className="flex items-center gap-2">
           <Users className="h-[18px] w-[18px] text-ink" />
-          <span className="min-w-0 truncate text-[1.1rem] font-extrabold tracking-[-0.03em] text-ink">{members.length > 1 ? "La nostra dispensa" : "La tua dispensa"}</span>
+          <span className="min-w-0 truncate text-[1rem] font-bold tracking-[-0.01em] text-ink">{members.length > 1 ? "La nostra dispensa" : "La tua dispensa"}</span>
         </div>
         {members.length > 0 && (
-          <ul className="mt-1.5 divide-y divide-riga">
+          <ul className="mt-1.5 divide-y divide-riga border-t border-riga">
             {members.map((m) => {
               const isMe = m.email && m.email === email;
               const isOwner = m.role === "owner";
               return (
-                <li key={m.user_id} className="flex min-h-[40px] items-center gap-2 text-[0.95rem] font-semibold text-ink">
+                <li key={m.user_id} className="flex min-h-[40px] items-center gap-2 text-[0.92rem] font-semibold text-ink">
                   <span className="min-w-0 truncate">{memberName(m)}{isMe ? " (tu)" : ""}</span>
                   {isOwner ? (
                     <span className="ml-auto flex w-[76px] shrink-0 justify-center">
@@ -159,14 +159,19 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         </div>
       )}
 
-      {/* Entra + Invita: sulla stessa riga, mezza larghezza ciascuno */}
-      <div className="mt-3 flex gap-2">
-        <Button variant="secondary" size="sm" className="flex-1" onClick={() => { setJoinOpen((o) => !o); setCode(""); setMsg(""); }}>
-          <DoorOpen className="h-4 w-4" /> Entra con codice
-        </Button>
-        <Button variant="cook" size="sm" className="flex-1" onClick={invite} disabled={busy === "invite"}>
-          {busy === "invite" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invita</>}
-        </Button>
+      {/* Entra + Invita: due pillole piccole (si usano una volta ogni tanto,
+          non devono pesare quanto un'azione principale). */}
+      <div className="mt-2 flex gap-2">
+        <button
+          onClick={() => { setJoinOpen((o) => !o); setCode(""); setMsg(""); }}
+          aria-expanded={joinOpen}
+          className="pillola min-h-[36px] flex-1 px-2 text-[0.8rem]"
+        >
+          <DoorOpen className="h-3.5 w-3.5" /> Entra con codice
+        </button>
+        <button onClick={invite} disabled={busy === "invite"} className="pillola min-h-[36px] flex-1 px-2 text-[0.8rem] disabled:opacity-60">
+          {busy === "invite" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><UserPlus className="h-3.5 w-3.5" /> Invita</>}
+        </button>
       </div>
 
       {/* Codice invito appena generato */}

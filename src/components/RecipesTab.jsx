@@ -8,7 +8,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
-  ChefHat, Trash2, Check, CalendarPlus,
+  ChefHat, ChevronDown, Trash2, Check, CalendarPlus,
 } from "lucide-react";
 import { stripParens, formatRecipeQty, shoppingQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
@@ -78,6 +78,7 @@ export default function RecipesTab({
   const [shelf, setShelf] = useState("salvate"); // tab del ricettario
   const [struck, setStruck] = useState({});    // ingredienti spuntati
   const [cooking, setCooking] = useState(false);  // modalità cucina
+  const [cookableOpen, setCookableOpen] = useState(false); // "Puoi farle con quello che hai" aperta
   // Sotto-vista iniziale: "piano" se si arriva dal deep-link della notifica
   // delle 18:30 con cena pianificata (/?view=piano), altrimenti "idee".
   const [tab, setTab] = useState(startOnPlan && plan ? "piano" : "idee");
@@ -93,7 +94,7 @@ export default function RecipesTab({
     if (recipe && pendingSlot && plan) {
       plan.planMeal(isoDate(pendingSlot.date), pendingSlot.slot, { title: recipe.title, data: recipe });
       const label = pendingSlot.date.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" });
-      setPlannedMsg(`Nel piano: ${label} · ${pendingSlot.slot} ✓`);
+      setPlannedMsg(`Nel calendario: ${label} · ${pendingSlot.slot} ✓`);
       setPendingSlot(null);
     } else {
       setPlannedMsg("");
@@ -128,7 +129,7 @@ export default function RecipesTab({
     if (!plan || !recipe) return;
     plan.planMeal(isoDate(day), slot, { title: recipe.title, data: recipe }, existingId);
     const label = day.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" });
-    setPlannedMsg(`Nel piano: ${label} · ${slot} ✓`);
+    setPlannedMsg(`Nel calendario: ${label} · ${slot} ✓`);
   }
 
   // "Genera un'idea con l'AI" da uno slot del Piano: passa alle Idee e chiede
@@ -213,7 +214,7 @@ export default function RecipesTab({
               Il piano compare solo se il composition root lo passa (migration-11). */}
           {plan && (
             <div className="mt-5 grid grid-cols-2 gap-1.5">
-              {[["idee", "Idee"], ["piano", "Piano Alimentare"]].map(([id, label]) => (
+              {[["idee", "Idee"], ["piano", "Calendario Alimentare"]].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => switchTab(id)}
@@ -310,11 +311,23 @@ export default function RecipesTab({
                   ricetta completa, col procedimento, come le altre. */}
               {cookable.length > 0 && (
                 <section className="mt-6">
-                  <div className="flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px]">
+                  {/* A scomparsa, CHIUSA di serie (09/10): l'intestazione è il
+                      bottone, col numero di ricette e la freccina. */}
+                  <button
+                    onClick={() => setCookableOpen((v) => !v)}
+                    aria-expanded={cookableOpen}
+                    className="flex w-full items-center gap-2 border-b-[1.5px] border-ink pb-[7px] text-left"
+                  >
                     <h2 className="min-w-0 text-[1.3rem] font-extrabold leading-[1.05] tracking-[-0.04em] text-ink">{doable.length ? "Puoi farle con quello che hai" : "Ti manca poco"}</h2>
-                  </div>
-                  {!doable.length && <p className="micro mt-2">Le più vicine a quello che hai in dispensa.</p>}
-                  <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
+                    <span className="num ml-auto text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{String(cookable.length).padStart(2, "0")}</span>
+                    <ChevronDown className={`h-5 w-5 shrink-0 text-ink transition-transform duration-200 ${cookableOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {cookableOpen && (
+                    <div className="animate-fade-in">
+                      {!doable.length && <p className="micro mt-2">Le più vicine a quello che hai in dispensa.</p>}
+                      <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
+                    </div>
+                  )}
                 </section>
               )}
 
@@ -615,7 +628,7 @@ export default function RecipesTab({
               <p className="mt-3 text-center text-[0.86rem] font-semibold text-ink">{plannedMsg}</p>
             ) : (
               <Button variant="secondary" size="sm" full className="mt-3" onClick={() => setPlanSheet(true)}>
-                <CalendarPlus className="h-3.5 w-3.5" /> Aggiungi al piano
+                <CalendarPlus className="h-3.5 w-3.5" /> Aggiungi al calendario
               </Button>
             )
           )}

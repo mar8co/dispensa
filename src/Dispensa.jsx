@@ -864,7 +864,7 @@ export default function Dispensa({ session }) {
         planMeal(p.date, p.slot, { title: p.recipe.title, data: withServings(p.recipe) })
       ));
       const saved = picks.map((p, i) => ({ ...p, id: ids[i] })).filter((p) => p.id);
-      if (!saved.length) { showToast("Non sono riuscito a salvare il piano. Controlla la connessione e riprova."); return; }
+      if (!saved.length) { showToast("Non sono riuscito a salvare il calendario. Controlla la connessione e riprova."); return; }
       // Mancanti in lista: una voce per prodotto, con la quantità che serve
       // davvero (sommata tra le ricette). Chi è già in lista si salta.
       const missing = shoppingList(saved);
@@ -875,7 +875,7 @@ export default function Dispensa({ session }) {
       setPlanReady({ picks: saved, added: res?.added || 0, undo: res?.undo, rejected: [] });
     } catch (e) {
       console.error(e);
-      showToast("Non sono riuscito a preparare il piano. Riprova.");
+      showToast("Non sono riuscito a preparare il calendario. Riprova.");
     } finally {
       setFillingWeek(false);
     }

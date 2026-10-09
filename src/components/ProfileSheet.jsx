@@ -1,7 +1,8 @@
 // Profilo: l'UNICO menu dell'app (dall'avatar con l'iniziale, in alto a
 // sinistra). Pannello laterale da SINISTRA, blu come l'avatar, con la X in alto
-// a destra (si chiude anche toccando fuori o trascinando). Dentro: account
-// (nome), Dispensa condivisa, Esigenze alimentari e, dal 09/10, anche le
+// a destra (si chiude anche toccando fuori o trascinando). Dentro, in ordine
+// d'uso: account (nome), Esigenze alimentari, Notifiche, Dispensa condivisa,
+// Ordine delle categorie, Esci. Dal 09/10 contiene anche le
 // Impostazioni (SettingsSection: notifiche, "Esci", privacy / elimina account
 // con dietro "svuota dispensa"). L'ingranaggio in testata non
 // c'è più. Veste manifesto: righe sottili, pillole.
@@ -11,7 +12,7 @@ import { CAT_ICON } from "../constants.js";
 import IconaChiudi from "./IconaChiudi.jsx";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
-import SettingsSection from "./SettingsSection.jsx";
+import SettingsSection, { NotificationsSection } from "./SettingsSection.jsx";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
 import { parsePrefs } from "../lib/prefs.js";
 
@@ -73,16 +74,11 @@ export default function ProfileSheet({
             <p className="mt-2 text-[0.86rem] font-bold text-ink">Aggiungi il tuo nome così gli altri ti riconoscono nella dispensa.</p>
           )}
 
-          {/* Dispensa familiare: sempre aperta */}
-          <HouseholdSection
-            households={households}
-            activeHouseholdId={activeHouseholdId}
-            email={email}
-            refreshKey={membersKey}
-            onSwitch={onSwitchHousehold}
-            onChanged={onHouseholdsChanged}
-          />
-
+          {/* Ordine delle sezioni = quanto spesso servono (riordinato il 09/10):
+              1. Esigenze alimentari (cambiano ogni ricetta proposta)
+              2. Notifiche  3. Dispensa condivisa  4. Ordine delle categorie
+              (a scomparsa)  5. Esci e, in piccolo, privacy / elimina account.
+              Tutte uguali: intestazione `.sezione` + riquadro bianco. */}
           {/* Esigenze alimentari: box da 2 righe sempre visibile (le ricette ne
               tengono conto — è "chi sei a tavola", per questo resta nel Profilo) */}
           <div className="sezione mt-6">Esigenze alimentari</div>
@@ -104,10 +100,21 @@ export default function ProfileSheet({
           {foodPrefs.trim() && (
             <p className="mt-2 text-[0.8rem] font-medium leading-snug text-tenue">
               {understood.length
-                ? <>Nel piano e nelle ricette senza AI escludo: <strong>{understood.join(", ")}</strong>.</>
+                ? <>Nel calendario e nelle ricette senza AI escludo: <strong>{understood.join(", ")}</strong>.</>
                 : <>Qui non ho trovato cibi da escludere: di questo testo terrà conto solo l&rsquo;AI. Capisco frasi come «no peperoni», «senza glutine», «vegetariano».</>}
             </p>
           )}
+
+          <NotificationsSection />
+
+          <HouseholdSection
+            households={households}
+            activeHouseholdId={activeHouseholdId}
+            email={email}
+            refreshKey={membersKey}
+            onSwitch={onSwitchHousehold}
+            onChanged={onHouseholdsChanged}
+          />
 
           {/* Ordine delle categorie della Dispensa: chiuso di serie (si tocca
               di rado), si apre con un tocco; frecce su/giù per ogni riga. */}
@@ -146,8 +153,6 @@ export default function ProfileSheet({
             </ul>
           )}
 
-          {/* Impostazioni. "Svuota dispensa" non è più una riga: sta dietro
-              "Elimina account", in fondo. */}
           <SettingsSection
             close={close}
             onDeleteAccount={onDeleteAccount}
