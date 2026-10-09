@@ -99,7 +99,6 @@ export default function RecipesTab({
   expiring = [],
   onNeedAi, localQuery = null, onLocalQueryUsed,
 }) {
-  const [showAll, setShowAll] = useState(false); // "Tutte le ricette" aperto
   const [tipo, setTipo] = useState("");          // filtro per tipo ("" = tutte)
   // Ricerca chiesta da fuori (piano gratuito: "Cucina con questo prodotto"
   // dalla Dispensa): il nome del prodotto entra nel campo e si vedono subito
@@ -187,12 +186,16 @@ export default function RecipesTab({
     return [...mine, ...BASE_RECIPES];
   }, [savedRecipes]);
   const allRanked = rankCookable(cookbook, hasIngredient, expiring, Infinity);
-  const cookable = allRanked.filter((x) => x.missing.length <= 1).slice(0, 4);
+  // Da mostrare: fino a 5 ricette a cui non manca NULLA; se non ce ne sono,
+  // una sola, la più vicina (scelta dell'utente del 09/10: mai l'elenco intero).
+  const MAX_SHOWN = 5;
+  const doable = allRanked.filter((x) => x.missing.length === 0).slice(0, MAX_SHOWN);
+  const cookable = doable.length ? doable : allRanked.slice(0, 1);
   // Piano gratuito: la ricerca è locale, nel ricettario.
   const found = !isPro && ask.trim()
     ? rankCookable(searchRecipes(cookbook, ask), hasIngredient, expiring, Infinity)
     : [];
-  // Filtro per tipo (Tutte le ricette / Ricette trovate). Le ricette salvate
+  // Filtro per tipo (Ricette trovate, che ne mostra comunque al massimo 5). Le ricette salvate
   // dall'utente non hanno un tipo: compaiono solo con "Tutte".
   const byTipo = (list) => (tipo ? list.filter((x) => x.recipe.tipo === tipo) : list);
   const tipoChips = (
@@ -352,7 +355,7 @@ export default function RecipesTab({
               {found.length > 0 ? (
                 <>
                   {tipoChips}
-                  {byTipo(found).length ? <ul className="mt-1 divide-y divide-riga">{byTipo(found).map(recipeRow)}</ul> : nessuna}
+                  {byTipo(found).length ? <ul className="mt-1 divide-y divide-riga">{byTipo(found).slice(0, MAX_SHOWN).map(recipeRow)}</ul> : nessuna}
                 </>
               ) : (
                 <p className="py-5 text-center text-[0.95rem] font-semibold text-ink">
@@ -363,29 +366,18 @@ export default function RecipesTab({
             </section>
           ) : (
             <>
-              {/* Puoi farle adesso: dal ricettario, senza AI. */}
-              {cookable.length > 0 && !showAll && (
+              {/* Dal ricettario, senza AI: al massimo 5 ricette, solo quelle che
+                  si possono fare con la dispensa di ora. Se non ce n'è nessuna
+                  se ne mostra comunque UNA, quella a cui manca meno. */}
+              {cookable.length > 0 && (
                 <section className="mt-6">
                   <div className="flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
-                    <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Puoi farle adesso</h2>
-                    <span className="micro">con quello che hai</span>
+                    <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">{doable.length ? "Puoi farle adesso" : "Ti manca poco"}</h2>
+                    <span className="micro">{doable.length ? "con quello che hai" : "la più vicina a quello che hai"}</span>
                   </div>
                   <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
                 </section>
               )}
-              {showAll && (
-                <section className="mt-6">
-                  <div className="flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
-                    <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Tutte le ricette</h2>
-                    <span className="micro">prima quelle che puoi fare</span>
-                  </div>
-                  {tipoChips}
-                  {byTipo(allRanked).length ? <ul className="mt-1 divide-y divide-riga">{byTipo(allRanked).map(recipeRow)}</ul> : nessuna}
-                </section>
-              )}
-              <button onClick={() => setShowAll((v) => !v)} className="link mt-3 flex min-h-[44px] items-center text-[0.9rem] text-ink">
-                {showAll ? "Mostra solo quelle che puoi fare adesso" : `Tutte le ricette (${allRanked.length})`}
-              </button>
             </>
           )}
 
