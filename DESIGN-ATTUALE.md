@@ -18,9 +18,9 @@
   | Dispensa, accesso, caricamento, avvio | **beige** `#dcceb3` (marchio, token `sabbia`; dal 01/10, prima arancio) |
   | Spesa | **bianco** (dal 01/10; prima giallo) |
   | Ricette (Idee, proposte, Piano Alimentare) | **verde** `#22b35e` |
-  | Ricetta aperta, modalità cucina | **bianco** |
+  | Ricetta aperta, modalità cucina, fogli del Piano | **verde** (dal 09/10, prima bianco): tutto ciò che è Ricette o Piano Alimentare è verde; gli ingredienti stanno in una card bianca |
   | Profilo (pannello da sinistra) | **blu** `#3572e8`, lo stesso dell'avatar (testi secondari neri) |
-  | Impostazioni (pannello da destra) | **arancio** `#ff7a1a` |
+  | Impostazioni | dentro il Profilo (blu) dal 09/10; il pannello arancio non esiste più |
   | Privacy (foglio) | **beige** `#dcceb3` |
   | Premium (paywall) | **rosa** `#ffb5d0` |
   | Fogli dove si scrive (a mano, voce, revisione, Ho cucinato) | **bianco** (default di `Sheet`) |
@@ -53,10 +53,11 @@
 - **Profilo**: avatar tondo **blu** `#3572e8` con l'iniziale bianca (36 px, Nome o mail) in alto a
   sinistra di ogni scheda; accanto, "Offline" quando manca la rete. Lo stesso avatar (48 px) apre
   il pannello Profilo. Avatar col bordo nero di 2 px (come Wishlist).
-- **Impostazioni**: ingranaggio in alto a destra su **tutte** le schede (nella Spesa luce e
-  condivisione gli stanno accanto, a sinistra; la lampadina accesa è un tondo **giallo**). Dentro c'è **"Esci"**, con conferma in linea.
+- **Impostazioni**: dal 09/10 stanno **dentro il Profilo** (`SettingsSection`: Premium, Face ID,
+  notifiche, tutorial, "Svuota dispensa", "Esci" con conferma in linea, privacy / elimina account).
+  L'ingranaggio in testata è stato tolto: in alto a destra restano solo luce e condivisione della Spesa.
 - **Menu laterale** (`Sheet` con `side`, come il menu di Expense Track): il **Profilo entra da
-  sinistra**, le **Impostazioni da destra**; alti quanto lo schermo, larghi l'88%, senza maniglia,
+  sinistra** ed è l'unico pannello laterale; alto quanto lo schermo, largo l'88%, senza maniglia,
   con la **X a tratto spesso** (`IconaChiudi.jsx`) in alto a destra; si chiudono anche toccando
   fuori o trascinando. Nel Profilo non c'è più l'ingranaggio. Gli altri fogli salgono dal basso.
 - **Pillole su fondo colorato**: quelle delle categorie in Dispensa e delle occasioni in Ricette

@@ -62,7 +62,7 @@
 - **Veste "manifesto svizzero"** (dettagli in `DESIGN-ATTUALE.md`): un colore
   pieno per schermata (`PAGE_COLOR` in `src/lib/colors.js`, applicato con
   `usePageColor`: Dispensa beige `#dcceb3` (token `sabbia`), Spesa bianco, Ricette verde,
-  ricetta aperta bianca), inchiostro nero, Inter Tight, titoli `.gigante`,
+  ricetta aperta verde come il resto delle Ricette), inchiostro nero, Inter Tight, titoli `.gigante`,
   etichette `.micro`, righe sottili al posto delle card, pillole e tondi.
   Niente `backdrop-filter`/`filter: blur`/`mix-blend-mode`, animazioni solo
   `transform`/`opacity`. Per vedere le schermate senza login:
@@ -90,7 +90,8 @@
   stanno tra la lista e "Nel carrello", in flusso, non fissi); con la tastiera
   aperta va in alto. Se cambia la barra si cambiano solo le variabili.
 - **Fogli e pannelli**: dal basso i fogli (`Sheet`); di lato il Profilo (da
-  sinistra, blu) e le Impostazioni (da destra, arancio) con `Sheet side="left"|
+  sinistra, blu), che contiene anche le Impostazioni (`SettingsSection`: non c'è
+  più un pannello a parte né l'ingranaggio in testata), con `Sheet side="left"|
   "right"`. Velo e pannelli laterali restano **staccati dal bordo alto** (iOS
   colora la barra di stato con ciò che tocca quel bordo): non rimetterli a
   `top: 0`.
@@ -194,8 +195,9 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
   lavori a metà, nessun ramo aperto.
 - **Veste attuale** (dettagli in `DESIGN-ATTUALE.md`): Dispensa e marchio beige
   `#dcceb3`, Spesa bianca, Ricette verde; avatar blu in alto a sinistra →
-  Profilo (pannello blu da sinistra); ingranaggio in alto a destra →
-  Impostazioni (pannello arancio da destra, con "Esci"); barra nera con
+  Profilo (pannello blu da sinistra), l'unico menu: dentro ci sono anche le
+  Impostazioni e "Esci" (l'ingranaggio in testata è stato tolto il 09/10);
+  tutto ciò che è Ricette o Piano è verde, ricetta aperta compresa; barra nera con
   Dispensa · Spesa · Ricette e "+" bianco su tutte le schede; logo nuovo
   (sacchetto + cappello da chef).
 - **Confermato dall'utente sull'iPhone (09/10)**: barra di stato giusta dopo
