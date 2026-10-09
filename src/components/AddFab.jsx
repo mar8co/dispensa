@@ -15,10 +15,12 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
   // Barcode, foto e voce hanno bisogno della rete (ricerca del prodotto, AI,
   // dettatura): offline si spengono qui, invece di fallire dopo il tocco.
   const options = [
+    // Dal basso verso l'alto (la prima è la più vicina al pollice): scelta
+    // dell'utente del 09/10.
     { id: "manual", icon: Pencil, label: "A mano", action: onManual },
+    { id: "voice", icon: Mic, label: "Voce", action: onVoice, needsNet: true },
     { id: "barcode", icon: ScanBarcode, label: "Barcode", action: onBarcode, needsNet: true },
     { id: "photo", icon: Camera, label: "Foto", action: onPhoto, needsNet: true },
-    { id: "voice", icon: Mic, label: "Voce", action: onVoice, needsNet: true },
   ];
 
   return (
