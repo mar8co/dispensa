@@ -209,21 +209,18 @@ export function usePantry({
   }
 
   // "Finito" (riga scorsa verso sinistra, pillola "Finito" del pannello): il
-  // prodotto ESCE dalla dispensa ed entra in lista della spesa (dal 09/10 non
-  // resta più in elenco a quantità zero). Un solo avviso, con "Annulla" che
-  // rimette com'erano sia la dispensa sia la lista.
+  // prodotto ESCE dalla dispensa ed entra in lista della spesa. Non sempre lo
+  // si vuole ricomprare: l'avviso ha "Non serve", che lo toglie dalla lista
+  // lasciandolo finito (dal 10/10; prima c'era "Annulla", che rimetteva anche
+  // il prodotto in dispensa).
   async function finishItem(it) {
     setItems((prev) => prev.filter((x) => x.id !== it.id));
     persistDelete(it.id);
     const res = await addToShoppingMerged([{ name: it.name, qty: "1" }]);
     showToast(<><strong>{it.name}</strong> finito: è in lista</>, () => {
-      // Se era già a zero (prodotti di prima del 09/10) torna come "c'è".
-      const row = { id: newLocalId(), name: it.name, qty: isOut(it) ? "1" : it.qty, category: it.category, expiry: it.expiry };
-      setItems((prev) => [...prev, { ...row, created_at: new Date().toISOString() }]);
-      persistInsert(row);
       res?.undo?.();
       dismissToast();
-    });
+    }, "Non serve");
   }
 
   // Imposta/cambia la scadenza dal pannello (stesso flusso con Annulla).

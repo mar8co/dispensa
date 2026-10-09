@@ -1078,12 +1078,15 @@ export default function Dispensa({ session }) {
       markMealCooked(cookMealRef.current);
       cookMealRef.current = null;
     }
-    // I prodotti finiti vanno da soli in lista della spesa.
+    // I prodotti finiti vanno da soli in lista della spesa; "Non serve" li
+    // toglie dalla lista (restano finiti), come per "Finito" in dispensa.
     if (out.length) {
-      await addToShoppingMerged(out.map((r) => ({ name: r.name, qty: "1" })));
+      const res = await addToShoppingMerged(out.map((r) => ({ name: r.name, qty: "1" })));
       showToast(out.length === 1
         ? <><strong>{out[0].name}</strong> finito: è in lista</>
-        : `${out.length} prodotti finiti: sono in lista`);
+        : `${out.length} prodotti finiti: sono in lista`,
+      () => { res?.undo?.(); dismissToast(); },
+      out.length === 1 ? "Non serve" : "Non servono");
     }
   }
 
