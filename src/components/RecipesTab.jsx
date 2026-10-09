@@ -246,7 +246,7 @@ export default function RecipesTab({
           <>
           {/* Occhiello rosso + ricerca ingredienti: bloccati insieme in alto
               mentre si scorrono occasioni e ricettario. */}
-          <div data-tour="recipe-search" className="sticky top-0 z-20 -mx-4 mt-4 bg-sfondo px-4 pb-2 pt-2">
+          <div className="sticky top-0 z-20 -mx-4 mt-4 bg-sfondo px-4 pb-2 pt-2">
             <div className="micro">Ricette</div>
             {/* "Cosa ti va?": un ingrediente, una voglia, "qualcosa di estivo"…
                 l'AI incrocia la richiesta con la dispensa. È di Premium: nel
@@ -459,7 +459,6 @@ export default function RecipesTab({
             {ideas.map((r, i) => (
               <button
                 key={i}
-                data-tour={i === 0 ? "recipe-idea" : undefined}
                 onClick={() => openRecipe(r.title)}
                 className="block w-full overflow-hidden rounded-card bg-white text-left shadow-card transition active:scale-[0.99]"
               >
@@ -543,7 +542,6 @@ export default function RecipesTab({
               </div>
             )}
             <button
-              data-tour="recipe-heart"
               onClick={onToggleSave}
               aria-label={isSaved ? "Rimuovi dalle salvate" : "Salva nel ricettario"}
               className="tondo absolute right-3 top-3 h-11 w-11 bg-white shadow-card"

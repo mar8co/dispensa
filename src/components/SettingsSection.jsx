@@ -6,7 +6,7 @@
 // `close` chiude il pannello del Profilo.
 import { useState, useEffect } from "react";
 import {
-  GraduationCap, Loader2, Bell,
+  Loader2, Bell,
   Sparkles, ChevronRight,
 } from "lucide-react";
 import IconaEsci from "./IconaEsci.jsx";
@@ -19,7 +19,7 @@ import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush
 const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
 
 export default function SettingsSection({
-  close, onReplayTour, onDeleteAccount, onOpenPrivacy, onLogout,
+  close, onDeleteAccount, onOpenPrivacy, onLogout,
   isPro = true, onOpenPaywall, children,
 }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -214,15 +214,6 @@ export default function SettingsSection({
                 </span>
               </div>
             )}
-
-            {/* Tutorial */}
-            <button
-              onClick={() => { close(); onReplayTour?.(); }}
-              className={`${riga} text-left`}
-            >
-              <GraduationCap className="h-[19px] w-[19px] shrink-0 text-ink" />
-              <span className={nome}>Rivedi il tutorial</span>
-            </button>
 
             {children}
 

@@ -16,7 +16,7 @@ import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
 export default function ProfileSheet({
   email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
-  onReplayTour, onDeleteAccount, onLogout, onOpenPrivacy, isPro = true, onOpenPaywall,
+  onDeleteAccount, onLogout, onOpenPrivacy, isPro = true, onOpenPaywall,
 }) {
   const [username, setUsernameState] = useState("");
   const [membersKey, setMembersKey] = useState(0);  // forza il refresh della lista membri
@@ -98,7 +98,6 @@ export default function ProfileSheet({
               sta tra le righe, subito prima di "Esci". */}
           <SettingsSection
             close={close}
-            onReplayTour={onReplayTour}
             onDeleteAccount={onDeleteAccount}
             onLogout={onLogout}
             onOpenPrivacy={onOpenPrivacy}
@@ -106,7 +105,6 @@ export default function ProfileSheet({
             onOpenPaywall={onOpenPaywall}
           >
             <button
-              data-tour="clear-pantry"
               onClick={() => { close(); onClearPantry(); }}
               className="flex min-h-[60px] w-full items-center gap-3 border-b border-riga py-2.5 text-left"
             >

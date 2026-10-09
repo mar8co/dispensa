@@ -17,7 +17,6 @@ import { RECIPES_SCHEMA, RECIPE_CONTEXTS } from "../constants.js";
 import { norm, stripParens } from "../lib/pantry.js";
 import { upsertSavedRecipe, updateSavedRecipe, deleteSavedRecipe } from "../lib/db.js";
 import { loadSavedRecipes, saveSavedRecipes, localRecipeId } from "../lib/recipes.js";
-import { tourSignal, TOUR_RECIPE } from "../lib/tour.js";
 
 export function useRecipes({
   session,
@@ -25,7 +24,6 @@ export function useRecipes({
   pantryStr,
   prefServings,
   setPrefServings,
-  tourActive,
   setCookDone,
   showToast,
   dismissToast,
@@ -239,16 +237,6 @@ export function useRecipes({
 
   async function openRecipe(title) {
     const gen = newGen(); // invalida le richieste precedenti ancora in volo
-    // Durante il tutorial la ricetta d'esempio è precaricata (niente AI).
-    if (tourActive && norm(title) === norm(TOUR_RECIPE.title)) {
-      scrollToTop();
-      animateUI(() => {
-        setRecipe(TOUR_RECIPE); setServings(initialServings(TOUR_RECIPE));
-        setRecipeErr(""); setLoadingRecipe(false); setCookDone("");
-      });
-      tourSignal("recipe-opened");
-      return;
-    }
     scrollToTop(); // la ricetta parte dall'alto
     // Se è già nel ricettario, si apre da lì: istantanea e senza quota AI.
     const saved = savedByTitle(title);
@@ -371,7 +359,6 @@ export function useRecipes({
     } else if (ex) {
       commitRecipes(savedRecipes.map((r) => (r.id === ex.id ? { ...r, saved: true } : r)));
       updateSavedRecipe(ex.id, { saved: true }).catch(() => {});
-      tourSignal("recipe-saved");
     } else {
       const id = localRecipeId();
       const row = {
@@ -380,7 +367,6 @@ export function useRecipes({
       };
       commitRecipes([row, ...savedRecipes]);
       syncRecipeUpsert(id, { title: recipe.title, data: recipe, image: recipe.image || null, saved: true });
-      tourSignal("recipe-saved");
     }
   }
 

@@ -152,7 +152,6 @@ export default function Anteprima() {
       >
         <header className="mb-3.5 flex items-center gap-2.5">
           <button
-            data-tour="tab-profilo"
             onClick={() => setFoglio("profilo")}
             aria-label="Profilo"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink bg-blu text-[0.95rem] font-[750] tracking-[-0.02em] text-white transition active:scale-95"
@@ -254,7 +253,7 @@ export default function Anteprima() {
         <ProfileSheet
           email="marco@esempio.it" itemCount={items.length} shared foodPrefs="" onSaveFoodPrefs={() => {}}
           onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
-          onLogout={chiudi} onReplayTour={() => {}} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")} isPro={false} onOpenPaywall={() => setFoglio("premium")}
+          onLogout={chiudi} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")} isPro={false} onOpenPaywall={() => setFoglio("premium")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
         />
       )}

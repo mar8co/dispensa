@@ -23,7 +23,6 @@ import { useState } from "react";
 import { Calendar, Trash2, X } from "lucide-react";
 import { PICKER_CATS, CAT_ICON } from "../constants.js";
 import { formatExpiry } from "../lib/pantry.js";
-import { tourSignal } from "../lib/tour.js";
 import ExpiryCalendar from "./ExpiryCalendar.jsx";
 
 // testo-grande: sopra i 16px iOS non zooma, quindi il minimo globale dei
@@ -136,8 +135,7 @@ export default function ProductFields({
                 nativo: vedi ExpiryCalendar). */}
             <button
               type="button"
-              data-tour="expiry-field"
-              onClick={() => { setExpOpen((o) => !o); tourSignal("expiry-opened"); }}
+              onClick={() => setExpOpen((o) => !o)}
               title="Scadenza"
               aria-haspopup="dialog"
               aria-expanded={expOpen}
@@ -160,7 +158,7 @@ export default function ProductFields({
         )}
 
         {/* Stepper a cerchi: − valore + (il valore resta un campo scrivibile). */}
-        <div data-tour="qty-stepper" className="flex h-11 shrink-0 items-center gap-1">
+        <div className="flex h-11 shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={onMinus}
@@ -186,7 +184,7 @@ export default function ProductFields({
 
       </div>
 
-        <div data-tour="unit-chips" className="mt-2 grid grid-cols-5 gap-1.5">
+        <div className="mt-2 grid grid-cols-5 gap-1.5">
           {["", "g", "kg", "ml", "l"].map((u) => {
             const active = u === "" ? unitActive === "" : unitActive === u;
             return (

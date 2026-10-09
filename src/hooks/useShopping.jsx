@@ -21,7 +21,6 @@ import {
   deleteShopping, deleteShoppingItems,
 } from "../lib/db.js";
 import { loadHistory, saveHistory, bumpedHistory } from "../lib/history.js";
-import { tourSignal } from "../lib/tour.js";
 import { parseSpokenList } from "../lib/parse.js";
 
 export function useShopping({ session, showToast, dismissToast, shopCats, setShopCats }) {
@@ -109,7 +108,6 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   // dizionario della dispensa, zero AI) + prima lettera maiuscola.
   async function addShoppingItem(name, qty) {
     const res = await addToShoppingMerged([{ name: correctName(String(name)), qty }]);
-    tourSignal("shopping-added");
     return { merged: res.merged > 0 };
   }
 

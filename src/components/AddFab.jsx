@@ -7,7 +7,6 @@
 // un ventaglio a quarto di cerchio faceva sovrapporre le etichette. Il velo che
 // chiude al tocco esterno è renderizzato dalla pagina (Dispensa.jsx).
 import { Plus, Pencil, Camera, ScanBarcode, Mic } from "lucide-react";
-import { tourSignal } from "../lib/tour.js";
 
 // Passo verticale tra un tondo e l'altro (tondo 48px + 12px d'aria).
 const STEP = 60;
@@ -47,9 +46,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
               {off ? `${o.label} · offline` : o.label}
             </span>
             <button
-              data-tour={o.id === "manual" ? "add-manual-option" : undefined}
               onClick={() => {
-                if (o.id === "manual") tourSignal("add-manual-chosen");
                 setMenuOpen(false);
                 o.action();
               }}
@@ -64,8 +61,7 @@ export default function AddFab({ menuOpen, setMenuOpen, onManual, onPhoto, onBar
       })}
 
       <button
-        data-tour="add-fab"
-        onClick={() => setMenuOpen((v) => { const next = !v; if (next) tourSignal("add-menu-opened"); return next; })}
+        onClick={() => setMenuOpen((v) => !v)}
         aria-label={menuOpen ? "Chiudi" : "Aggiungi"}
         className="relative flex h-full w-full items-center justify-center rounded-full border-[2.5px] border-ink bg-white text-ink shadow-barra transition active:scale-95"
       >

@@ -3,15 +3,13 @@
 // carrello, niente altra riga aperta, niente campo che prende il fuoco).
 // Si ascolta in fase di cattura sul documento: così si arriva PRIMA dei
 // gestori di React (che stanno sulla radice) e li si ferma.
-// Eccezioni: gli avvisi (il loro "Annulla" deve funzionare) e il tutorial,
-// che guida i tocchi a pannello aperto.
-import { tourIsActive } from "./tour.js";
+// Eccezione: gli avvisi (il loro "Annulla" deve funzionare).
 
 export function onOutsideTap(getPanel, close) {
   const onDown = (e) => {
     const panel = getPanel();
     if (!panel || panel.contains(e.target)) return;
-    if (tourIsActive() || e.target.closest?.('[role="status"]')) { close(); return; }
+    if (e.target.closest?.('[role="status"]')) { close(); return; }
     e.stopPropagation();
     if (e.pointerType === "mouse") e.preventDefault(); // niente fuoco sul campo sotto
     // Il "click" (e su iPhone il fuoco) nascono al rilascio: si fermano lì.

@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, qtyLabel, isLow, changeUnit } from "../lib/pantry.js";
-import { tourSignal } from "../lib/tour.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 import PushNudge from "./PushNudge.jsx";
@@ -53,7 +52,6 @@ export default function PantryTab({
   grouped, cardRefs,
   onMoveCat, onAutoSave, onSetExpiry, removeItem,
   expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
-  canNudge = false,
 }) {
   const searchActive = search.trim() !== "";
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
@@ -93,7 +91,6 @@ export default function PantryTab({
     if (!it || !val || val === String(lastRef.current.qty)) return;
     lastRef.current.qty = val;
     onAutoSave(it, { qty: val }, { qty: snapRef.current.qty });
-    tourSignal("qty-changed");
   }
   function scheduleQty(v) {
     setQtyDraft(v);
@@ -128,7 +125,6 @@ export default function PantryTab({
   // (onChange = scelta reale, non provvisoria) si salva con una breve attesa.
   function scheduleExpiry(v) {
     setExpDraft(v);
-    if (v) tourSignal("expiry-set"); // data scelta: fa avanzare il tutorial
     clearTimeout(expTimer.current);
     expTimer.current = setTimeout(() => commitExpiryNow(v), 400);
   }
@@ -143,7 +139,6 @@ export default function PantryTab({
   function openPanel(it) {
     flushPending();
     setOpenId(it.id);
-    tourSignal("product-opened");
     openItemRef.current = it;
     snapRef.current = { name: it.name, qty: it.qty, category: it.category, expiry: it.expiry };
     lastRef.current = { name: it.name, qty: it.qty, expiry: it.expiry || "" };
@@ -184,7 +179,6 @@ export default function PantryTab({
     setQtyDraft(v);
     clearTimeout(qtyTimer.current);
     commitQtyNow(v);
-    tourSignal("unit-changed");
   }
 
   // Il pannello si chiude toccando un punto qualsiasi fuori da esso; quel
@@ -214,9 +208,6 @@ export default function PantryTab({
   // reparti (alta 50px, presente solo con più di una categoria). Prima si
   // fermavano a 48px fissi: finivano nascoste dietro le due barre.
   const headTop = searchH - 1 + (grouped.length > 1 ? 49 : 0);
-
-  // Primo prodotto in assoluto: bersaglio dello spotlight nel tutorial.
-  const firstItemId = grouped[0]?.list?.[0]?.id;
 
   return (
     <div className="pt-2">
@@ -315,7 +306,7 @@ export default function PantryTab({
       {/* Soft-ask notifiche: proprio quando c'è il banner scadenze (e fuori dal
           tutorial) invitiamo ad attivare gli avvisi. Il componente decide da sé
           se comparire (installata, non già attive, non già rifiutato qui). */}
-      {expiredCount + expiringSoonCount > 0 && canNudge && <PushNudge />}
+      {expiredCount + expiringSoonCount > 0 && <PushNudge />}
 
       {/* Barra salta-reparto, fissa in alto: una riga di chips (quelle che
           ci stanno) e la freccina che "srotola" le righe successive — la
@@ -362,7 +353,7 @@ export default function PantryTab({
         <div className="flex flex-col items-center py-12 text-center">
           {!searchActive && !expFilter && <Barattoli size={96} className="mb-3 text-ink" />}
           <p className="text-[1.05rem] font-semibold text-tenue">
-            {searchActive ? "Nessun prodotto trovato." : expFilter ? "Niente in scadenza. 🎉" : "Dispensa vuota. Tocca + per aggiungere."}
+            {searchActive ? "Nessun prodotto trovato." : expFilter ? "Niente in scadenza. 🎉" : "Dispensa vuota. Tocca + per aggiungere: a mano, a voce, col codice a barre o con una foto dello scontrino."}
           </p>
         </div>
       )}
@@ -455,7 +446,7 @@ export default function PantryTab({
 
                       {/* "Cosa ci cucino?": apre le Ricette con proposte basate su
                           questo prodotto — compatto, coerente col resto del box. */}
-                      <Button variant="cook" size="sm" full className="mt-3" data-tour="cook-with" onClick={() => onCookWith(it.name)}>
+                      <Button variant="cook" size="sm" full className="mt-3" onClick={() => onCookWith(it.name)}>
                         <Sparkles className="h-4 w-4" /> Cucina con questo prodotto
                       </Button>
                     </li>
@@ -466,7 +457,6 @@ export default function PantryTab({
                 return (
                   <li key={it.id}>
                     <button
-                      data-tour={it.id === firstItemId ? "pantry-first-item" : undefined}
                       onClick={() => openPanel(it)}
                       className="flex w-full items-baseline gap-2 py-[9px] text-left"
                     >

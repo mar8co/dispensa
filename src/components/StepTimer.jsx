@@ -5,7 +5,6 @@ import { Timer, Play, Pause, RotateCcw } from "lucide-react";
 import {
   subscribeTimers, getTimer, isFinished, startTimer, pauseTimer, resetTimer,
 } from "../lib/timers.js";
-import { tourSignal } from "../lib/tour.js";
 
 export default function StepTimer({ minutes, id, label }) {
   const total = Math.max(1, Math.round(minutes * 60));
@@ -35,7 +34,6 @@ export default function StepTimer({ minutes, id, label }) {
   function start() {
     startTimer(id, label, pausedLeft ?? total);
     setPausedLeft(null);
-    tourSignal("timer-started");
   }
   function pause() { setPausedLeft(pauseTimer(id)); }
   function reset() { resetTimer(id); setPausedLeft(null); }
@@ -45,7 +43,6 @@ export default function StepTimer({ minutes, id, label }) {
 
   return (
     <div
-      data-tour="step-timer"
       className={`mt-2.5 inline-flex items-center gap-2 rounded-full border-[1.5px] border-ink py-1 pl-3 pr-1 text-ink ${
         done ? "bg-giallo" : "bg-white"
       }`}

@@ -7,11 +7,10 @@
 // Pallino rosso, senza numero, sulla Dispensa se ci sono prodotti scaduti e
 // sulla Spesa se c'è qualcosa da prendere.
 
-function Tab({ active, onClick, label, dot, dotLabel, tourId }) {
+function Tab({ active, onClick, label, dot, dotLabel }) {
   return (
     <button
       onClick={onClick}
-      data-tour={tourId}
       aria-current={active ? "page" : undefined}
       className={`relative whitespace-nowrap rounded-full px-[1.05rem] py-[0.7rem] text-[0.92rem] font-[650] leading-[1.35] tracking-[-0.01em] transition-colors duration-[180ms] ${
         active ? "bg-crema text-ink" : "text-crema"
@@ -35,9 +34,9 @@ export default function BottomNav({ view, setView, shoppingCount = 0, expiredCou
           aria-label="Navigazione principale"
           className="pointer-events-auto flex gap-1 rounded-full bg-ink p-[5px] shadow-barra"
         >
-          <Tab active={view === "dispensa"} onClick={() => setView("dispensa")} label="Dispensa" dot={expiredCount > 0} dotLabel="Prodotti scaduti" tourId="tab-dispensa" />
-          <Tab active={view === "spesa"} onClick={() => setView("spesa")} label="Spesa" dot={shoppingCount > 0} dotLabel="Prodotti da prendere" tourId="tab-spesa" />
-          <Tab active={view === "ricette"} onClick={() => setView("ricette")} label="Ricette" tourId="tab-ricette" />
+          <Tab active={view === "dispensa"} onClick={() => setView("dispensa")} label="Dispensa" dot={expiredCount > 0} dotLabel="Prodotti scaduti" />
+          <Tab active={view === "spesa"} onClick={() => setView("spesa")} label="Spesa" dot={shoppingCount > 0} dotLabel="Prodotti da prendere" />
+          <Tab active={view === "ricette"} onClick={() => setView("ricette")} label="Ricette" />
         </nav>
         {/* Posto del "+": alto quanto la barra (--nav-h), vuoto fuori dalla Dispensa. */}
         <div className="pointer-events-auto relative h-[var(--nav-h)] w-[var(--nav-h)] shrink-0">{addSlot}</div>

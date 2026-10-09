@@ -2,14 +2,10 @@
 // normalizzazione/merge/scaling delle quantità (unità metriche g/kg/ml),
 // e matching ingrediente<->prodotto. Logica identica a dispensa-ui.jsx.
 
-import { CATEGORIES, SEED_DATA } from "../constants.js";
+import { CATEGORIES } from "../constants.js";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-}
-
-export function seed() {
-  return SEED_DATA.map(([name, qty, category]) => ({ id: uid(), name, qty, category }));
 }
 
 const CATEGORY_KEYWORDS = {

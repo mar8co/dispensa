@@ -20,7 +20,6 @@ import {
 } from "../lib/db.js";
 import { enqueue } from "../lib/outbox.js";
 import { newLocalId } from "../lib/sync.js";
-import { tourSignal } from "../lib/tour.js";
 
 export function usePantry({
   session,
@@ -153,7 +152,6 @@ export function usePantry({
     }
     bumpShopHistory([name]);
     setNewName(""); setNewQty("1"); setNewUnit(""); setNewCat(""); setNewExpiry(""); setAdding(false);
-    if (result) tourSignal("product-added");
     return result;
   }
 

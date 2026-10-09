@@ -335,9 +335,9 @@ const demoDate = (days) => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
 
-// Prodotti demo per l'onboarding (1-2 per categoria): popolano la dispensa
-// durante il tutorial e vengono eliminati alla fine, per un avvio pulito.
-// Alcuni hanno una scadenza (4° campo) per mostrare il banner scadenze:
+// Prodotti di ESEMPIO (1-2 per categoria) per la pagina di prova dello
+// sviluppo (src/anteprima): nell'app vera non si inseriscono più (il tutorial
+// che li usava è stato tolto il 09/10). Alcuni hanno una scadenza (4° campo):
 // uova in scadenza (3 gg), latte già scaduto, rucola ancora lontana (12 gg).
 export const DEMO_DATA = [
   ["Zucchine", "3", "Verdura"],
@@ -376,46 +376,3 @@ export const ORDER_KEY = "dispensa-order-v1";
 export const MODE_ORDER_KEY = "dispensa-mode-order-v1";
 export const MODEL = "claude-sonnet-4-20250514";
 
-export const SEED_DATA = [
-  ["Pasta (vari formati)", "4 pacchi", "Pasta, Riso e Cereali"],
-  ["Cous cous", "1 conf.", "Pasta, Riso e Cereali"],
-  ["Riso basmati", "1 kg", "Pasta, Riso e Cereali"],
-  ["Riso carnaroli", "1 conf.", "Pasta, Riso e Cereali"],
-  ["Fiocchi di avena", "1 conf.", "Pasta, Riso e Cereali"],
-  ["Farina", "1 conf.", "Pasta, Riso e Cereali"],
-  ["Pan grattato", "1 conf.", "Pasta, Riso e Cereali"],
-  ["Piadina", "1", "Pane e Forno"],
-  ["Tonno in scatola", "12", "Conserve"],
-  ["Pomodori pelati", "1 barattolo", "Conserve"],
-  ["Ceci", "2 barattoli", "Legumi"],
-  ["Fagioli", "1 barattolo", "Legumi"],
-  ["Mandorle", "1 conf.", "Frutta Secca"],
-  ["Pistacchi", "1 conf.", "Frutta Secca"],
-  ["Pinoli", "poca quantità", "Frutta Secca"],
-  ["Noci sgusciate", "poca quantità", "Frutta Secca"],
-  ["Olio EVO", "1 bottiglia", "Condimenti e Salse"],
-  ["Salsa di soia", "1 bottiglia", "Condimenti e Salse"],
-  ["Aceto balsamico", "1 bottiglia", "Condimenti e Salse"],
-  ["Aceto di mele", "1 bottiglia", "Condimenti e Salse"],
-  ["Parmigiano grattugiato", "1 conf.", "Latticini"],
-  ["Pecorino romano", "1 pezzo", "Latticini"],
-  ["Pomodorini", "1 vaschetta", "Verdura"],
-  ["Limone", "1", "Verdura"],
-  ["Fish burger di merluzzo", "2", "Surgelati"],
-  ["Sovracoscie di pollo (marinata al rosmarino)", "2", "Surgelati"],
-  ["Bocconcini di pollo al curry", "1,5 porzioni", "Surgelati"],
-  ["Fettine di pollo yogurt e paprika", "1 conf.", "Surgelati"],
-  ["Fettine di bovino", "1 conf.", "Surgelati"],
-  ["Spinaci", "1 conf.", "Surgelati"],
-  ["Minestrone", "1 conf.", "Surgelati"],
-  ["Broccoli", "1 conf.", "Surgelati"],
-  ["Piselli", "1 conf.", "Surgelati"],
-  ["Paprika dolce", "1 barattolo", "Spezie ed Erbe"],
-  ["Paprika piccante", "1 barattolo", "Spezie ed Erbe"],
-  ["Pepe", "1 barattolo", "Spezie ed Erbe"],
-  ["Rosmarino", "1 barattolo", "Spezie ed Erbe"],
-  ["Aglio in polvere", "1 barattolo", "Spezie ed Erbe"],
-  ["Cumino", "1 barattolo", "Spezie ed Erbe"],
-  ["Curcuma", "1 barattolo", "Spezie ed Erbe"],
-  ["Caffè", "3 pacchetti da 250g", "Bevande"],
-];
