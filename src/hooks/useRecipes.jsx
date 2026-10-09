@@ -99,10 +99,11 @@ export function useRecipes({
     zuppa: ["senzacottura", "insalata"],
     insalata: ["caldo", "forno", "zuppa"],
     // Ingrediente principale: uno alla volta.
-    carne: ["pesce", "verdure", "legumi"],
-    pesce: ["carne", "verdure", "legumi"],
-    verdure: ["carne", "pesce", "legumi"],
-    legumi: ["carne", "pesce", "verdure"],
+    carne: ["pesce", "verdure", "legumi", "pollo"],
+    pollo: ["carne", "pesce", "verdure", "legumi"],
+    pesce: ["carne", "verdure", "legumi", "pollo"],
+    verdure: ["carne", "pesce", "legumi", "pollo"],
+    legumi: ["carne", "pesce", "verdure", "pollo"],
   };
   function toggleRecipeContext(id) {
     setRecipeContext((prev) => {

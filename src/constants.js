@@ -224,6 +224,7 @@ export const RECIPE_CONTEXTS = [
   { id: "proteico", icon: "🏋️", label: "Proteico", hint: "il piatto deve essere ricco di proteine" },
   // Ingrediente principale: se ne sceglie uno solo (vedi CONTEXT_CONFLICTS in useRecipes).
   { id: "carne", icon: "🥩", label: "Carne", hint: "l'ingrediente principale del piatto deve essere la carne" },
+  { id: "pollo", icon: "🍗", label: "Pollo", hint: "l'ingrediente principale deve essere il pollo; proponi modi DIVERSI tra loro di cucinarlo (tagli, cotture e condimenti differenti)" },
   { id: "pesce", icon: "🐟", label: "Pesce", hint: "l'ingrediente principale del piatto deve essere il pesce" },
   { id: "verdure", icon: "🥬", label: "Verdure", hint: "il piatto deve essere a base di verdure, senza carne né pesce" },
   { id: "legumi", icon: "🫘", label: "Legumi", hint: "l'ingrediente principale del piatto devono essere i legumi" },

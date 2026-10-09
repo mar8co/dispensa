@@ -122,7 +122,7 @@
   "Indietro"); scorrendo, quando il titolo grande esce dallo schermo, al posto della scritta compare
   il nome del piatto più piccolo (1,25rem, una riga, troncato) e sotto la riga un filo nero.
 - **Pillole di contesto delle Ricette (Premium)**: una riga sola che scorre di lato; alle cinque di
-  prima si aggiungono Carne, Pesce, Verdure, Legumi (una sola alla volta), poi Pasta, Uova, Riso, Zuppa, Insalata, Al forno, Piccante, Pochi ingredienti (si spengono solo
+  prima si aggiungono Carne, Pollo, Pesce, Verdure, Legumi (una sola alla volta), poi Pasta, Uova, Riso, Zuppa, Insalata, Al forno, Piccante, Pochi ingredienti (si spengono solo
   quelle che si contraddicono, es. Insalata e Zuppa). Sotto, da accese: "Ne tengo
   conto nella ricetta".
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
