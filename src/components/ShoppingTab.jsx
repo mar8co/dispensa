@@ -15,7 +15,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   Pencil, Plus, Mic, Check, Trash2, Loader2, Store,
-  Share, Lightbulb, X,
+  Share, X,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
 import { atMinQty, adjustQty, formatQtyDisplay, qtyLabel, matchKey, changeUnit } from "../lib/pantry.js";
@@ -229,8 +229,6 @@ export default function ShoppingTab({
 }) {
   const [name, setName] = useState(""); // campo di inserimento in linea
   const inputRef = useRef(null);
-  const [awake, setAwake] = useState(false);
-  const wakeRef = useRef(null);
 
   // Carrello = articoli `checked`; lista = quelli ancora da prendere.
   const cart = shopping.filter((s) => s.checked);
@@ -280,42 +278,6 @@ export default function ShoppingTab({
     }
     return [...starts, ...wordStarts, ...contains].slice(0, 6);
   }, [suggestPool, inList, name]);
-
-  // Wake Lock: tiene lo schermo acceso mentre fai la spesa (se supportato).
-  const wakeSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
-
-  // La lampadina è icona-sola e il suo significato non si scopre da soli:
-  // UNA volta per dispositivo, alla prima lista non vuota, un toast spiega
-  // a cosa serve. Il flag si scrive solo quando l'hint viene mostrato.
-  const hasItems = shopping.length > 0;
-  useEffect(() => {
-    if (!wakeSupported || !hasItems) return;
-    try {
-      if (localStorage.getItem("dispensa-wake-hint")) return;
-      localStorage.setItem("dispensa-wake-hint", "1");
-      onNotify("💡 Tocca la lampadina in alto per tenere lo schermo acceso mentre fai la spesa", undefined, undefined, "giallo", 3000);
-    } catch { /* niente hint */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasItems]);
-  useEffect(() => {
-    if (!awake) {
-      wakeRef.current?.release?.().catch(() => {});
-      wakeRef.current = null;
-      return;
-    }
-    const acquire = async () => {
-      try { wakeRef.current = await navigator.wakeLock.request("screen"); }
-      catch { setAwake(false); }
-    };
-    acquire();
-    const onVis = () => { if (document.visibilityState === "visible") acquire(); };
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      document.removeEventListener("visibilitychange", onVis);
-      wakeRef.current?.release?.().catch(() => {});
-      wakeRef.current = null;
-    };
-  }, [awake]);
 
   // Tocco sulla riga: mette nel carrello / rimette in lista.
   const selectItem = (it) => onToggle(it.id, !it.checked);
@@ -467,22 +429,6 @@ export default function ShoppingTab({
       <h1 className="gigante">La spesa</h1>
       {azioni && createPortal(
         <>
-          {wakeSupported && shopping.length > 0 && (
-            <button
-              onClick={() => {
-                const next = !awake;
-                setAwake(next);
-                // Avvisi della lampadina: pillola gialla, brevi (2 s).
-                onNotify(next ? "💡 Schermo sempre acceso mentre fai la spesa" : "Lo schermo può spegnersi di nuovo", undefined, undefined, "giallo", 2000);
-              }}
-              aria-pressed={awake}
-              className={`tondo ${awake ? "bg-giallo" : ""}`}
-              title="Tieni lo schermo acceso"
-              aria-label="Tieni lo schermo acceso"
-            >
-              <Lightbulb className="h-[18px] w-[18px]" />
-            </button>
-          )}
           {shopping.length > 0 && (
             <button
               onClick={shareList}

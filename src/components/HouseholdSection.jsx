@@ -159,22 +159,6 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         </div>
       )}
 
-      {/* Cambia nucleo attivo (solo con più di un nucleo) */}
-      {households.length > 1 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {households.map((h) => (
-            <button
-              key={h.id}
-              onClick={() => onSwitch?.(h.id)}
-              aria-pressed={h.id === active.id}
-              className="pillola min-h-[34px] px-3 text-[0.84rem]"
-            >
-              {h.name}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Entra + Invita: sulla stessa riga, mezza larghezza ciascuno */}
       <div className="mt-3 flex gap-2">
         <Button variant="secondary" size="sm" className="flex-1" onClick={() => { setJoinOpen((o) => !o); setCode(""); setMsg(""); }}>

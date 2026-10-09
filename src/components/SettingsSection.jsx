@@ -1,8 +1,8 @@
 // Impostazioni DENTRO il Profilo (dal 09/10: prima erano un pannello a parte,
 // aperto dall'ingranaggio in alto a destra, tolto su richiesta). Raccoglie il
 // "come si comporta l'app": Premium, notifiche push, "Esci"
-// (con conferma) e il footer legale (privacy / elimina account). `children` =
-// righe del Profilo da mettere subito prima di "Esci" (es. "Svuota dispensa").
+// (con conferma) e il footer legale (privacy / elimina account, con dietro
+// "Voglio solo svuotare la dispensa").
 // `close` chiude il pannello del Profilo.
 import { useState, useEffect } from "react";
 import {
@@ -14,7 +14,7 @@ import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush
 
 export default function SettingsSection({
   close, onDeleteAccount, onOpenPrivacy, onLogout,
-  isPro = true, onOpenPaywall, children,
+  isPro = true, onOpenPaywall, onClearPantry,
 }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -132,8 +132,6 @@ export default function SettingsSection({
               </div>
             )}
 
-            {children}
-
             {/* Esci (con conferma in linea). */}
             {onLogout && (confirmLogout ? (
               <div className="flex gap-2 border-b border-riga py-3">
@@ -170,6 +168,13 @@ export default function SettingsSection({
           ) : (
             <div className="mt-3 rounded-card bg-giallo p-3.5 text-center">
               <p className="text-[0.95rem] font-semibold leading-snug text-ink">Eliminare account e tutti i dati? L'azione è definitiva e non recuperabile.</p>
+              {/* "Svuota dispensa" sta qui dietro (dal 09/10): si usa di rado
+                  e non deve stare tra le righe di tutti i giorni. */}
+              {onClearPantry && (
+                <button onClick={onClearPantry} disabled={deleting} className="mt-1.5 py-1.5 text-[0.86rem] font-bold text-ink underline underline-offset-2">
+                  Voglio solo svuotare la dispensa
+                </button>
+              )}
               {delErr && <p className="mt-1.5 text-[0.86rem] font-bold text-ink">{delErr}</p>}
               <div className="mt-3 flex gap-2">
                 <button

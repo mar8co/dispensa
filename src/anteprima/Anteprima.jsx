@@ -120,9 +120,9 @@ export default function Anteprima() {
   const [servings, setServings] = useState(2);
   const [context, setContext] = useState([]);
   const [foglio, setFoglio] = useState(PARAM_FOGLIO);
+  const [ordine, setOrdine] = useState(CATEGORIES);
   const chiudi = () => setFoglio("");
   const cardRefs = useRef({});
-  const modeCardRefs = useRef({});
 
   const notify = (message) => setToast({ message });
   usePageColor(PARAM_VISTA === "accesso" ? PAGE_COLOR.accesso : pageColorFor(view, !!recipe));
@@ -203,8 +203,7 @@ export default function Anteprima() {
 
         {view === "ricette" && (
           <RecipesTab
-            orderedModes={MODES} mode={mode} modeCardRefs={modeCardRefs}
-            dragMode={null} onModeDragStart={() => {}} onModeDragMove={() => {}} onModeDragEnd={() => {}}
+            orderedModes={MODES} mode={mode}
             chooseMode={(m) => { setMode(m); setRecipe(null); }}
             ideas={mode ? IDEAS : []} loadingIdeas={false}
             openRecipe={() => setRecipe(RECIPE)} backToModes={() => { setMode(null); setRecipe(null); }}
@@ -265,6 +264,7 @@ export default function Anteprima() {
         <ProfileSheet
           email="marco@esempio.it" itemCount={items.length} shared foodPrefs={PARAM_ESIGENZE} onSaveFoodPrefs={() => {}}
           onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
+          catOrder={ordine} onMoveCat={(c, d) => setOrdine((o) => { const i = o.indexOf(c), j = i + d; if (j < 0 || j >= o.length) return o; const n = [...o]; [n[i], n[j]] = [n[j], n[i]]; return n; })}
           onLogout={chiudi} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")} isPro={false} onOpenPaywall={() => setFoglio("premium")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
         />

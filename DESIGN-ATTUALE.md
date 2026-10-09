@@ -125,6 +125,14 @@
   prima si aggiungono Carne, Pollo, Pesce, Verdure, Legumi (una sola alla volta), poi Pasta, Uova, Riso, Zuppa, Insalata, Al forno, Piccante, Pochi ingredienti (si spengono solo
   quelle che si contraddicono, es. Insalata e Zuppa). Sotto, da accese: "Ne tengo
   conto nella ricetta".
+- **Semplificazioni del 09/10 sera**: Ricette e ricetta aperta ROSA (`PALETTE.rosa`, prima arancio);
+  titoli `.gigante` a `clamp(2.6rem, 12.5vw, 4rem)` (prima 3.4–5.4rem); nella ricetta aperta
+  "Modalità cucina" è un bottone grande GIALLO col bordo nero e sotto la riga "Un passaggio alla
+  volta, con i timer"; i passaggi sono solo numero + testo (niente spunta, niente timer); intestazioni
+  di categoria della Dispensa senza frecce; nel Profilo la sezione a scomparsa "Ordine delle
+  categorie" (riquadro bianco, una riga per categoria con frecce su/giù) e, nel riquadro giallo di
+  "Elimina account", il link "Voglio solo svuotare la dispensa"; via la lampada dalla testata della
+  Spesa e la maniglia dalle card delle occasioni.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

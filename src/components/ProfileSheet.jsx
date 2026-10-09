@@ -6,7 +6,8 @@
 // dispensa", "Esci", privacy / elimina account). L'ingranaggio in testata non
 // c'è più. Veste manifesto: righe sottili, pillole.
 import { useState, useEffect } from "react";
-import { Trash2, Leaf, Users } from "lucide-react";
+import { Leaf, Users, ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
+import { CAT_ICON } from "../constants.js";
 import IconaChiudi from "./IconaChiudi.jsx";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
@@ -16,11 +17,13 @@ import { parsePrefs } from "../lib/prefs.js";
 
 export default function ProfileSheet({
   email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
+  catOrder = [], onMoveCat,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
   onDeleteAccount, onLogout, onOpenPrivacy, isPro = true, onOpenPaywall,
 }) {
   const [username, setUsernameState] = useState("");
   const [membersKey, setMembersKey] = useState(0);  // forza il refresh della lista membri
+  const [catsOpen, setCatsOpen] = useState(false);  // "Ordine delle categorie" aperto
   const understood = parsePrefs(foodPrefs).labels;  // esclusioni capite dal testo delle esigenze
 
   useEffect(() => { getMyUsername().then(setUsernameState).catch(() => {}); }, []);
@@ -106,8 +109,45 @@ export default function ProfileSheet({
             </p>
           )}
 
-          {/* Impostazioni: stesse righe di prima, ora qui. "Svuota dispensa"
-              sta tra le righe, subito prima di "Esci". */}
+          {/* Ordine delle categorie della Dispensa: chiuso di serie (si tocca
+              di rado), si apre con un tocco; frecce su/giù per ogni riga. */}
+          <button
+            onClick={() => setCatsOpen((v) => !v)}
+            aria-expanded={catsOpen}
+            className="sezione mt-6 flex w-full items-center justify-between text-left"
+          >
+            Ordine delle categorie
+            <ChevronDown className={`h-[18px] w-[18px] transition-transform duration-200 ${catsOpen ? "rotate-180" : ""}`} />
+          </button>
+          {catsOpen && (
+            <ul className="animate-fade-in mt-2 divide-y divide-riga rounded-card bg-white px-3.5">
+              {catOrder.map((c, i) => (
+                <li key={c} className="flex min-h-[44px] items-center gap-2.5">
+                  <span className="text-[1.05rem] leading-none">{CAT_ICON[c]}</span>
+                  <span className="min-w-0 flex-1 truncate text-[0.98rem] font-bold tracking-[-0.01em] text-ink">{c}</span>
+                  <button
+                    onClick={() => onMoveCat(c, -1)}
+                    disabled={i === 0}
+                    aria-label={`Sposta su ${c}`}
+                    className="flex h-11 w-10 items-center justify-center text-ink transition active:scale-90 disabled:opacity-25"
+                  >
+                    <ArrowUp className="h-[18px] w-[18px]" />
+                  </button>
+                  <button
+                    onClick={() => onMoveCat(c, 1)}
+                    disabled={i === catOrder.length - 1}
+                    aria-label={`Sposta giù ${c}`}
+                    className="flex h-11 w-10 items-center justify-center text-ink transition active:scale-90 disabled:opacity-25"
+                  >
+                    <ArrowDown className="h-[18px] w-[18px]" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Impostazioni. "Svuota dispensa" non è più una riga: sta dietro
+              "Elimina account", in fondo. */}
           <SettingsSection
             close={close}
             onDeleteAccount={onDeleteAccount}
@@ -115,15 +155,8 @@ export default function ProfileSheet({
             onOpenPrivacy={onOpenPrivacy}
             isPro={isPro}
             onOpenPaywall={onOpenPaywall}
-          >
-            <button
-              onClick={() => { close(); onClearPantry(); }}
-              className="flex min-h-[60px] w-full items-center gap-3 border-b border-riga py-2.5 text-left"
-            >
-              <Trash2 className="h-[19px] w-[19px] shrink-0 text-ink" />
-              <span className="block text-[1rem] font-bold tracking-[-0.01em] text-ink">Svuota dispensa</span>
-            </button>
-          </SettingsSection>
+            onClearPantry={() => { close(); onClearPantry(); }}
+          />
         </div>
       )}
     </Sheet>

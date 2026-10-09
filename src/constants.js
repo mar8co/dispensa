@@ -28,14 +28,6 @@ export const PICKER_CATS = (() => {
   return arr;
 })();
 
-// Durata tipica (giorni) dei freschi, per PROPORRE una scadenza quando la
-// spesa passa in dispensa. È solo un suggerimento modificabile: gli scaffali
-// (pasta, conserve, surgelati…) non ne hanno, la data vera è sulla confezione.
-export const SHELF_LIFE_DAYS = {
-  "Verdura": 5, "Frutta": 7, "Carne": 3, "Salumi": 7, "Pesce": 2,
-  "Latticini": 7, "Pane e Forno": 3,
-};
-
 export const CAT_ICON = {
   "Verdura": "🥬", "Frutta": "🍎", "Carne": "🥩", "Salumi": "🥓",
   "Pesce": "🐟", "Latticini": "🧀", "Pane e Forno": "🍞",
@@ -225,8 +217,6 @@ export const RECIPE_CONTEXTS = [
   // Ingrediente principale: se ne sceglie uno solo (vedi CONTEXT_CONFLICTS in useRecipes).
   { id: "carne", icon: "🥩", label: "Carne", hint: "l'ingrediente principale del piatto deve essere la carne" },
   { id: "pollo", icon: "🍗", label: "Pollo", hint: "l'ingrediente principale deve essere il pollo; proponi modi DIVERSI tra loro di cucinarlo (tagli, cotture e condimenti differenti)" },
-  { id: "pesce", icon: "🐟", label: "Pesce", hint: "l'ingrediente principale del piatto deve essere il pesce" },
-  { id: "verdure", icon: "🥬", label: "Verdure", hint: "il piatto deve essere a base di verdure, senza carne né pesce" },
   { id: "legumi", icon: "🫘", label: "Legumi", hint: "l'ingrediente principale del piatto devono essere i legumi" },
   // Si combinano con le altre (pasta al pesce, frittata di verdure): nessun conflitto.
   { id: "pasta", icon: "🍝", label: "Pasta", hint: "il piatto deve essere una pasta" },

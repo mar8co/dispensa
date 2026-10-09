@@ -3,7 +3,7 @@
 // evidenziato in modo discreto (cartellino nero "Oggi" e bordo nero); i giorni
 // passati restano visibili ma attenuati e compressi. Toccando uno slot si apre il foglio:
 // vuoto → scegli dal ricettario / piatto libero / genera un'idea;
-// pieno → cucina (CookModal via bridge), mancanti alla spesa, cambia, rimuovi.
+// pieno → tre azioni sole (dal 09/10): cucinato, cambia, rimuovi.
 import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Sun, Moon, Plus, Minus, Check, Sparkles,
@@ -13,7 +13,6 @@ import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { isoDate, mondayOf, addDays } from "../hooks/useMealPlan.jsx";
 import { FOGLIO_NERO } from "../lib/colors.js";
-import { shoppingQty } from "../lib/pantry.js";
 
 const SLOTS = [
   { id: "pranzo", label: "Pranzo", Icon: Sun },
@@ -38,13 +37,12 @@ function weekLabel(weekStart) {
 
 // Foglio dello slot: scelta del piatto (vuoto) o azioni sul piatto (pieno).
 function MealSlotSheet({
-  date, slot, meal, savedRecipes, hasIngredient,
-  onPick, onCook, onMarkCooked, onAddMissing, onRemove, onGoIdeas, onChangeServings, onClose,
+  date, slot, meal, savedRecipes,
+  onPick, onCook, onMarkCooked, onRemove, onGoIdeas, onClose,
 }) {
   const [picking, setPicking] = useState(!meal); // pieno → azioni; vuoto → scelta
   const [query, setQuery] = useState("");
   const [free, setFree] = useState("");
-  const [missingAdded, setMissingAdded] = useState(false);
 
   // Il foglio resta MONTATO durante l'animazione di chiusura di Sheet: se un
   // pick arriva proprio in quella finestra (close() + onPick() nello stesso
@@ -65,8 +63,6 @@ function MealSlotSheet({
     .sort((a, b) => Number(b.saved) - Number(a.saved))
     .filter((r) => r.title.toLowerCase().includes(query.trim().toLowerCase()))
     .slice(0, 30);
-
-  const missing = (meal?.data?.ingredients || []).filter((ing) => !hasIngredient(ing.name));
 
   return (
     <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
@@ -91,59 +87,10 @@ function MealSlotSheet({
               )}
 
               <div className="mt-4 space-y-2">
-                {/* Porzioni pianificate (solo ricette): "Ho cucinato" scala la
-                    dispensa in proporzione a questo numero. */}
-                {meal.data && !meal.cooked_at && (() => {
-                  const servings = Number(meal.data.planServings) || Number(meal.data.servings) || 2;
-                  return (
-                    <div className="flex items-center justify-between border-y-[1.5px] border-ink py-2">
-                      <span className="text-[1rem] font-bold text-ink">Porzioni</span>
-                      <div className="inline-flex items-center gap-1">
-                        <button
-                          onClick={() => onChangeServings(servings - 1)}
-                          disabled={servings <= 1}
-                          aria-label="Meno porzioni"
-                          className="flex h-[34px] w-[34px] items-center justify-center rounded-full border-[1.5px] border-ink text-ink transition active:scale-90 disabled:opacity-30"
-                        >
-                          <Minus className="h-3.5 w-3.5" />
-                        </button>
-                        <span className="num w-9 text-center text-[1.15rem] font-extrabold text-ink">{servings}</span>
-                        <button
-                          onClick={() => onChangeServings(servings + 1)}
-                          aria-label="Più porzioni"
-                          className="flex h-[34px] w-[34px] items-center justify-center rounded-full border-[1.5px] border-ink text-ink transition active:scale-90"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })()}
                 {!meal.cooked_at && (
                   <Button variant="primary" full onClick={() => { close(); (meal.data ? onCook : onMarkCooked)(meal); }}>
                     <Utensils className="h-4 w-4" /> {meal.data ? "Ho cucinato questa ricetta" : "Segna come cucinato"}
                   </Button>
-                )}
-                {meal.data && missing.length > 0 && (
-                  missingAdded ? (
-                    <p className="text-center text-[0.86rem] font-semibold text-tenue">
-                      {missing.length} {missing.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista della spesa.
-                    </p>
-                  ) : (
-                    <Button
-                      variant="cook" size="sm" full
-                      onClick={async () => {
-                        // In lista con la quantità della ricetta per le porzioni pianificate.
-                        const base = Number(meal.data.servings) || 2;
-                        const f = (Number(meal.data.planServings) || base) / base;
-                        await onAddMissing(missing.map((i) => ({ name: i.name, qty: shoppingQty(i.qty, f) })));
-                        setMissingAdded(true);
-                      }}
-                    >
-                      <ShoppingCart className="h-3.5 w-3.5" />
-                      Aggiungi {missing.length} {missing.length === 1 ? "mancante" : "mancanti"} alla spesa
-                    </Button>
-                  )
                 )}
                 <Button variant="secondary" full onClick={() => setPicking(true)}>
                   <RefreshCw className="h-4 w-4" /> Cambia piatto

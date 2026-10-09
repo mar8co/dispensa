@@ -6,7 +6,7 @@ import { onOutsideTap } from "../lib/outsideTap.js";
 import { useState, useRef, useEffect } from "react";
 import {
   X, Search, ShoppingCart,
-  SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown, Sparkles,
+  SlidersHorizontal, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
 import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, qtyLabel, isLow, changeUnit } from "../lib/pantry.js";
@@ -134,7 +134,7 @@ export default function PantryTab({
   shared = false,
   search, setSearch, sort, setSort,
   grouped, cardRefs,
-  onMoveCat, onAutoSave, onSetExpiry, removeItem,
+  onAutoSave, onSetExpiry, removeItem,
   expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
   onFinish,
 }) {
@@ -445,7 +445,7 @@ export default function PantryTab({
 
       {/* Sezioni a tutta larghezza, con intestazione fissa */}
       <div className="space-y-5">
-        {grouped.map(({ cat, list }, gi) => (
+        {grouped.map(({ cat, list }) => (
           <section
             key={cat}
             ref={(el) => { cardRefs.current[cat] = el; }}
@@ -455,28 +455,6 @@ export default function PantryTab({
               <span className="text-[1.15rem] leading-none">{CAT_ICON[cat]}</span>
               <h2 className="min-w-0 truncate text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">{cat}</h2>
               <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{String(list.length).padStart(2, "0")}</span>
-              {/* Frecce per riordinare, nude e discrete: la prima categoria
-                  può solo scendere, l'ultima solo salire */}
-              <div className="ml-auto flex shrink-0 items-center">
-                {gi > 0 && (
-                  <button
-                    onClick={() => onMoveCat(cat, -1)}
-                    className="-my-1.5 flex h-11 w-10 items-center justify-center text-ink transition active:scale-90"
-                    aria-label="Sposta su"
-                  >
-                    <ArrowUp className="h-[18px] w-[18px]" />
-                  </button>
-                )}
-                {gi < grouped.length - 1 && (
-                  <button
-                    onClick={() => onMoveCat(cat, 1)}
-                    className="-my-1.5 flex h-11 w-10 items-center justify-center text-ink transition active:scale-90"
-                    aria-label="Sposta giù"
-                  >
-                    <ArrowDown className="h-[18px] w-[18px]" />
-                  </button>
-                )}
-              </div>
             </div>
 
             <ul>

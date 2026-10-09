@@ -26,7 +26,6 @@ export function usePantry({
   showToast,
   dismissToast,
   catOrder,
-  setCatOrder,
   bumpShopHistory,
   addToShoppingMerged,
 }) {
@@ -196,9 +195,9 @@ export function usePantry({
     });
   }
 
-  // Salvataggio automatico dal pannello prodotto: aggiorna subito e mostra
-  // il toast "Modifica salvata" con Annulla (ripristina i valori di apertura).
-  async function autoSaveItem(it, fields, restore) {
+  // Salvataggio automatico dal pannello prodotto: aggiorna subito, in
+  // silenzio (l'avviso "Modifica salvata" a ogni ritocco è stato tolto il 09/10).
+  async function autoSaveItem(it, fields) {
     setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...fields } : x)));
     persistUpdate(it.id, fields);
     // Quantità arrivata a zero: proponi la lista invece del semplice "salvata".
@@ -210,11 +209,6 @@ export function usePantry({
       }, "metti nella lista");
       return;
     }
-    showToast(<strong>Modifica salvata</strong>, async () => {
-      setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...restore } : x)));
-      persistUpdate(it.id, restore);
-      dismissToast();
-    }, "Annulla", "ink");
   }
 
   // "Finito" con un gesto (la riga scorsa verso sinistra, vedi PantryTab): la
@@ -279,21 +273,6 @@ export function usePantry({
     }
   }
 
-  // Sposta una categoria su/giù di una posizione rispetto a quelle visibili.
-  function moveCategory(cat, dir) {
-    const visible = grouped.map((g) => g.cat);
-    const i = visible.indexOf(cat);
-    const target = visible[i + dir];
-    if (!target) return;
-    setCatOrder((order) => {
-      const arr = order.filter((c) => c !== cat);
-      const ti = arr.indexOf(target);
-      if (ti < 0) return order;
-      arr.splice(dir > 0 ? ti + 1 : ti, 0, cat);
-      return arr;
-    });
-  }
-
   // "Cosa mi manca": true se l'ingrediente trova corrispondenza in dispensa.
   function hasIngredient(name) {
     // I finiti (quantità 0) non contano: non li hai più.
@@ -312,6 +291,6 @@ export function usePantry({
     grouped, expiringItems, expiredCount, expiringSoonCount, isOut, hasIngredient,
     // funzioni
     mergeItems, addManual, submitManual, removeItem, clearPantry,
-    autoSaveItem, setItemExpiry, moveCategory, finishItem,
+    autoSaveItem, setItemExpiry, finishItem,
   };
 }

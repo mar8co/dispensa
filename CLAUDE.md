@@ -61,8 +61,8 @@
   tocco ≥ 44px, rispetto di `env(safe-area-inset-*)`.
 - **Veste "manifesto svizzero"** (dettagli in `DESIGN-ATTUALE.md`): un colore
   pieno per schermata (`PAGE_COLOR` in `src/lib/colors.js`, applicato con
-  `usePageColor`: Dispensa beige `#dcceb3` (token `sabbia`), Spesa bianco, Ricette arancio
-  (dal 09/10, prima verde), ricetta aperta dello stesso colore), inchiostro nero, Inter Tight, titoli `.gigante`,
+  `usePageColor`: Dispensa beige `#dcceb3` (token `sabbia`), Spesa bianco, Ricette ROSA
+  (dal 09/10 sera; prima arancio, prima ancora verde), ricetta aperta dello stesso colore), inchiostro nero, Inter Tight, titoli `.gigante`,
   etichette `.micro`, righe sottili al posto delle card, pillole e tondi.
   Niente `backdrop-filter`/`filter: blur`/`mix-blend-mode`, animazioni solo
   `transform`/`opacity`. Per vedere le schermate senza login:
@@ -240,6 +240,19 @@ una regola locale basta.
   tradotto in esclusioni applicate al piano della settimana e a "Puoi farle con
   quello che hai"; il Profilo mostra cosa è stato capito. Ogni nuova funzione
   che propone ricette SENZA AI deve passare da `allowedBy(foodPrefs)`.
+  **Semplificazioni del 09/10 sera (decise dall'utente, punto per punto)**:
+  "Sposta in dispensa" sposta SUBITO (tolta la revisione con le scadenze
+  proposte e `SHELF_LIFE_DAYS`); tolti l'avviso "Modifica salvata", la
+  lampada (schermo acceso) della Spesa, il trascinamento delle occasioni, i
+  timer e la spunta dei passaggi nella pagina della ricetta (restano nella
+  Modalità cucina, ora bottone grande giallo), le pillole Pesce e Verdure
+  (doppioni delle occasioni), le pillole per passare da una dispensa
+  all'altra; il foglio del pasto nel Piano ha tre azioni (cucinato, cambia,
+  rimuovi); l'ordine delle categorie si cambia dal Profilo ("Ordine delle
+  categorie", a scomparsa) e non più dalle intestazioni; "Svuota dispensa" sta
+  dietro "Elimina account"; Ricette rosa; titoli `.gigante` più bassi.
+  **Restano, per scelta**: filtri di ordinamento, "Cucina con questo
+  prodotto", Barcode, "Seleziona tutto", foto dei piatti, Piano dentro Ricette.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con
   tocco sul nome = modifica (resta così) e "+" su tutte le schede (resta).
 - **Prossimo lavoro grande**: resta la Fase 3 (prodotti su App Store Connect,

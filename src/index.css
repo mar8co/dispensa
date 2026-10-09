@@ -60,7 +60,7 @@ svg.lucide {
   /* Titolo di pagina enorme e stretto. word-spacing: con -0.065em lo spazio
      tra le parole quasi sparisce ("Haifame?"). */
   .gigante {
-    font-size: clamp(3.4rem, 17vw, 5.4rem);
+    font-size: clamp(2.6rem, 12.5vw, 4rem); /* dal 09/10: prima 3.4-5.4rem, rubava mezza schermata */
     font-weight: 800;
     letter-spacing: -0.065em;
     word-spacing: 0.1em;

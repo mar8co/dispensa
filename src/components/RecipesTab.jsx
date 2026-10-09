@@ -6,7 +6,7 @@
 // manca", timer e "Ho cucinato questa ricetta".
 import { useState, useEffect, useMemo, useRef } from "react";
 import {
-  Plus, Minus, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
+  Plus, Minus, ArrowLeft, Clock, Gauge, Utensils,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
   ChefHat, Trash2, Check, CalendarPlus, Lock,
 } from "lucide-react";
@@ -18,7 +18,6 @@ import { allowedBy } from "../lib/prefs.js";
 import BASE_RECIPES from "../data/ricetteBase.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
-import StepTimer from "./StepTimer.jsx";
 import CookingMode from "./CookingMode.jsx";
 import PlanWeek from "./PlanWeek.jsx";
 import PlanDaySheet from "./PlanDaySheet.jsx";
@@ -58,8 +57,7 @@ function IdeaSkeleton() {
 }
 
 export default function RecipesTab({
-  orderedModes, mode, modeCardRefs,
-  dragMode, onModeDragStart, onModeDragMove, onModeDragEnd, chooseMode,
+  orderedModes, mode, chooseMode,
   ideas, loadingIdeas, openRecipe, backToModes,
   recipe, loadingRecipe, recipeErr,
   servings, setServings, factor, backToIdeas,
@@ -81,7 +79,6 @@ export default function RecipesTab({
   const [ask, setAsk] = useState("");          // "Cosa ti va?"
   const [shelf, setShelf] = useState("salvate"); // tab del ricettario
   const [struck, setStruck] = useState({});    // ingredienti spuntati
-  const [stepsDone, setStepsDone] = useState({}); // passaggi completati
   const [cooking, setCooking] = useState(false);  // modalità cucina
   // Sotto-vista iniziale: "piano" se si arriva dal deep-link della notifica
   // delle 18:30 con cena pianificata (/?view=piano), altrimenti "idee".
@@ -93,7 +90,7 @@ export default function RecipesTab({
   // piazziamo lì automaticamente, chiudendo il giro generazione → piano.
   const [pendingSlot, setPendingSlot] = useState(null); // { date, slot } | null
   useEffect(() => {
-    setAddedMissing(false); setStruck({}); setStepsDone({}); setCooking(false);
+    setAddedMissing(false); setStruck({}); setCooking(false);
     setPlanSheet(false);
     if (recipe && pendingSlot && plan) {
       plan.planMeal(isoDate(pendingSlot.date), pendingSlot.slot, { title: recipe.title, data: recipe });
@@ -346,27 +343,13 @@ export default function RecipesTab({
             {orderedModes.map((m) => (
               <div
                 key={m.id}
-                ref={(el) => { modeCardRefs.current[m.id] = el; }}
                 onClick={() => (isPro ? online && chooseMode(m) : onNeedAi?.())}
                 aria-disabled={isPro && !online}
-                className={`relative cursor-pointer rounded-card bg-white p-4 text-left transition active:scale-[0.98] ${dragMode === m.id ? "ring-2 ring-ink" : ""} ${isPro && !online ? "opacity-50" : ""}`}
+                className={`relative cursor-pointer rounded-card bg-white p-4 text-left transition active:scale-[0.98] ${isPro && !online ? "opacity-50" : ""}`}
               >
                 <div className="mb-2 text-2xl">{m.icon}</div>
-                <div className="pr-5 text-[1.05rem] font-extrabold leading-tight tracking-[-0.03em] text-ink">{m.id}</div>
+                <div className="text-[1.05rem] font-extrabold leading-tight tracking-[-0.03em] text-ink">{m.id}</div>
                 <div className="mt-1 text-[0.8rem] font-medium leading-snug text-tenue">{m.desc}</div>
-                <button
-                  data-noswipe
-                  onPointerDown={(e) => { e.stopPropagation(); onModeDragStart(e, m.id); }}
-                  onPointerMove={onModeDragMove}
-                  onPointerUp={onModeDragEnd}
-                  onPointerCancel={onModeDragEnd}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ touchAction: "none" }}
-                  className="absolute right-1.5 top-1.5 cursor-grab rounded-full p-1.5 text-ink/30 transition active:cursor-grabbing active:text-ink"
-                  aria-label="Trascina per riordinare"
-                >
-                  <GripVertical className="h-4 w-4" />
-                </button>
               </div>
             ))}
           </div>
@@ -659,31 +642,23 @@ export default function RecipesTab({
             )
           )}
 
-          {/* Modalità cucina: schermo intero, un passaggio alla volta */}
-          <Button variant="secondary" full className="mt-7" onClick={() => setCooking(true)}>
-            <ChefHat className="h-[18px] w-[18px]" /> Modalità cucina
+          {/* Modalità cucina: il modo consigliato di seguire la ricetta (schermo
+              intero, un passaggio alla volta, timer e schermo sempre acceso).
+              Bottone grande e giallo: è l'unico posto dove restano i timer e
+              la spunta dei passaggi, tolti da questa pagina il 09/10. */}
+          <Button variant="primary" size="lg" full className="mt-7 bg-giallo text-ink shadow-[inset_0_0_0_1.5px_#0a0a0a]" onClick={() => setCooking(true)}>
+            <ChefHat className="h-5 w-5" /> Modalità cucina
           </Button>
+          <p className="mt-2 text-center text-[0.8rem] font-medium text-tenue">Un passaggio alla volta, con i timer</p>
 
           <h3 className="mb-4 mt-8 border-b-[1.5px] border-ink pb-[7px] text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Procedimento</h3>
           <ol className="space-y-5">
-            {(recipe.steps || []).map((s, i) => {
-              const done = !!stepsDone[i];
-              return (
-                <li key={i} className="flex gap-3.5">
-                  <button
-                    onClick={() => setStepsDone((p) => ({ ...p, [i]: !p[i] }))}
-                    aria-label={done ? "Segna da fare" : "Segna come fatto"}
-                    className={`num flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.95rem] font-extrabold transition active:scale-90 ${done ? "bg-white text-ink" : "bg-ink text-white"}`}
-                  >
-                    {done ? <Check className="h-4 w-4" /> : i + 1}
-                  </button>
-                  <div className="flex-1 pt-0.5">
-                    <p className={`text-[1.02rem] font-medium leading-relaxed transition ${done ? "text-ink/50 line-through" : "text-ink"}`}>{s.text}</p>
-                    {s.timer ? <StepTimer minutes={Number(s.timer)} id={`${recipe.title}-${i}`} label={recipe.title} /> : null}
-                  </div>
-                </li>
-              );
-            })}
+            {(recipe.steps || []).map((s, i) => (
+              <li key={i} className="flex gap-3.5">
+                <span className="num flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-[0.95rem] font-extrabold text-white">{i + 1}</span>
+                <p className="flex-1 pt-0.5 text-[1.02rem] font-medium leading-relaxed text-ink">{s.text}</p>
+              </li>
+            ))}
           </ol>
 
           <Button variant="primary" size="lg" full className="mt-7" onClick={openCookModal}>

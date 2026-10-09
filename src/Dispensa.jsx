@@ -4,12 +4,12 @@ import { Loader2 } from "lucide-react";
 
 import {
   CATEGORIES, MODES, RECEIPT_PROMPT, NAME_RULES, CATEGORY_PROMPT,
-  ITEMS_SCHEMA, SHELF_LIFE_DAYS,
+  ITEMS_SCHEMA,
 } from "./constants.js";
 import {
   guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  matchKey, isStapleQb, isQbQty, isSpoonQty, dateInDays,
+  matchKey, isStapleQb, isQbQty, isSpoonQty,
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
 import { cleanBarcodeName, parseSpokenList } from "./lib/parse.js";
@@ -125,9 +125,6 @@ export default function Dispensa({ session }) {
   const cardRefs = useRef({});
 
   const [modeOrder, setModeOrder] = useState(MODES.map((m) => m.id));
-  const [dragMode, setDragMode] = useState(null);
-  const dragModeRef = useRef(null);
-  const modeCardRefs = useRef({});
 
 
   // lista della spesa: impostazioni persistite (la collezione e la logica
@@ -174,9 +171,6 @@ export default function Dispensa({ session }) {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [voiceReview, setVoiceReview] = useState(false); // il riepilogo aperto viene dalla voce → mostra "Aggiungi altri prodotti"
   const voiceAppendRef = useRef(false); // il prossimo risultato voce si ACCODA al riepilogo invece di sostituirlo
-  // Revisione aperta da "Sposta in dispensa": id degli articoli della lista da
-  // togliere alla conferma (null = la revisione viene da foto/barcode/voce).
-  const [fromShopping, setFromShopping] = useState(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
 
@@ -235,9 +229,9 @@ export default function Dispensa({ session }) {
     confirmClear, setConfirmClear,
     grouped, expiringItems, expiredCount, expiringSoonCount, isOut, hasIngredient,
     mergeItems, addManual, submitManual, removeItem, clearPantry,
-    autoSaveItem, setItemExpiry, moveCategory, finishItem,
+    autoSaveItem, setItemExpiry, finishItem,
   } = usePantry({
-    session, showToast, dismissToast, catOrder, setCatOrder,
+    session, showToast, dismissToast, catOrder,
     bumpShopHistory, addToShoppingMerged,
   });
 
@@ -580,38 +574,28 @@ export default function Dispensa({ session }) {
 
   // --- Lista della spesa: stato e logica estratti in hooks/useShopping.jsx ---
   // Resta qui solo il bridge verso la dispensa (scrive pantry_items).
-  // "Sposta in dispensa". Se nel carrello ci sono dei FRESCHI si apre la
-  // revisione, con una scadenza PROPOSTA per ciascuno (durata tipica della
-  // categoria) da correggere o togliere: così la data entra nel percorso
-  // normale, senza riaprire ogni prodotto dopo. Se di freschi non ce ne sono
-  // (pasta, conserve, bevande…) non c'è nulla da rivedere: si sposta subito,
-  // come prima, senza un passo in più. Se in dispensa c'è già lo stesso
-  // prodotto con una sua scadenza non si propone nulla (non va sovrascritta
-  // con una stima).
+  // "Sposta in dispensa": sposta subito, senza passi in più (la revisione con
+  // le scadenze proposte è stata tolta il 09/10: la data, se serve, si mette
+  // dal prodotto).
+  // Ordine delle categorie della Dispensa: si cambia dal Profilo, una
+  // posizione alla volta (prima c'erano le frecce su ogni intestazione).
+  function moveCatInOrder(cat, dir) {
+    setCatOrder((order) => {
+      const i = order.indexOf(cat);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= order.length) return order;
+      const arr = [...order];
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return arr;
+    });
+  }
   async function moveCheckedToPantry() {
     const checked = shopping.filter((x) => x.checked);
     if (!checked.length) return;
-    const list = checked.map((x) => {
-      const category = catForShopping(x.name);
-      const days = SHELF_LIFE_DAYS[category];
-      const existing = items.find((i) => matchKey(i.name) === matchKey(x.name));
-      return {
-        name: x.name, qty: x.qty, category,
-        expiry: days && !existing?.expiry ? dateInDays(days) : "",
-      };
-    });
-    const ids = checked.map((x) => x.id);
-    if (!list.some((x) => x.expiry)) {
-      await mergeItems(list);
-      leaveShopping(ids);
-      showToast(`${list.length} ${list.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`);
-      return;
-    }
-    setScanItems(list);
-    setFromShopping(ids);
-    setVoiceReview(false);
-    bumpModal("scan");
-    setScanOpen(true);
+    const list = checked.map((x) => ({ name: x.name, qty: x.qty, category: catForShopping(x.name), expiry: "" }));
+    await mergeItems(list);
+    leaveShopping(checked.map((x) => x.id));
+    showToast(`${list.length} ${list.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`);
   }
   // Gli articoli spostati in dispensa escono dalla lista (subito a schermo,
   // in coda se offline) ed entrano nello storico degli acquisti.
@@ -624,46 +608,6 @@ export default function Dispensa({ session }) {
     });
     bumpShopHistory(moved.map((x) => x.name)); // acquisti completati
   }
-  // --- Riordino generico (categorie e occasioni) ---
-  function moveInOrder(setOrder, dragged, target) {
-    setOrder((order) => {
-      const arr = [...order];
-      const fromIdx = arr.indexOf(dragged);
-      const toIdxOrig = arr.indexOf(target);
-      if (fromIdx < 0 || toIdxOrig < 0) return order;
-      arr.splice(fromIdx, 1);
-      let insertAt = arr.indexOf(target);
-      if (fromIdx < toIdxOrig) insertAt += 1;
-      arr.splice(insertAt, 0, dragged);
-      return arr;
-    });
-  }
-
-  // --- Trascinamento occasioni di ricetta ---
-  function onModeDragStart(e, id) {
-    e.preventDefault();
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignora */ }
-    dragModeRef.current = id;
-    setDragMode(id);
-  }
-  function onModeDragMove(e) {
-    if (!dragModeRef.current) return;
-    const x = e.clientX, y = e.clientY;
-    for (const id in modeCardRefs.current) {
-      const el = modeCardRefs.current[id];
-      if (!el) continue;
-      const r = el.getBoundingClientRect();
-      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-        if (id !== dragModeRef.current) moveInOrder(setModeOrder, dragModeRef.current, id);
-        break;
-      }
-    }
-  }
-  function onModeDragEnd() {
-    dragModeRef.current = null;
-    setDragMode(null);
-  }
-
   // --- Scontrino ---
   // L'immagine arriva già come base64 (scattata dalla fotocamera integrata o
   // scelta dalla galleria nel ReceiptScanModal). Mostra l'overlay di analisi,
@@ -852,14 +796,8 @@ export default function Dispensa({ session }) {
     const valid = (reviewed || []).filter((x) => String(x.name || "").trim());
     if (valid.length) {
       await mergeItems(valid);
-      showToast(fromShopping
-        ? `${valid.length} ${valid.length === 1 ? "prodotto spostato" : "prodotti spostati"} in dispensa`
-        : `${valid.length} ${valid.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"}`);
+      showToast(`${valid.length} ${valid.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"}`);
     }
-    // Dalla spesa: gli articoli del carrello escono dalla lista (anche quelli
-    // tolti a mano nella revisione: erano comunque stati presi).
-    if (fromShopping?.length) leaveShopping(fromShopping);
-    setFromShopping(null);
     setScanItems([]);
     setVoiceReview(false);
   }
@@ -1220,7 +1158,6 @@ export default function Dispensa({ session }) {
             shared={sharedHousehold}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} cardRefs={cardRefs}
-            onMoveCat={moveCategory}
             onAutoSave={autoSaveItem} onSetExpiry={setItemExpiry} removeItem={removeItem}
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
@@ -1233,9 +1170,7 @@ export default function Dispensa({ session }) {
         {view === "ricette" && (
           <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-ink" /></div>}>
           <RecipesTab
-            orderedModes={orderedModes} mode={mode} modeCardRefs={modeCardRefs}
-            dragMode={dragMode} onModeDragStart={onModeDragStart} onModeDragMove={onModeDragMove}
-            onModeDragEnd={onModeDragEnd} chooseMode={chooseMode}
+            orderedModes={orderedModes} mode={mode} chooseMode={chooseMode}
             ideas={ideas} loadingIdeas={loadingIdeas} openRecipe={openRecipe} backToModes={backToModes}
             recipe={recipe} loadingRecipe={loadingRecipe} recipeErr={recipeErr}
             servings={servings} setServings={changeServings} factor={factor} backToIdeas={backToIdeas}
@@ -1386,6 +1321,8 @@ export default function Dispensa({ session }) {
           onHouseholdsChanged={refreshHouseholds}
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
+          catOrder={catOrder}
+          onMoveCat={moveCatInOrder}
           onClose={() => { setProfileOpen(false); openPendingSheet(); }}
           onDeleteAccount={deleteAccount}
           onLogout={logout}
@@ -1443,14 +1380,8 @@ export default function Dispensa({ session }) {
         <ReviewScanModal
           key={modalEpoch.current.scan}
           initialItems={scanItems}
-          onCancel={() => { setScanOpen(false); setScanItems([]); setVoiceReview(false); setFromShopping(null); }}
+          onCancel={() => { setScanOpen(false); setScanItems([]); setVoiceReview(false); }}
           onConfirm={confirmScan}
-          {...(fromShopping ? {
-            kicker: "Dalla spesa",
-            title: "Metti in dispensa",
-            hint: "Ai freschi ho proposto una scadenza tipica: correggila o toglila, poi conferma.",
-            keepOnClose: true,
-          } : {})}
           onAddMore={voiceReview ? handleReviewAddMore : undefined}
         />
       )}
