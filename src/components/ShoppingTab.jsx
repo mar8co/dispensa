@@ -18,7 +18,7 @@ import {
   Share, Lightbulb, X,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
-import { atMinQty, adjustQty, formatQtyDisplay, matchKey } from "../lib/pantry.js";
+import { atMinQty, adjustQty, formatQtyDisplay, matchKey, changeUnit } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 import Barattoli from "./Barattoli.jsx";
@@ -385,8 +385,7 @@ export default function ShoppingTab({
     onAutoSave(it, { category: c }, { category: snapRef.current.category });
   }
   function applyUnit(u) {
-    const DEFAULTS = { "": "1", g: "100 g", kg: "1 kg", l: "1 l" };
-    const v = DEFAULTS[u] ?? "1";
+    const v = changeUnit(qtyDraft, u);
     setQtyDraft(v);
     clearTimeout(qtyTimer.current);
     commitQtyNow(v);

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
-  subtractQty, qtyStep, adjustQty, atMinQty, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, matchKey, findMatch,
+  subtractQty, qtyStep, adjustQty, atMinQty, changeUnit, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, matchKey, findMatch,
   toCookFraction, isSpoonQty, formatRecipeQty,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
@@ -270,6 +270,21 @@ describe("adjustQty", () => {
   it("non scende sotto zero e lascia invariato senza numero", () => {
     expect(adjustQty("50 g", -1)).toBe("0 g");
     expect(adjustQty("poca quantità", 1)).toBe("poca quantità");
+  });
+});
+
+describe("changeUnit", () => {
+  it("converte dentro la stessa famiglia", () => {
+    expect(changeUnit("500 g", "kg")).toBe("0,5 kg");
+    expect(changeUnit("1,5 kg", "g")).toBe("1500 g");
+    expect(changeUnit("1 l", "ml")).toBe("1000 ml");
+    expect(changeUnit("250 ml", "l")).toBe("0,25 l");
+  });
+  it("tra famiglie diverse riparte dal valore base", () => {
+    expect(changeUnit("100 g", "")).toBe("1");
+    expect(changeUnit("3", "g")).toBe("100 g");
+    expect(changeUnit("2 kg", "l")).toBe("1 l");
+    expect(changeUnit("1 barattolo", "ml")).toBe("250 ml");
   });
 });
 

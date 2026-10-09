@@ -414,6 +414,22 @@ export function matchKey(s) {
     .trim();
 }
 
+// Cambio di unità dalle pillole (pz · g · kg · ml · l). Dentro la stessa
+// famiglia la quantità si CONVERTE (500 g → 0,5 kg, 1 l → 1000 ml): prima si
+// azzerava sempre al valore base, e si perdeva quello che c'era scritto. Tra
+// famiglie diverse (pezzi ↔ peso ↔ volume) non c'è conversione sensata: si
+// riparte dal valore base dell'unità scelta.
+const UNIT_DEFAULTS = { "": "1", g: "100 g", kg: "1 kg", ml: "250 ml", l: "1 l" };
+export function changeUnit(qty, u) {
+  const p = parseQty(qty);
+  const table = u in WEIGHT_UNITS ? WEIGHT_UNITS : u in VOLUME_UNITS ? VOLUME_UNITS : null;
+  const family = table === WEIGHT_UNITS ? "weight" : table === VOLUME_UNITS ? "volume" : "count";
+  if (table && p && p.base > 0 && p.family === family) {
+    return `${fmtNum(p.base / table[u])} ${u}`;
+  }
+  return UNIT_DEFAULTS[u] ?? "1";
+}
+
 // Passo dello stepper in base all'unità: pezzi ±1, grammi ±50,
 // kg e litri ±0,25 (ml ±250). Scelte dell'utente.
 export function qtyStep(qty) {

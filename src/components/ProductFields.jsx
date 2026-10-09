@@ -7,7 +7,10 @@
 //   riga 1   [nome ................] [categoria emoji] [elimina?]
 //   pillole categoria (si aprono toccando l'emoji, come in Spesa)
 //   {children: contenuto del contesto, es. suggerimenti dell'aggiunta a mano}
-//   riga 2   [scadenza?] [−  qty  +] [pz g kg l]
+//   riga 2   [scadenza?] ............ [−  qty  +]
+//   riga 3   [pz] [g] [kg] [ml] [l]      (cinque pillole larghe uguali)
+// Tutti i comandi sono alti 44px (prima stepper e unità erano 30px, a 2-3px
+// l'uno dall'altro: si sbagliava tasto).
 //
 // La scadenza è una pillola visibile che apre il calendario IN-APP
 // (ExpiryCalendar, niente picker nativo iOS). La ✕ dentro la pillola azzera
@@ -71,7 +74,7 @@ export default function ProductFields({
           aria-label="Categoria"
           aria-expanded={catOpen}
           title="Categoria"
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink transition ${
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink transition ${
             catOpen ? "bg-ink/10" : "bg-white"
           }`}
         >
@@ -81,7 +84,7 @@ export default function ProductFields({
           <button
             type="button"
             onClick={onDelete}
-            className="tondo h-10 w-10"
+            className="tondo h-11 w-11"
             aria-label="Elimina"
           >
             <Trash2 className="h-[18px] w-[18px]" />
@@ -118,14 +121,14 @@ export default function ProductFields({
 
       {children}
 
-      {/* Riga 2 (zona quantità, separata da una riga sottile): scadenza ·
-          stepper in pill · unità. flex-nowrap: la riga non si spezza MAI; se lo
-          spazio è pochissimo cede solo il box scadenza (min-w-0 + testo
-          troncato), mentre stepper e unità (shrink-0) restano sempre interi. */}
-      <div className="mt-3 flex items-center justify-between gap-x-1 border-t border-riga pt-2.5">
+      {/* Zona quantità (separata da una riga sottile). Riga 2: scadenza a
+          sinistra, stepper a destra; se lo spazio è poco cede solo il box
+          scadenza (min-w-0 + testo troncato). Riga 3: le unità. */}
+      <div className="mt-3 border-t border-riga pt-2.5">
+      <div className="flex items-center justify-between gap-2">
         {showExpiry && (
           <div
-            className={`flex h-[34px] min-w-0 items-center rounded-full border-[1.5px] border-ink text-[0.8rem] font-bold transition ${
+            className={`flex h-11 min-w-0 items-center rounded-full border-[1.5px] border-ink text-[0.86rem] font-bold transition ${
               expOpen ? "bg-ink/10" : ""
             } ${expiry ? "text-ink" : "text-tenue"}`}
           >
@@ -138,7 +141,7 @@ export default function ProductFields({
               title="Scadenza"
               aria-haspopup="dialog"
               aria-expanded={expOpen}
-              className={`flex h-full min-w-0 items-center gap-1.5 pl-2.5 ${expiry ? "pr-1" : "pr-3"}`}
+              className={`flex h-full min-w-0 items-center gap-1.5 pl-3.5 ${expiry ? "pr-1" : "pr-4"}`}
             >
               <Calendar className="h-4 w-4 shrink-0" />
               <span className="min-w-0 truncate">{expiry ? formatExpiry(expiry) : "Scadenza"}</span>
@@ -147,7 +150,7 @@ export default function ProductFields({
               <button
                 type="button"
                 onClick={() => { onExpiry(""); setExpOpen(false); }}
-                className="flex h-full shrink-0 items-center pl-0.5 pr-2.5"
+                className="flex h-full w-10 shrink-0 items-center justify-center"
                 aria-label="Rimuovi scadenza"
               >
                 <X className="h-3.5 w-3.5" />
@@ -157,17 +160,17 @@ export default function ProductFields({
         )}
 
         {/* Stepper a cerchi: − valore + (il valore resta un campo scrivibile). */}
-        <div data-tour="qty-stepper" className="flex h-[34px] shrink-0 items-center gap-0.5">
+        <div data-tour="qty-stepper" className="flex h-11 shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={onMinus}
             disabled={minusDisabled}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-full border-[1.5px] border-ink text-lg font-semibold leading-none text-ink transition active:scale-90 disabled:opacity-30"
+            className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-ink text-xl font-semibold leading-none text-ink transition active:scale-90 disabled:opacity-30"
             aria-label="Diminuisci"
           >−</button>
           <input
             inputMode="decimal"
-            className="testo-grande num h-full w-10 bg-transparent text-center text-[1rem] font-extrabold tracking-[-0.03em] text-ink outline-none"
+            className="testo-grande num h-full w-14 bg-transparent text-center text-[1.1rem] font-extrabold tracking-[-0.03em] text-ink outline-none"
             value={qtyValue}
             onChange={(e) => onQtyInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && onEnter) onEnter(); }}
@@ -176,13 +179,15 @@ export default function ProductFields({
           <button
             type="button"
             onClick={onPlus}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-full border-[1.5px] border-ink text-lg font-semibold leading-none text-ink transition active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-ink text-xl font-semibold leading-none text-ink transition active:scale-90"
             aria-label="Aumenta"
           >+</button>
         </div>
 
-        <div data-tour="unit-chips" className="flex shrink-0 gap-[3px]">
-          {["", "g", "kg", "l"].map((u) => {
+      </div>
+
+        <div data-tour="unit-chips" className="mt-2 grid grid-cols-5 gap-1.5">
+          {["", "g", "kg", "ml", "l"].map((u) => {
             const active = u === "" ? unitActive === "" : unitActive === u;
             return (
               <button
@@ -190,7 +195,7 @@ export default function ProductFields({
                 type="button"
                 onClick={() => onUnit(u)}
                 aria-pressed={active}
-                className="pillola h-[30px] min-h-0 min-w-[30px] px-1.5 text-[0.8rem]"
+                className="pillola h-11 min-h-0 px-0 text-[0.9rem]"
               >
                 {u || "pz"}
               </button>

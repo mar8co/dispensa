@@ -9,7 +9,7 @@ import {
   SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
-import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, isLow } from "../lib/pantry.js";
+import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, isLow, changeUnit } from "../lib/pantry.js";
 import { tourSignal } from "../lib/tour.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
@@ -180,12 +180,10 @@ export default function PantryTab({
     openItemRef.current = { ...it, category: c };
     onAutoSave(it, { category: c }, { category: snapRef.current.category });
   }
-  // Cambio unità: la quantità si RESETTA sempre al default dell'unità
-  // scelta (mai ereditata dal valore precedente — 100 g → pz dà 1 pz,
-  // non 100 pz): pz → 1, g → 100, kg → 1, l → 1.
+  // Cambio unità: g ↔ kg e ml ↔ l si convertono; tra famiglie diverse si
+  // riparte dal valore base (vedi changeUnit).
   function applyUnit(u) {
-    const DEFAULTS = { "": "1", g: "100 g", kg: "1 kg", l: "1 l" };
-    const v = DEFAULTS[u] ?? "1";
+    const v = changeUnit(qtyDraft, u);
     setQtyDraft(v);
     clearTimeout(qtyTimer.current);
     commitQtyNow(v);

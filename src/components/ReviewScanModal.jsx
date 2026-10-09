@@ -8,7 +8,7 @@ import { CATEGORIES, CAT_ICON } from "../constants.js";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
-import { adjustQty, atMinQty, formatQtyDisplay } from "../lib/pantry.js";
+import { adjustQty, atMinQty, formatQtyDisplay, changeUnit } from "../lib/pantry.js";
 
 function tmpId() {
   return Math.random().toString(36).slice(2, 10);
@@ -95,7 +95,7 @@ export default function ReviewScanModal({ initialItems, onCancel, onConfirm, onA
                           onPlus={() => update(it.id, "qty", adjustQty(it.qty, 1))}
                           minusDisabled={atMin(it.qty)}
                           unitActive={String(it.qty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase()}
-                          onUnit={(u) => update(it.id, "qty", { "": "1", g: "100 g", kg: "1 kg", l: "1 l" }[u])}
+                          onUnit={(u) => update(it.id, "qty", changeUnit(it.qty, u))}
                           showExpiry
                           expiry={it.expiry}
                           onExpiry={(v) => update(it.id, "expiry", v)}

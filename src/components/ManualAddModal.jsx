@@ -8,11 +8,11 @@ import { Plus, Loader2, X, Check } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
-import { norm, correctName, guessCategory } from "../lib/pantry.js";
+import { norm, correctName, guessCategory, changeUnit } from "../lib/pantry.js";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 
-// Passi del contatore per unità: pz ±1, g ±50, kg/l ±0,25.
-const STEPS = { "": 1, g: 50, kg: 0.25, l: 0.25 };
+// Passi del contatore per unità: pz ±1, g ±50, ml ±250, kg/l ±0,25.
+const STEPS = { "": 1, g: 50, kg: 0.25, ml: 250, l: 0.25 };
 const parseV = (v) => parseFloat(String(v).replace(",", ".")) || 0;
 const fmtV = (n) => String(Math.round(n * 1000) / 1000).replace(".", ",");
 
@@ -39,11 +39,13 @@ export default function ManualAddModal({
       return fmtV(n);
     });
   }
-  // Cambiando unità la quantità si RESETTA al default dell'unità scelta
-  // (mai ereditata dal valore precedente): pz → 1, g → 100, kg/l → 1.
+  // Cambiando unità: g ↔ kg e ml ↔ l si convertono, tra famiglie diverse si
+  // riparte dal valore base (vedi changeUnit). Qui numero e unità sono
+  // separati: si tiene solo il numero.
   function chooseUnit(u) {
+    const v = changeUnit(unit ? `${newQty} ${unit}` : newQty, u);
     setUnit(u);
-    setNewQty(u === "g" ? "100" : "1");
+    setNewQty(v.replace(/[^0-9.,]/g, ""));
   }
 
   // Candidati per i suggerimenti: storico acquisti + nomi già in dispensa.
