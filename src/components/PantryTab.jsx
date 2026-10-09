@@ -355,14 +355,19 @@ export default function PantryTab({
           giorni (giallo); il filtro "Mostra" li include entrambi. Le due
           righe sotto portano al Calendario Alimentare e alla Spesa. */}
       <div className="evidenza mt-3.5 overflow-hidden">
-        <span className="micro block px-3.5 pt-3">Oggi</span>
         {expiredCount + expiringSoonCount > 0 ? (
           <>
+            {/* Tutta la parte alta è il bottone del filtro; "Mostra →" sta in
+                alto a destra, sulla riga di "Oggi". */}
             <button
               onClick={() => setExpFilter(!expFilter)}
               aria-pressed={expFilter}
-              className="block w-full px-3.5 pb-2.5 text-left"
+              className="block w-full px-3.5 pb-3 pt-3 text-left"
             >
+              <span className="flex items-baseline justify-between gap-3">
+                <span className="micro">Oggi</span>
+                <span className="text-[0.88rem] font-bold">{expFilter ? "Mostra tutto" : "Mostra"} <span aria-hidden="true">→</span></span>
+              </span>
               {expiredCount > 0 && (
                 <span className="mt-1 flex items-center gap-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">
                   <i aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-rosso" />
@@ -375,10 +380,6 @@ export default function PantryTab({
                   {expiringSoonCount} {expiringSoonCount === 1 ? "prodotto" : "prodotti"} in scadenza{expiredCount > 0 ? "" : " entro 7 giorni"}
                 </span>
               )}
-              <span className="mt-2.5 flex justify-between border-t border-crema/20 pt-2 text-[0.88rem] font-bold">
-                <span>{expFilter ? "Mostra tutto" : "Mostra"}</span>
-                <span aria-hidden="true">→</span>
-              </span>
             </button>
             <div className="px-3.5 pb-3">
               <Button variant="primary" size="sm" full className="bg-crema text-ink" onClick={onCookExpiring}>
@@ -387,7 +388,10 @@ export default function PantryTab({
             </div>
           </>
         ) : (
-          <p className="mt-1 px-3.5 pb-2.5 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">Niente in scadenza</p>
+          <div className="px-3.5 pb-2.5 pt-3">
+            <span className="micro block">Oggi</span>
+            <p className="mt-1 text-[1.1rem] font-[750] leading-tight tracking-[-0.03em]">Niente in scadenza</p>
+          </div>
         )}
         {onOpenPlan && (
           <button onClick={onOpenPlan} className="flex min-h-[44px] w-full items-center gap-2.5 border-t border-crema/20 px-3.5 py-2 text-left text-[0.95rem] font-bold">
