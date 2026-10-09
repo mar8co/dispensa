@@ -14,6 +14,7 @@ import { stripParens, formatRecipeQty, shoppingQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
 import { rankCookable } from "../lib/suggest.js";
+import { allowedBy } from "../lib/prefs.js";
 import BASE_RECIPES from "../data/ricetteBase.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
@@ -73,6 +74,7 @@ export default function RecipesTab({
   online = true,
   expiring = [],
   onNeedAi,
+  foodPrefs = "",
 }) {
 
   const [addedMissing, setAddedMissing] = useState(false);
@@ -150,8 +152,9 @@ export default function RecipesTab({
   // un ingrediente mancante. Calcolo locale: niente AI, funziona offline.
   const cookbook = useMemo(() => {
     const mine = (savedRecipes || []).filter((r) => r.data?.ingredients?.length).map((r) => ({ ...r.data, image: r.data.image || r.image }));
-    return [...mine, ...BASE_RECIPES];
-  }, [savedRecipes]);
+    // Fuori le ricette che non rispettano le esigenze alimentari del Profilo.
+    return [...mine, ...BASE_RECIPES].filter(allowedBy(foodPrefs));
+  }, [savedRecipes, foodPrefs]);
   const allRanked = rankCookable(cookbook, hasIngredient, expiring, Infinity);
   // Da mostrare: fino a 5 ricette a cui non manca NULLA; se non ce ne sono,
   // le DUE a cui mancano meno ingredienti (scelta dell'utente del 09/10: mai

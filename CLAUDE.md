@@ -21,7 +21,7 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (109/109), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
+   (119/119), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
    `suggest.js`, aggiorna i rispettivi test (`*.test.js` accanto al file).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
@@ -235,6 +235,11 @@ una regola locale basta.
   dispensa, SENZA AI, tenendo il conto di ciò che ogni ricetta consuma, e
   mette i mancanti in lista con la quantità che serve); invitare nella dispensa
   condivisa è gratuito (**`supabase/migration-14.sql` va eseguita a mano**).
+  **Esigenze alimentari senza AI** (`lib/prefs.js`): il testo libero del
+  Profilo ("no peperoni e no melanzane", "vegetariano", "senza glutine") viene
+  tradotto in esclusioni applicate al piano della settimana e a "Puoi farle con
+  quello che hai"; il Profilo mostra cosa è stato capito. Ogni nuova funzione
+  che propone ricette SENZA AI deve passare da `allowedBy(foodPrefs)`.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con
   tocco sul nome = modifica (resta così) e "+" su tutte le schede (resta).
 - **Prossimo lavoro grande**: resta la Fase 3 (prodotti su App Store Connect,

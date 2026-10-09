@@ -13,6 +13,7 @@ import {
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
 import { cleanBarcodeName, parseSpokenList } from "./lib/parse.js";
+import { allowedBy } from "./lib/prefs.js";
 import { apiUrl } from "./lib/api.js";
 import { supabase } from "./lib/supabase.js";
 import {
@@ -919,7 +920,9 @@ export default function Dispensa({ session }) {
       const mine = savedRecipes.filter((r) => r.data?.ingredients?.length).map((r) => r.data);
       const today = isoDate(new Date());
       const picks = planWeek({
-        slots, recipes: [...mine, ...BASE],
+        // Solo le ricette che rispettano le esigenze alimentari scritte nel
+        // Profilo ("no peperoni", "vegetariano"…): qui non c'è l'AI a leggerle.
+        slots, recipes: [...mine, ...BASE].filter(allowedBy(foodPrefs)),
         // Le scorte vere (senza i finiti): il pianificatore ne tiene il conto
         // ricetta dopo ricetta, partendo dai pasti già nel piano.
         pantry: items.filter((x) => !isOut(x)),
@@ -1187,6 +1190,7 @@ export default function Dispensa({ session }) {
             isPro={isPro}
             onNeedPro={() => openPaywall("Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola.")}
             online={online}
+            foodPrefs={foodPrefs}
             onNeedAi={() => openPaywall("Le idee su misura con l'AI fanno parte di Premium: scegli un'occasione o scrivi cosa ti va, e te le preparo con quello che hai.")}
             expiring={expiringItems.filter((x) => !isOut(x))}
             onAiLimit={() => openPaywall("Hai finito le richieste AI di oggi: con Premium non hanno limiti.")}

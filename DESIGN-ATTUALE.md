@@ -114,6 +114,9 @@
   fine: avviso "Piano pronto: N pasti · M prodotti in lista" con "Annulla".
 - **Ricetta aperta dal ricettario**: prende tutta la pagina (prima compariva in fondo a "Cosa
   cuciniamo?"); in alto il link "Indietro".
+- **Profilo, esigenze alimentari**: sotto il riquadro una riga piccola dice cosa l'app ne ha capito
+  ("Nel piano e nelle ricette senza AI escludo: **peperoni, melanzane**."), oppure che in quel testo non
+  ha trovato cibi da escludere, con tre esempi.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

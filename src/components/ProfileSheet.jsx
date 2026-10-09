@@ -12,6 +12,7 @@ import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
 import SettingsSection from "./SettingsSection.jsx";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
+import { parsePrefs } from "../lib/prefs.js";
 
 export default function ProfileSheet({
   email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
@@ -20,6 +21,7 @@ export default function ProfileSheet({
 }) {
   const [username, setUsernameState] = useState("");
   const [membersKey, setMembersKey] = useState(0);  // forza il refresh della lista membri
+  const understood = parsePrefs(foodPrefs).labels;  // esclusioni capite dal testo delle esigenze
 
   useEffect(() => { getMyUsername().then(setUsernameState).catch(() => {}); }, []);
 
@@ -93,6 +95,16 @@ export default function ProfileSheet({
               className="min-w-0 flex-1 resize-none bg-transparent text-[1rem] font-medium leading-snug text-ink outline-none placeholder:text-ink/40"
             />
           </div>
+          {/* Cosa ne ha capito l'app: il piano della settimana e le ricette
+              senza AI applicano SOLO questo (l'AI invece legge tutto il testo).
+              Così non si scopre dopo, dal piano, che "no peperoni" non era passato. */}
+          {foodPrefs.trim() && (
+            <p className="mt-2 text-[0.8rem] font-medium leading-snug text-tenue">
+              {understood.length
+                ? <>Nel piano e nelle ricette senza AI escludo: <strong>{understood.join(", ")}</strong>.</>
+                : <>Qui non ho trovato cibi da escludere: di questo testo terrà conto solo l&rsquo;AI. Capisco frasi come «no peperoni», «senza glutine», «vegetariano».</>}
+            </p>
+          )}
 
           {/* Impostazioni: stesse righe di prima, ora qui. "Svuota dispensa"
               sta tra le righe, subito prima di "Esci". */}

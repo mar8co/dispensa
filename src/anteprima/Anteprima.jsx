@@ -52,6 +52,7 @@ import { pageColorFor, PAGE_COLOR } from "../lib/colors.js";
 const q = new URLSearchParams(location.search);
 const PARAM_VISTA = q.get("vista") || "dispensa";
 const PARAM_FOGLIO = q.get("foglio") || "";
+const PARAM_ESIGENZE = q.get("esigenze") || ""; // es. ?esigenze=no peperoni, vegetariano
 
 const inDays = (n) => {
   const d = new Date();
@@ -223,6 +224,7 @@ export default function Anteprima() {
               ],
             }}
             startOnPlan={PARAM_VISTA === "piano"}
+            foodPrefs={PARAM_ESIGENZE}
             isPro={q.get("gratis") !== "1"}
             onNeedPro={() => {}} onNeedAi={() => setFoglio("premium")}
             savedRecipes={[
@@ -260,7 +262,7 @@ export default function Anteprima() {
 
       {(foglio === "profilo" || foglio === "impostazioni") && (
         <ProfileSheet
-          email="marco@esempio.it" itemCount={items.length} shared foodPrefs="" onSaveFoodPrefs={() => {}}
+          email="marco@esempio.it" itemCount={items.length} shared foodPrefs={PARAM_ESIGENZE} onSaveFoodPrefs={() => {}}
           onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
           onLogout={chiudi} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")} isPro={false} onOpenPaywall={() => setFoglio("premium")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
