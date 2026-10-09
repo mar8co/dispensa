@@ -5,7 +5,7 @@ import { guessCategory, isQbQty, isStapleQb, norm, findMatch } from "./pantry.js
 
 // Ingredienti "veri" di una ricetta: fuori le scorte a piacere (olio, sale,
 // pepe, spezie, "q.b."), che non devono far risultare "manca qualcosa".
-function mainIngredients(recipe) {
+export function mainIngredients(recipe) {
   return (recipe.ingredients || []).filter(
     (ing) => ing?.name && !isQbQty(ing.qty) && !isStapleQb(ing.name, guessCategory(ing.name))
   );

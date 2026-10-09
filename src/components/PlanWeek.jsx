@@ -13,6 +13,7 @@ import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { isoDate, mondayOf, addDays } from "../hooks/useMealPlan.jsx";
 import { FOGLIO_NERO } from "../lib/colors.js";
+import { shoppingQty } from "../lib/pantry.js";
 
 const SLOTS = [
   { id: "pranzo", label: "Pranzo", Icon: Sun },
@@ -131,7 +132,13 @@ function MealSlotSheet({
                   ) : (
                     <Button
                       variant="cook" size="sm" full
-                      onClick={async () => { await onAddMissing(missing.map((i) => i.name)); setMissingAdded(true); }}
+                      onClick={async () => {
+                        // In lista con la quantità della ricetta per le porzioni pianificate.
+                        const base = Number(meal.data.servings) || 2;
+                        const f = (Number(meal.data.planServings) || base) / base;
+                        await onAddMissing(missing.map((i) => ({ name: i.name, qty: shoppingQty(i.qty, f) })));
+                        setMissingAdded(true);
+                      }}
                     >
                       <ShoppingCart className="h-3.5 w-3.5" />
                       Aggiungi {missing.length} {missing.length === 1 ? "mancante" : "mancanti"} alla spesa

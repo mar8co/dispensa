@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   guessCategory, categorize, correctName, parseQty, normalizeWeight, mergeQty, scaleQty,
-  subtractQty, qtyStep, adjustQty, atMinQty, changeUnit, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, matchKey, findMatch,
+  subtractQty, qtyStep, adjustQty, atMinQty, changeUnit, shoppingQty, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, matchKey, findMatch,
   toCookFraction, isSpoonQty, formatRecipeQty,
   daysUntilExpiry, expiryStatus, formatExpiry,
 } from "./pantry.js";
@@ -285,6 +285,20 @@ describe("changeUnit", () => {
     expect(changeUnit("3", "g")).toBe("100 g");
     expect(changeUnit("2 kg", "l")).toBe("0,5 l");
     expect(changeUnit("1 barattolo", "ml")).toBe("500 ml");
+  });
+});
+
+describe("shoppingQty", () => {
+  it("pesi e volumi scalati, pezzi per eccesso, il resto vale 1", () => {
+    expect(shoppingQty("180 g", 1.5)).toBe("270 g");
+    expect(shoppingQty("700 g", 2)).toBe("1,4 kg");
+    expect(shoppingQty("200 ml")).toBe("200 ml");
+    expect(shoppingQty("2", 2)).toBe("4");
+    expect(shoppingQty("0,5")).toBe("1");
+    expect(shoppingQty("½")).toBe("1");
+    expect(shoppingQty("q.b.")).toBe("1");
+    expect(shoppingQty("1 cucchiaino", 4)).toBe("1");
+    expect(shoppingQty("4 fette")).toBe("1");
   });
 });
 

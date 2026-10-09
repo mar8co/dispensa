@@ -237,11 +237,15 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   }
   // Aggiunge alla lista spesa gli ingredienti mancanti (chi è già in lista
   // viene saltato, senza toccarne la quantità).
-  async function addMissingToShopping(names) {
+  // Ogni voce è { name, qty } (la quantità che serve davvero) oppure solo il
+  // nome, che vale "1".
+  async function addMissingToShopping(entries) {
     const existing = new Set(shopping.map((s) => norm(s.name)));
-    const toAdd = (names || []).filter(Boolean).filter((n) => !existing.has(norm(n)));
+    const toAdd = (entries || [])
+      .map((e) => (typeof e === "string" ? { name: e, qty: "1" } : e))
+      .filter((e) => e?.name && !existing.has(norm(e.name)));
     if (!toAdd.length) return { added: 0, merged: 0, undo: () => {} };
-    return addToShoppingMerged(toAdd.map((name) => ({ name, qty: "1" })));
+    return addToShoppingMerged(toAdd.map(({ name, qty }) => ({ name, qty: qty || "1" })));
   }
 
   // "Finito → in lista": dalla riga del prodotto esaurito in dispensa.

@@ -10,7 +10,7 @@ import {
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
   ChefHat, Trash2, Check, CalendarPlus, Lock,
 } from "lucide-react";
-import { stripParens, formatRecipeQty } from "../lib/pantry.js";
+import { stripParens, formatRecipeQty, shoppingQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
 import { rankCookable } from "../lib/suggest.js";
@@ -178,7 +178,8 @@ export default function RecipesTab({
   const missing = ingredients.filter((ing) => !hasIngredient(ing.name));
 
   async function addMissing() {
-    await onAddMissing(missing.map((ing) => ing.name));
+    // In lista con la quantità della ricetta (per le porzioni scelte), non "1".
+    await onAddMissing(missing.map((ing) => ({ name: ing.name, qty: shoppingQty(ing.qty, factor) })));
     setAddedMissing(true);
   }
 

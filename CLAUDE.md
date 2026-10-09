@@ -21,7 +21,7 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (98/98), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
+   (109/109), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
    `suggest.js`, aggiorna i rispettivi test (`*.test.js` accanto al file).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
@@ -232,7 +232,8 @@ una regola locale basta.
   con Annulla); "Sposta in dispensa" apre la revisione solo se ci sono
   freschi; **"Riempi la settimana"** nel Piano (`fillWeek` in Dispensa.jsx +
   `lib/planner.js`: sceglie pranzi e cene dal ricettario partendo dalla
-  dispensa, SENZA AI, e mette i mancanti in lista); invitare nella dispensa
+  dispensa, SENZA AI, tenendo il conto di ciò che ogni ricetta consuma, e
+  mette i mancanti in lista con la quantità che serve); invitare nella dispensa
   condivisa è gratuito (**`supabase/migration-14.sql` va eseguita a mano**).
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con
   tocco sul nome = modifica (resta così) e "+" su tutte le schede (resta).

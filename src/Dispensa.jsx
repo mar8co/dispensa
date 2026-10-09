@@ -9,7 +9,7 @@ import {
 import {
   guessCategory, categorize,
   normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  norm, matchKey, isStapleQb, isQbQty, isSpoonQty, dateInDays,
+  matchKey, isStapleQb, isQbQty, isSpoonQty, dateInDays,
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
 import { cleanBarcodeName, parseSpokenList } from "./lib/parse.js";
@@ -900,8 +900,9 @@ export default function Dispensa({ session }) {
 
   // --- Piano della settimana, generato da solo ---
   // Riempie i pasti LIBERI della settimana aperta (da oggi in poi) con ricette
-  // del ricettario scelte partendo dalla dispensa (lib/planner.js: niente AI),
-  // e mette in lista della spesa gli ingredienti che mancano. È un ponte tra
+  // del ricettario scelte partendo dalla dispensa (lib/planner.js: niente AI,
+  // tiene il conto di ciò che ogni ricetta consuma), e mette in lista della
+  // spesa gli ingredienti che mancano, con la loro quantità. È un ponte tra
   // piano, dispensa e lista, quindi sta qui. Ricettario e pianificatore si
   // caricano solo al tocco (import dinamico): non pesano sull'avvio.
   const [fillingWeek, setFillingWeek] = useState(false);
@@ -909,25 +910,33 @@ export default function Dispensa({ session }) {
     if (fillingWeek) return;
     setFillingWeek(true);
     try {
-      const [{ default: BASE }, { planWeek, freeSlots }] = await Promise.all([
+      const [{ default: BASE }, { planWeek, freeSlots, shoppingList }] = await Promise.all([
         import("./data/ricetteBase.js"), import("./lib/planner.js"),
       ]);
       const weekDays = [0, 1, 2, 3, 4, 5, 6].map((i) => isoDate(addDays(weekStart, i)));
       const slots = freeSlots(weekDays, meals, isoDate(new Date()));
       if (!slots.length) { showToast("In questa settimana non ci sono pasti liberi da riempire"); return; }
       const mine = savedRecipes.filter((r) => r.data?.ingredients?.length).map((r) => r.data);
+      const today = isoDate(new Date());
       const picks = planWeek({
-        slots, recipes: [...mine, ...BASE], hasIngredient,
+        slots, recipes: [...mine, ...BASE],
+        // Le scorte vere (senza i finiti): il pianificatore ne tiene il conto
+        // ricetta dopo ricetta, partendo dai pasti già nel piano.
+        pantry: items.filter((x) => !isOut(x)),
         expiring: expiringItems.filter((x) => !isOut(x)),
+        servings: prefServings,
+        planned: meals
+          .filter((m) => m.data && !m.cooked_at && m.date >= today)
+          .map((m) => ({ recipe: m.data, servings: m.data.planServings })),
       });
       // Le porzioni di casa ("a casa siamo in X"), se impostate, valgono anche qui.
       const ids = (await Promise.all(picks.map((p) =>
         planMeal(p.date, p.slot, { title: p.recipe.title, data: prefServings ? { ...p.recipe, planServings: prefServings } : p.recipe })
       ))).filter(Boolean);
       if (!ids.length) { showToast("Non sono riuscito a salvare il piano. Controlla la connessione e riprova."); return; }
-      // Mancanti in lista, una voce per prodotto (chi è già in lista si salta).
-      const seen = new Set();
-      const missing = picks.flatMap((p) => p.missing).filter((n) => { const k = norm(n); return seen.has(k) ? false : seen.add(k); });
+      // Mancanti in lista: una voce per prodotto, con la quantità che serve
+      // davvero (sommata tra le ricette). Chi è già in lista si salta.
+      const missing = shoppingList(picks);
       const res = missing.length ? await addMissingToShopping(missing) : null;
       const added = res?.added || 0;
       showToast(

@@ -555,6 +555,31 @@ function defraction(s) {
     .replace(/\bmezz[oa]\b/gi, "0.5");
 }
 
+// Dose di una ricetta → quantità interpretabile (glifi ½ ¼…, "1/2" e "mezzo"
+// compresi). null se non c'è un numero ("q.b.").
+export function parseRecipeQty(qty) {
+  return parseQty(defraction(stripParens(qty)));
+}
+
+// Quantità da scrivere nella LISTA DELLA SPESA per un bisogno espresso nella
+// sua unità di base (g, ml, pezzi): pesi e volumi così come sono, i pezzi
+// arrotondati per eccesso (mezza cipolla = 1 cipolla); le unità libere
+// ("2 fette", "1 ciuffo") valgono 1.
+export function formatShoppingQty(family, base) {
+  if (family === "weight") return fmtWeight(Math.max(1, Math.round(base)));
+  if (family === "volume") return fmtVolume(Math.max(1, Math.round(base)));
+  if (family === "count") return String(Math.max(1, Math.ceil(base - 1e-9)));
+  return "1";
+}
+
+// Lo stesso, partendo dalla dose di una ricetta e dal fattore delle porzioni:
+// "180 g" × 1,5 → "270 g" · "2" → "2" · "q.b." o cucchiaini → "1".
+export function shoppingQty(qty, factor = 1) {
+  const p = parseRecipeQty(qty);
+  if (!p || isQbQty(qty) || isSpoonQty(qty)) return "1";
+  return formatShoppingQty(p.family, p.base * (factor || 1));
+}
+
 // True se la dose della ricetta è "a cucchiaino/i" (qualunque forma).
 export function isSpoonQty(qty) {
   return /cucchia/.test(norm(qty));
