@@ -96,11 +96,12 @@
 - **Ricette, "Puoi farle adesso"**: elenco a righe sottili sopra le occasioni (titolo, tempo,
   "hai tutto" / "manca: …", cartellino nero "usa ciò che scade"); sotto la ricerca una riga dice
   quante richieste AI restano oggi, o che sei offline (le occasioni si attenuano).
-- **Ricette nel piano gratuito (09/10)**: il campo in alto cerca nel ricettario mentre scrivi
-  (lente al posto delle scintille, "Ricette trovate"), sotto compaiono al massimo 5 ricette fattibili con la dispensa (almeno 1: se nessuna è fattibile, la più vicina, col titolo "Ti manca poco"); mai l'elenco intero; le
-  occasioni restano visibili sotto il titolo "Idee su misura con l'AI" col cartellino nero
-  "Premium" e aprono il paywall; le pillole di contesto compaiono solo con Premium (dove la riga
-  sulle richieste rimaste non serve più ed è stata tolta).
+- **Ricette nel piano gratuito (09/10)**: il campo "Cosa ti va?" è lo stesso di Premium (scintille), ma
+  "Vai" ha il lucchetto e apre il paywall: la ricerca la fa l'AI, incrociando richiesta e dispensa. Sotto,
+  "Puoi farle adesso": al massimo 5 ricette a cui non manca nulla; se non ce n'è nessuna, le 2 più vicine col
+  titolo "Ti manca poco" e la riga "ti manca: N ingredienti". Mai l'elenco intero del ricettario. Le occasioni
+  restano visibili sotto "Idee su misura con l'AI" col cartellino nero "Premium"; le pillole di contesto solo
+  con Premium.
 
 ## Movimento
 

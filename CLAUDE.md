@@ -21,7 +21,7 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (93/93), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
+   (91/91), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
    `suggest.js`, aggiorna i rispettivi test (`*.test.js` accanto al file).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
@@ -251,7 +251,7 @@ una regola locale basta.
   lo **schema concreto va proposto all'utente prima**.
   Le scelte UX (mockup con opzioni) precedono sempre il codice.
   Free vs Premium (aggiornato il 09/10): free = dispensa+spesa+ricette **dal
-  ricettario** (il proprio + `data/ricetteBase.js`, ricerca locale, niente AI
+  ricettario** (il proprio + `data/ricetteBase.js`, solo "Puoi farle adesso": max 5 fattibili o le 2 più vicine; niente AI
   per le ricette) con pubblicità; foto/barcode/voce usano l'AI solo se serve,
   entro il tetto giornaliero. Le **idee e le ricette su misura con l'AI sono
   solo Premium** (`kind: "recipe"`, verificato in `server/claude.js`). **Premium (1,99€/mese · 14,99€/anno, 7gg prova)

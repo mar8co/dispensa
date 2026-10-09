@@ -7,14 +7,14 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
-  ChefHat, Trash2, Check, CalendarPlus, Lock, Search, X,
+  ChefHat, Trash2, Check, CalendarPlus, Lock,
 } from "lucide-react";
 import { stripParens, formatRecipeQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
-import { rankCookable, searchRecipes } from "../lib/suggest.js";
+import { rankCookable } from "../lib/suggest.js";
 import { FOGLIO_NERO } from "../lib/colors.js";
-import BASE_RECIPES, { RECIPE_TYPES } from "../data/ricetteBase.js";
+import BASE_RECIPES from "../data/ricetteBase.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
 import StepTimer from "./StepTimer.jsx";
@@ -97,18 +97,9 @@ export default function RecipesTab({
   isPro = true, onNeedPro, onAiLimit,
   online = true,
   expiring = [],
-  onNeedAi, localQuery = null, onLocalQueryUsed,
+  onNeedAi,
 }) {
-  const [tipo, setTipo] = useState("");          // filtro per tipo ("" = tutte)
-  // Ricerca chiesta da fuori (piano gratuito: "Cucina con questo prodotto"
-  // dalla Dispensa): il nome del prodotto entra nel campo e si vedono subito
-  // le ricette del ricettario che lo usano.
-  useEffect(() => {
-    if (!localQuery) return;
-    setAsk(localQuery); setTab("idee");
-    onLocalQueryUsed?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localQuery]);
+
   const [addedMissing, setAddedMissing] = useState(false);
   const [ask, setAsk] = useState("");          // "Cosa ti va?"
   const [shelf, setShelf] = useState("salvate"); // tab del ricettario
@@ -187,27 +178,10 @@ export default function RecipesTab({
   }, [savedRecipes]);
   const allRanked = rankCookable(cookbook, hasIngredient, expiring, Infinity);
   // Da mostrare: fino a 5 ricette a cui non manca NULLA; se non ce ne sono,
-  // una sola, la più vicina (scelta dell'utente del 09/10: mai l'elenco intero).
-  const MAX_SHOWN = 5;
-  const doable = allRanked.filter((x) => x.missing.length === 0).slice(0, MAX_SHOWN);
-  const cookable = doable.length ? doable : allRanked.slice(0, 1);
-  // Piano gratuito: la ricerca è locale, nel ricettario.
-  const found = !isPro && ask.trim()
-    ? rankCookable(searchRecipes(cookbook, ask), hasIngredient, expiring, Infinity)
-    : [];
-  // Filtro per tipo (Ricette trovate, che ne mostra comunque al massimo 5). Le ricette salvate
-  // dall'utente non hanno un tipo: compaiono solo con "Tutte".
-  const byTipo = (list) => (tipo ? list.filter((x) => x.recipe.tipo === tipo) : list);
-  const tipoChips = (
-    <div className="no-scrollbar -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4">
-      {[["", "Tutte"], ...RECIPE_TYPES].map(([id, label]) => (
-        <button key={id} onClick={() => setTipo(id)} aria-pressed={tipo === id} className={`pillola min-h-[36px] px-3 text-[0.84rem] ${tipo === id ? "" : "bg-white"}`}>
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-  const nessuna = <p className="py-5 text-center text-[0.95rem] font-semibold text-ink">Nessuna ricetta di questo tipo.</p>;
+  // le DUE a cui mancano meno ingredienti (scelta dell'utente del 09/10: mai
+  // l'elenco intero del ricettario).
+  const doable = allRanked.filter((x) => x.missing.length === 0).slice(0, 5);
+  const cookable = doable.length ? doable : allRanked.slice(0, 2);
   // Riga di una ricetta del ricettario (Puoi farle adesso / Tutte / Trovate).
   const recipeRow = ({ recipe: r, missing: miss, usesExpiring }) => (
     <li key={r.title}>
@@ -216,7 +190,7 @@ export default function RecipesTab({
           <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>
           <span className="block truncate text-[0.8rem] font-medium text-tenue">
             {r.time ? `${r.time} · ` : ""}
-            {miss.length === 0 ? "hai tutto" : miss.length <= 2 ? `manca: ${miss.join(", ")}` : `mancano ${miss.length} ingredienti`}
+            {miss.length === 0 ? "hai tutto" : `ti manca: ${miss.length} ${miss.length === 1 ? "ingrediente" : "ingredienti"}`}
           </span>
         </span>
         {usesExpiring && <span className="cartellino bg-ink text-white">usa ciò che scade</span>}
@@ -274,42 +248,32 @@ export default function RecipesTab({
               mentre si scorrono occasioni e ricettario. */}
           <div data-tour="recipe-search" className="sticky top-0 z-20 -mx-4 mt-4 bg-sfondo px-4 pb-2 pt-2">
             <div className="micro">Ricette</div>
-            {isPro ? (
-              <form
-                className="relative"
-                onSubmit={(e) => { e.preventDefault(); if (ask.trim() && online) { onCustomAsk(ask); setAsk(""); } }}
-              >
-                <Sparkles className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
-                <input
-                  value={ask}
-                  onChange={(e) => setAsk(e.target.value)}
-                  placeholder="Cosa ti va? es. qualcosa coi funghi"
-                  className={`campo testo-grande pl-8 text-[1.06rem] text-ink ${ask.trim() ? "pr-16" : "pr-2"}`}
-                />
-                {ask.trim() && (
-                  <button type="submit" disabled={!online} className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-ink px-3.5 py-1.5 text-[0.84rem] font-bold text-white disabled:opacity-40">
-                    Vai
-                  </button>
-                )}
-              </form>
-            ) : (
-              // Piano gratuito: lo stesso campo CERCA nel ricettario (il tuo +
-              // quello incluso nell'app), mentre scrivi e senza AI.
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
-                <input
-                  value={ask}
-                  onChange={(e) => setAsk(e.target.value)}
-                  placeholder="Cerca una ricetta o un ingrediente"
-                  className="campo testo-grande pl-8 pr-10 text-[1.06rem] text-ink"
-                />
-                {ask && (
-                  <button onClick={() => setAsk("")} aria-label="Cancella ricerca" className="absolute -right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-ink">
-                    <X className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
-            )}
+            {/* "Cosa ti va?": un ingrediente, una voglia, "qualcosa di estivo"…
+                l'AI incrocia la richiesta con la dispensa. È di Premium: nel
+                piano gratuito il campo si vede (col lucchetto su "Vai") e
+                l'invio apre il paywall. */}
+            <form
+              className="relative"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!ask.trim()) return;
+                if (!isPro) { onNeedAi?.(); return; }
+                if (online) { onCustomAsk(ask); setAsk(""); }
+              }}
+            >
+              <Sparkles className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-ink" />
+              <input
+                value={ask}
+                onChange={(e) => setAsk(e.target.value)}
+                placeholder="Cosa ti va? es. qualcosa coi funghi"
+                className={`campo testo-grande pl-8 text-[1.06rem] text-ink ${ask.trim() ? "pr-20" : "pr-2"}`}
+              />
+              {ask.trim() && (
+                <button type="submit" disabled={isPro && !online} className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-full bg-ink px-3.5 py-1.5 text-[0.84rem] font-bold text-white disabled:opacity-40">
+                  {!isPro && <Lock className="h-3 w-3" />} Vai
+                </button>
+              )}
+            </form>
           </div>
 
           {/* Premium, senza rete: le idee nuove le prepara l'AI, lo si dice
@@ -346,40 +310,18 @@ export default function RecipesTab({
             </p>
           )}
 
-          {/* Ricerca nel ricettario (piano gratuito): risultati mentre scrivi. */}
-          {!isPro && ask.trim() ? (
-            <section className="mt-6">
-              <div className="border-b-[1.5px] border-ink pb-[7px]">
-                <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Ricette trovate</h2>
-              </div>
-              {found.length > 0 ? (
-                <>
-                  {tipoChips}
-                  {byTipo(found).length ? <ul className="mt-1 divide-y divide-riga">{byTipo(found).slice(0, MAX_SHOWN).map(recipeRow)}</ul> : nessuna}
-                </>
-              ) : (
-                <p className="py-5 text-center text-[0.95rem] font-semibold text-ink">
-                  Nessuna ricetta trovata nel ricettario.{" "}
-                  <button onClick={onNeedAi} className="link">Con Premium te la preparo su misura</button>
-                </p>
-              )}
-            </section>
-          ) : (
-            <>
               {/* Dal ricettario, senza AI: al massimo 5 ricette, solo quelle che
                   si possono fare con la dispensa di ora. Se non ce n'è nessuna
-                  se ne mostra comunque UNA, quella a cui manca meno. */}
+                  se ne mostrano DUE, quelle a cui manca meno. */}
               {cookable.length > 0 && (
                 <section className="mt-6">
                   <div className="flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
                     <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">{doable.length ? "Puoi farle adesso" : "Ti manca poco"}</h2>
-                    <span className="micro">{doable.length ? "con quello che hai" : "la più vicina a quello che hai"}</span>
+                    <span className="micro">{doable.length ? "con quello che hai" : "le più vicine a quello che hai"}</span>
                   </div>
                   <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
                 </section>
               )}
-            </>
-          )}
 
           {/* Idee su misura: le prepara l'AI, fanno parte di Premium. Nel piano
               gratuito le occasioni restano visibili col lucchetto (si capisce

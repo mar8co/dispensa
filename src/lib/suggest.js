@@ -1,7 +1,7 @@
 // "Puoi farle adesso": sceglie, tra ricette già note (il tuo ricettario + il
 // ricettario di base dell'app), quelle che si possono cucinare con ciò che c'è
 // in dispensa. Tutto sul dispositivo: niente AI, niente rete.
-import { guessCategory, isQbQty, isStapleQb, norm, findMatch, matchKey } from "./pantry.js";
+import { guessCategory, isQbQty, isStapleQb, norm, findMatch } from "./pantry.js";
 
 // Ingredienti "veri" di una ricetta: fuori le scorte a piacere (olio, sale,
 // pepe, spezie, "q.b."), che non devono far risultare "manca qualcosa".
@@ -9,20 +9,6 @@ function mainIngredients(recipe) {
   return (recipe.ingredients || []).filter(
     (ing) => ing?.name && !isQbQty(ing.qty) && !isStapleQb(ing.name, guessCategory(ing.name))
   );
-}
-
-// Ricerca nel ricettario (piano gratuito, senza AI): tiene le ricette in cui
-// OGNI parola cercata compare nel titolo o tra gli ingredienti. Singolari e
-// plurali uniti, accenti ignorati, parole di contorno ("qualcosa coi…") saltate.
-const fold = (s) => matchKey(s).normalize("NFD").replace(/\p{Diacritic}/gu, "");
-const SKIP = new Set(["qualcosa", "con", "coi", "col", "di", "del", "della", "dei", "un", "una", "il", "lo", "la", "le", "gli", "al", "alla", "alle", "per", "che", "ricetta", "ricette", "piatto"]);
-export function searchRecipes(recipes, query) {
-  const words = fold(query).split(" ").filter((w) => w.length >= 2 && !SKIP.has(w));
-  if (!words.length) return [];
-  return recipes.filter((r) => {
-    const text = ` ${fold(`${r.title} ${(r.ingredients || []).map((i) => i.name).join(" ")}`)}`;
-    return words.every((w) => text.includes(` ${w}`));
-  });
 }
 
 // recipes: [{ title, ingredients, ... }] · hasIngredient(nome) → bool ·
