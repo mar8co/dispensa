@@ -4,10 +4,7 @@
 // leggerebbe). I fogli del Piano e "Aggiorna la dispensa" sono neri.
 // griglia occasioni -> 5 proposte -> ricetta completa con grammature, "cosa mi
 // manca", timer e "Ho cucinato questa ricetta".
-import { useState, useEffect, useMemo, useRef } from "react";
-import { recipesForOccasion } from "../lib/occasions.js";
-import { allowedBy } from "../lib/prefs.js";
-import BASE_RECIPES from "../data/ricetteBase.js";
+import { useState, useEffect, useRef } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
@@ -69,8 +66,6 @@ export default function RecipesTab({
   plan = null,
   startOnPlan = false,
   online = true,
-  expiring = [],
-  foodPrefs = "",
 }) {
 
   const [addedMissing, setAddedMissing] = useState(false);
@@ -159,15 +154,6 @@ export default function RecipesTab({
   const cookedList = (savedRecipes || [])
     .filter((r) => r.cooked_count > 0)
     .sort((a, b) => String(b.last_cooked_at || "").localeCompare(String(a.last_cooked_at || "")));
-
-  // Ricette del ricettario per l'occasione aperta: calcolo locale, immediato.
-  const localForMode = useMemo(() => {
-    if (!mode) return [];
-    const mine = (savedRecipes || []).filter((r) => r.data?.ingredients?.length).map((r) => r.data);
-    // Fuori le ricette che non rispettano le esigenze alimentari del Profilo.
-    return recipesForOccasion(mode.id, [...mine, ...BASE_RECIPES].filter(allowedBy(foodPrefs)), hasIngredient, expiring);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode?.id, savedRecipes, foodPrefs]);
 
   const ingredients = recipe?.ingredients || [];
   const missing = ingredients.filter((ing) => !hasIngredient(ing.name));
@@ -374,31 +360,6 @@ export default function RecipesTab({
             <span className="shrink-0 text-[1.6rem] leading-none">{mode.icon}</span>
             <h1 className="min-w-0 truncate text-[1.9rem] font-extrabold leading-none tracking-[-0.055em] text-ink [word-spacing:0.08em]">{mode.id}</h1>
           </div>
-
-          {/* SUBITO, senza aspettare l'AI: le ricette del ricettario adatte a
-              questa occasione (lib/occasions.js), prima quelle che si possono
-              fare con la dispensa. Sotto arrivano le idee su misura. */}
-          {localForMode.length > 0 && (
-            <section className="mb-5">
-              <p className="micro">Subito, dal ricettario</p>
-              <ul className="mt-1.5 divide-y divide-riga rounded-card bg-white px-3.5">
-                {localForMode.map(({ recipe: r, missing: miss }) => (
-                  <li key={r.title}>
-                    <button onClick={() => onOpenSaved({ title: r.title, data: r })} className="flex min-h-[56px] w-full items-center gap-3 py-2 text-left">
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>
-                        <span className="block truncate text-[0.8rem] font-medium text-tenue">
-                          {r.time ? `${r.time} · ` : ""}{miss.length === 0 ? "hai tutto" : `ti manca: ${miss.join(", ")}`}
-                        </span>
-                      </span>
-                      <span aria-hidden="true" className="shrink-0 text-ink">→</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <p className="micro mt-5">Idee su misura</p>
-            </section>
-          )}
 
           {loadingIdeas && (
             <div className="space-y-3">

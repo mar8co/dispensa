@@ -181,9 +181,6 @@
   dentro i riquadri bianchi e gialli; i pulsanti pieni neri restano neri); **avvisi sempre a pillola
   nera** con "Annulla" giallo, il tono è un pallino colorato davanti al testo ("Preso: …" ha il
   pallino giallo).
-- **Proposte di un'occasione (10/10 sera)**: sotto la riga fissa, l'etichetta piccola "Subito, dal
-  ricettario" e un riquadro bianco con fino a 5 righe (titolo, "15 min · hai tutto" o "ti manca: …",
-  freccia); poi l'etichetta "Idee su misura" e le card dell'AI come prima.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un
