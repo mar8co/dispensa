@@ -21,8 +21,8 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (69/69), `npm run build`. Se tocchi `pantry.js`/`history.js`, aggiorna i
-   rispettivi test (`pantry.test.js` / `history.test.js`).
+   (86/86), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
+   `suggest.js`, aggiorna i rispettivi test (`*.test.js` accanto al file).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
    per lavori grandi a più blocchi (es. un restyle) l'utente può chiedere un
@@ -72,9 +72,10 @@
 - **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
 - **Vista prodotto**: sempre via `ProductFields.jsx` (nome · categoria-emoji →
   pillole · elimina / box scadenza → `ExpiryCalendar` in-app · stepper in pill ·
-  unità) ovunque si mostri o modifichi un prodotto. La riga quantità è
-  `flex-nowrap` (mai a capo: cede solo il box scadenza, troncato). Non ricreare
-  quei campi a mano.
+  unità) ovunque si mostri o modifichi un prodotto. Dal 09/10 la zona quantità
+  è su DUE righe (scadenza + stepper, poi le cinque unità pz·g·kg·ml·l) con
+  comandi da 44px; cambiare unità converte nella stessa famiglia
+  (`changeUnit`). Non ricreare quei campi a mano.
 - **Bottoni d'azione**: usa `Button.jsx` (varianti per funzione: `primary` nero
   pieno = conferma/commit · `secondary` col bordo = alternativa/Annulla · `cook`
   col bordo + icona = genera/cucina · `danger` rosso = elimina). Non creare
@@ -125,6 +126,15 @@ PWA leggera). Approvate:
 Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto usa
 `fetchPhotos` (proxy Pexels).
 
+**Prima il locale, poi l'AI** (dal 09/10): l'AI è l'ultima risorsa, non la
+prima. Barcode e voce passano da `src/lib/parse.js` (regole + catalogo) e
+chiamano l'AI solo per ciò che resta non riconosciuto; "Puoi farle adesso"
+(`src/lib/suggest.js` + `src/data/ricetteBase.js`) propone ricette senza AI; le
+ricette generate restano in cache sul dispositivo; il limite giornaliero conta
+solo le risposte riuscite e il client mostra quante ne restano
+(`src/lib/aiUsage.js`). Una funzione nuova non deve aggiungere chiamate AI se
+una regola locale basta.
+
 ---
 
 ## Pattern architetturali da seguire
@@ -147,7 +157,7 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
   g/ml/kg/l; **mai parentesi** nel campo qty. Nel **CookModal** i cucchiaini sono
   scorte q.b. (mostrati, non sottratti) — vedi `isSpoonQty`/`isStapleQb`.
 - **Persistenza impostazioni**: in `user_settings` (jsonb) ciò che è cross-device
-  (ordini, collassato, porzioni, preferenze); in localStorage ciò che è
+  (ordini, porzioni, preferenze); in localStorage ciò che è
   per-dispositivo o per-uid (ultimo ordinamento spesa).
 
 ---
@@ -207,6 +217,14 @@ Per AI usa il **proxy esistente** (`callClaude`), non SDK lato client. Per foto 
   la barra prendeva ancora il colore del menu. Tentativo del 09/10: fascia
   fissa del colore della pagina nello stacco in cima (`Sheet.jsx`). Se non va,
   prossima idea: un bianco non puro per la Spesa (es. `#fffffe`).
+- **Giro del 09/10 (analisi UX + correzioni)**: bug corretti (reparto nello
+  spostamento spesa→dispensa, intestazioni fisse, "Ho cucinato" offline, token,
+  limite AI, finiti fuori dalle ricette, tutorial interrotto); "Sposta in
+  dispensa" apre la revisione con scadenza proposta per i freschi
+  (`SHELF_LIFE_DAYS`); niente più avviso a ogni prodotto nel carrello; "Cucina
+  con questi prodotti" sempre visibile; foglio del pasto nel Piano nero.
+  **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con
+  tocco sul nome = modifica (resta così) e "+" su tutte le schede (resta).
 - **Prossimo lavoro grande**: resta la Fase 3 (prodotti su App Store Connect,
   firma, TestFlight): vedi `HANDOFF.md`.
 

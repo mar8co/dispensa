@@ -77,8 +77,8 @@
   riga** e staccato di 10 px; **su tutte le schede** (aggiunge sempre alla dispensa); le 4 azioni
   salgono in colonna sopra di lui ("A mano" la più vicina), etichette a sinistra, velo nero senza
   sfocatura.
-- **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Eccezione: "X spostato nel
-  carrello" = pillola **verde** col bordo nero, 2,5 s, con "Annulla" (rimette in lista); avvisi della lampadina = pillola **gialla**, 2 s (3 s il suggerimento iniziale). Barra timer nera.
+- **Avvisi**: pillola nera, azione gialla ("Annulla", "Stop"). Mettere un prodotto nel carrello non
+  dà più nessun avviso (tolto il 09/10: per annullare si ritocca la riga); avvisi della lampadina = pillola **gialla**, 2 s (3 s il suggerimento iniziale). Barra timer nera.
 - **Logo / oggetto simbolo (01/10)**: sacchetto della spesa con pane, insalata e mela + cappello da
   chef. È il ricalco vettoriale dell'immagine scelta dall'utente (seconda versione, `a2f865d`): un
   solo tracciato in `components/logoPath.js`, un solo colore (`currentColor`; i vuoti lasciano
@@ -88,6 +88,14 @@
 - **Icona e splash**: logo nero sul beige; splash con la scritta "Dispensa" (immagine
   pronta `scripts/assets/wordmark-dispensa.png`, Inter Tight 800 a −0.04em). Rigenerare con
   `node scripts/generate-icons.mjs` e `node scripts/generate-splash.mjs`.
+
+- **Pannello prodotto (09/10)**: zona quantità su due righe — scadenza a sinistra e stepper a
+  destra, poi le cinque unità (pz · g · kg · ml · l) larghe uguali; tutti i comandi alti 44 px.
+- **Testo secondario sul verde**: `--tenue-a` passa da 0.6 a 0.8 (lo imposta `setPageColor`), perché
+  il nero al 60% sul verde non raggiungeva il contrasto leggibile.
+- **Ricette, "Puoi farle adesso"**: elenco a righe sottili sopra le occasioni (titolo, tempo,
+  "hai tutto" / "manca: …", cartellino nero "usa ciò che scade"); sotto la ricerca una riga dice
+  quante richieste AI restano oggi, o che sei offline (le occasioni si attenuano).
 
 ## Movimento
 
