@@ -8,7 +8,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
-  ChefHat, Trash2, Check, CalendarPlus, Lock,
+  ChefHat, Trash2, Check, CalendarPlus,
 } from "lucide-react";
 import { stripParens, formatRecipeQty, shoppingQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
@@ -68,10 +68,8 @@ export default function RecipesTab({
   savedRecipes, onOpenSaved, onDeleteSaved, isSaved, onToggleSave,
   plan = null,
   startOnPlan = false,
-  isPro = true, onNeedPro, onAiLimit,
   online = true,
   expiring = [],
-  onNeedAi,
   foodPrefs = "",
 }) {
 
@@ -82,7 +80,7 @@ export default function RecipesTab({
   const [cooking, setCooking] = useState(false);  // modalità cucina
   // Sotto-vista iniziale: "piano" se si arriva dal deep-link della notifica
   // delle 18:30 con cena pianificata (/?view=piano), altrimenti "idee".
-  const [tab, setTab] = useState(startOnPlan && plan && isPro ? "piano" : "idee");
+  const [tab, setTab] = useState(startOnPlan && plan ? "piano" : "idee");
   const [planSheet, setPlanSheet] = useState(false); // "Aggiungi al piano" aperto
   const [plannedMsg, setPlannedMsg] = useState("");  // feedback dopo l'aggiunta
   // Giorno/slot in attesa di un'idea AI (arriva da "Genera un'idea con l'AI"
@@ -153,9 +151,6 @@ export default function RecipesTab({
   // l'attesa: evita che una ricetta aperta più tardi, scollegata, finisca
   // piazzata per errore nello slot originale.
   function switchTab(id) {
-    // Il Piano Alimentare è Premium: al tocco mostriamo il paywall invece di
-    // aprire una scheda vuota. Restiamo su "Idee", così l'app resta usabile.
-    if (id === "piano" && !isPro) { onNeedPro?.(); return; }
     if (id === "piano") setPendingSlot(null);
     setTab(id);
   }
@@ -226,9 +221,6 @@ export default function RecipesTab({
                   className="pillola min-h-[40px] text-[0.9rem]"
                 >
                   {label}
-                  {/* Lucchetto: si capisce che è Premium PRIMA di toccarlo,
-                      invece di scoprirlo con un paywall a sorpresa. */}
-                  {id === "piano" && !isPro && <Lock className="h-3.5 w-3.5" />}
                 </button>
               ))}
             </div>
@@ -251,15 +243,12 @@ export default function RecipesTab({
           <div className="sticky top-0 z-20 -mx-4 mt-4 bg-sfondo px-4 pb-2 pt-2">
             <div className="micro">Ricette</div>
             {/* "Cosa ti va?": un ingrediente, una voglia, "qualcosa di estivo"…
-                l'AI incrocia la richiesta con la dispensa. È di Premium: nel
-                piano gratuito il campo si vede (col lucchetto su "Vai") e
-                l'invio apre il paywall. */}
+                l'AI incrocia la richiesta con la dispensa. */}
             <form
               className="relative"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!ask.trim()) return;
-                if (!isPro) { onNeedAi?.(); return; }
                 if (online) { onCustomAsk(ask); setAsk(""); }
               }}
             >
@@ -271,16 +260,16 @@ export default function RecipesTab({
                 className={`campo testo-grande pl-8 text-[1.06rem] text-ink ${ask.trim() ? "pr-20" : "pr-2"}`}
               />
               {ask.trim() && (
-                <button type="submit" disabled={isPro && !online} className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-full bg-ink px-3.5 py-1.5 text-[0.84rem] font-bold text-white disabled:opacity-40">
-                  {!isPro && <Lock className="h-3 w-3" />} Vai
+                <button type="submit" disabled={!online} className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-full bg-ink px-3.5 py-1.5 text-[0.84rem] font-bold text-white disabled:opacity-40">
+                  Vai
                 </button>
               )}
             </form>
           </div>
 
-          {/* Premium, senza rete: le idee nuove le prepara l'AI, lo si dice
-              PRIMA del tocco (le occasioni si attenuano). */}
-          {isPro && !online && (
+          {/* Senza rete: le idee nuove le prepara l'AI, lo si dice PRIMA del
+              tocco (le occasioni si attenuano). */}
+          {!online && (
             <p className="mt-3 text-[0.9rem] font-bold leading-snug text-ink">
               Sei offline: le idee nuove tornano con la rete. Il tuo ricettario funziona lo stesso.
             </p>
@@ -290,7 +279,7 @@ export default function RecipesTab({
               quando poi scegli un'occasione. Multi-select, opzionali. */}
           {/* Una riga sola che scorre di lato (prima andavano a capo): con le
               pillole dell'ingrediente principale sono nove. */}
-          {isPro && <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
+          <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
             {RECIPE_CONTEXTS.map((c) => {
               const on = recipeContext.includes(c.id);
               return (
@@ -305,47 +294,41 @@ export default function RecipesTab({
                 </button>
               );
             })}
-          </div>}
+          </div>
           {/* Feedback: le pill agiscono sulle proposte FUTURE — senza questa
               riga il toggle sembrava non fare nulla. */}
-          {isPro && recipeContext.length > 0 && (
+          {recipeContext.length > 0 && (
             <p className="animate-fade-in mt-2 text-[0.86rem] font-semibold text-tenue">
               Ne tengo conto nella ricetta
             </p>
           )}
 
-              {/* SOLO piano gratuito (con Premium c'è l'AI e la sezione sparisce):
+              {/* Per tutti (dal 09/10 non c'è più distinzione free/premium):
                   dal ricettario, senza AI, al massimo 5 ricette che si possono
                   fare con la dispensa di ora. Se non ce n'è nessuna se ne
                   mostrano DUE, quelle a cui manca meno. Ogni riga apre la
                   ricetta completa, col procedimento, come le altre. */}
-              {!isPro && cookable.length > 0 && (
+              {cookable.length > 0 && (
                 <section className="mt-6">
                   <div className="flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px]">
                     <h2 className="min-w-0 text-[1.3rem] font-extrabold leading-[1.05] tracking-[-0.04em] text-ink">{doable.length ? "Puoi farle con quello che hai" : "Ti manca poco"}</h2>
-                    <span className="cartellino ml-auto">FREE</span>
                   </div>
                   {!doable.length && <p className="micro mt-2">Le più vicine a quello che hai in dispensa.</p>}
                   <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
                 </section>
               )}
 
-          {/* Idee su misura: le prepara l'AI, fanno parte di Premium. Nel piano
-              gratuito le occasioni restano visibili col lucchetto (si capisce
-              PRIMA del tocco) e aprono il paywall. */}
-          {!isPro && (
-            <div className="mt-7 flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px]">
-              <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Idee su misura con l&rsquo;AI</h2>
-              <span className="cartellino ml-auto inline-flex items-center gap-1 bg-ink text-white"><Lock className="h-3 w-3" /> Premium</span>
-            </div>
-          )}
+          {/* Idee su misura: le prepara l'AI partendo dall'occasione scelta. */}
+          <div className="mt-7 border-b-[1.5px] border-ink pb-[7px]">
+            <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Idee su misura</h2>
+          </div>
           <div className="mt-5 grid grid-cols-2 gap-3">
             {orderedModes.map((m) => (
               <div
                 key={m.id}
-                onClick={() => (isPro ? online && chooseMode(m) : onNeedAi?.())}
-                aria-disabled={isPro && !online}
-                className={`relative cursor-pointer rounded-card bg-white p-4 text-left transition active:scale-[0.98] ${isPro && !online ? "opacity-50" : ""}`}
+                onClick={() => online && chooseMode(m)}
+                aria-disabled={!online}
+                className={`relative cursor-pointer rounded-card bg-white p-4 text-left transition active:scale-[0.98] ${!online ? "opacity-50" : ""}`}
               >
                 <div className="mb-2 text-2xl">{m.icon}</div>
                 <div className="text-[1.05rem] font-extrabold leading-tight tracking-[-0.03em] text-ink">{m.id}</div>
@@ -441,10 +424,8 @@ export default function RecipesTab({
               {recipeErr}
               {/* Riprova ripete l'AZIONE fallita (ricetta o proposte), non
                   rigenera a caso le idee dell'occasione. */}
-              {/* Limite giornaliero: riprovare non può funzionare, si offre Premium. */}
-              {recipeErr === AI_LIMIT_MESSAGE
-                ? onAiLimit && <button onClick={onAiLimit} className="bottone mt-3 w-full">Scopri Premium</button>
-                : <button onClick={onRetry} className="bottone mt-3 w-full">Riprova</button>}
+              {/* Tetto giornaliero: riprovare non può funzionare, niente bottone. */}
+              {recipeErr !== AI_LIMIT_MESSAGE && <button onClick={onRetry} className="bottone mt-3 w-full">Riprova</button>}
             </div>
           )}
 
@@ -633,11 +614,8 @@ export default function RecipesTab({
             plannedMsg ? (
               <p className="mt-3 text-center text-[0.86rem] font-semibold text-ink">{plannedMsg}</p>
             ) : (
-              // Il Piano Alimentare è Premium: nel piano gratuito il pulsante
-              // ha il lucchetto e apre il paywall (prima aggiungeva a un piano
-              // che poi non si poteva aprire).
-              <Button variant="secondary" size="sm" full className="mt-3" onClick={() => (isPro ? setPlanSheet(true) : onNeedPro?.())}>
-                <CalendarPlus className="h-3.5 w-3.5" /> Aggiungi al piano {!isPro && <Lock className="h-3.5 w-3.5" />}
+              <Button variant="secondary" size="sm" full className="mt-3" onClick={() => setPlanSheet(true)}>
+                <CalendarPlus className="h-3.5 w-3.5" /> Aggiungi al piano
               </Button>
             )
           )}

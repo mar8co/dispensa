@@ -67,10 +67,6 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
   // Best-effort: richiede SUPABASE_SERVICE_ROLE_KEY + la funzione SQL
   // bump_ai_usage (migration-5). Se manca o va in errore, NON blocca.
   //
-  // Premium (migration-13): nessun tetto. Il controllo è QUI, lato server, non
-  // nel client: è l'unico posto dove non è aggirabile. `is_pro` va chiamata
-  // passando l'uid esplicito, perché col service role auth.uid() è NULL.
-  //
   // Il contatore si LEGGE prima della chiamata e si INCREMENTA solo dopo una
   // risposta valida (vedi `countUsage` in fondo): errori, timeout e i tentativi
   // automatici del client non consumano più le richieste del giorno.
@@ -79,44 +75,23 @@ export async function handleClaudeRequest({ authHeader, body, env }) {
   if (env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-      let pro = false;
-      const { data: isPro, error: proErr } = await admin.rpc("is_pro", { uid: userData.user.id });
-      // Se la migration-13 non è ancora applicata la rpc fallisce: si prosegue
-      // col tetto del piano gratuito (nessuno resta bloccato per un errore).
-      if (!proErr) pro = isPro === true;
-
-      // Idee e ricette AI (kind "recipe") sono SOLO Premium (dal 09/10): nel
-      // piano gratuito le ricette vengono dal ricettario dell'app, senza AI.
-      // Si blocca solo se lo stato Premium è stato letto davvero (se la rpc
-      // fallisce non si chiude fuori nessuno). Foto, barcode e voce restano
-      // disponibili a tutti, col tetto giornaliero qui sotto.
-      if (!proErr && !pro && body?.kind === "recipe") {
+      // Tetto giornaliero uguale per tutti (dal 09/10 non c'è più un piano
+      // Premium): serve solo contro gli abusi, a un uso normale non ci si arriva.
+      const limit = Number(env.AI_DAILY_CAP) || 80;
+      usageLimit = limit;
+      // `day` è una date del DB (current_date, UTC su Supabase).
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: row, error } = await admin
+        .from("ai_usage").select("count")
+        .eq("user_id", userData.user.id).eq("day", today).maybeSingle();
+      countUsage = () => admin.rpc("bump_ai_usage", { p_uid: userData.user.id });
+      if (!error && typeof row?.count === "number" && row.count >= limit) {
+        // code: "daily_limit" → il client NON ritenta (il limite è giornaliero,
+        // ritentare sprecherebbe solo attese). Diverso da un 429 transitorio Gemini.
         return {
-          status: 403,
-          json: { error: "Le ricette su misura con l'AI fanno parte di Premium.", code: "premium_only" },
+          status: 429,
+          json: { error: "Oggi hai fatto tante richieste AI: riprova domani.", code: "daily_limit" },
         };
-      }
-
-      if (!pro) {
-        const limit = Number(env.AI_DAILY_LIMIT) || 5;
-        usageLimit = limit;
-        // `day` è una date del DB (current_date, UTC su Supabase).
-        const today = new Date().toISOString().slice(0, 10);
-        const { data: row, error } = await admin
-          .from("ai_usage").select("count")
-          .eq("user_id", userData.user.id).eq("day", today).maybeSingle();
-        countUsage = () => admin.rpc("bump_ai_usage", { p_uid: userData.user.id });
-        if (!error && typeof row?.count === "number" && row.count >= limit) {
-          // code: "daily_limit" → il client NON ritenta (il limite è giornaliero,
-          // ritentare sprecherebbe solo attese). Diverso da un 429 transitorio Gemini.
-          return {
-            status: 429,
-            json: {
-              error: "Hai finito le richieste AI di oggi. Con Premium non hanno limiti, oppure riprova domani.",
-              code: "daily_limit",
-            },
-          };
-        }
       }
     } catch { /* best-effort: non blocca la richiesta */ }
   }

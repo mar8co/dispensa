@@ -288,6 +288,16 @@ una regola locale basta.
   Migration 11/12/13 sono SQL manuali (eccezione esplicita alla regola 3);
   lo **schema concreto va proposto all'utente prima**.
   Le scelte UX (mockup con opzioni) precedono sempre il codice.
+  **DAL 09/10 SERA IL PREMIUM È SPENTO (scelta dell'utente): tutto è libero
+  per tutti.** Tolti dal client paywall (`PaywallSheet`), `isPro`, lucchetti,
+  cartellino FREE, `lib/premium.js`, `lib/storekit.js`; nel server
+  (`server/claude.js`) niente `is_pro` né `premium_only`, resta solo un tetto
+  anti-abuso uguale per tutti (`AI_DAILY_CAP`, 80 al giorno). "Puoi farle con
+  quello che hai" ora si vede sempre. NON toccati: database (entitlements,
+  `is_pro`), `server/receipt.js`, `server/appstore.js`, plugin nativo iOS. Se
+  l'utente dice **"riattiva la modalità premium"**: `git revert` del commit
+  "Senza Premium" (stato di partenza nel tag `prima-senza-premium`). Quanto
+  segue descrive il modello di PRIMA, da ripristinare in quel caso.
   Free vs Premium (aggiornato il 09/10): free = dispensa+spesa+ricette **dal
   ricettario** (il proprio + `data/ricetteBase.js`, solo "Puoi farle con quello che hai" (sezione visibile SOLO nel gratuito): max 5 fattibili o le 2 più vicine; niente AI
   per le ricette), senza pubblicità; foto/barcode/voce usano l'AI solo se serve,

@@ -19,14 +19,13 @@ import { supabase } from "./lib/supabase.js";
 import {
   fetchPantry, updateItem,
   deleteItems,
-  fetchSettings, saveSettings, fetchIsPro,
+  fetchSettings, saveSettings,
   fetchShopping, deleteShoppingItems,
   fetchSavedRecipes,
   ensurePersonalHousehold, setActiveHousehold, fetchHouseholds, fetchMembers,
   getMyUsername,
 } from "./lib/db.js";
 import { stopAlarm } from "./lib/timers.js";
-import { storeKitAvailable, purchaseProduct, syncReceipt, onTransactionUpdate } from "./lib/storekit.js";
 
 import { loadCache, saveCache } from "./lib/cache.js";
 import { sortedNames } from "./lib/history.js";
@@ -46,7 +45,6 @@ import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
-import PaywallSheet from "./components/PaywallSheet.jsx";
 import PrivacySheet from "./components/PrivacySheet.jsx";
 import PlanReadySheet from "./components/PlanReadySheet.jsx";
 import TimerBar from "./components/TimerBar.jsx";
@@ -187,21 +185,15 @@ export default function Dispensa({ session }) {
   // foglio profilo (nome, famiglia, esigenze, svuota, logout)
   const [profileOpen, setProfileOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
-  // Premium: `isPro` decide solo COSA MOSTRARE (i controlli veri sono nelle
-  // policy del DB e nel proxy AI). Parte da true per non far lampeggiare il
-  // paywall a un abbonato mentre la verifica è in corso.
-  const [isPro, setIsPro] = useState(true);
-  const [paywall, setPaywall] = useState(null); // { reason } | null
-  // Passaggio Profilo→Privacy/Premium SERIALIZZATO: il foglio successivo
+  // Passaggio Profilo→Privacy SERIALIZZATO: il foglio successivo
   // si apre solo QUANDO il precedente ha finito l'animazione di chiusura
   // (onClose). Due drawer Vaul sovrapposti lasciavano residui Radix
   // (pointer-events sul body) che mangiavano il primo tap dopo la chiusura.
-  const pendingSheetRef = useRef(null); // "privacy" | "paywall" | null
+  const pendingSheetRef = useRef(null); // "privacy" | null
   function openPendingSheet() {
     const next = pendingSheetRef.current;
     pendingSheetRef.current = null;
     if (next === "privacy") { bumpModal("privacy"); setPrivacyOpen(true); }
-    else if (next === "paywall") { bumpModal("paywall"); setPaywall({ reason: null }); }
   }
 
   // Lista della spesa: stato (articoli, storico, voce) e logica (aggiunta con
@@ -331,7 +323,6 @@ export default function Dispensa({ session }) {
             if (!cachedTs || remoteTs >= cachedTs) applySettings(remote.settings);
           }
         } catch (e) { console.error(e); }
-        fetchIsPro().then(setIsPro).catch(() => {});
         try { setShopping(await fetchShopping()); } catch (e) { console.error(e); }
         // Ricettario local-first: adottiamo le righe dal DB SOLO se ce ne sono.
         // Se il DB è vuoto o non ancora sincronizzato NON sovrascriviamo la
@@ -441,25 +432,6 @@ export default function Dispensa({ session }) {
     if (window.location.search.includes("view=")) {
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, []);
-
-  // Transazioni che arrivano FUORI da un acquisto esplicito (rinnovi mentre
-  // l'app è aperta, Ask-to-Buy approvato, acquisto su un altro dispositivo):
-  // le mandiamo al server e rileggiamo lo stato Premium. Solo guscio nativo.
-  useEffect(() => {
-    if (!storeKitAvailable()) return undefined;
-    let removed = false;
-    let handle;
-    onTransactionUpdate(async (tx) => {
-      try {
-        await syncReceipt(tx);
-        setIsPro(await fetchIsPro());
-      } catch (e) { console.error("Sync transazione fallita:", e); }
-    }).then((h) => {
-      handle = h;
-      if (removed) h.remove(); // smontato prima che la promise risolvesse
-    });
-    return () => { removed = true; handle?.remove?.(); };
   }, []);
 
   // --- Ticker globale dei timer: suonano da qualunque scheda dell'app ---
@@ -818,14 +790,10 @@ export default function Dispensa({ session }) {
   // --- Ricette: stato e logica estratti in hooks/useRecipes.jsx ---
 
   // "Cucina con questi": manda i prodotti in scadenza alle Ricette.
-  // Le idee con l'AI sono di Premium: nel piano gratuito gli stessi pulsanti
-  // portano alle Ricette, dove "Puoi farle adesso" mette già in cima ciò che
-  // usa i prodotti in scadenza.
   function cookWithExpiring() {
     const names = expiringItems.filter((x) => !isOut(x)).map((x) => x.name).slice(0, 8);
     if (!names.length) return;
     changeView("ricette");
-    if (!isPro) { backToModes(); return; }
     askCustom(`qualcosa per usare subito: ${names.join(", ")}`);
   }
   // Dal pannello prodotto: apre le Ricette con proposte basate su quel prodotto
@@ -834,7 +802,6 @@ export default function Dispensa({ session }) {
     const n = String(name || "").trim();
     if (!n) return;
     changeView("ricette");
-    if (!isPro) { backToModes(); return; }
     askCustom(n);
   }
 
@@ -958,41 +925,6 @@ export default function Dispensa({ session }) {
 
   const baseServings = recipe ? (Number(recipe.servings) || 2) : 1;
   const factor = servings / baseServings;
-
-  // --- Premium ---
-
-  // Apre il paywall spiegando PERCHÉ (la funzione toccata): un paywall che
-  // risponde a un'azione converte meglio di uno generico.
-  function openPaywall(reason) {
-    bumpModal("paywall");
-    setPaywall({ reason });
-  }
-
-  // Acquisto reale via StoreKit 2 (solo nell'app nativa). Il pagamento passa da
-  // Apple; la transazione firmata va a /api/receipt, che verifica con Apple e
-  // scrive l'entitlement col service role. Poi rileggiamo lo stato Premium: la
-  // UI non se lo decide da sola. Sul web (paywall visibile per provare la UI)
-  // diciamo chiaramente che l'acquisto si fa dall'app.
-  async function purchasePremium(productId) {
-    if (!storeKitAvailable()) {
-      throw new Error("Gli abbonamenti si attivano dall'app Dispensa su App Store.");
-    }
-    const res = await purchaseProduct(productId, session.user.id);
-    if (res?.status === "cancelled") return; // annullato dall'utente: nessun errore
-    if (res?.status === "pending") {
-      // Ask-to-Buy / autorizzazione: l'esito arriverà dal listener transactionUpdated.
-      showToast("Acquisto in attesa di approvazione. Ti avviseremo.");
-      return;
-    }
-    if (res?.status !== "purchased") {
-      throw new Error("Acquisto non completato. Riprova.");
-    }
-    await syncReceipt(res); // verifica lato server + scrittura entitlement
-    const pro = await fetchIsPro();
-    setIsPro(pro);
-    if (!pro) throw new Error("Pagamento ricevuto: attivazione in corso, riprova tra poco.");
-    showToast("Benvenuto in Premium! 🎉");
-  }
 
   // --- "Ho cucinato questo" ---
 
@@ -1148,13 +1080,9 @@ export default function Dispensa({ session }) {
             recipeContext={recipeContext} onToggleContext={toggleRecipeContext}
             plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek }}
             startOnPlan={planFirst}
-            isPro={isPro}
-            onNeedPro={() => openPaywall("Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola.")}
             online={online}
             foodPrefs={foodPrefs}
-            onNeedAi={() => openPaywall("Le idee su misura con l'AI fanno parte di Premium: scegli un'occasione o scrivi cosa ti va, e te le preparo con quello che hai.")}
             expiring={expiringItems.filter((x) => !isOut(x))}
-            onAiLimit={() => openPaywall("Hai finito le richieste AI di oggi: con Premium non hanno limiti.")}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
             onDeleteSaved={removeSavedRecipe}
@@ -1293,18 +1221,7 @@ export default function Dispensa({ session }) {
           onDeleteAccount={deleteAccount}
           onLogout={logout}
           onOpenPrivacy={() => { pendingSheetRef.current = "privacy"; }}
-          isPro={isPro}
-          onOpenPaywall={() => { pendingSheetRef.current = "paywall"; }}
           onClearPantry={() => { bumpModal("confirmClear"); setConfirmClear(true); }}
-        />
-      )}
-
-      {paywall && (
-        <PaywallSheet
-          key={modalEpoch.current.paywall}
-          reason={paywall.reason}
-          onPurchase={purchasePremium}
-          onClose={() => setPaywall(null)}
         />
       )}
 

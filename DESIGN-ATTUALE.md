@@ -140,6 +140,9 @@
   "Sta finendo · Metti in lista". Niente più pillole delle unità, da nessuna parte. Foglio nero
   **"Com'è rimasto?"** dopo "Ho cucinato": un prodotto per riga, sotto tre pillole (scelta = gialla),
   "Ce n'è ancora" già scelta.
+- **Senza Premium (09/10 sera)**: nessun lucchetto, nessun cartellino "FREE"/"Premium", niente
+  riquadro Premium nel Profilo. Nelle Ricette, in ordine: campo "Cosa ti va?", pillole, "Puoi farle
+  con quello che hai" (per tutti), intestazione "Idee su misura" e le occasioni.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

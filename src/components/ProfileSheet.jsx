@@ -2,8 +2,8 @@
 // sinistra). Pannello laterale da SINISTRA, blu come l'avatar, con la X in alto
 // a destra (si chiude anche toccando fuori o trascinando). Dentro: account
 // (nome), Dispensa condivisa, Esigenze alimentari e, dal 09/10, anche le
-// Impostazioni (SettingsSection: Premium, notifiche, "Svuota
-// dispensa", "Esci", privacy / elimina account). L'ingranaggio in testata non
+// Impostazioni (SettingsSection: notifiche, "Esci", privacy / elimina account
+// con dietro "svuota dispensa"). L'ingranaggio in testata non
 // c'è più. Veste manifesto: righe sottili, pillole.
 import { useState, useEffect } from "react";
 import { Leaf, Users, ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
@@ -19,7 +19,7 @@ export default function ProfileSheet({
   email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
   catOrder = [], onMoveCat,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
-  onDeleteAccount, onLogout, onOpenPrivacy, isPro = true, onOpenPaywall,
+  onDeleteAccount, onLogout, onOpenPrivacy,
 }) {
   const [username, setUsernameState] = useState("");
   const [membersKey, setMembersKey] = useState(0);  // forza il refresh della lista membri
@@ -153,8 +153,6 @@ export default function ProfileSheet({
             onDeleteAccount={onDeleteAccount}
             onLogout={onLogout}
             onOpenPrivacy={onOpenPrivacy}
-            isPro={isPro}
-            onOpenPaywall={onOpenPaywall}
             onClearPantry={() => { close(); onClearPantry(); }}
           />
         </div>

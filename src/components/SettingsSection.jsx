@@ -1,6 +1,6 @@
 // Impostazioni DENTRO il Profilo (dal 09/10: prima erano un pannello a parte,
 // aperto dall'ingranaggio in alto a destra, tolto su richiesta). Raccoglie il
-// "come si comporta l'app": Premium, notifiche push, "Esci"
+// "come si comporta l'app": notifiche push, "Esci"
 // (con conferma) e il footer legale (privacy / elimina account, con dietro
 // "Voglio solo svuotare la dispensa").
 // `close` chiude il pannello del Profilo.
@@ -14,7 +14,7 @@ import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush
 
 export default function SettingsSection({
   close, onDeleteAccount, onOpenPrivacy, onLogout,
-  isPro = true, onOpenPaywall, onClearPantry,
+  onClearPantry,
 }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -72,32 +72,7 @@ export default function SettingsSection({
     <>
           <div className="sezione mb-2.5 mt-6">Impostazioni</div>
 
-          {/* Premium: punto d'accesso permanente al paywall (gli altri sono
-              contestuali, sulle funzioni bloccate). Per un abbonato diventa
-              una conferma discreta invece di sparire del tutto. */}
-          {isPro ? (
-            <div className="flex items-center gap-3 rounded-card bg-white px-3.5 py-3">
-              <Sparkles className="h-[18px] w-[18px] shrink-0 text-ink" />
-              <span className="min-w-0 flex-1">
-                <span className={nome}>Premium attivo</span>
-                <span className={stato}>Grazie per il sostegno 🧡</span>
-              </span>
-            </div>
-          ) : (
-            <button
-              onClick={() => { close(); onOpenPaywall?.(); }}
-              className="flex w-full items-center gap-3 rounded-card bg-rosa px-3.5 py-3 text-left shadow-[inset_0_0_0_1.5px_#0a0a0a] transition active:scale-[0.99]"
-            >
-              <Sparkles className="h-[18px] w-[18px] shrink-0 text-ink" />
-              <span className="min-w-0 flex-1">
-                <span className={nome}>Passa a Premium</span>
-                <span className="block text-[0.8rem] font-medium leading-snug text-ink/70">Piano Alimentare e ricette su misura con l'AI</span>
-              </span>
-              <ChevronRight className="h-5 w-5 shrink-0 text-ink" />
-            </button>
-          )}
-
-          <div className="mt-4 border-t-[1.5px] border-ink">
+          <div className="border-t-[1.5px] border-ink">
             {/* Notifiche push: avvisi scadenze (opt-in per dispositivo). Visibile
                 solo dove le push sono supportate; su iPhone non installato mostra
                 l'invito ad aggiungere l'app alla Home. */}

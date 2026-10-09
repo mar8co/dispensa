@@ -22,7 +22,6 @@ import Toast from "../components/Toast.jsx";
 import Auth from "../components/Auth.jsx";
 import { mondayOf } from "../hooks/useMealPlan.jsx";
 import ProfileSheet from "../components/ProfileSheet.jsx";
-import PaywallSheet from "../components/PaywallSheet.jsx";
 import PrivacySheet from "../components/PrivacySheet.jsx";
 import ConfirmClearModal from "../components/ConfirmClearModal.jsx";
 import ManualAddModal from "../components/ManualAddModal.jsx";
@@ -223,8 +222,6 @@ export default function Anteprima() {
             }}
             startOnPlan={PARAM_VISTA === "piano"}
             foodPrefs={PARAM_ESIGENZE}
-            isPro={q.get("gratis") !== "1"}
-            onNeedPro={() => {}} onNeedAi={() => setFoglio("premium")}
             savedRecipes={[
               { id: "r1", title: "Pasta zucchine e menta", saved: true, cooked_count: 3, data: { time: "20 min" } },
               { id: "r2", title: "Pollo al limone", saved: true, cooked_count: 1, data: { time: "25 min" } },
@@ -263,11 +260,10 @@ export default function Anteprima() {
           email="marco@esempio.it" itemCount={items.length} shared foodPrefs={PARAM_ESIGENZE} onSaveFoodPrefs={() => {}}
           onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
           catOrder={ordine} onMoveCat={(c, d) => setOrdine((o) => { const i = o.indexOf(c), j = i + d; if (j < 0 || j >= o.length) return o; const n = [...o]; [n[i], n[j]] = [n[j], n[i]]; return n; })}
-          onLogout={chiudi} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")} isPro={false} onOpenPaywall={() => setFoglio("premium")}
+          onLogout={chiudi} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
         />
       )}
-      {foglio === "premium" && <PaywallSheet onClose={chiudi} reason="Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola." />}
       {foglio === "privacy" && <PrivacySheet onClose={chiudi} />}
       {foglio === "svuota" && <ConfirmClearModal onCancel={chiudi} onConfirm={chiudi} />}
       {foglio === "aggiungi" && <AggiungiProva onClose={chiudi} />}
