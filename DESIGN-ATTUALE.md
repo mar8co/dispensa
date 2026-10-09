@@ -99,7 +99,7 @@
 - **Ricette nel piano gratuito (09/10)**: il campo "Cosa ti va?" è lo stesso di Premium (scintille), ma
   "Vai" ha il lucchetto e apre il paywall: la ricerca la fa l'AI, incrociando richiesta e dispensa. Sotto,
   "Puoi farle adesso": al massimo 5 ricette a cui non manca nulla; se non ce n'è nessuna, le 2 più vicine col
-  titolo "Ti manca poco" e la riga "ti manca: N ingredienti". Mai l'elenco intero del ricettario. Le occasioni
+  titolo "Ti manca poco" e la riga "ti manca: " seguita dai nomi degli ingredienti. Mai l'elenco intero del ricettario. Le occasioni
   restano visibili sotto "Idee su misura con l'AI" col cartellino nero "Premium"; le pillole di contesto solo
   con Premium.
 

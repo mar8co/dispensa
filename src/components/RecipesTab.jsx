@@ -190,7 +190,7 @@ export default function RecipesTab({
           <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>
           <span className="block truncate text-[0.8rem] font-medium text-tenue">
             {r.time ? `${r.time} · ` : ""}
-            {miss.length === 0 ? "hai tutto" : `ti manca: ${miss.length} ${miss.length === 1 ? "ingrediente" : "ingredienti"}`}
+            {miss.length === 0 ? "hai tutto" : `ti manca: ${miss.join(", ")}`}
           </span>
         </span>
         {usesExpiring && <span className="cartellino bg-ink text-white">usa ciò che scade</span>}
