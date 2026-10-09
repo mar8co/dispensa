@@ -4,7 +4,7 @@
 // leggerebbe). I fogli del Piano e "Aggiorna la dispensa" sono neri.
 // griglia occasioni -> 5 proposte -> ricetta completa con grammature, "cosa mi
 // manca", timer e "Ho cucinato questa ricetta".
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils, GripVertical,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
@@ -105,6 +105,27 @@ export default function RecipesTab({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipe?.title]);
+
+  // Ricetta aperta: in alto resta SEMPRE la riga con la freccia per tornare
+  // indietro (fissa mentre si scorre). Quando il titolo grande è uscito dallo
+  // schermo, accanto alla freccia compare il nome del piatto, più piccolo:
+  // così a metà procedimento si sa ancora cosa si sta leggendo e si torna
+  // indietro senza risalire in cima.
+  const titleRef = useRef(null);
+  const [titleGone, setTitleGone] = useState(false);
+  useEffect(() => {
+    setTitleGone(false);
+    const el = titleRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return undefined;
+    // Il margine in alto vale l'altezza della riga fissa: il titolo "esce"
+    // quando finisce sotto di lei, non quando tocca il bordo dello schermo.
+    const io = new IntersectionObserver(
+      ([e]) => setTitleGone(!e.isIntersecting && e.boundingClientRect.top < 80),
+      { rootMargin: "-60px 0px 0px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [recipe?.title, loadingRecipe]);
 
   // Dal dettaglio ricetta: mette QUESTA ricetta nel piano (giorno + slot).
   // `existingId`: il piatto già pianificato in quel pasto, da sostituire.
@@ -515,9 +536,20 @@ export default function RecipesTab({
 
       {recipe && !loadingRecipe && (
         <>
-          <button onClick={backToIdeas} className="mb-4 flex min-h-[36px] items-center gap-1.5 text-[0.95rem] font-bold text-ink">
-            <ArrowLeft className="h-[18px] w-[18px]" /> <span className="link">{mode ? "Altre proposte" : "Indietro"}</span>
-          </button>
+          {/* Riga fissa in alto, come nell'elenco delle proposte: tondo con la
+              freccia e, accanto, "Altre proposte" finché il titolo grande è a
+              schermo; poi il nome del piatto (su una riga, troncato) e il
+              filo sotto, che la stacca da ciò che le scorre dietro. */}
+          <div className={`sticky top-0 z-20 -mx-4 mb-3 flex items-center gap-2.5 border-b-[1.5px] bg-sfondo px-4 py-2.5 ${titleGone ? "border-ink" : "border-transparent"}`}>
+            <button onClick={backToIdeas} aria-label={mode ? "Torna alle proposte" : "Indietro"} className="tondo">
+              <ArrowLeft className="h-[18px] w-[18px]" />
+            </button>
+            {titleGone ? (
+              <p className="animate-fade-in min-w-0 truncate text-[1.25rem] font-extrabold leading-tight tracking-[-0.045em] text-ink [word-spacing:0.08em]">{recipe.title}</p>
+            ) : (
+              <button onClick={backToIdeas} className="link min-h-[36px] text-[0.95rem] text-ink">{mode ? "Altre proposte" : "Indietro"}</button>
+            )}
+          </div>
 
           {/* Cover con cuore per salvare */}
           <div className="relative">
@@ -537,7 +569,7 @@ export default function RecipesTab({
             </button>
           </div>
 
-          <h1 className="titolo mt-5">{recipe.title}</h1>
+          <h1 ref={titleRef} className="titolo mt-5">{recipe.title}</h1>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {recipe.time && (
               <span className="pillola min-h-[36px] cursor-default bg-white px-3 text-[0.84rem]">
