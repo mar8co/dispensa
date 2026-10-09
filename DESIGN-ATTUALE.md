@@ -18,7 +18,8 @@
   | Dispensa, accesso, caricamento, avvio | **beige** `#dcceb3` (marchio, token `sabbia`; dal 01/10, prima arancio) |
   | Spesa | **bianco** (dal 01/10; prima giallo) |
   | Ricette (Idee, proposte, Piano Alimentare) | **verde** `#22b35e` |
-  | Ricetta aperta, modalità cucina, fogli del Piano | **verde** (dal 09/10, prima bianco): tutto ciò che è Ricette o Piano Alimentare è verde; gli ingredienti stanno in una card bianca |
+  | Foglio del pasto nel Piano (scegli / azioni sul piatto) | **nero** (testo crema, azione gialla; dal 09/10) |
+  | Ricetta aperta, modalità cucina, "Aggiungi al piano" | **verde** (dal 09/10, prima bianco): tutto ciò che è Ricette o Piano Alimentare è verde; gli ingredienti stanno in una card bianca |
   | Profilo (pannello da sinistra) | **blu** `#3572e8`, lo stesso dell'avatar (testi secondari neri) |
   | Impostazioni | dentro il Profilo (blu) dal 09/10; il pannello arancio non esiste più |
   | Privacy (foglio) | **beige** `#dcceb3` |

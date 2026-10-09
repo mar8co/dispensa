@@ -67,10 +67,12 @@ function MealSlotSheet({
   const missing = (meal?.data?.ingredients || []).filter((ing) => !hasIngredient(ing.name));
 
   return (
-    <Sheet onClose={onClose} panelClass="bg-verde">
+    <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
       {(close) => (
-        // Sul verde i testi secondari grigi non si leggono: qui diventano neri.
-        <div className="px-[18px] pb-4 pt-1 [&_.micro]:text-ink [&_.text-tenue]:text-ink">
+        // Foglio NERO sulla pagina verde (scelta dell'utente, 09/10): come nelle
+        // fotocamere si scrive in crema, i bordi sono crema e l'azione
+        // principale è gialla (un bottone nero sul nero sparirebbe).
+        <div className="px-[18px] pb-4 pt-1 text-crema [&_.border-ink]:border-crema [&_.bottone-chiaro]:border-crema [&_.bottone-chiaro]:text-crema [&_.bottone]:bg-giallo [&_.bottone]:text-ink [&_.campo]:border-crema [&_.campo]:placeholder:text-crema/50 [&_.divide-riga>*]:border-crema/20 [&_.micro]:text-crema/70 [&_.text-ink]:text-crema [&_.text-tenue]:text-crema/70">
           <p className="micro capitalize">{heading}</p>
 
           {!picking && meal && (
