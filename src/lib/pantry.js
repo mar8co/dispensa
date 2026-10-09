@@ -419,7 +419,7 @@ export function matchKey(s) {
 // azzerava sempre al valore base, e si perdeva quello che c'era scritto. Tra
 // famiglie diverse (pezzi ↔ peso ↔ volume) non c'è conversione sensata: si
 // riparte dal valore base dell'unità scelta.
-const UNIT_DEFAULTS = { "": "1", g: "100 g", kg: "1 kg", ml: "250 ml", l: "1 l" };
+const UNIT_DEFAULTS = { "": "1", g: "100 g", kg: "1 kg", ml: "500 ml", l: "0,5 l" };
 export function changeUnit(qty, u) {
   const p = parseQty(qty);
   const table = u in WEIGHT_UNITS ? WEIGHT_UNITS : u in VOLUME_UNITS ? VOLUME_UNITS : null;

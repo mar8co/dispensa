@@ -283,8 +283,8 @@ describe("changeUnit", () => {
   it("tra famiglie diverse riparte dal valore base", () => {
     expect(changeUnit("100 g", "")).toBe("1");
     expect(changeUnit("3", "g")).toBe("100 g");
-    expect(changeUnit("2 kg", "l")).toBe("1 l");
-    expect(changeUnit("1 barattolo", "ml")).toBe("250 ml");
+    expect(changeUnit("2 kg", "l")).toBe("0,5 l");
+    expect(changeUnit("1 barattolo", "ml")).toBe("500 ml");
   });
 });
 
