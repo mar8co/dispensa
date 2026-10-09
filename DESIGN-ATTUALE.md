@@ -111,8 +111,7 @@
   Un avviso, una volta sola per dispositivo, spiega il gesto.
 - **Piano, "Riempi la settimana" (09/10)**: pulsante nero pieno sotto il selettore della settimana, con
   una riga piccola che dice cosa fa; compare solo se da oggi in poi c'è almeno un pasto libero. Alla
-  fine si apre il foglio nero **"Piano pronto"** (`PlanReadySheet.jsx`): un pasto per riga (giorno ·
-  pasto, piatto, cosa manca); tocco sul piatto = apre la ricetta, tondo con le frecce = ne propone
+  fine si apre il foglio nero **"Piano pronto"** (`PlanReadySheet.jsx`): un blocco per giorno (giorno in testa; sotto i pasti con sole = pranzo e luna = cena, piatto, cosa manca; il filo separa i giorni); tocco sul piatto = apre la ricetta, tondo con le frecce = ne propone
   un'altra; in fondo "Annulla tutto" e "Va bene" (giallo).
 - **Ricetta aperta dal ricettario**: prende tutta la pagina (prima compariva in fondo a "Cosa
   cuciniamo?"); in alto il link "Indietro".

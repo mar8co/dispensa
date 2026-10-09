@@ -9,16 +9,19 @@ import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { FOGLIO_NERO } from "../lib/colors.js";
 
-const SLOT = { pranzo: "pranzo", cena: "cena" };
-// "ven 9 · cena"
-function when(p) {
-  const d = new Date(`${p.date}T12:00:00`);
-  return `${d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric" })} · ${SLOT[p.slot] || p.slot}`;
+// "ven 9" (il giorno si scrive una volta sola, in testa al suo blocco)
+function dayLabel(iso) {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString("it-IT", { weekday: "long", day: "numeric" });
 }
 
 // picks: [{ id, date, slot, recipe, missing: [{ name }] }] · added: prodotti messi in lista
 // swapping: indice del pasto che si sta cambiando (null = nessuno)
 export default function PlanReadySheet({ picks, added = 0, swapping = null, onSwap, onOpen, onUndoAll, onClose }) {
+  // I pasti raggruppati per giorno, tenendo l'indice originale (serve a "cambia").
+  const byDay = new Map();
+  picks.forEach((p, i) => { if (!byDay.has(p.date)) byDay.set(p.date, []); byDay.get(p.date).push({ p, i }); });
+  const days = [...byDay.entries()];
+
   return (
     <Sheet onClose={onClose} panelClass="bg-ink" handleClass="bg-crema/40">
       {(close) => (
@@ -32,29 +35,35 @@ export default function PlanReadySheet({ picks, added = 0, swapping = null, onSw
             </p>
           </div>
 
-          <ul className="max-h-[50vh] divide-y divide-riga overflow-y-auto border-y-[1.5px] border-ink px-[18px]">
-            {picks.map((p, i) => (
-              <li key={`${p.date}|${p.slot}`} className="flex items-center gap-2 py-2">
-                <button onClick={() => { close(); onOpen(p); }} className="min-w-0 flex-1 py-1 text-left">
-                  {/* Sole = pranzo, luna = cena: le stesse icone del Piano, per
-                      distinguerli a colpo d'occhio senza altro testo. */}
-                  <span className="micro flex items-center gap-1 capitalize">
-                    {p.slot === "cena" ? <Moon className="h-3 w-3 shrink-0" /> : <Sun className="h-3 w-3 shrink-0" />} {when(p)}
-                  </span>
-                  <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{p.recipe.title}</span>
-                  <span className="block truncate text-[0.8rem] font-medium text-tenue">
-                    {p.missing.length ? `manca: ${p.missing.map((m) => m.name).join(", ")}` : "hai tutto"}
-                  </span>
-                </button>
-                <button
-                  onClick={() => onSwap(i)}
-                  disabled={swapping !== null}
-                  aria-label={`Cambia ${p.recipe.title}`}
-                  title="Proponine un'altra"
-                  className="tondo h-11 w-11 disabled:opacity-40"
-                >
-                  {swapping === i ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <RefreshCw className="h-[18px] w-[18px]" />}
-                </button>
+          {/* Un blocco per giorno: il giorno in testa, sotto i suoi pasti (sole =
+              pranzo, luna = cena, come nel Piano). Il filo separa i giorni, non
+              i due pasti dello stesso giorno. */}
+          <ul className="max-h-[52vh] divide-y divide-riga overflow-y-auto border-y-[1.5px] border-ink px-[18px]">
+            {days.map(([date, rows]) => (
+              <li key={date} className="py-2.5">
+                <p className="text-[0.86rem] font-extrabold capitalize tracking-[-0.01em] text-ink">{dayLabel(date)}</p>
+                {rows.map(({ p, i }) => (
+                  <div key={p.slot} className="flex items-center gap-2.5 py-1">
+                    {p.slot === "cena"
+                      ? <Moon className="h-4 w-4 shrink-0 text-tenue" aria-label="Cena" />
+                      : <Sun className="h-4 w-4 shrink-0 text-tenue" aria-label="Pranzo" />}
+                    <button onClick={() => { close(); onOpen(p); }} className="min-w-0 flex-1 py-1 text-left">
+                      <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{p.recipe.title}</span>
+                      <span className="block truncate text-[0.8rem] font-medium text-tenue">
+                        {p.slot === "cena" ? "Cena" : "Pranzo"} · {p.missing.length ? `manca: ${p.missing.map((m) => m.name).join(", ")}` : "hai tutto"}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => onSwap(i)}
+                      disabled={swapping !== null}
+                      aria-label={`Cambia ${p.recipe.title}`}
+                      title="Proponine un'altra"
+                      className="tondo h-11 w-11 disabled:opacity-40"
+                    >
+                      {swapping === i ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <RefreshCw className="h-[18px] w-[18px]" />}
+                    </button>
+                  </div>
+                ))}
               </li>
             ))}
           </ul>
