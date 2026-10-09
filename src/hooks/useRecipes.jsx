@@ -315,6 +315,7 @@ export function useRecipes({
   function openSavedRecipe(row) {
     if (!row?.data) return;
     newGen(); // le risposte in volo di richieste precedenti non devono più committare
+    scrollToTop(); // la ricetta prende tutta la pagina: si parte dall'alto
     animateUI(() => {
       setMode(null); setIdeas([]); setRecipeErr(""); setCookDone(""); setLoadingRecipe(false);
       setRecipe({ ...row.data, image: row.data.image || row.image || undefined });

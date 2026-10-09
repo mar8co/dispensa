@@ -184,7 +184,11 @@ export default function RecipesTab({
 
   return (
     <div className="pt-2">
-      {!mode && (
+      {/* La pagina principale si vede solo se NON c'è una ricetta aperta: una
+          ricetta del ricettario si apre con `mode` vuoto, e prima compariva in
+          fondo a questa pagina, sotto tutto il resto — cioè, toccandola dalla
+          sezione in alto, sembrava non aprirsi. */}
+      {!mode && !recipe && (
         <>
           <h1 className="gigante">Cosa<br />cuciniamo?</h1>
 
@@ -295,7 +299,7 @@ export default function RecipesTab({
                 <section className="mt-6">
                   <div className="flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px]">
                     <h2 className="min-w-0 text-[1.3rem] font-extrabold leading-[1.05] tracking-[-0.04em] text-ink">{doable.length ? "Puoi farle con quello che hai" : "Ti manca poco"}</h2>
-                    <span className="cartellino ml-auto">Gratis</span>
+                    <span className="cartellino ml-auto">FREE</span>
                   </div>
                   {!doable.length && <p className="micro mt-2">Le più vicine a quello che hai in dispensa.</p>}
                   <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
@@ -508,7 +512,7 @@ export default function RecipesTab({
       {recipe && !loadingRecipe && (
         <>
           <button onClick={backToIdeas} className="mb-4 flex min-h-[36px] items-center gap-1.5 text-[0.95rem] font-bold text-ink">
-            <ArrowLeft className="h-[18px] w-[18px]" /> <span className="link">{mode ? "Altre proposte" : "Il tuo ricettario"}</span>
+            <ArrowLeft className="h-[18px] w-[18px]" /> <span className="link">{mode ? "Altre proposte" : "Indietro"}</span>
           </button>
 
           {/* Cover con cuore per salvare */}
