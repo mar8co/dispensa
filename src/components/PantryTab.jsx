@@ -9,7 +9,7 @@ import {
   SlidersHorizontal, ArrowUp, ArrowDown, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
-import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, isLow, changeUnit } from "../lib/pantry.js";
+import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, qtyLabel, isLow, changeUnit } from "../lib/pantry.js";
 import { tourSignal } from "../lib/tour.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
@@ -45,9 +45,6 @@ const SORTS = [
   ["nome", "A-Z"],
   ["scadenza", "Scadenza"],
 ];
-
-// Quantità a riposo: i numeri puri diventano "×3", il resto resta com'è.
-const qtyLabel = (q) => (/^\d+$/.test(String(q).trim()) ? `×${String(q).trim()}` : formatQtyDisplay(q));
 
 
 export default function PantryTab({
@@ -388,7 +385,7 @@ export default function PantryTab({
                 {gi > 0 && (
                   <button
                     onClick={() => onMoveCat(cat, -1)}
-                    className="flex h-8 w-8 items-center justify-center text-ink transition active:scale-90"
+                    className="-my-1.5 flex h-11 w-10 items-center justify-center text-ink transition active:scale-90"
                     aria-label="Sposta su"
                   >
                     <ArrowUp className="h-[18px] w-[18px]" />
@@ -397,7 +394,7 @@ export default function PantryTab({
                 {gi < grouped.length - 1 && (
                   <button
                     onClick={() => onMoveCat(cat, 1)}
-                    className="flex h-8 w-8 items-center justify-center text-ink transition active:scale-90"
+                    className="-my-1.5 flex h-11 w-10 items-center justify-center text-ink transition active:scale-90"
                     aria-label="Sposta giù"
                   >
                     <ArrowDown className="h-[18px] w-[18px]" />
@@ -473,11 +470,11 @@ export default function PantryTab({
                       onClick={() => openPanel(it)}
                       className="flex w-full items-baseline gap-2 py-[9px] text-left"
                     >
-                      <span className={`min-w-0 truncate text-[1.06rem] font-[650] tracking-[-0.02em] ${out ? "text-ink/40" : "text-ink"}`}>{it.name}</span>
+                      <span className={`min-w-0 truncate text-[1.06rem] font-[650] tracking-[-0.02em] ${out ? "text-tenue" : "text-ink"}`}>{it.name}</span>
                       <ExpiryBadge date={it.expiry} />
                       {out && <span className="cartellino self-center">finito</span>}
                       <span aria-hidden="true" className="-translate-y-1 border-b-2 border-dotted border-ink/35" style={{ flex: "1 0 12px" }} />
-                      <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${out ? "text-ink/40" : "text-ink"}`}>{qtyLabel(it.qty)}</span>
+                      <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${out ? "text-tenue" : "text-ink"}`}>{qtyLabel(it.qty)}</span>
                     </button>
                   </li>
                 );

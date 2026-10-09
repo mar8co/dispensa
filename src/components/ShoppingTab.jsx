@@ -18,7 +18,7 @@ import {
   Share, Lightbulb, X,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
-import { atMinQty, adjustQty, formatQtyDisplay, matchKey, changeUnit } from "../lib/pantry.js";
+import { atMinQty, adjustQty, formatQtyDisplay, qtyLabel, matchKey, changeUnit } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 import Barattoli from "./Barattoli.jsx";
@@ -132,14 +132,14 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
       >
         {/* Il nome (con un filo d'aria in più per il dito) apre la modifica; il
             resto della riga, spazio vuoto compreso, mette nel carrello. */}
-        <span ref={nameRef} className={`min-w-0 truncate py-2 pr-4 text-[1.06rem] font-[650] tracking-[-0.02em] ${selected ? "text-ink/45 line-through" : "text-ink"}`}>
+        <span ref={nameRef} className={`min-w-0 truncate py-2 pr-4 text-[1.06rem] font-[650] tracking-[-0.02em] ${selected ? "text-tenue line-through" : "text-ink"}`}>
           {it.name}
         </span>
         <span aria-hidden="true" className="flex-1 self-stretch" />
         {/* Quantità in spazio dedicato (solo se impostata, ≠ "1") */}
         {it.qty && it.qty !== "1" && (
-          <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${selected ? "text-ink/45 line-through" : "text-ink"}`}>
-            {formatQtyDisplay(it.qty)}
+          <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${selected ? "text-tenue line-through" : "text-ink"}`}>
+            {qtyLabel(it.qty)}
           </span>
         )}
         {/* Cerchio carrello: bottone REALE (area di tocco 44px, cerchio 28px
@@ -440,7 +440,7 @@ export default function ShoppingTab({
     if (navigator.share) {
       navigator.share({ text }).catch(() => { /* condivisione annullata */ });
     } else if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).then(() => onNotify("Lista copiata negli appunti."), () => {});
+      navigator.clipboard.writeText(text).then(() => onNotify("Lista copiata negli appunti"), () => {});
     }
   }
 
@@ -583,7 +583,7 @@ export default function ShoppingTab({
                     <div className="flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px] pt-4">
                       <span className="text-[1.15rem] leading-none">{CAT_ICON[cat]}</span>
                       <h4 className="min-w-0 truncate text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">{cat}</h4>
-                      <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{list.length}</span>
+                      <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{String(list.length).padStart(2, "0")}</span>
                     </div>
                     <ul className="divide-y divide-riga">{renderItems(list)}</ul>
                   </section>
@@ -614,7 +614,7 @@ export default function ShoppingTab({
                 <div className="flex items-center gap-2 border-b-[1.5px] border-ink pb-[7px] pt-4">
                   <span className="text-[1.15rem] leading-none">🛒</span>
                   <h4 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Nel carrello</h4>
-                  <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{cart.length}</span>
+                  <span className="num text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{String(cart.length).padStart(2, "0")}</span>
                 </div>
                 <ul className="divide-y divide-riga">{renderItems(cart)}</ul>
               </section>

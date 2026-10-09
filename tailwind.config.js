@@ -9,6 +9,9 @@ const sfondo = "rgb(var(--sfondo) / <alpha-value>)";
 // Inchiostro trasparente: su qualsiasi colore pieno resta leggibile e prende
 // la tinta del fondo (un grigio fisso sul giallo o sull'arancio sporcherebbe).
 const inkA = (a) => `rgb(10 10 10 / calc(<alpha-value> * ${a}))`;
+// Testo secondario: nero al 60%, ma sul VERDE delle Ricette quel grigio scende
+// sotto il contrasto leggibile (3,6:1): lì setPageColor alza --tenue-a a 0.8.
+const tenue = "rgb(10 10 10 / calc(<alpha-value> * var(--tenue-a, 0.6)))";
 
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
@@ -20,7 +23,7 @@ export default {
         white: "#ffffff",
         crema: "#f3f1ec", // "bianco caldo" del testo su nero
         carta: "#efede8",
-        tenue: inkA(0.6), // etichette e testi secondari
+        tenue, // etichette e testi secondari
         riga: inkA(0.16), // fili sottili tra le righe
         // Colori pieni (sopra si scrive in nero; bianco solo sul rosso azione)
         arancio: "#ff7a1a", // Impostazioni (fino al 01/10 era il marchio)

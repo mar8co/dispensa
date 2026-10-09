@@ -39,6 +39,8 @@ export function setPageColor(hex) {
   const n = parseInt(hex.replace("#", ""), 16);
   const rgb = `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
   document.documentElement.style.setProperty("--sfondo", rgb);
+  // Sul verde il testo secondario (nero al 60%) non regge il contrasto: più scuro.
+  document.documentElement.style.setProperty("--tenue-a", hex === PALETTE.verde ? "0.8" : "0.6");
   let meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) {
     meta = document.createElement("meta");

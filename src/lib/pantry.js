@@ -511,6 +511,13 @@ export function formatQtyDisplay(qty) {
   return String(qty);
 }
 
+// Quantità a riposo nelle righe (Dispensa e Spesa, uguali): i numeri puri
+// diventano "×3", il resto resta com'è.
+export function qtyLabel(q) {
+  const s = String(q).trim();
+  return /^\d+$/.test(s) ? `×${s}` : formatQtyDisplay(q);
+}
+
 // --- Quantità delle RICETTE (display, scalato per le porzioni) ---
 
 // Frazioni "da cucina": glifi delle più comuni, con tolleranza di aggancio. Lo

@@ -744,7 +744,7 @@ export default function Dispensa({ session }) {
         }
       }
       const list = [...byName.values()];
-      if (!list.length) showToast("Nessun alimento riconosciuto nell'immagine.");
+      if (!list.length) showToast("Nessun alimento riconosciuto nell'immagine");
       else {
         // Non aggiunge subito: apre la modale di revisione per nome/categoria.
         setScanItems(list);

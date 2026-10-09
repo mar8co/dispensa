@@ -93,7 +93,7 @@ svg.lucide {
     font-size: 0.72rem;
     font-weight: 500;
     line-height: 1.25;
-    color: rgb(10 10 10 / 0.6);
+    color: rgb(10 10 10 / var(--tenue-a, 0.6));
   }
   .num {
     font-variant-numeric: tabular-nums;

@@ -66,7 +66,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
       setJoinOpen(false); setJoinCode("");
       await onChanged?.();   // ricarica l'elenco nuclei
       await onSwitch?.(hid); // passa al nucleo condiviso (ricarica i dati)
-    } catch { setMsg("Errore nell'entrare nel nucleo. Riprova."); }
+    } catch { setMsg("Non sono riuscito a entrare nella dispensa condivisa. Riprova."); }
     setBusy("");
   }
   async function leave() {
@@ -77,7 +77,7 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
       const remaining = households.filter((h) => h.id !== active.id);
       await onChanged?.();
       if (remaining[0]) await onSwitch?.(remaining[0].id);
-    } catch { setMsg("Non sono riuscito a uscire dal nucleo."); }
+    } catch { setMsg("Non sono riuscito a uscire dalla dispensa condivisa."); }
     setBusy("");
   }
   async function kick() {
