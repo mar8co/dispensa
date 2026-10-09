@@ -20,11 +20,11 @@ export const PAGE_COLOR = {
   dispensa: PALETTE.sabbia,
   spesa: WHITE, // dal 01/10 (prima giallo)
   ricette: PALETTE.verde, // Idee, proposte e Piano Alimentare
-  ricetta: WHITE, // ricetta aperta: si legge meglio, le foto risaltano
+  ricetta: PALETTE.verde, // ricetta aperta: verde come tutto ciò che è Ricette (dal 09/10, prima bianca)
   accesso: PALETTE.sabbia, // login e caricamento
 };
 
-// Schermata della vista corrente (la ricetta aperta ha il suo colore).
+// Schermata della vista corrente (la ricetta aperta ha la sua voce, oggi verde).
 export function pageColorFor(view, recipeOpen = false) {
   if (view === "ricette" && recipeOpen) return PAGE_COLOR.ricetta;
   return PAGE_COLOR[view] || PAGE_COLOR.dispensa;

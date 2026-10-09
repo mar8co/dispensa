@@ -34,7 +34,7 @@ export default function CookingMode({ recipe, onClose, onFinish }) {
   const s = steps[i];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+    <div className="fixed inset-0 z-50 flex flex-col bg-verde [&_.micro]:text-ink">
       {/* Testata (sotto la fascia di vetro di iOS nell'app installata) */}
       <div className="flex items-center gap-3 px-4 pb-3" style={{ paddingTop: "calc(1.25rem + env(safe-area-inset-top))" }}>
         <div className="min-w-0 flex-1">
@@ -53,7 +53,7 @@ export default function CookingMode({ recipe, onClose, onFinish }) {
             key={k}
             onClick={() => setI(k)}
             aria-label={`Passaggio ${k + 1}`}
-            className={`h-[5px] flex-1 rounded-full transition ${k < i ? "bg-ink/40" : k === i ? "bg-ink" : "bg-ink/15"}`}
+            className={`h-[5px] flex-1 rounded-full transition ${k < i ? "bg-ink/45" : k === i ? "bg-ink" : "bg-white/60"}`}
           />
         ))}
       </div>

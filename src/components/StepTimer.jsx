@@ -47,7 +47,7 @@ export default function StepTimer({ minutes, id, label }) {
     <div
       data-tour="step-timer"
       className={`mt-2.5 inline-flex items-center gap-2 rounded-full border-[1.5px] border-ink py-1 pl-3 pr-1 text-ink ${
-        done ? "bg-verde" : ""
+        done ? "bg-giallo" : "bg-white"
       }`}
     >
       <Timer className="h-4 w-4" />

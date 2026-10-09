@@ -67,9 +67,10 @@ function MealSlotSheet({
   const missing = (meal?.data?.ingredients || []).filter((ing) => !hasIngredient(ing.name));
 
   return (
-    <Sheet onClose={onClose}>
+    <Sheet onClose={onClose} panelClass="bg-verde">
       {(close) => (
-        <div className="px-[18px] pb-4 pt-1">
+        // Sul verde i testi secondari grigi non si leggono: qui diventano neri.
+        <div className="px-[18px] pb-4 pt-1 [&_.micro]:text-ink [&_.text-tenue]:text-ink">
           <p className="micro capitalize">{heading}</p>
 
           {!picking && meal && (
@@ -165,7 +166,7 @@ function MealSlotSheet({
                         {r.image ? (
                           <img src={r.image} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-xl object-cover" />
                         ) : (
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink/[0.06] text-lg">🍽️</span>
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg">🍽️</span>
                         )}
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[1rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>

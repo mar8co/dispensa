@@ -1,4 +1,6 @@
-// Scheda Ricette (veste manifesto, pagina verde; la ricetta aperta è bianca):
+// Scheda Ricette (veste manifesto): TUTTO verde, anche la ricetta aperta, la
+// modalità cucina e i fogli del piano; sul verde gli ingredienti stanno in una
+// card bianca (il rosso di "manca" sul verde non si leggerebbe).
 // griglia occasioni -> 5 proposte -> ricetta completa con grammature, "cosa mi
 // manca", timer e "Ho cucinato questa ricetta".
 import { useState, useEffect } from "react";
@@ -22,7 +24,7 @@ import { isoDate, addDays } from "../hooks/useMealPlan.jsx";
 function PlanDaySheet({ onChoose, onClose }) {
   const days = [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(new Date(), i));
   return (
-    <Sheet onClose={onClose}>
+    <Sheet onClose={onClose} panelClass="bg-verde">
       {(close) => (
         <div className="px-[18px] pb-4 pt-1">
           <h3 className="titolo">Aggiungi al piano</h3>
@@ -460,7 +462,7 @@ export default function RecipesTab({
             {recipe.image ? (
               <FadeImg src={recipe.image} className="h-44 w-full rounded-card" />
             ) : (
-              <div className="flex h-36 items-center justify-center overflow-hidden rounded-card bg-ink/[0.06] text-6xl">
+              <div className="flex h-36 items-center justify-center overflow-hidden rounded-card bg-white text-6xl">
                 {mode?.icon || "🍽️"}
               </div>
             )}
@@ -477,7 +479,7 @@ export default function RecipesTab({
           <h1 className="titolo mt-5">{recipe.title}</h1>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {recipe.time && (
-              <span className="pillola min-h-[36px] cursor-default px-3 text-[0.84rem]">
+              <span className="pillola min-h-[36px] cursor-default bg-white px-3 text-[0.84rem]">
                 <Clock className="h-3.5 w-3.5" /> {recipe.time}
               </span>
             )}
@@ -506,9 +508,10 @@ export default function RecipesTab({
           {/* Ingredienti: raccolti in un "foglio" */}
           <div className="mt-7 flex items-baseline justify-between gap-2 border-b-[1.5px] border-ink pb-[7px]">
             <h3 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Ingredienti</h3>
-            <span className="flex items-center gap-1 text-[0.72rem] font-medium text-tenue"><CheckCircle2 className="h-3.5 w-3.5 text-ink" /> ce l'hai · <Circle className="h-3.5 w-3.5 text-rosso-azione" /> manca · tocca e depenni</span>
+            <span className="flex items-center gap-1 text-[0.72rem] font-medium text-ink"><CheckCircle2 className="h-3.5 w-3.5 text-ink" /> ce l'hai · <Circle className="h-3.5 w-3.5 text-ink" /> manca · tocca e depenni</span>
           </div>
-          <div>
+          {/* Card bianca: sul verde il rosso di "manca" non si leggerebbe. */}
+          <div className="mt-3 rounded-card bg-white px-3.5">
             <ul className="divide-y divide-riga">
               {ingredients.map((ing, i) => {
                 const have = hasIngredient(ing.name);
@@ -536,7 +539,7 @@ export default function RecipesTab({
 
           {missing.length > 0 && (
             addedMissing ? (
-              <p className="mt-3 text-center text-[0.86rem] font-semibold text-tenue">
+              <p className="mt-3 text-center text-[0.86rem] font-semibold text-ink">
                 {missing.length} {missing.length === 1 ? "prodotto aggiunto" : "prodotti aggiunti"} alla lista della spesa.
               </p>
             ) : (
@@ -550,7 +553,7 @@ export default function RecipesTab({
           {/* Nel piano settimanale: è anche la via "genera un'idea → piano". */}
           {plan && (
             plannedMsg ? (
-              <p className="mt-3 text-center text-[0.86rem] font-semibold text-tenue">{plannedMsg}</p>
+              <p className="mt-3 text-center text-[0.86rem] font-semibold text-ink">{plannedMsg}</p>
             ) : (
               <Button variant="secondary" size="sm" full className="mt-3" onClick={() => setPlanSheet(true)}>
                 <CalendarPlus className="h-3.5 w-3.5" /> Aggiungi al piano
@@ -572,12 +575,12 @@ export default function RecipesTab({
                   <button
                     onClick={() => setStepsDone((p) => ({ ...p, [i]: !p[i] }))}
                     aria-label={done ? "Segna da fare" : "Segna come fatto"}
-                    className={`num flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.95rem] font-extrabold transition active:scale-90 ${done ? "bg-verde text-ink" : "bg-ink text-white"}`}
+                    className={`num flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.95rem] font-extrabold transition active:scale-90 ${done ? "bg-white text-ink" : "bg-ink text-white"}`}
                   >
                     {done ? <Check className="h-4 w-4" /> : i + 1}
                   </button>
                   <div className="flex-1 pt-0.5">
-                    <p className={`text-[1.02rem] font-medium leading-relaxed transition ${done ? "text-ink/40" : "text-ink"}`}>{s.text}</p>
+                    <p className={`text-[1.02rem] font-medium leading-relaxed transition ${done ? "text-ink/50 line-through" : "text-ink"}`}>{s.text}</p>
                     {s.timer ? <StepTimer minutes={Number(s.timer)} id={`${recipe.title}-${i}`} label={recipe.title} /> : null}
                   </div>
                 </li>
@@ -588,7 +591,7 @@ export default function RecipesTab({
           <Button variant="primary" size="lg" full className="mt-7" onClick={openCookModal}>
             <Utensils className="h-4 w-4" /> Ho cucinato questa ricetta
           </Button>
-          {cookDone && <p className="mt-2 text-center text-[0.86rem] font-semibold text-tenue">{cookDone}</p>}
+          {cookDone && <p className="mt-2 text-center text-[0.86rem] font-semibold text-ink">{cookDone}</p>}
 
           {cooking && (
             <CookingMode
