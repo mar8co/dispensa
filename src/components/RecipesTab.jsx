@@ -4,18 +4,15 @@
 // leggerebbe). I fogli del Piano e "Aggiorna la dispensa" sono neri.
 // griglia occasioni -> 5 proposte -> ricetta completa con grammature, "cosa mi
 // manca", timer e "Ho cucinato questa ricetta".
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Plus, Minus, ArrowLeft, Clock, Gauge, Utensils,
   CheckCircle2, Circle, ShoppingCart, Heart, RefreshCw, Sparkles,
-  ChefHat, ChevronDown, Trash2, Check, CalendarPlus,
+  ChefHat, Trash2, Check, CalendarPlus,
 } from "lucide-react";
 import { stripParens, formatRecipeQty, shoppingQty } from "../lib/pantry.js";
 import { RECIPE_CONTEXTS } from "../constants.js";
 import { AI_LIMIT_MESSAGE } from "../lib/claude.js";
-import { rankCookable } from "../lib/suggest.js";
-import { allowedBy } from "../lib/prefs.js";
-import BASE_RECIPES from "../data/ricetteBase.js";
 import Button from "./Button.jsx";
 import Sheet from "./Sheet.jsx";
 import CookingMode from "./CookingMode.jsx";
@@ -69,8 +66,6 @@ export default function RecipesTab({
   plan = null,
   startOnPlan = false,
   online = true,
-  expiring = [],
-  foodPrefs = "",
 }) {
 
   const [addedMissing, setAddedMissing] = useState(false);
@@ -78,7 +73,6 @@ export default function RecipesTab({
   const [shelf, setShelf] = useState("salvate"); // tab del ricettario
   const [struck, setStruck] = useState({});    // ingredienti spuntati
   const [cooking, setCooking] = useState(false);  // modalità cucina
-  const [cookableOpen, setCookableOpen] = useState(false); // "Puoi farle con quello che hai" aperta
   // Sotto-vista iniziale: "piano" se si arriva dal deep-link della notifica
   // delle 18:30 con cena pianificata (/?view=piano), altrimenti "idee".
   const [tab, setTab] = useState(startOnPlan && plan ? "piano" : "idee");
@@ -160,36 +154,6 @@ export default function RecipesTab({
   const cookedList = (savedRecipes || [])
     .filter((r) => r.cooked_count > 0)
     .sort((a, b) => String(b.last_cooked_at || "").localeCompare(String(a.last_cooked_at || "")));
-
-  // "Puoi farle adesso": ricette GIÀ note (prima le tue, poi quelle di base
-  // dell'app) che si possono cucinare con la dispensa di ora, al massimo con
-  // un ingrediente mancante. Calcolo locale: niente AI, funziona offline.
-  const cookbook = useMemo(() => {
-    const mine = (savedRecipes || []).filter((r) => r.data?.ingredients?.length).map((r) => ({ ...r.data, image: r.data.image || r.image }));
-    // Fuori le ricette che non rispettano le esigenze alimentari del Profilo.
-    return [...mine, ...BASE_RECIPES].filter(allowedBy(foodPrefs));
-  }, [savedRecipes, foodPrefs]);
-  const allRanked = rankCookable(cookbook, hasIngredient, expiring, Infinity);
-  // Da mostrare: fino a 5 ricette a cui non manca NULLA; se non ce ne sono,
-  // le DUE a cui mancano meno ingredienti (scelta dell'utente del 09/10: mai
-  // l'elenco intero del ricettario).
-  const doable = allRanked.filter((x) => x.missing.length === 0).slice(0, 5);
-  const cookable = doable.length ? doable : allRanked.slice(0, 2);
-  // Riga di una ricetta del ricettario (Puoi farle adesso / Tutte / Trovate).
-  const recipeRow = ({ recipe: r, missing: miss, usesExpiring }) => (
-    <li key={r.title}>
-      <button onClick={() => onOpenSaved({ title: r.title, data: r })} className="flex min-h-[56px] w-full items-center gap-3 py-2 text-left">
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{r.title}</span>
-          <span className="block truncate text-[0.8rem] font-medium text-tenue">
-            {r.time ? `${r.time} · ` : ""}
-            {miss.length === 0 ? "hai tutto" : `ti manca: ${miss.join(", ")}`}
-          </span>
-        </span>
-        {usesExpiring && <span className="cartellino bg-ink text-white">usa ciò che scade</span>}
-      </button>
-    </li>
-  );
 
   const ingredients = recipe?.ingredients || [];
   const missing = ingredients.filter((ing) => !hasIngredient(ing.name));
@@ -304,37 +268,9 @@ export default function RecipesTab({
             </p>
           )}
 
-              {/* Per tutti (dal 09/10 non c'è più distinzione free/premium):
-                  dal ricettario, senza AI, al massimo 5 ricette che si possono
-                  fare con la dispensa di ora. Se non ce n'è nessuna se ne
-                  mostrano DUE, quelle a cui manca meno. Ogni riga apre la
-                  ricetta completa, col procedimento, come le altre. */}
-              {cookable.length > 0 && (
-                <section className="mt-6">
-                  {/* A scomparsa, CHIUSA di serie (09/10): l'intestazione è il
-                      bottone, col numero di ricette e la freccina. */}
-                  <button
-                    onClick={() => setCookableOpen((v) => !v)}
-                    aria-expanded={cookableOpen}
-                    className="flex w-full items-center gap-2 border-b-[1.5px] border-ink pb-[7px] text-left"
-                  >
-                    <h2 className="min-w-0 text-[1.3rem] font-extrabold leading-[1.05] tracking-[-0.04em] text-ink">{doable.length ? "Puoi farle con quello che hai" : "Ti manca poco"}</h2>
-                    <span className="num ml-auto text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-tenue">{String(cookable.length).padStart(2, "0")}</span>
-                    <ChevronDown className={`h-5 w-5 shrink-0 text-ink transition-transform duration-200 ${cookableOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {cookableOpen && (
-                    <div className="animate-fade-in">
-                      {!doable.length && <p className="micro mt-2">Le più vicine a quello che hai in dispensa.</p>}
-                      <ul className="divide-y divide-riga">{cookable.map(recipeRow)}</ul>
-                    </div>
-                  )}
-                </section>
-              )}
-
-          {/* Idee su misura: le prepara l'AI partendo dall'occasione scelta. */}
-          <div className="mt-7 border-b-[1.5px] border-ink pb-[7px]">
-            <h2 className="text-[1.3rem] font-extrabold leading-none tracking-[-0.04em] text-ink">Idee su misura</h2>
-          </div>
+          {/* Le occasioni: l'AI prepara le idee partendo da quella scelta. (La
+              sezione "Puoi farle con quello che hai" è stata tolta il 10/10: se
+              tornano free/premium va rimessa, vedi CLAUDE.md.) */}
           <div className="mt-5 grid grid-cols-2 gap-3">
             {orderedModes.map((m) => (
               <div

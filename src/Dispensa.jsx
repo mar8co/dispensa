@@ -1127,8 +1127,6 @@ export default function Dispensa({ session }) {
             plan={{ meals, weekStart, shiftWeek, loadingMeals, planMeal, removeMeal, markMealCooked, setMealServings, onCookMeal: cookMealFromPlan, onFillWeek: fillWeek, fillingWeek, onConnectCalendar: connectCalendar }}
             startOnPlan={planFirst}
             online={online}
-            foodPrefs={foodPrefs}
-            expiring={expiringItems.filter((x) => !isOut(x))}
             savedRecipes={savedRecipes}
             onOpenSaved={openSavedRecipe}
             onDeleteSaved={removeSavedRecipe}
