@@ -8,7 +8,7 @@ import { CATEGORIES, CAT_ICON } from "../constants.js";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
-import { adjustQty, atMinQty, formatQtyDisplay, changeUnit } from "../lib/pantry.js";
+import { pieces } from "../lib/pantry.js";
 
 function tmpId() {
   return Math.random().toString(36).slice(2, 10);
@@ -27,7 +27,7 @@ export default function ReviewScanModal({
     (initialItems || []).map((it) => ({
       id: tmpId(),
       name: String(it.name || "").trim(),
-      qty: String(it.qty || "1").trim() || "1",
+      qty: String(pieces(it.qty || "1")), // in dispensa entrano pezzi ("500 g" = 1)
       category: CATEGORIES.includes(it.category) ? it.category : "Altro",
       expiry: it.expiry || "",
     }))
@@ -45,8 +45,6 @@ export default function ReviewScanModal({
   function remove(id) {
     setItems((arr) => arr.filter((x) => x.id !== id));
   }
-  // Il "−" è attivo solo dal secondo passo in su (1 pz / 50 g / 0,25 kg-l).
-  const atMin = atMinQty;
 
   // Raggruppa per categoria nell'ordine di CATEGORIES.
   const grouped = CATEGORIES
@@ -97,13 +95,11 @@ export default function ReviewScanModal({
                           category={it.category}
                           onCategory={(c) => update(it.id, "category", c)}
                           onDelete={() => remove(it.id)}
-                          qtyValue={formatQtyDisplay(it.qty)}
-                          onQtyInput={(v) => update(it.id, "qty", v.replace("½", "0,5"))}
-                          onMinus={() => update(it.id, "qty", adjustQty(it.qty, -1))}
-                          onPlus={() => update(it.id, "qty", adjustQty(it.qty, 1))}
-                          minusDisabled={atMin(it.qty)}
-                          unitActive={String(it.qty).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase()}
-                          onUnit={(u) => update(it.id, "qty", changeUnit(it.qty, u))}
+                          qtyValue={it.qty}
+                          onQtyInput={(v) => update(it.id, "qty", v.replace(/\D/g, ""))}
+                          onMinus={() => update(it.id, "qty", String(pieces(it.qty) - 1))}
+                          onPlus={() => update(it.id, "qty", String(pieces(it.qty) + 1))}
+                          minusDisabled={pieces(it.qty) <= 1}
                           showExpiry
                           expiry={it.expiry}
                           onExpiry={(v) => update(it.id, "expiry", v)}

@@ -9,7 +9,7 @@ import {
   SlidersHorizontal, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
-import { expiryStatus, formatExpiry, adjustQty, formatQtyDisplay, qtyLabel, isLow, changeUnit } from "../lib/pantry.js";
+import { expiryStatus, formatExpiry, piecesLabel, qtyState, pieces, LOW_QTY } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 import PushNudge from "./PushNudge.jsx";
@@ -41,11 +41,12 @@ function ExpiryBadge({ date, onlyUrgent = false }) {
 
 // --- Riga prodotto a riposo. Gesti:
 // • tocco = apre il pannello di modifica;
-// • scorrimento ← oltre la soglia = "finito": quantità a zero e prodotto in
-//   lista della spesa (lo fa `onFinish`, con "Annulla" nell'avviso).
+// • scorrimento ← oltre la soglia = "finito": via dalla dispensa e in lista
+//   della spesa (lo fa `onFinish`, con "Annulla" nell'avviso).
 // Stessa soglia e stessa resa delle righe della Spesa (là a sinistra si
 // elimina, qui non si elimina nulla: il fondo è nero, non rosso).
-function PantryRow({ it, out, onOpen, onFinish }) {
+function PantryRow({ it, out, low, onOpen, onFinish }) {
+  const label = piecesLabel(it.qty); // "×3" da due pezzi in su, altrimenti niente
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const start = useRef(null);
@@ -98,7 +99,7 @@ function PantryRow({ it, out, onOpen, onFinish }) {
         aria-hidden="true"
         className={`pointer-events-none absolute inset-0 flex items-center justify-end gap-1.5 pr-3 text-[0.9rem] font-extrabold tracking-[-0.01em] ${dx < -4 ? "bg-ink text-crema" : "opacity-0"}`}
       >
-        {out ? "In lista" : "Finito · in lista"} <ShoppingCart className="h-4 w-4" />
+        Finito · in lista <ShoppingCart className="h-4 w-4" />
       </div>
       <button
         onPointerDown={down}
@@ -116,8 +117,14 @@ function PantryRow({ it, out, onOpen, onFinish }) {
         <span className={`min-w-0 truncate text-[1.06rem] font-[650] tracking-[-0.02em] ${out ? "text-tenue" : "text-ink"}`}>{it.name}</span>
         <ExpiryBadge date={it.expiry} />
         {out && <span className="cartellino self-center">finito</span>}
-        <span aria-hidden="true" className="-translate-y-1 border-b-2 border-dotted border-ink/35" style={{ flex: "1 0 12px" }} />
-        <span className={`num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] ${out ? "text-tenue" : "text-ink"}`}>{qtyLabel(it.qty)}</span>
+        {low && <span className="cartellino self-center bg-giallo">sta finendo</span>}
+        {/* I puntini di guida servono solo se a destra c'è un numero. */}
+        {label && (
+          <>
+            <span aria-hidden="true" className="-translate-y-1 border-b-2 border-dotted border-ink/35" style={{ flex: "1 0 12px" }} />
+            <span className="num shrink-0 text-[0.95rem] font-bold tracking-[-0.01em] text-ink">{label}</span>
+          </>
+        )}
       </button>
     </li>
   );
@@ -158,16 +165,13 @@ export default function PantryTab({
   }, []);
 
   // --- Pannello prodotto con salvataggio automatico ---
-  // Le modifiche si applicano da sole (nome al blur, quantità con una breve
-  // attesa, categoria al tap) e il toast "Modifica salvata · Annulla"
-  // permette di tornare ai valori di apertura.
+  // Le modifiche si applicano da sole e in silenzio: nome al blur, pezzi,
+  // stato e categoria al tocco.
   const [draftName, setDraftName] = useState("");
   const [qtyDraft, setQtyDraft] = useState("");
   const panelRef = useRef(null);
   const openItemRef = useRef(null); // prodotto aperto (com'era all'apertura)
-  const snapRef = useRef({});       // valori originali per "Annulla"
   const lastRef = useRef({});       // ultimi valori salvati (rileva i cambi)
-  const qtyTimer = useRef(null);
   const expTimer = useRef(null);
 
   function commitQtyNow(v) {
@@ -175,16 +179,12 @@ export default function PantryTab({
     const val = String(v).trim();
     if (!it || !val || val === String(lastRef.current.qty)) return;
     lastRef.current.qty = val;
-    onAutoSave(it, { qty: val }, { qty: snapRef.current.qty });
+    onAutoSave(it, { qty: val });
   }
-  function scheduleQty(v) {
+  // Pezzi e stato si salvano subito: è un tocco, non c'è nulla da aspettare.
+  function setQty(v) {
     setQtyDraft(v);
-    clearTimeout(qtyTimer.current);
-    // Arrivati a 0 (prodotto finito) committiamo subito: il toast "Hai finito"
-    // deve comparire all'istante, senza gli 800 ms di attesa.
-    const m = String(v).replace(",", ".").match(/-?\d+(\.\d+)?/);
-    if (m && parseFloat(m[0]) === 0) { commitQtyNow(v); return; }
-    qtyTimer.current = setTimeout(() => commitQtyNow(v), 800);
+    commitQtyNow(v);
   }
   function commitNameNow() {
     const it = openItemRef.current;
@@ -194,7 +194,7 @@ export default function PantryTab({
     const cap = val.charAt(0).toUpperCase() + val.slice(1);
     lastRef.current.name = cap;
     setDraftName(cap);
-    onAutoSave(it, { name: cap }, { name: snapRef.current.name });
+    onAutoSave(it, { name: cap });
   }
   // Scadenza: ogni modifica (calendario o selettore rapido) si salva da sola
   // con una breve attesa; nessun pulsante "Salva".
@@ -214,10 +214,8 @@ export default function PantryTab({
     expTimer.current = setTimeout(() => commitExpiryNow(v), 400);
   }
   function flushPending() {
-    clearTimeout(qtyTimer.current);
     clearTimeout(expTimer.current);
     if (!openItemRef.current) return;
-    commitQtyNow(qtyDraft);
     commitNameNow();
     commitExpiryNow(expDraft);
   }
@@ -225,7 +223,6 @@ export default function PantryTab({
     flushPending();
     setOpenId(it.id);
     openItemRef.current = it;
-    snapRef.current = { name: it.name, qty: it.qty, category: it.category, expiry: it.expiry };
     lastRef.current = { name: it.name, qty: it.qty, expiry: it.expiry || "" };
     setDraftName(it.name);
     setQtyDraft(it.qty);
@@ -246,7 +243,6 @@ export default function PantryTab({
   }
   function closePanel(flush = true) {
     if (flush) flushPending();
-    clearTimeout(qtyTimer.current);
     clearTimeout(expTimer.current);
     setOpenId(null);
     openItemRef.current = null;
@@ -255,15 +251,17 @@ export default function PantryTab({
     const it = openItemRef.current;
     if (!it || c === it.category) return;
     openItemRef.current = { ...it, category: c };
-    onAutoSave(it, { category: c }, { category: snapRef.current.category });
+    onAutoSave(it, { category: c });
   }
-  // Cambio unità: g ↔ kg e ml ↔ l si convertono; tra famiglie diverse si
-  // riparte dal valore base (vedi changeUnit).
-  function applyUnit(u) {
-    const v = changeUnit(qtyDraft, u);
-    setQtyDraft(v);
-    clearTimeout(qtyTimer.current);
-    commitQtyNow(v);
+  // Stato del prodotto: "C'è" / "Sta finendo" si salvano nella quantità (vedi
+  // qtyState in pantry.js); "Finito" chiude il pannello e passa a onFinish
+  // (via dalla dispensa, in lista della spesa, con Annulla).
+  function applyState(s) {
+    const it = openItemRef.current;
+    if (!it) return;
+    if (s === "out") { closePanel(false); onFinish?.(it); return; }
+    if (s === qtyState(qtyDraft)) return;
+    setQty(s === "low" ? LOW_QTY : String(pieces(qtyDraft)));
   }
 
   // Il pannello si chiude toccando un punto qualsiasi fuori da esso; quel
@@ -460,17 +458,17 @@ export default function PantryTab({
             <ul>
               {list.map((it) => {
                 const out = isOut(it);
-                const low = !out && isLow(it.qty); // quasi finito (arancione)
+                const low = qtyState(it.qty) === "low"; // sta finendo
 
                 // Modifica: nome + categoria, in linea
                 // Pannello prodotto: tutto modificabile, salvataggio automatico.
                 if (openId === it.id) {
-                  const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
+                  const n = pieces(qtyDraft);
                   return (
                     <li key={it.id} ref={panelRef} className="-mx-2 my-1.5 scroll-mb-[calc(var(--sopra-nav)+8px)] rounded-card bg-white p-3 shadow-card">
                       {/* Vista prodotto standard (ProductFields): stessa
-                          struttura di Spesa/Aggiungi a mano/Revisione. Le
-                          chip "finito/sta finendo" entrano nello slot. */}
+                          struttura di Spesa/Aggiungi a mano/Revisione, più la
+                          riga dello stato (solo qui). */}
                       <ProductFields
                         name={draftName}
                         onName={setDraftName}
@@ -478,31 +476,23 @@ export default function PantryTab({
                         category={it.category}
                         onCategory={chooseCategory}
                         onDelete={() => { closePanel(false); removeItem(it); }}
-                        qtyValue={formatQtyDisplay(qtyDraft)}
-                        onQtyInput={(v) => scheduleQty(v.replace("½", "0,5"))}
-                        onMinus={() => scheduleQty(adjustQty(qtyDraft, -1))}
-                        onPlus={() => scheduleQty(adjustQty(qtyDraft, 1))}
-                        minusDisabled={out}
-                        unitActive={curUnit}
-                        onUnit={applyUnit}
+                        qtyValue={String(n)}
+                        onQtyInput={(v) => { const d = parseInt(v.replace(/\D/g, ""), 10); if (d > 0) setQty(String(d)); }}
+                        onMinus={() => setQty(String(n - 1))}
+                        onPlus={() => setQty(String(n + 1))}
+                        minusDisabled={n <= 1}
+                        stateActive={qtyState(qtyDraft)}
+                        onState={applyState}
                         showExpiry
                         expiry={expDraft}
                         onExpiry={(v) => (v ? scheduleExpiry(v) : clearExpiry())}
                       >
-                        {out && (
-                          <button
-                            onClick={() => onToShopping(it)}
-                            className="pillola mt-3 min-h-[32px] bg-ink px-3 text-[0.8rem] text-white"
-                          >
-                            <ShoppingCart className="h-3.5 w-3.5" /> Finito · Metti in lista
-                          </button>
-                        )}
                         {low && (
                           <button
                             onClick={() => onToShopping(it)}
                             className="pillola mt-3 min-h-[32px] px-3 text-[0.8rem]"
                           >
-                            <ShoppingCart className="h-3.5 w-3.5" /> Sta finendo · Aggiungi
+                            <ShoppingCart className="h-3.5 w-3.5" /> Sta finendo · Metti in lista
                           </button>
                         )}
                       </ProductFields>
@@ -518,7 +508,7 @@ export default function PantryTab({
 
                 // A riposo: nome ……… quantità (puntini di guida); scorrendola
                 // verso sinistra il prodotto è "finito" (vedi PantryRow).
-                return <PantryRow key={it.id} it={it} out={out} onOpen={openPanel} onFinish={onFinish} />;
+                return <PantryRow key={it.id} it={it} out={out} low={low} onOpen={openPanel} onFinish={onFinish} />;
               })}
             </ul>
           </section>

@@ -507,7 +507,42 @@ export function formatQtyDisplay(qty) {
   return String(qty);
 }
 
-// Quantità a riposo nelle righe (Dispensa e Spesa, uguali): i numeri puri
+// --- Quantità semplici (dal 09/10) ---
+// In DISPENSA un prodotto ha solo PEZZI (1, 2, 3…) e uno STATO: c'è / sta
+// finendo / finito. Niente grammi né litri: contare i 180 g di spaghetti
+// usati non lo faceva nessuno. Il campo `qty` resta lo stesso (nessuna modifica
+// al database): un numero intero = i pezzi; "0,5" = sta finendo; "0" = finito
+// (solo prodotti di prima: oggi un finito esce dalla dispensa). I valori di
+// prima con un'unità ("500 g", "1 l") valgono "c'è", un pezzo.
+export const LOW_QTY = "0,5";
+export function qtyState(qty) {
+  const p = parseQty(qty);
+  if (!p) return "ok";
+  if (p.base === 0) return "out";
+  const counted = p.family === "count" || p.family === "other";
+  return counted && p.base <= 0.5 ? "low" : "ok";
+}
+// Quanti pezzi (almeno 1): i pesi e i volumi di prima contano per uno.
+export function pieces(qty) {
+  const p = parseQty(qty);
+  if (!p || p.family === "weight" || p.family === "volume") return 1;
+  return Math.max(1, Math.ceil(p.base));
+}
+// Un prodotto che arriva (spesa, scontrino, voce, barcode) su uno che c'è già:
+// i pezzi si sommano; se quello di casa stava finendo o era finito, contano
+// solo i nuovi.
+export function mergePieces(have, incoming) {
+  const add = pieces(incoming);
+  return String(qtyState(have) === "ok" ? pieces(have) + add : add);
+}
+// A riposo nella riga della Dispensa: "×3" solo da due pezzi in su (uno è il
+// caso normale, non serve scriverlo).
+export function piecesLabel(qty) {
+  const n = pieces(qty);
+  return qtyState(qty) === "ok" && n >= 2 ? `×${n}` : "";
+}
+
+// Quantità a riposo nelle righe della Spesa: i numeri puri
 // diventano "×3", il resto resta com'è.
 export function qtyLabel(q) {
   const s = String(q).trim();

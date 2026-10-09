@@ -10,7 +10,6 @@ import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { DecodeHintType, BarcodeFormat } from "@zxing/library";
 import { ScanBarcode, Loader2, Keyboard, Search, Flashlight, FlashlightOff, Check, X } from "lucide-react";
-import { scaleQty, normalizeWeight } from "../lib/pantry.js";
 import CameraScanShell from "./CameraScanShell.jsx";
 
 // Messaggio d'errore fotocamera in base alla causa reale (err.name), così
@@ -163,7 +162,7 @@ export default function BarcodeScanModal({ onClose, onResult }) {
     onResultRef.current(trayRef.current.map((t) => ({
       barcode: t.code,
       name: t.name,
-      qty: t.count > 1 ? normalizeWeight(scaleQty(t.baseQty || "1", t.count)) : (t.baseQty || "1"),
+      qty: String(t.count), // una scansione = un pezzo (il peso sulla confezione non si conta più)
       category: t.category,
       found: t.found,
       brands: t.brands,

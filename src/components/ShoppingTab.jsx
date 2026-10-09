@@ -18,7 +18,7 @@ import {
   Share, X,
 } from "lucide-react";
 import { AISLE_ORDER, CAT_ICON, CATALOG_NAMES } from "../constants.js";
-import { atMinQty, adjustQty, formatQtyDisplay, qtyLabel, matchKey, changeUnit } from "../lib/pantry.js";
+import { atMinQty, adjustQty, formatQtyDisplay, qtyLabel, matchKey } from "../lib/pantry.js";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
 import Barattoli from "./Barattoli.jsx";
@@ -346,12 +346,6 @@ export default function ShoppingTab({
     if (!it || c === catFor(it.name)) return;
     onAutoSave(it, { category: c }, { category: snapRef.current.category });
   }
-  function applyUnit(u) {
-    const v = changeUnit(qtyDraft, u);
-    setQtyDraft(v);
-    clearTimeout(qtyTimer.current);
-    commitQtyNow(v);
-  }
 
   // Il pannello si chiude toccando un punto qualsiasi fuori da esso; quel
   // tocco non fa nient'altro (vedi lib/outsideTap.js).
@@ -362,7 +356,6 @@ export default function ShoppingTab({
   }, [editId, qtyDraft, draftName]);
 
   function renderEditPanel(it) {
-    const curUnit = String(qtyDraft).replace(/-?\d+([.,]\d+)?/, "").trim().toLowerCase();
     return (
       <li key={it.id} ref={panelRef} className="-mx-2 my-1.5 scroll-mb-[calc(var(--nav-bottom)+var(--nav-h)+90px)] rounded-card bg-white p-3 shadow-card">
         {/* Vista prodotto standard (ProductFields), come Dispensa/Aggiungi/
@@ -379,8 +372,6 @@ export default function ShoppingTab({
           onMinus={() => scheduleQty(adjustQty(qtyDraft, -1))}
           onPlus={() => scheduleQty(adjustQty(qtyDraft, 1))}
           minusDisabled={atMinQty(qtyDraft)}
-          unitActive={curUnit}
-          onUnit={applyUnit}
         />
       </li>
     );

@@ -35,12 +35,11 @@ import PlanReadySheet from "../components/PlanReadySheet.jsx";
 function AggiungiProva({ onClose }) {
   const [name, setName] = useState("Pomod");
   const [qty, setQty] = useState("1");
-  const [unit, setUnit] = useState("");
   const [cat, setCat] = useState("");
   const [expiry, setExpiry] = useState("");
   return (
     <ManualAddModal
-      newName={name} setNewName={setName} newQty={qty} setNewQty={setQty} unit={unit} setUnit={setUnit}
+      newName={name} setNewName={setName} newQty={qty} setNewQty={setQty}
       newCat={cat} setNewCat={setCat} newExpiry={expiry} setNewExpiry={setExpiry}
       adding={false} onSubmit={async () => ({ name, category: "Verdura" })} onQuickAdd={async (n) => ({ name: n, category: "Verdura" })}
       onClose={onClose} historyNames={["Pomodori", "Pomodorini"]} pantryNames={[]}
@@ -141,7 +140,6 @@ export default function Anteprima() {
   const isOut = (x) => { const m = String(x.qty).replace(",", ".").match(/-?\d+(\.\d+)?/); return !!m && parseFloat(m[0]) === 0; };
   const autoSave = (it, patch) => {
     setItems((l) => l.map((x) => (x.id === it.id ? { ...x, ...patch } : x)));
-    setToast({ message: <><strong>{it.name}</strong>: modifica salvata</>, onUndo: () => setToast(null), actionTone: "ink" });
   };
 
   if (PARAM_VISTA === "accesso") return <Auth />;
@@ -174,7 +172,7 @@ export default function Anteprima() {
             removeItem={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> eliminato</>, onUndo: () => setToast(null) }); }}
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={() => {}} isOut={isOut} onToShopping={() => notify("In lista spesa")}
-            onFinish={(it) => { setItems((l) => l.map((x) => (x.id === it.id ? { ...x, qty: String(x.qty).replace(/-?\d+(?:[.,]\d+)?/, "0") } : x))); setToast({ message: <><strong>{it.name}</strong> finito: è in lista</>, onUndo: () => setToast(null) }); }}
+            onFinish={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> finito: è in lista</>, onUndo: () => setToast(null) }); }}
             onCookWith={() => {}}
           />
         )}
@@ -282,11 +280,11 @@ export default function Anteprima() {
       {foglio === "cucinato" && (
         <CookModal
           rows={[
-            { itemId: "a", name: "Spaghetti", kind: "exact", used: "180 g", before: "500 g", after: "320 g" },
-            { itemId: "b", name: "Zucchine", kind: "pack", before: "3", after: "1" },
-            { itemId: "c", name: "Olio EVO", kind: "qb", before: "1 l", after: "1 l" },
+            { itemId: "a", name: "Spaghetti", state: "ok" },
+            { itemId: "b", name: "Zucchine", state: "low" },
+            { itemId: "c", name: "Olio EVO", state: "out" },
           ]}
-          onClose={chiudi} onSetAfter={() => {}} onRemoveRow={() => {}} onApply={chiudi} onStapleToShopping={() => {}}
+          onClose={chiudi} onSetState={() => {}} onApply={chiudi}
         />
       )}
       {foglio === "piano-pronto" && (

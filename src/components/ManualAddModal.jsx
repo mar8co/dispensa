@@ -8,16 +8,13 @@ import { Plus, Loader2, X, Check } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import ProductFields from "./ProductFields.jsx";
-import { norm, correctName, guessCategory, changeUnit } from "../lib/pantry.js";
+import { norm, correctName, guessCategory } from "../lib/pantry.js";
 import { CATEGORIES, CAT_ICON } from "../constants.js";
 
-// Passi del contatore per unità: pz ±1, g ±50, ml ±250, kg/l ±0,25.
-const STEPS = { "": 1, g: 50, kg: 0.25, ml: 250, l: 0.25 };
-const parseV = (v) => parseFloat(String(v).replace(",", ".")) || 0;
-const fmtV = (n) => String(Math.round(n * 1000) / 1000).replace(".", ",");
+const parseV = (v) => parseInt(String(v).replace(/\D/g, ""), 10) || 1;
 
 export default function ManualAddModal({
-  newName, setNewName, newQty, setNewQty, unit, setUnit,
+  newName, setNewName, newQty, setNewQty,
   newCat, setNewCat, newExpiry, setNewExpiry, adding, onSubmit, onQuickAdd, onClose,
   historyNames = [], pantryNames = [],
 }) {
@@ -29,23 +26,9 @@ export default function ManualAddModal({
   const isAuto = !CATEGORIES.includes(newCat);
   const effCat = isAuto ? guessed : newCat;
 
-  // Contatore a passi: pz 1,2,3… · g 50,100,150… · kg/l 0,25 0,5 0,75…
-  const step = STEPS[unit] ?? 1;
+  // Contatore a pezzi: 1, 2, 3… (dal 09/10 niente grammi né litri).
   function bumpQty(dir) {
-    setNewQty((v) => {
-      let n = parseV(v) + dir * step;
-      n = Math.round(n / step) * step;
-      if (n < step) n = step;
-      return fmtV(n);
-    });
-  }
-  // Cambiando unità: g ↔ kg e ml ↔ l si convertono, tra famiglie diverse si
-  // riparte dal valore base (vedi changeUnit). Qui numero e unità sono
-  // separati: si tiene solo il numero.
-  function chooseUnit(u) {
-    const v = changeUnit(unit ? `${newQty} ${unit}` : newQty, u);
-    setUnit(u);
-    setNewQty(v.replace(/[^0-9.,]/g, ""));
+    setNewQty((v) => String(Math.max(1, parseV(v) + dir)));
   }
 
   // Candidati per i suggerimenti: storico acquisti + nomi già in dispensa.
@@ -99,12 +82,10 @@ export default function ManualAddModal({
           allowAuto
           isAuto={isAuto}
           qtyValue={newQty}
-          onQtyInput={(v) => setNewQty(v.replace(/[^0-9.,]/g, ""))}
+          onQtyInput={(v) => setNewQty(v.replace(/\D/g, ""))}
           onMinus={() => bumpQty(-1)}
           onPlus={() => bumpQty(1)}
-          minusDisabled={parseV(newQty) <= step}
-          unitActive={unit}
-          onUnit={chooseUnit}
+          minusDisabled={parseV(newQty) <= 1}
           showExpiry
           expiry={newExpiry || ""}
           onExpiry={setNewExpiry}

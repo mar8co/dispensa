@@ -8,9 +8,10 @@
 //   pillole categoria (si aprono toccando l'emoji, come in Spesa)
 //   {children: contenuto del contesto, es. suggerimenti dell'aggiunta a mano}
 //   riga 2   [scadenza?] ............ [−  qty  +]
-//   riga 3   [pz] [g] [kg] [ml] [l]      (cinque pillole larghe uguali)
-// Tutti i comandi sono alti 44px (prima stepper e unità erano 30px, a 2-3px
-// l'uno dall'altro: si sbagliava tasto).
+//   riga 3   [C'è] [Sta finendo] [Finito]   (solo in Dispensa, se c'è onState)
+// Tutti i comandi sono alti 44px. Dal 09/10 niente unità (g/kg/ml/l): in
+// dispensa si contano i pezzi e si dice lo stato; in lista la quantità resta
+// quella scritta (es. "600 g" messi dal piano).
 //
 // La scadenza è una pillola visibile che apre il calendario IN-APP
 // (ExpiryCalendar, niente picker nativo iOS). La ✕ dentro la pillola azzera
@@ -27,6 +28,8 @@ import ExpiryCalendar from "./ExpiryCalendar.jsx";
 
 // testo-grande: sopra i 16px iOS non zooma, quindi il minimo globale dei
 // campi (index.css) qui non serve.
+const STATES = [["ok", "C'è"], ["low", "Sta finendo"], ["out", "Finito"]];
+
 const inputCls =
   "testo-grande min-w-0 flex-1 rounded-none border-0 border-b-[1.5px] border-ink bg-transparent py-1.5 text-[1.2rem] font-bold tracking-[-0.03em] text-ink outline-none placeholder:text-ink/40 focus:border-b-[3px] focus:pb-[4.5px]";
 
@@ -35,9 +38,10 @@ export default function ProductFields({
   name, onName, onNameBlur, onEnter, namePlaceholder = "Nome", autoFocus = false,
   // riga 1 — categoria (emoji → pillole) e rimozione
   category, onCategory, allowAuto = false, isAuto = false, onDelete,
-  // riga 2 — quantità e unità
+  // riga 2 — quantità (pezzi)
   qtyValue, onQtyInput, onMinus, onPlus, minusDisabled = false,
-  unitActive, onUnit,
+  // riga 3 — stato (solo Dispensa): "ok" | "low" | "out"
+  stateActive, onState,
   // riga 2 — scadenza (solo dove ha senso: dispensa/aggiunta/revisione)
   showExpiry = false, expiry = "", onExpiry,
   children,
@@ -124,7 +128,7 @@ export default function ProductFields({
           sinistra, stepper a destra; se lo spazio è poco cede solo il box
           scadenza (min-w-0 + testo troncato). Riga 3: le unità. */}
       <div className="mt-3 border-t border-riga pt-2.5">
-      <div className="flex items-center justify-between gap-2">
+      <div className={`flex items-center gap-2 ${showExpiry ? "justify-between" : "justify-end"}`}>
         {showExpiry && (
           <div
             className={`flex h-11 min-w-0 items-center rounded-full border-[1.5px] border-ink text-[0.86rem] font-bold transition ${
@@ -183,23 +187,23 @@ export default function ProductFields({
         </div>
 
       </div>
-
-        <div className="mt-2 grid grid-cols-5 gap-1.5">
-          {["", "g", "kg", "ml", "l"].map((u) => {
-            const active = u === "" ? unitActive === "" : unitActive === u;
-            return (
+        {/* Riga 3 (solo in Dispensa): com'è messo il prodotto. "Finito" lo
+            toglie dalla dispensa e lo mette in lista (lo fa il chiamante). */}
+        {onState && (
+          <div className="mt-2 grid grid-cols-3 gap-1.5">
+            {STATES.map(([id, label]) => (
               <button
-                key={u || "pz"}
+                key={id}
                 type="button"
-                onClick={() => onUnit(u)}
-                aria-pressed={active}
+                onClick={() => onState(id)}
+                aria-pressed={stateActive === id}
                 className="pillola h-11 min-h-0 px-0 text-[0.9rem]"
               >
-                {u || "pz"}
+                {label}
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Calendario in-app: si apre sotto la riga, con niente preselezionato. */}

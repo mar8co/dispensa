@@ -4,6 +4,7 @@ import {
   subtractQty, qtyStep, adjustQty, atMinQty, changeUnit, shoppingQty, isLow, formatQtyDisplay, isStapleQb, isQbQty, isQbIngredient, stripParens, norm, matchKey, findMatch,
   toCookFraction, isSpoonQty, formatRecipeQty,
   daysUntilExpiry, expiryStatus, formatExpiry,
+  qtyState, pieces, mergePieces, piecesLabel, LOW_QTY,
 } from "./pantry.js";
 
 // Data ISO (YYYY-MM-DD) a +N giorni da oggi, per test stabili sulle scadenze.
@@ -486,5 +487,38 @@ describe("scadenze", () => {
     expect(formatExpiry(isoIn(1))).toBe("Scade domani");
     expect(formatExpiry(isoIn(3))).toBe("Tra 3 gg");
     expect(formatExpiry(isoIn(20))).toContain("/");
+  });
+});
+
+// --- Quantità semplici (dal 09/10): pezzi + stato ---
+describe("pezzi e stato", () => {
+  it("lo stato si legge dalla quantità", () => {
+    expect(qtyState("3")).toBe("ok");
+    expect(qtyState("0,5")).toBe("low");
+    expect(qtyState("0")).toBe("out");
+    // i valori di prima con un'unità valgono "c'è"
+    expect(qtyState("50 g")).toBe("ok");
+    expect(qtyState("1 l")).toBe("ok");
+    expect(qtyState("0 g")).toBe("out");
+  });
+  it("i pezzi sono almeno uno; pesi e volumi contano per uno", () => {
+    expect(pieces("3")).toBe(3);
+    expect(pieces("0,5")).toBe(1);
+    expect(pieces("500 g")).toBe(1);
+    expect(pieces("2 confezioni")).toBe(2);
+    expect(pieces("")).toBe(1);
+  });
+  it("un prodotto che arriva si somma ai pezzi che ci sono", () => {
+    expect(mergePieces("2", "1")).toBe("3");
+    expect(mergePieces("500 g", "600 g")).toBe("2");
+    // se stava finendo contano solo i nuovi
+    expect(mergePieces(LOW_QTY, "2")).toBe("2");
+    expect(mergePieces("0", "1")).toBe("1");
+  });
+  it("nella riga si scrive ×n solo da due pezzi in su", () => {
+    expect(piecesLabel("1")).toBe("");
+    expect(piecesLabel("3")).toBe("×3");
+    expect(piecesLabel("500 g")).toBe("");
+    expect(piecesLabel(LOW_QTY)).toBe("");
   });
 });

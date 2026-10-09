@@ -133,6 +133,13 @@
   categorie" (riquadro bianco, una riga per categoria con frecce su/giù) e, nel riquadro giallo di
   "Elimina account", il link "Voglio solo svuotare la dispensa"; via la lampada dalla testata della
   Spesa e la maniglia dalle card delle occasioni.
+- **Quantità semplici (09/10 sera)**: nella riga della Dispensa a destra c'è "×3" solo da due pezzi in
+  su (coi puntini di guida); con un pezzo la riga è il solo nome. "Sta finendo" = cartellino giallo
+  accanto al nome. Pannello del prodotto: scadenza + stepper dei pezzi, sotto tre pillole larghe
+  uguali **C'è · Sta finendo · Finito** (scelta = piena nera); con "Sta finendo" compare la pillola
+  "Sta finendo · Metti in lista". Niente più pillole delle unità, da nessuna parte. Foglio nero
+  **"Com'è rimasto?"** dopo "Ho cucinato": un prodotto per riga, sotto tre pillole (scelta = gialla),
+  "Ce n'è ancora" già scelta.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

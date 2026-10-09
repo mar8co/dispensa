@@ -8,8 +8,8 @@ import {
 } from "./constants.js";
 import {
   guessCategory, categorize,
-  normalizeWeight, mergeQty, scaleQty, subtractQty, findMatch,
-  matchKey, isStapleQb, isQbQty, isSpoonQty,
+  normalizeWeight, mergeQty, findMatch, LOW_QTY,
+  matchKey,
 } from "./lib/pantry.js";
 import { callClaude, aiErrorMessage } from "./lib/claude.js";
 import { cleanBarcodeName, parseSpokenList } from "./lib/parse.js";
@@ -223,7 +223,7 @@ export default function Dispensa({ session }) {
   // in Dispensa; bumpShopHistory/addToShoppingMerged arrivano da useShopping.
   const {
     items, setItems,
-    newName, setNewName, newQty, setNewQty, newUnit, setNewUnit,
+    newName, setNewName, newQty, setNewQty,
     newCat, setNewCat, newExpiry, setNewExpiry, adding,
     search, setSearch, sort, setSort, expFilter, setExpFilter,
     confirmClear, setConfirmClear,
@@ -996,30 +996,17 @@ export default function Dispensa({ session }) {
 
   // --- "Ho cucinato questo" ---
 
-  // Prepara le righe del CookModal classificando ogni ingrediente in 3 corsie:
-  //  - "qb"    → scorta a piacere (olio/sale/spezie… o la ricetta dice "q.b."):
-  //              NON si scala, si mostra soltanto.
-  //  - "exact" → stessa unità della ricetta: matematica esatta (es. 500 g − 200 g).
-  //  - "pack"  → unità non confrontabili (es. "1 barattolo" vs "200 g"): niente
-  //              stima, l'utente dice quanti ne restano con lo stepper (½ incluso).
-  function buildCookRows(rec, f) {
+  // Le righe del CookModal: un prodotto della dispensa per ogni ingrediente
+  // della ricetta che ci corrisponde (una volta sola), tutti su "ce n'è
+  // ancora". Niente conti: cosa è cambiato lo dice chi ha cucinato.
+  function buildCookRows(rec) {
     const rows = [];
     const seen = new Set();
     for (const ing of (rec.ingredients || [])) {
       const match = findMatch(ing.name, items);
       if (!match || seen.has(match.id)) continue;
       seen.add(match.id);
-      // I cucchiaini (spezie dosate) sono scorte q.b.: si mostrano ma NON si
-      // sottraggono dalla dispensa.
-      if (isQbQty(ing.qty) || isSpoonQty(ing.qty) || isStapleQb(match.name, match.category)) {
-        rows.push({ itemId: match.id, name: match.name, before: match.qty, kind: "qb" });
-        continue;
-      }
-      const used = scaleQty(ing.qty, f);
-      const sub = subtractQty(match.qty, used);
-      rows.push(sub.ok
-        ? { itemId: match.id, name: match.name, used, before: match.qty, after: sub.value, kind: "exact" }
-        : { itemId: match.id, name: match.name, used, before: match.qty, after: match.qty, kind: "pack" });
+      rows.push({ itemId: match.id, name: match.name, state: "ok" });
     }
     return rows;
   }
@@ -1031,7 +1018,7 @@ export default function Dispensa({ session }) {
     if (!recipe) return;
     cookRecipeRef.current = recipe;
     cookMealRef.current = null;
-    setCookRows(buildCookRows(recipe, factor));
+    setCookRows(buildCookRows(recipe));
     bumpModal("cook");
     setCookOpen(true);
   }
@@ -1041,9 +1028,7 @@ export default function Dispensa({ session }) {
   // ingrediente è in dispensa non c'è nulla da scalare: si marca e basta.
   function cookMealFromPlan(meal) {
     if (!meal?.data) return;
-    const base = Number(meal.data.servings) || 2;
-    const plannedServings = Number(meal.data.planServings) || base;
-    const rows = buildCookRows(meal.data, plannedServings / base);
+    const rows = buildCookRows(meal.data);
     if (!rows.length) {
       markMealCooked(meal.id);
       showToast(<><strong>{meal.title}</strong> segnata come cucinata</>);
@@ -1055,63 +1040,44 @@ export default function Dispensa({ session }) {
     bumpModal("cook");
     setCookOpen(true);
   }
-  function setRowAfter(idx, val) {
-    setCookRows((rows) => rows.map((r, i) => (i === idx ? { ...r, after: val } : r)));
-  }
-  function removeRow(idx) {
-    setCookRows((rows) => rows.filter((_, i) => i !== idx));
+  function setRowState(idx, state) {
+    setCookRows((rows) => rows.map((r, i) => (i === idx ? { ...r, state } : r)));
   }
   async function applyCooked() {
-    const updates = {};
-    const removals = new Set();
-    for (const r of cookRows) {
-      if (r.kind === "qb") continue; // le scorte "q.b." non si toccano
-      const v = String(r.after).trim();
-      const m = v.replace(",", ".").match(/-?\d+(\.\d+)?/);
-      const isZero = m && parseFloat(m[0]) === 0;
-      if (v === "" || isZero) removals.add(r.itemId);
-      else updates[r.itemId] = v;
-    }
+    const low = new Set(cookRows.filter((r) => r.state === "low").map((r) => r.itemId));
+    const out = cookRows.filter((r) => r.state === "out");
+    const removals = new Set(out.map((r) => r.itemId));
     // Come il resto della dispensa: stato aggiornato SUBITO, scrittura in
     // background e, se fallisce (offline), in coda per il ritorno online.
-    // Prima si aspettava il DB: offline non cambiava nulla ma il messaggio
-    // diceva lo stesso "Dispensa aggiornata".
     const uid = session.user.id;
     setItems((prev) =>
       prev
         .filter((x) => !removals.has(x.id))
-        .map((x) => (updates[x.id] !== undefined ? { ...x, qty: updates[x.id] } : x))
+        .map((x) => (low.has(x.id) ? { ...x, qty: LOW_QTY } : x))
     );
     if (removals.size) {
       deleteItems([...removals]).catch(() => {
         for (const id of removals) enqueue(uid, { table: "pantry", type: "delete", id });
       });
     }
-    for (const [id, qty] of Object.entries(updates)) {
-      updateItem(id, { qty }).catch(() => enqueue(uid, { table: "pantry", type: "update", id, fields: { qty } }));
+    for (const id of low) {
+      updateItem(id, { qty: LOW_QTY }).catch(() => enqueue(uid, { table: "pantry", type: "update", id, fields: { qty: LOW_QTY } }));
     }
     setCookOpen(false);
-    const n = Object.keys(updates).length + removals.size;
-    setCookDone(n ? `Dispensa aggiornata: ${n} prodotti.` : "");
+    const n = low.size + removals.size;
+    setCookDone(n ? `Dispensa aggiornata: ${n} ${n === 1 ? "prodotto" : "prodotti"}.` : "Segnata come cucinata.");
     recordCookedRecipe(cookRecipeRef.current || undefined); // storico "cucinate di recente"
     // Cottura partita dal piano pasti: marca anche la voce del piano.
     if (cookMealRef.current) {
       markMealCooked(cookMealRef.current);
       cookMealRef.current = null;
     }
-    // I prodotti finiti cucinando si possono rimettere in lista con un tap.
-    const finished = cookRows.filter((r) => removals.has(r.itemId)).map((r) => r.name);
-    if (finished.length) {
-      showToast(
-        finished.length === 1
-          ? <>Hai finito <strong>{finished[0]}</strong></>
-          : `Hai finito ${finished.length} prodotti`,
-        async () => {
-          await addToShoppingMerged(finished.map((name) => ({ name, qty: "1" })));
-          dismissToast();
-        },
-        "metti nella lista"
-      );
+    // I prodotti finiti vanno da soli in lista della spesa.
+    if (out.length) {
+      await addToShoppingMerged(out.map((r) => ({ name: r.name, qty: "1" })));
+      showToast(out.length === 1
+        ? <><strong>{out[0].name}</strong> finito: è in lista</>
+        : `${out.length} prodotti finiti: sono in lista`);
     }
   }
 
@@ -1161,8 +1127,8 @@ export default function Dispensa({ session }) {
             onAutoSave={autoSaveItem} onSetExpiry={setItemExpiry} removeItem={removeItem}
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
-            // Riga scorsa verso sinistra: "finito" (se lo era già, solo in lista).
-            onFinish={(it) => (isOut(it) ? finishedToShopping(it) : finishItem(it))}
+            // Riga scorsa verso sinistra o pillola "Finito": via dalla dispensa, in lista.
+            onFinish={finishItem}
             onCookWith={cookWithProduct}
           />
         )}
@@ -1301,7 +1267,7 @@ export default function Dispensa({ session }) {
         <ManualAddModal
           key={modalEpoch.current.manual}
           newName={newName} setNewName={setNewName} newQty={newQty} setNewQty={setNewQty}
-          unit={newUnit} setUnit={setNewUnit} newCat={newCat} setNewCat={setNewCat}
+          newCat={newCat} setNewCat={setNewCat}
           newExpiry={newExpiry} setNewExpiry={setNewExpiry}
           adding={adding} onSubmit={submitManual} onQuickAdd={addManual}
           onClose={() => setManualOpen(false)}
@@ -1366,13 +1332,8 @@ export default function Dispensa({ session }) {
           key={modalEpoch.current.cook}
           rows={cookRows}
           onClose={() => setCookOpen(false)}
-          onSetAfter={setRowAfter}
-          onRemoveRow={removeRow}
+          onSetState={setRowState}
           onApply={applyCooked}
-          onStapleToShopping={(name) => {
-            addToShoppingMerged([{ name, qty: "1" }]);
-            showToast(<><strong>{name}</strong> aggiunto alla lista della spesa</>);
-          }}
         />
       )}
 

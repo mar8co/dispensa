@@ -21,7 +21,7 @@
 3. **Non toccare il data layer** (tabelle, colonne, query di `src/lib/db.js`, campi
    degli item) salvo richiesta esplicita. Le feature UI usano i campi esistenti.
 4. **Build verde prima di consegnare**: `npm run lint` (0 warning), `npm test`
-   (119/119), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
+   (123/123), `npm run build`. Se tocchi `pantry.js`/`history.js`/`parse.js`/
    `suggest.js`, aggiorna i rispettivi test (`*.test.js` accanto al file).
 5. **Committa e pusha in automatico** dopo build verde (preferenza dell'utente su
    questo progetto), senza chiedere. Branch `main`, remoto `origin`. Eccezione:
@@ -71,11 +71,19 @@
   Dispensa e Spesa. Non sostituirle con icone lineari.
 - **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
 - **Vista prodotto**: sempre via `ProductFields.jsx` (nome · categoria-emoji →
-  pillole · elimina / box scadenza → `ExpiryCalendar` in-app · stepper in pill ·
-  unità) ovunque si mostri o modifichi un prodotto. Dal 09/10 la zona quantità
-  è su DUE righe (scadenza + stepper, poi le cinque unità pz·g·kg·ml·l) con
-  comandi da 44px; cambiare unità converte nella stessa famiglia
-  (`changeUnit`). Non ricreare quei campi a mano.
+  pillole · elimina / box scadenza → `ExpiryCalendar` in-app · stepper dei
+  pezzi · in Dispensa la riga dello stato C'è / Sta finendo / Finito) ovunque
+  si mostri o modifichi un prodotto. Non ricreare quei campi a mano.
+- **Quantità semplici (dal 09/10 sera, scelta dell'utente "di prova")**: in
+  dispensa un prodotto ha solo PEZZI e uno STATO (`qtyState`, `pieces`,
+  `mergePieces`, `piecesLabel`, `LOW_QTY` in `pantry.js`); il campo `qty` è lo
+  stesso di prima (intero = pezzi, "0,5" = sta finendo; i valori vecchi con
+  unità valgono un pezzo). "Finito" TOGLIE il prodotto dalla dispensa e lo
+  mette in lista. Dopo "Ho cucinato" niente sottrazioni: `CookModal` chiede
+  per ogni prodotto usato "Ce n'è ancora / Sta finendo / Finito". La ricetta e
+  la lista della spesa continuano a mostrare grammi e litri. Se l'utente dice
+  **"torna allo stato delle quantità di prima"**: `git revert` dei commit
+  "Quantità semplici" (stato di partenza nel tag `prima-quantita-semplici`).
 - **Bottoni d'azione**: usa `Button.jsx` (varianti per funzione: `primary` nero
   pieno = conferma/commit · `secondary` col bordo = alternativa/Annulla · `cook`
   col bordo + icona = genera/cucina · `danger` rosso = elimina). Non creare

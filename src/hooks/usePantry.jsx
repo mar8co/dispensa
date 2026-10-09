@@ -11,7 +11,7 @@
 // un prodotto finito si rimette in lista).
 import { useState, useEffect } from "react";
 import {
-  guessCategory, correctName, normalizeWeight, mergeQty, findMatch,
+  guessCategory, correctName, pieces, mergePieces, findMatch,
   norm, matchKey, daysUntilExpiry,
 } from "../lib/pantry.js";
 import { CATEGORIES } from "../constants.js";
@@ -47,7 +47,6 @@ export function usePantry({
   // form aggiunta
   const [newName, setNewName] = useState("");
   const [newQty, setNewQty] = useState("1");
-  const [newUnit, setNewUnit] = useState(""); // "" = pezzi, oppure g/kg/ml/l
   const [newCat, setNewCat] = useState("");   // "" = categoria automatica
   const [newExpiry, setNewExpiry] = useState("");
   const [adding, setAdding] = useState(false);
@@ -124,8 +123,7 @@ export function usePantry({
   async function addManual(rawName) {
     const raw = String(rawName ?? newName).trim();
     if (!raw || adding) return null;
-    const n = String(newQty).trim() || "1";
-    const qty = normalizeWeight(newUnit ? `${n} ${newUnit}` : n);
+    const qty = String(pieces(String(newQty).trim() || "1"));
     setAdding(true);
     const name = correctName(raw);
     // Categoria: quella scelta a mano nel foglio vince sull'automatica
@@ -137,7 +135,7 @@ export function usePantry({
     let result;
     const existing = items.find((x) => matchKey(x.name) === matchKey(name));
     if (existing) {
-      const merged = normalizeWeight(mergeQty(existing.qty, qty));
+      const merged = mergePieces(existing.qty, qty);
       const fields = { qty: merged };
       if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
       setItems((prev) => prev.map((x) => (x.id === existing.id ? { ...x, ...fields } : x)));
@@ -150,7 +148,7 @@ export function usePantry({
       result = { name, merged: false, category };
     }
     bumpShopHistory([name]);
-    setNewName(""); setNewQty("1"); setNewUnit(""); setNewCat(""); setNewExpiry(""); setAdding(false);
+    setNewName(""); setNewQty("1"); setNewCat(""); setNewExpiry(""); setAdding(false);
     return result;
   }
 
@@ -200,29 +198,21 @@ export function usePantry({
   async function autoSaveItem(it, fields) {
     setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, ...fields } : x)));
     persistUpdate(it.id, fields);
-    // Quantità arrivata a zero: proponi la lista invece del semplice "salvata".
-    const m = fields.qty != null ? String(fields.qty).replace(",", ".").match(/-?\d+(\.\d+)?/) : null;
-    if (m && parseFloat(m[0]) === 0) {
-      showToast(<>Hai finito <strong>{it.name}</strong></>, async () => {
-        await addToShoppingMerged([{ name: it.name, qty: "1" }]);
-        dismissToast();
-      }, "metti nella lista");
-      return;
-    }
   }
 
-  // "Finito" con un gesto (la riga scorsa verso sinistra, vedi PantryTab): la
-  // quantità va a zero — il prodotto resta in elenco come "finito" — e in
-  // lista della spesa entra una voce. Un solo avviso, con "Annulla" che
+  // "Finito" (riga scorsa verso sinistra, pillola "Finito" del pannello): il
+  // prodotto ESCE dalla dispensa ed entra in lista della spesa (dal 09/10 non
+  // resta più in elenco a quantità zero). Un solo avviso, con "Annulla" che
   // rimette com'erano sia la dispensa sia la lista.
   async function finishItem(it) {
-    const zero = /\d/.test(String(it.qty)) ? String(it.qty).replace(/-?\d+(?:[.,]\d+)?/, "0") : "0";
-    setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: zero } : x)));
-    persistUpdate(it.id, { qty: zero });
+    setItems((prev) => prev.filter((x) => x.id !== it.id));
+    persistDelete(it.id);
     const res = await addToShoppingMerged([{ name: it.name, qty: "1" }]);
     showToast(<><strong>{it.name}</strong> finito: è in lista</>, () => {
-      setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, qty: it.qty } : x)));
-      persistUpdate(it.id, { qty: it.qty });
+      // Se era già a zero (prodotti di prima del 09/10) torna come "c'è".
+      const row = { id: newLocalId(), name: it.name, qty: isOut(it) ? "1" : it.qty, category: it.category, expiry: it.expiry };
+      setItems((prev) => [...prev, { ...row, created_at: new Date().toISOString() }]);
+      persistInsert(row);
       res?.undo?.();
       dismissToast();
     });
@@ -243,12 +233,13 @@ export function usePantry({
     for (const raw of incoming) {
       const name = String(raw.name || "").trim();
       if (!name) continue;
-      const qty = normalizeWeight(String(raw.qty || "1").trim());
+      // In dispensa entrano PEZZI: "600 g" messi in lista dal piano = 1.
+      const qty = String(pieces(String(raw.qty || "1").trim()));
       const cat = CATEGORIES.includes(raw.category) ? raw.category : "Altro";
       const expiry = raw.expiry || null;
       const idx = working.findIndex((x) => matchKey(x.name) === matchKey(name));
       if (idx >= 0) {
-        const merged = normalizeWeight(mergeQty(working[idx].qty, qty));
+        const merged = mergePieces(working[idx].qty, qty);
         const fields = { qty: merged };
         if (expiry) fields.expiry = expiry; // aggiorna la scadenza solo se indicata
         working[idx] = { ...working[idx], ...fields };
@@ -283,7 +274,7 @@ export function usePantry({
     // stato + setter (items/setItems servono agli effetti condivisi, ai flussi
     // scan e al CookModal rimasti in Dispensa)
     items, setItems,
-    newName, setNewName, newQty, setNewQty, newUnit, setNewUnit,
+    newName, setNewName, newQty, setNewQty,
     newCat, setNewCat, newExpiry, setNewExpiry, adding,
     search, setSearch, sort, setSort, expFilter, setExpFilter,
     confirmClear, setConfirmClear,
