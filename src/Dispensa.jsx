@@ -48,6 +48,7 @@ import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
 import PaywallSheet from "./components/PaywallSheet.jsx";
 import PrivacySheet from "./components/PrivacySheet.jsx";
+import PlanReadySheet from "./components/PlanReadySheet.jsx";
 import TimerBar from "./components/TimerBar.jsx";
 import Toast from "./components/Toast.jsx";
 import { useOnline } from "./hooks/useOnline.js";
@@ -907,52 +908,111 @@ export default function Dispensa({ session }) {
   // piano, dispensa e lista, quindi sta qui. Ricettario e pianificatore si
   // caricano solo al tocco (import dinamico): non pesano sull'avvio.
   const [fillingWeek, setFillingWeek] = useState(false);
+  // Riepilogo mostrato dopo "Riempi la settimana" (PlanReadySheet): i pasti
+  // appena messi, quanti prodotti sono finiti in lista e come toglierli.
+  const [planReady, setPlanReady] = useState(null); // { picks, added, undo, rejected } | null
+  const [swappingMeal, setSwappingMeal] = useState(null); // indice del pasto che si sta cambiando
+  // L'ultima versione di addMissingToShopping: dopo aver annullato le aggiunte
+  // in lista (cambio di un piatto) serve quella che vede la lista AGGIORNATA.
+  const addMissingRef = useRef(addMissingToShopping);
+  addMissingRef.current = addMissingToShopping;
+
+  // Ricettario e pianificatore si caricano solo al bisogno (import dinamico).
+  // Ritorna tutto ciò che serve per scegliere: le ricette che rispettano le
+  // esigenze alimentari del Profilo (qui non c'è l'AI a leggerle), le scorte
+  // vere (senza i finiti) e i prodotti in scadenza.
+  async function plannerKit() {
+    const [{ default: BASE }, planner] = await Promise.all([
+      import("./data/ricetteBase.js"), import("./lib/planner.js"),
+    ]);
+    const mine = savedRecipes.filter((r) => r.data?.ingredients?.length).map((r) => r.data);
+    return {
+      ...planner,
+      recipes: [...mine, ...BASE].filter(allowedBy(foodPrefs)),
+      pantry: items.filter((x) => !isOut(x)),
+      expiring: expiringItems.filter((x) => !isOut(x)),
+    };
+  }
+  // I pasti già nel piano e non ancora cucinati consumano le scorte prima
+  // degli altri (`except`: il pasto che si sta sostituendo non conta).
+  function plannedMeals(except = null) {
+    const today = isoDate(new Date());
+    return meals
+      .filter((m) => m.data && !m.cooked_at && m.date >= today && m.id !== except)
+      .map((m) => ({ recipe: m.data, servings: m.data.planServings }));
+  }
+  // Le porzioni di casa ("a casa siamo in X"), se impostate, valgono anche nel piano.
+  const withServings = (recipe) => (prefServings ? { ...recipe, planServings: prefServings } : recipe);
+
   async function fillWeek() {
     if (fillingWeek) return;
     setFillingWeek(true);
     try {
-      const [{ default: BASE }, { planWeek, freeSlots, shoppingList }] = await Promise.all([
-        import("./data/ricetteBase.js"), import("./lib/planner.js"),
-      ]);
+      const { planWeek, freeSlots, shoppingList, recipes, pantry, expiring } = await plannerKit();
       const weekDays = [0, 1, 2, 3, 4, 5, 6].map((i) => isoDate(addDays(weekStart, i)));
       const slots = freeSlots(weekDays, meals, isoDate(new Date()));
       if (!slots.length) { showToast("In questa settimana non ci sono pasti liberi da riempire"); return; }
-      const mine = savedRecipes.filter((r) => r.data?.ingredients?.length).map((r) => r.data);
-      const today = isoDate(new Date());
-      const picks = planWeek({
-        // Solo le ricette che rispettano le esigenze alimentari scritte nel
-        // Profilo ("no peperoni", "vegetariano"…): qui non c'è l'AI a leggerle.
-        slots, recipes: [...mine, ...BASE].filter(allowedBy(foodPrefs)),
-        // Le scorte vere (senza i finiti): il pianificatore ne tiene il conto
-        // ricetta dopo ricetta, partendo dai pasti già nel piano.
-        pantry: items.filter((x) => !isOut(x)),
-        expiring: expiringItems.filter((x) => !isOut(x)),
-        servings: prefServings,
-        planned: meals
-          .filter((m) => m.data && !m.cooked_at && m.date >= today)
-          .map((m) => ({ recipe: m.data, servings: m.data.planServings })),
-      });
-      // Le porzioni di casa ("a casa siamo in X"), se impostate, valgono anche qui.
-      const ids = (await Promise.all(picks.map((p) =>
-        planMeal(p.date, p.slot, { title: p.recipe.title, data: prefServings ? { ...p.recipe, planServings: prefServings } : p.recipe })
-      ))).filter(Boolean);
-      if (!ids.length) { showToast("Non sono riuscito a salvare il piano. Controlla la connessione e riprova."); return; }
+      // Il pianificatore tiene il conto delle scorte ricetta dopo ricetta,
+      // partendo dai pasti già nel piano.
+      const picks = planWeek({ slots, recipes, pantry, expiring, servings: prefServings, planned: plannedMeals() });
+      const ids = await Promise.all(picks.map((p) =>
+        planMeal(p.date, p.slot, { title: p.recipe.title, data: withServings(p.recipe) })
+      ));
+      const saved = picks.map((p, i) => ({ ...p, id: ids[i] })).filter((p) => p.id);
+      if (!saved.length) { showToast("Non sono riuscito a salvare il piano. Controlla la connessione e riprova."); return; }
       // Mancanti in lista: una voce per prodotto, con la quantità che serve
       // davvero (sommata tra le ricette). Chi è già in lista si salta.
-      const missing = shoppingList(picks);
+      const missing = shoppingList(saved);
       const res = missing.length ? await addMissingToShopping(missing) : null;
-      const added = res?.added || 0;
-      showToast(
-        `Piano pronto: ${ids.length} ${ids.length === 1 ? "pasto" : "pasti"}${added ? ` · ${added} ${added === 1 ? "prodotto" : "prodotti"} in lista` : ""}`,
-        () => { ids.forEach((id) => removeMeal(id)); res?.undo?.(); dismissToast(); },
-        "Annulla", undefined, 9000,
-      );
+      // Niente avviso che sparisce: un foglio che mostra cosa è stato messo e
+      // lascia cambiare subito i piatti che non vanno.
+      bumpModal("planReady");
+      setPlanReady({ picks: saved, added: res?.added || 0, undo: res?.undo, rejected: [] });
     } catch (e) {
       console.error(e);
       showToast("Non sono riuscito a preparare il piano. Riprova.");
     } finally {
       setFillingWeek(false);
     }
+  }
+
+  // Dal riepilogo: un'altra ricetta per QUEL pasto. Si sceglie come le altre
+  // (scorte, scadenze, esigenze), scartando le ricette già nel piano e quelle
+  // già rifiutate qui; poi la lista della spesa si rifà sui piatti rimasti.
+  async function swapPlanned(i) {
+    const cur = planReady?.picks[i];
+    if (!cur || swappingMeal !== null) return;
+    setSwappingMeal(i);
+    try {
+      const { planWeek, shoppingList, recipes, pantry, expiring } = await plannerKit();
+      const skip = new Set([...meals.map((m) => m.title), ...planReady.rejected, cur.recipe.title]);
+      const [next] = planWeek({
+        slots: [{ date: cur.date, slot: cur.slot }],
+        recipes: recipes.filter((r) => !skip.has(r.title)),
+        pantry, expiring, servings: prefServings, planned: plannedMeals(cur.id),
+      });
+      if (!next) { showToast("Non ho altre ricette da proporre per questo pasto"); return; }
+      const ok = await planMeal(cur.date, cur.slot, { title: next.recipe.title, data: withServings(next.recipe) }, cur.id);
+      if (!ok) { showToast("Non sono riuscito a cambiare il piatto. Controlla la connessione e riprova."); return; }
+      const picks = planReady.picks.map((p, k) => (k === i ? { ...next, id: cur.id } : p));
+      // Lista: via le aggiunte di prima (flushSync: la lista deve risultare
+      // aggiornata PRIMA di rimetterci i mancanti del piano nuovo).
+      flushSync(() => planReady.undo?.());
+      const missing = shoppingList(picks);
+      const res = missing.length ? await addMissingRef.current(missing) : null;
+      setPlanReady({ picks, added: res?.added || 0, undo: res?.undo, rejected: [...planReady.rejected, cur.recipe.title] });
+    } catch (e) {
+      console.error(e);
+      showToast("Non sono riuscito a cambiare il piatto. Riprova.");
+    } finally {
+      setSwappingMeal(null);
+    }
+  }
+  // "Annulla tutto": via i pasti appena aggiunti e i prodotti messi in lista.
+  function undoPlan() {
+    if (!planReady) return;
+    planReady.picks.forEach((p) => removeMeal(p.id));
+    planReady.undo?.();
   }
 
   // --- Derivati ---
@@ -1346,6 +1406,19 @@ export default function Dispensa({ session }) {
       )}
 
       {privacyOpen && <PrivacySheet key={modalEpoch.current.privacy} onClose={() => setPrivacyOpen(false)} />}
+
+      {planReady && (
+        <PlanReadySheet
+          key={modalEpoch.current.planReady}
+          picks={planReady.picks}
+          added={planReady.added}
+          swapping={swappingMeal}
+          onSwap={swapPlanned}
+          onOpen={(p) => openSavedRecipe({ title: p.recipe.title, data: p.recipe })}
+          onUndoAll={undoPlan}
+          onClose={() => setPlanReady(null)}
+        />
+      )}
 
       {confirmClear && (
         <ConfirmClearModal key={modalEpoch.current.confirmClear} onCancel={() => setConfirmClear(false)} onConfirm={clearPantry} />

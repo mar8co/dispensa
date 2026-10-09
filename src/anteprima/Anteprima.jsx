@@ -29,6 +29,7 @@ import ManualAddModal from "../components/ManualAddModal.jsx";
 import ReviewScanModal from "../components/ReviewScanModal.jsx";
 import CookModal from "../components/CookModal.jsx";
 import VoiceAddModal from "../components/VoiceAddModal.jsx";
+import PlanReadySheet from "../components/PlanReadySheet.jsx";
 
 // "Aggiungi a mano" con lo stato che in Dispensa.jsx vive nel composition root.
 function AggiungiProva({ onClose }) {
@@ -286,6 +287,16 @@ export default function Anteprima() {
             { itemId: "c", name: "Olio EVO", kind: "qb", before: "1 l", after: "1 l" },
           ]}
           onClose={chiudi} onSetAfter={() => {}} onRemoveRow={() => {}} onApply={chiudi} onStapleToShopping={() => {}}
+        />
+      )}
+      {foglio === "piano-pronto" && (
+        <PlanReadySheet
+          added={7} onSwap={() => {}} onOpen={() => {}} onUndoAll={chiudi} onClose={chiudi}
+          picks={[
+            ["cena", 0, "Cotolette di pollo al forno", ["Pangrattato"]], ["pranzo", 1, "Spaghetti al limone", []],
+            ["cena", 1, "Salmone con salsa allo yogurt", ["Salmone"]], ["pranzo", 2, "Risotto alle zucchine", ["Cipolla"]],
+            ["cena", 2, "Frittata di zucchine", []], ["pranzo", 3, "Insalata di ceci e feta", ["Cetrioli", "Limone"]],
+          ].map(([slot, n, title, miss]) => ({ id: `${n}${slot}`, date: inDays(n), slot, recipe: { title }, missing: miss.map((name) => ({ name })) }))}
         />
       )}
       {foglio === "voce" && <VoiceAddModal processing={false} onCancel={chiudi} onResult={chiudi} />}

@@ -111,7 +111,9 @@
   Un avviso, una volta sola per dispositivo, spiega il gesto.
 - **Piano, "Riempi la settimana" (09/10)**: pulsante nero pieno sotto il selettore della settimana, con
   una riga piccola che dice cosa fa; compare solo se da oggi in poi c'è almeno un pasto libero. Alla
-  fine: avviso "Piano pronto: N pasti · M prodotti in lista" con "Annulla".
+  fine si apre il foglio nero **"Piano pronto"** (`PlanReadySheet.jsx`): un pasto per riga (giorno ·
+  pasto, piatto, cosa manca); tocco sul piatto = apre la ricetta, tondo con le frecce = ne propone
+  un'altra; in fondo "Annulla tutto" e "Va bene" (giallo).
 - **Ricetta aperta dal ricettario**: prende tutta la pagina (prima compariva in fondo a "Cosa
   cuciniamo?"); in alto il link "Indietro".
 - **Profilo, esigenze alimentari**: sotto il riquadro una riga piccola dice cosa l'app ne ha capito
@@ -121,7 +123,8 @@
   "Indietro"); scorrendo, quando il titolo grande esce dallo schermo, al posto della scritta compare
   il nome del piatto più piccolo (1,25rem, una riga, troncato) e sotto la riga un filo nero.
 - **Pillole di contesto delle Ricette (Premium)**: una riga sola che scorre di lato; alle cinque di
-  prima si aggiungono Carne, Pesce, Verdure, Legumi (una sola alla volta), poi Pasta e Uova (libere). Sotto, da accese: "Ne tengo
+  prima si aggiungono Carne, Pesce, Verdure, Legumi (una sola alla volta), poi Pasta, Uova, Riso, Zuppa, Insalata, Al forno, Piccante, Pochi ingredienti (si spengono solo
+  quelle che si contraddicono, es. Insalata e Zuppa). Sotto, da accese: "Ne tengo
   conto nella ricetta".
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
