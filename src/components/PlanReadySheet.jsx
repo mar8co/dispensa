@@ -4,7 +4,7 @@
 // apre la ricetta, tondo con le frecce = ne propone un'altra per quel pasto.
 // "Annulla tutto" toglie i pasti appena aggiunti e i prodotti messi in lista.
 // La logica (scelta delle ricette, lista della spesa) sta in Dispensa.jsx.
-import { RefreshCw, Loader2, Check } from "lucide-react";
+import { RefreshCw, Loader2, Check, Sun, Moon } from "lucide-react";
 import Sheet from "./Sheet.jsx";
 import Button from "./Button.jsx";
 import { FOGLIO_NERO } from "../lib/colors.js";
@@ -36,7 +36,11 @@ export default function PlanReadySheet({ picks, added = 0, swapping = null, onSw
             {picks.map((p, i) => (
               <li key={`${p.date}|${p.slot}`} className="flex items-center gap-2 py-2">
                 <button onClick={() => { close(); onOpen(p); }} className="min-w-0 flex-1 py-1 text-left">
-                  <span className="micro block capitalize">{when(p)}</span>
+                  {/* Sole = pranzo, luna = cena: le stesse icone del Piano, per
+                      distinguerli a colpo d'occhio senza altro testo. */}
+                  <span className="micro flex items-center gap-1 capitalize">
+                    {p.slot === "cena" ? <Moon className="h-3 w-3 shrink-0" /> : <Sun className="h-3 w-3 shrink-0" />} {when(p)}
+                  </span>
                   <span className="block truncate text-[1.06rem] font-bold tracking-[-0.02em] text-ink">{p.recipe.title}</span>
                   <span className="block truncate text-[0.8rem] font-medium text-tenue">
                     {p.missing.length ? `manca: ${p.missing.map((m) => m.name).join(", ")}` : "hai tutto"}
