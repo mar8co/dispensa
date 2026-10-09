@@ -1,21 +1,22 @@
-// Foglio profilo (dalla navbar). Dopo lo split con Impostazioni (⚙️ in alto a
-// destra → SettingsSheet) qui resta il "chi sei": account (nome/username),
-// Dispensa familiare, Esigenze alimentari e "Svuota dispensa". Pannello
-// laterale da SINISTRA, con la X in alto a destra (si chiude anche toccando
-// fuori o trascinando);
-// "Esci" sta nelle Impostazioni. L'avatar è lo stesso della testata (tondo blu
-// con l'iniziale). Face ID, notifiche, tutorial e footer legale vivono in
-// SettingsSheet. Veste manifesto: pannello blu (lo stesso dell'avatar), righe sottili, pillole.
+// Profilo: l'UNICO menu dell'app (dall'avatar con l'iniziale, in alto a
+// sinistra). Pannello laterale da SINISTRA, blu come l'avatar, con la X in alto
+// a destra (si chiude anche toccando fuori o trascinando). Dentro: account
+// (nome), Dispensa condivisa, Esigenze alimentari e, dal 09/10, anche le
+// Impostazioni (SettingsSection: Premium, Face ID, notifiche, tutorial, "Svuota
+// dispensa", "Esci", privacy / elimina account). L'ingranaggio in testata non
+// c'è più. Veste manifesto: righe sottili, pillole.
 import { useState, useEffect } from "react";
 import { Trash2, Leaf, Users } from "lucide-react";
 import IconaChiudi from "./IconaChiudi.jsx";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
+import SettingsSection from "./SettingsSection.jsx";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
 
 export default function ProfileSheet({
   email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
+  onReplayTour, onDeleteAccount, onLogout, onOpenPrivacy, isPro = true, onOpenPaywall,
 }) {
   const [username, setUsernameState] = useState("");
   const [membersKey, setMembersKey] = useState(0);  // forza il refresh della lista membri
@@ -36,7 +37,6 @@ export default function ProfileSheet({
         <div className="px-[18px] pb-4 pt-1 [&_.text-tenue]:text-ink">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h3 className="titolo">Profilo</h3>
-            {/* Le Impostazioni si aprono dall'ingranaggio della testata. */}
             <button onClick={close} aria-label="Chiudi" className="tondo">
               <IconaChiudi />
             </button>
@@ -94,16 +94,26 @@ export default function ProfileSheet({
             />
           </div>
 
-          {/* Azioni: righe sottili, niente scatole */}
-          <div className="mt-5 border-t-[1.5px] border-ink">
+          {/* Impostazioni: stesse righe di prima, ora qui. "Svuota dispensa"
+              sta tra le righe, subito prima di "Esci". */}
+          <SettingsSection
+            close={close}
+            onReplayTour={onReplayTour}
+            onDeleteAccount={onDeleteAccount}
+            onLogout={onLogout}
+            onOpenPrivacy={onOpenPrivacy}
+            isPro={isPro}
+            onOpenPaywall={onOpenPaywall}
+          >
             <button
               data-tour="clear-pantry"
               onClick={() => { close(); onClearPantry(); }}
-              className="flex min-h-[52px] w-full items-center gap-3 text-left text-[1rem] font-bold text-ink"
+              className="flex min-h-[60px] w-full items-center gap-3 border-b border-riga py-2.5 text-left"
             >
-              <Trash2 className="h-[18px] w-[18px]" /> Svuota dispensa
+              <Trash2 className="h-[19px] w-[19px] shrink-0 text-ink" />
+              <span className="block text-[1rem] font-bold tracking-[-0.01em] text-ink">Svuota dispensa</span>
             </button>
-          </div>
+          </SettingsSection>
         </div>
       )}
     </Sheet>

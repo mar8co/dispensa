@@ -1,16 +1,15 @@
-// Impostazioni (dall'ingranaggio in alto a destra di ogni scheda):
-// pannello laterale da destra, con la X in alto a destra. Raccoglie il "come si
-// comporta l'app": Face ID, notifiche push, tutorial, "Esci" (con conferma)
-// e il footer legale (privacy / elimina account). Il Profilo resta
-// il "chi sei": nome, dispensa familiare, esigenze alimentari e azioni dati.
+// Impostazioni DENTRO il Profilo (dal 09/10: prima erano un pannello a parte,
+// aperto dall'ingranaggio in alto a destra, tolto su richiesta). Raccoglie il
+// "come si comporta l'app": Premium, Face ID, notifiche push, tutorial, "Esci"
+// (con conferma) e il footer legale (privacy / elimina account). `children` =
+// righe del Profilo da mettere subito prima di "Esci" (es. "Svuota dispensa").
+// `close` chiude il pannello del Profilo.
 import { useState, useEffect } from "react";
 import {
   GraduationCap, Loader2, Bell,
   Sparkles, ChevronRight,
 } from "lucide-react";
-import Sheet from "./Sheet.jsx";
 import IconaEsci from "./IconaEsci.jsx";
-import IconaChiudi from "./IconaChiudi.jsx";
 import FaceIdIcon from "./FaceIdIcon.jsx";
 import { supabase } from "../lib/supabase.js";
 import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush } from "../lib/push.js";
@@ -19,9 +18,9 @@ import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush
 // Safari/PWA la supporta). Se manca, la riga Face ID non compare.
 const CAN_USE_PASSKEY = typeof window !== "undefined" && !!window.PublicKeyCredential;
 
-export default function SettingsSheet({
-  onClose, onReplayTour, onDeleteAccount, onOpenPrivacy, onLogout,
-  isPro = true, onOpenPaywall,
+export default function SettingsSection({
+  close, onReplayTour, onDeleteAccount, onOpenPrivacy, onLogout,
+  isPro = true, onOpenPaywall, children,
 }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -131,17 +130,8 @@ export default function SettingsSheet({
   const disattiva = "pillola min-h-[34px] px-3.5 text-[0.84rem]";
 
   return (
-    <Sheet side="right" onClose={onClose} panelClass="bg-arancio">
-      {(close) => (
-        <div className="px-[18px] pb-4 pt-1">
-          {/* X in alto a destra, sulla riga del titolo: è il punto dove il
-              pollice la cerca (stesso posto dell'ingranaggio che apre). */}
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <h3 className="titolo">Impostazioni</h3>
-            <button onClick={close} aria-label="Chiudi" className="tondo">
-              <IconaChiudi />
-            </button>
-          </div>
+    <>
+          <div className="sezione mb-2.5 mt-6">Impostazioni</div>
 
           {/* Premium: punto d'accesso permanente al paywall (gli altri sono
               contestuali, sulle funzioni bloccate). Per un abbonato diventa
@@ -234,7 +224,9 @@ export default function SettingsSheet({
               <span className={nome}>Rivedi il tutorial</span>
             </button>
 
-            {/* Esci: qui dal 01/10 (prima nel Profilo, poi in testata). */}
+            {children}
+
+            {/* Esci (con conferma in linea). */}
             {onLogout && (confirmLogout ? (
               <div className="flex gap-2 border-b border-riga py-3">
                 <button onClick={() => setConfirmLogout(false)} className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]">
@@ -289,8 +281,6 @@ export default function SettingsSheet({
               </div>
             </div>
           )}
-        </div>
-      )}
-    </Sheet>
+    </>
   );
 }

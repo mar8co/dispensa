@@ -10,7 +10,6 @@
 //   menu=1  menu "+" aperto · toast=1  avviso con Annulla
 //   foglio = profilo | impostazioni | premium | privacy | svuota | aggiungi |
 //            revisione | cucinato | voce
-import { Settings } from "lucide-react";
 import { useState, useRef } from "react";
 import { DEMO_DATA, CATEGORIES, MODES } from "../constants.js";
 import { guessCategory, daysUntilExpiry, findMatch } from "../lib/pantry.js";
@@ -23,7 +22,6 @@ import Toast from "../components/Toast.jsx";
 import Auth from "../components/Auth.jsx";
 import { mondayOf } from "../hooks/useMealPlan.jsx";
 import ProfileSheet from "../components/ProfileSheet.jsx";
-import SettingsSheet from "../components/SettingsSheet.jsx";
 import PaywallSheet from "../components/PaywallSheet.jsx";
 import PrivacySheet from "../components/PrivacySheet.jsx";
 import ConfirmClearModal from "../components/ConfirmClearModal.jsx";
@@ -162,9 +160,6 @@ export default function Anteprima() {
             M
           </button>
           <div id="testata-azioni" className="ml-auto flex gap-2" />
-          <button onClick={() => setFoglio("impostazioni")} aria-label="Impostazioni" title="Impostazioni" className="tondo">
-            <Settings className="h-[18px] w-[18px]" />
-          </button>
         </header>
         {view === "dispensa" && (
           <PantryTab
@@ -257,15 +252,13 @@ export default function Anteprima() {
         )}
       />
 
-      {foglio === "profilo" && (
+      {(foglio === "profilo" || foglio === "impostazioni") && (
         <ProfileSheet
           email="marco@esempio.it" itemCount={items.length} shared foodPrefs="" onSaveFoodPrefs={() => {}}
           onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
+          onLogout={chiudi} onReplayTour={() => {}} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")} isPro={false} onOpenPaywall={() => setFoglio("premium")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
         />
-      )}
-      {foglio === "impostazioni" && (
-        <SettingsSheet onClose={chiudi} onLogout={chiudi} onReplayTour={() => {}} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")} isPro={false} onOpenPaywall={() => setFoglio("premium")} />
       )}
       {foglio === "premium" && <PaywallSheet onClose={chiudi} reason="Il Piano Alimentare fa parte di Premium: organizza la settimana e la lista della spesa si riempie da sola." />}
       {foglio === "privacy" && <PrivacySheet onClose={chiudi} />}

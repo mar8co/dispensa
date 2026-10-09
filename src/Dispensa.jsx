@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
-import { Loader2, Settings } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import {
   CATEGORIES, MODES, RECEIPT_PROMPT, SEED_DATA, DEMO_DATA, NAME_RULES, CATEGORY_PROMPT,
@@ -45,7 +45,6 @@ import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
-import SettingsSheet from "./components/SettingsSheet.jsx";
 import PaywallSheet from "./components/PaywallSheet.jsx";
 import PrivacySheet from "./components/PrivacySheet.jsx";
 import TimerBar from "./components/TimerBar.jsx";
@@ -198,23 +197,21 @@ export default function Dispensa({ session }) {
 
   // foglio profilo (nome, famiglia, esigenze, svuota, logout)
   const [profileOpen, setProfileOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false); // impostazioni (⚙️ dal Profilo)
   const [privacyOpen, setPrivacyOpen] = useState(false); // informativa privacy
   // Premium: `isPro` decide solo COSA MOSTRARE (i controlli veri sono nelle
   // policy del DB e nel proxy AI). Parte da true per non far lampeggiare il
   // paywall a un abbonato mentre la verifica è in corso.
   const [isPro, setIsPro] = useState(true);
   const [paywall, setPaywall] = useState(null); // { reason } | null
-  // Passaggio Profilo→Impostazioni→Privacy SERIALIZZATO: il foglio successivo
+  // Passaggio Profilo→Privacy/Premium SERIALIZZATO: il foglio successivo
   // si apre solo QUANDO il precedente ha finito l'animazione di chiusura
   // (onClose). Due drawer Vaul sovrapposti lasciavano residui Radix
   // (pointer-events sul body) che mangiavano il primo tap dopo la chiusura.
-  const pendingSheetRef = useRef(null); // "settings" | "privacy" | "paywall" | null
+  const pendingSheetRef = useRef(null); // "privacy" | "paywall" | null
   function openPendingSheet() {
     const next = pendingSheetRef.current;
     pendingSheetRef.current = null;
-    if (next === "settings") { bumpModal("settings"); setSettingsOpen(true); }
-    else if (next === "privacy") { bumpModal("privacy"); setPrivacyOpen(true); }
+    if (next === "privacy") { bumpModal("privacy"); setPrivacyOpen(true); }
     else if (next === "paywall") { bumpModal("paywall"); setPaywall({ reason: null }); }
   }
 
@@ -1113,13 +1110,9 @@ export default function Dispensa({ session }) {
           </button>
           {!online && <span className="text-[0.72rem] font-bold text-ink">Offline</span>}
           {/* Azioni della scheda aperta sulla stessa riga, a destra (la Spesa ci
-              mette luce e condivisione, via portal), poi le Impostazioni. */}
+              mette luce e condivisione, via portal). Le Impostazioni stanno
+              nel Profilo: l'ingranaggio qui non c'è più (09/10). */}
           <div id="testata-azioni" className="ml-auto flex gap-2" />
-          {/* Impostazioni: in alto a destra su tutte le schede ("Esci" è lì
-              dentro). */}
-          <button onClick={() => { bumpModal("settings"); setSettingsOpen(true); }} aria-label="Impostazioni" title="Impostazioni" className="tondo">
-            <Settings className="h-[18px] w-[18px]" />
-          </button>
         </header>
         {view === "dispensa" && (
           <PantryTab
@@ -1287,25 +1280,18 @@ export default function Dispensa({ session }) {
           foodPrefs={foodPrefs}
           onSaveFoodPrefs={setFoodPrefs}
           onClose={() => { setProfileOpen(false); openPendingSheet(); }}
-          onClearPantry={() => {
-            // Durante il tutorial lo svuotamento è guidato e immediato (niente
-            // conferma): cancella i dati demo e avanza al passo finale.
-            if (tour.active) { tourEmptyDemo(); tourSignal("pantry-cleared"); }
-            else { bumpModal("confirmClear"); setConfirmClear(true); }
-          }}
-        />
-      )}
-
-      {settingsOpen && (
-        <SettingsSheet
-          key={modalEpoch.current.settings}
-          onClose={() => { setSettingsOpen(false); openPendingSheet(); }}
           onReplayTour={replayTour}
           onDeleteAccount={deleteAccount}
           onLogout={logout}
           onOpenPrivacy={() => { pendingSheetRef.current = "privacy"; }}
           isPro={isPro}
           onOpenPaywall={() => { pendingSheetRef.current = "paywall"; }}
+          onClearPantry={() => {
+            // Durante il tutorial lo svuotamento è guidato e immediato (niente
+            // conferma): cancella i dati demo e avanza al passo finale.
+            if (tour.active) { tourEmptyDemo(); tourSignal("pantry-cleared"); }
+            else { bumpModal("confirmClear"); setConfirmClear(true); }
+          }}
         />
       )}
 
