@@ -93,8 +93,11 @@ export function useRecipes({
   // invece convivono (es. insalata fredda). Le altre restano libere.
   const CONTEXT_CONFLICTS = {
     fresco: ["caldo"],
-    caldo: ["fresco", "senzacottura"],
-    senzacottura: ["caldo"],
+    caldo: ["fresco", "senzacottura", "insalata"],
+    senzacottura: ["caldo", "forno", "zuppa"],
+    forno: ["senzacottura", "insalata"],
+    zuppa: ["senzacottura", "insalata"],
+    insalata: ["caldo", "forno", "zuppa"],
     // Ingrediente principale: uno alla volta.
     carne: ["pesce", "verdure", "legumi"],
     pesce: ["carne", "verdure", "legumi"],

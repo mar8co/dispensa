@@ -230,6 +230,12 @@ export const RECIPE_CONTEXTS = [
   // Si combinano con le altre (pasta al pesce, frittata di verdure): nessun conflitto.
   { id: "pasta", icon: "🍝", label: "Pasta", hint: "il piatto deve essere una pasta" },
   { id: "uova", icon: "🥚", label: "Uova", hint: "il piatto deve essere a base di uova" },
+  { id: "riso", icon: "🍚", label: "Riso", hint: "il piatto deve essere a base di riso" },
+  { id: "zuppa", icon: "🥣", label: "Zuppa", hint: "il piatto deve essere una zuppa, una minestra o una vellutata" },
+  { id: "insalata", icon: "🥗", label: "Insalata", hint: "il piatto deve essere un'insalata o un piatto unico freddo" },
+  { id: "forno", icon: "🔥", label: "Al forno", hint: "il piatto deve essere cotto al forno" },
+  { id: "piccante", icon: "🌶️", label: "Piccante", hint: "il piatto deve essere piccante" },
+  { id: "pochi", icon: "🖐️", label: "Pochi ingredienti", hint: "la ricetta deve usare al massimo 5 ingredienti, esclusi olio, sale e pepe" },
 ];
 
 // Regole condivise per ottenere il NOME GENERICO dell'alimento (usate da
