@@ -173,7 +173,10 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
           `(numero oppure unità metriche come "500 g"/"1 l"), MAI nel nome; altrimenti "1". ` +
           `Rispondi SOLO con JSON valido senza markdown: {"items":[{"name":"...","qty":"..."}]}`;
         const parsed = await callClaude([{ type: "text", text: prompt }], 600);
-        if (Array.isArray(parsed?.items) && parsed.items.length) list = parsed.items;
+        // L'AI vale solo se trova ALMENO i prodotti della lettura locale: se li
+        // fonde in una voce sola ("una pera due zucchine" → un prodotto) si
+        // tiene la lettura locale.
+        if (Array.isArray(parsed?.items) && parsed.items.length && parsed.items.length >= list.length) list = parsed.items;
       } catch (e) {
         console.error(e);
         if (!list.length) {

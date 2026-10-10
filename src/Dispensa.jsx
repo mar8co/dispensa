@@ -725,7 +725,9 @@ export default function Dispensa({ session }) {
         const raw = Array.isArray(parsed?.items) ? parsed.items : [];
         // Dizionario-first sulla categoria: le varianti note (es. formati di
         // pasta) vengono corrette anche se l'AI le sbaglia.
-        if (raw.length) {
+        // …e solo se l'AI trova ALMENO i prodotti della lettura locale: se li
+        // fonde in una voce sola si tiene la lettura locale.
+        if (raw.length && raw.length >= list.length) {
           list = raw.map((it) => ({ ...it, category: categorize(String(it?.name || ""), it?.category) }));
         }
       } catch (e) {

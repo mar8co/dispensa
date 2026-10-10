@@ -131,6 +131,51 @@ function parseFragment(frag) {
   return { name, qty };
 }
 
+// Chi detta spesso NON fa pause: il telefono restituisce "una pera due
+// zucchine quattro pesce", senza virgole. Un NUMERO in mezzo alla frase apre
+// un prodotto nuovo ("…pera | due zucchine | quattro pesce"). Non vale per i
+// numeri che fanno parte del nome ("farina 00", "spaghetti numero 5").
+const isNumber = (w) => w in NUMBERS || /^\d+(?:[.,]\d+)?$/.test(w);
+function splitAtNumbers(frag) {
+  const words = frag.replace(/'/g, " ").split(/\s+/).filter(Boolean);
+  const pieces = [];
+  let cur = [];
+  let hasName = false; // nel pezzo corrente c'è già una parola che fa da nome
+  words.forEach((w, i) => {
+    const prev = words[i - 1];
+    const inName = w === "00" || w === "0" || prev === "numero" || prev === "n" || prev === "tipo";
+    if (isNumber(w) && !inName && hasName) {
+      pieces.push(cur.join(" "));
+      cur = [];
+      hasName = false;
+    }
+    cur.push(w);
+    if (!isNumber(w) && !(w in UNITS) && !PACKS.has(w) && !FILLERS.has(w) && w !== "§mezzo") hasName = true;
+  });
+  if (cur.length) pieces.push(cur.join(" "));
+  return pieces;
+}
+
+// Stessa cosa senza numeri: "pane latte uova". Se il nome comincia con un
+// prodotto del catalogo e ciò che segue è A SUA VOLTA un prodotto del
+// catalogo, sono due prodotti. "Tonno fresco" o "latte di mandorla" restano
+// interi (ciò che segue non è un prodotto, o comincia con "di").
+function splitAtCatalog(name) {
+  const out = [];
+  let words = name.split(/\s+/).filter(Boolean);
+  while (words.length > 1) {
+    const hit = catalogAtStart(words.join(" "));
+    if (!hit) break;
+    const n = hit.split(/\s+/).length;
+    const rest = words.slice(n);
+    if (!rest.length || FILLERS.has(rest[0]) || !(catalogAtStart(rest.join(" ")) || EXTRA_FOODS.has(fold(rest[0])))) break;
+    out.push(words.slice(0, n).join(" "));
+    words = rest;
+  }
+  out.push(words.join(" "));
+  return out;
+}
+
 // Frase dettata → { items: [{ name, qty, category }], unknown }. `unknown` è
 // il numero di voci che non abbiamo riconosciuto come alimenti noti (restano
 // comunque in `items`, in "Altro"): se è > 0 conviene chiedere all'AI.
@@ -139,18 +184,24 @@ export function parseSpokenList(transcript) {
     .toLowerCase()
     .replace(/\be mezz[oa]\b/g, " §mezzo ")
     .replace(/[.;:!?]/g, ",");
-  const fragments = text.split(/\s*(?:,|\be\b|\bpoi\b|\bpiù\b|\boppure\b)\s*/);
+  const fragments = text.split(/\s*(?:,|\be\b|\bpoi\b|\bpiù\b|\boppure\b)\s*/).flatMap(splitAtNumbers);
   const items = [];
   let unknown = 0;
   for (const frag of fragments) {
     const parsed = parseFragment(frag.trim());
     if (!parsed) continue;
-    const hit = catalogAtStart(parsed.name);
-    // Catalogo: si usa il suo nome solo se copre TUTTO il detto ("pasta
-    // integrale"), altrimenti si tiene quello dell'utente, corretto.
-    const name = hit && fold(hit) === fold(parsed.name) ? hit : correctName(parsed.name);
-    if (!known(name)) unknown += 1;
-    items.push({ name, qty: parsed.qty, category: guessCategory(name) || "Altro" });
+    // La quantità detta vale per il primo; gli altri prodotti trovati nello
+    // stesso pezzo ("pane latte uova") contano uno.
+    splitAtCatalog(parsed.name).forEach((said, k) => {
+      const hit = catalogAtStart(said);
+      // Catalogo: si usa il suo nome solo se copre TUTTO il detto ("pasta
+      // integrale"), altrimenti si tiene quello dell'utente, corretto.
+      // Una parola che il dizionario conosce già NON si "corregge": prima
+      // "pesce" diventava "Pesche".
+      const name = hit && fold(hit) === fold(said) ? hit : guessCategory(said) ? cap(said) : correctName(said);
+      if (!known(name)) unknown += 1;
+      items.push({ name, qty: k === 0 ? parsed.qty : "1", category: guessCategory(name) || "Altro" });
+    });
   }
   return { items, unknown };
 }

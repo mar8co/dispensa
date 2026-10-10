@@ -49,6 +49,24 @@ describe("parseSpokenList", () => {
       { name: "Mozzarella", qty: "1", category: "Latticini" },
     ]);
   });
+  it("senza pause: un numero apre un prodotto nuovo", () => {
+    const { items } = parseSpokenList("una pera due zucchine quattro pesce");
+    expect(items.map((x) => [x.name, x.qty])).toEqual([["Pere", "1"], ["Zucchine", "2"], ["Pesce", "4"]]);
+    const b = parseSpokenList("due pacchi di pasta 3 mozzarelle un litro di latte");
+    expect(b.items.map((x) => [x.name, x.qty])).toEqual([["Pasta", "2"], ["Mozzarella", "3"], ["Latte", "1 l"]]);
+  });
+  it("i numeri che fanno parte del nome non dividono", () => {
+    expect(parseSpokenList("farina 00").items.length).toBe(1);
+    expect(parseSpokenList("spaghetti numero 5").items.length).toBe(1);
+  });
+  it("senza pause e senza numeri: divide sui prodotti che conosce", () => {
+    const { items } = parseSpokenList("pane latte uova");
+    expect(items.map((x) => x.name)).toEqual(["Pane", "Latte", "Uova"]);
+    // un nome con la sua specifica resta intero
+    expect(parseSpokenList("tonno fresco").items.length).toBe(1);
+    expect(parseSpokenList("latte di mandorla").items.length).toBe(1);
+    expect(parseSpokenList("yogurt greco").items.length).toBe(1);
+  });
   it("conta ciò che non riconosce", () => {
     const { items, unknown } = parseSpokenList("latte e detersivo per i piatti");
     expect(items.length).toBe(2);
