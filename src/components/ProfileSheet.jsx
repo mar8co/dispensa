@@ -41,7 +41,7 @@ export default function ProfileSheet({
         // "Sul blu tutto bianco" (regola delle tre app: Wishlist, Expense
         // Track, Dispensa): testi, fili e bordi bianchi; restano neri solo i
         // contenuti dei riquadri chiari. Vedi `.su-blu` in index.css.
-        <div className="su-blu px-[18px] pb-4 pt-1">
+        <div className="su-blu flex min-h-full flex-col px-[18px] pb-4 pt-1">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h3 className="titolo">Profilo</h3>
             {/* Campanella delle notifiche al posto della X (come in Expense

@@ -188,6 +188,10 @@
 - **Ordine delle pillole (12/10)**: prima quelle senza ingrediente — Fresco, Caldo, Sostanzioso,
   Proteico, Pochi ingredienti, Senza cottura, Piccante, Insalata, Zuppa — poi quelle con
   l'ingrediente: Pasta, Riso, Carne, Pollo, Uova.
+- **Profilo, fondo e azioni rare (12/10)**: in FONDO al pannello (sempre, anche con poco contenuto)
+  una riga sola di link piccoli sottolineati: "Esci · Privacy Policy · Elimina account" ("Esci" non è
+  più una riga grande). Nella dispensa condivisa niente titolo "La tua dispensa" e niente pillole:
+  "Entra con codice" (a sinistra) e "Invita" (a destra) sono testo sottolineato con l'icona.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

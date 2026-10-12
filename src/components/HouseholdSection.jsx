@@ -3,7 +3,7 @@
 // cambiano il nucleo attivo (e quindi ricaricano i dati) passano da Dispensa
 // via props (onSwitch / onChanged); le altre chiamano db.js direttamente.
 import { useState, useEffect } from "react";
-import { Users, Copy, Check, Share2, LogOut, Loader2, UserPlus, DoorOpen, Crown, UserMinus } from "lucide-react";
+import { Copy, Check, Share2, LogOut, Loader2, UserPlus, DoorOpen, Crown, UserMinus } from "lucide-react";
 import Button from "./Button.jsx";
 import { createInvite, acceptInvite, fetchMembers, leaveHousehold, removeMember } from "../lib/db.js";
 
@@ -101,14 +101,11 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         <span className="micro">{members.length} {members.length === 1 ? "membro" : "membri"}</span>
       </div>
 
-      {/* Nucleo attivo + membri: righe sottili sul blu, niente riquadro */}
-      <div className="pt-2.5">
-        <div className="flex items-center gap-2">
-          <Users className="h-[18px] w-[18px] text-ink" />
-          <span className="min-w-0 truncate text-[1rem] font-bold tracking-[-0.01em] text-ink">{members.length > 1 ? "La nostra dispensa" : "La tua dispensa"}</span>
-        </div>
+      {/* I membri: righe sottili sul blu, niente riquadro né titolo doppio
+          (l'intestazione della sezione dice già di che dispensa si parla). */}
+      <div>
         {members.length > 0 && (
-          <ul className="mt-1.5 divide-y divide-riga border-t border-riga">
+          <ul className="divide-y divide-riga">
             {members.map((m) => {
               const isMe = m.email && m.email === email;
               const isOwner = m.role === "owner";
@@ -159,18 +156,19 @@ export default function HouseholdSection({ households = [], activeHouseholdId, e
         </div>
       )}
 
-      {/* Entra + Invita: due pillole piccole (si usano una volta ogni tanto,
-          non devono pesare quanto un'azione principale). */}
-      <div className="mt-2 flex gap-2">
+      {/* Entra + Invita: due azioni rare, quindi testo sottolineato (`.link`)
+          come le altre azioni secondarie dell'app — niente pillole col bordo,
+          che in mezzo alle righe sottili del menu stonavano (12/10). */}
+      <div className="flex items-center justify-between gap-3 border-t border-riga">
         <button
           onClick={() => { setJoinOpen((o) => !o); setCode(""); setMsg(""); }}
           aria-expanded={joinOpen}
-          className="pillola min-h-[36px] flex-1 px-2 text-[0.8rem]"
+          className="link flex min-h-[44px] items-center gap-1.5 text-[0.9rem] text-ink"
         >
-          <DoorOpen className="h-3.5 w-3.5" /> Entra con codice
+          <DoorOpen className="h-4 w-4" /> Entra con codice
         </button>
-        <button onClick={invite} disabled={busy === "invite"} className="pillola min-h-[36px] flex-1 px-2 text-[0.8rem] disabled:opacity-60">
-          {busy === "invite" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><UserPlus className="h-3.5 w-3.5" /> Invita</>}
+        <button onClick={invite} disabled={busy === "invite"} className="link flex min-h-[44px] items-center gap-1.5 text-[0.9rem] text-ink disabled:opacity-60">
+          {busy === "invite" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4" /> Invita</>}
         </button>
       </div>
 

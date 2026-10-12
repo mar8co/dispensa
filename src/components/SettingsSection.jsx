@@ -8,10 +8,8 @@
 // campanella in testata, l'uscita in fondo.
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import IconaEsci from "./IconaEsci.jsx";
 import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush } from "../lib/push.js";
 
-const nome = "block text-[1rem] font-bold tracking-[-0.01em] text-ink";
 
 // Campanella (come in Expense Track e Wishlist): disegnata piena quando le
 // notifiche sono accese, barrata quando sono spente.
@@ -83,32 +81,30 @@ export default function SettingsSection({ close, onDeleteAccount, onOpenPrivacy,
   }
 
   return (
-    <>
-      {/* Esci (con conferma in linea): in fondo. Niente filo sopra: c'è già
-          quello di "Ordine delle categorie" (due fili vicini davano fastidio). */}
-      {onLogout && (
-        <div className="mt-2">
-          {confirmLogout ? (
-            <div className="flex gap-2 py-3">
-              <button onClick={() => setConfirmLogout(false)} className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]">
-                Annulla
-              </button>
-              <button onClick={onLogout} className="bottone-rosso min-h-[44px] flex-1 py-2 text-[0.92rem]">
-                Sì, esci
-              </button>
-            </div>
-          ) : (
-            <button onClick={() => setConfirmLogout(true)} className="flex min-h-[56px] w-full items-center gap-3 py-2.5 text-left">
-              <span className="grid w-[19px] shrink-0 place-items-center text-ink"><IconaEsci /></span>
-              <span className={nome}>Esci</span>
-            </button>
-          )}
+    // In FONDO al pannello (mt-auto: il Profilo è una colonna alta quanto lo
+    // schermo): una riga sola di azioni rare — Esci · Privacy · Elimina account.
+    <div className="mt-auto pt-8">
+      {/* Esci: conferma in linea, sopra la riga. */}
+      {confirmLogout && (
+        <div className="mb-2 flex gap-2">
+          <button onClick={() => setConfirmLogout(false)} className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]">
+            Annulla
+          </button>
+          <button onClick={onLogout} className="bottone-rosso min-h-[44px] flex-1 py-2 text-[0.92rem]">
+            Sì, esci
+          </button>
         </div>
       )}
-
-      {/* Footer discreto: privacy e cancellazione account */}
       {!confirmDelete ? (
-        <div className="mt-1 flex items-center justify-center gap-2.5 text-[0.8rem] font-semibold text-tenue">
+        <div className="flex flex-wrap items-center justify-center gap-x-2.5 text-[0.8rem] font-semibold text-tenue">
+          {onLogout && (
+            <>
+              <button onClick={() => setConfirmLogout(true)} className="py-2 underline underline-offset-2">
+                Esci
+              </button>
+              <span aria-hidden="true">·</span>
+            </>
+          )}
           {onOpenPrivacy && (
             <>
               <button onClick={() => { close(); onOpenPrivacy(); }} className="py-2 underline underline-offset-2">
@@ -117,7 +113,7 @@ export default function SettingsSection({ close, onDeleteAccount, onOpenPrivacy,
               <span aria-hidden="true">·</span>
             </>
           )}
-          <button onClick={() => { setDelErr(""); setConfirmDelete(true); }} className="py-2 underline underline-offset-2">
+          <button onClick={() => { setDelErr(""); setConfirmLogout(false); setConfirmDelete(true); }} className="py-2 underline underline-offset-2">
             Elimina account
           </button>
         </div>
@@ -150,6 +146,6 @@ export default function SettingsSection({ close, onDeleteAccount, onOpenPrivacy,
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
