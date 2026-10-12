@@ -1,7 +1,7 @@
 // Profilo: l'UNICO menu dell'app (dall'avatar con l'iniziale, in alto a
 // sinistra). Pannello laterale da SINISTRA, blu come l'avatar, con la X in alto
 // a destra (si chiude anche toccando fuori o trascinando). Dentro, in ordine
-// d'uso: account (nome), Esigenze alimentari, Notifiche, Dispensa condivisa,
+// d'uso: account (nome), Esigenze alimentari, Dispensa condivisa,
 // Ordine delle categorie, Esci. Dal 09/10 contiene anche le
 // Impostazioni (SettingsSection: notifiche, "Esci", privacy / elimina account
 // con dietro "svuota dispensa"). L'ingranaggio in testata non
@@ -9,16 +9,15 @@
 import { useState, useEffect } from "react";
 import { Leaf, Users, ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
-import IconaChiudi from "./IconaChiudi.jsx";
 import Sheet from "./Sheet.jsx";
 import HouseholdSection from "./HouseholdSection.jsx";
-import SettingsSection, { NotificationsSection } from "./SettingsSection.jsx";
+import SettingsSection, { NotificationBell } from "./SettingsSection.jsx";
 import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
 import { parsePrefs } from "../lib/prefs.js";
 
 export default function ProfileSheet({
   email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
-  catOrder = [], onMoveCat,
+  catOrder = [], onMoveCat, onNotify,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
   onDeleteAccount, onLogout, onOpenPrivacy,
 }) {
@@ -45,9 +44,9 @@ export default function ProfileSheet({
         <div className="su-blu px-[18px] pb-4 pt-1">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h3 className="titolo">Profilo</h3>
-            <button onClick={close} aria-label="Chiudi" className="tondo">
-              <IconaChiudi />
-            </button>
+            {/* Campanella delle notifiche al posto della X (come in Expense
+                Track): il pannello si chiude toccando fuori o trascinandolo. */}
+            <NotificationBell onNotify={onNotify} />
           </div>
 
           {/* Account: il Nome (username) prende il posto della mail */}
@@ -78,7 +77,7 @@ export default function ProfileSheet({
 
           {/* Ordine delle sezioni = quanto spesso servono (riordinato il 09/10):
               1. Esigenze alimentari (cambiano ogni ricetta proposta)
-              2. Notifiche  3. Dispensa condivisa  4. Ordine delle categorie
+              2. Dispensa condivisa  3. Ordine delle categorie
               (a scomparsa)  5. Esci e, in piccolo, privacy / elimina account.
               Tutte uguali: intestazione `.sezione` + righe sul blu. Il riquadro
               bianco lo ha SOLO il campo delle esigenze (scelta dell'utente, 10/10). */}
@@ -107,8 +106,6 @@ export default function ProfileSheet({
                 : <>Qui non ho trovato cibi da escludere: di questo testo terrà conto solo l&rsquo;AI. Capisco frasi come «no peperoni», «senza glutine», «vegetariano».</>}
             </p>
           )}
-
-          <NotificationsSection />
 
           <HouseholdSection
             households={households}

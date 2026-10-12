@@ -261,7 +261,7 @@ export default function Anteprima() {
         <ProfileSheet
           email="marco@esempio.it" itemCount={items.length} shared foodPrefs={PARAM_ESIGENZE} onSaveFoodPrefs={() => {}}
           onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
-          catOrder={ordine} onMoveCat={(c, d) => setOrdine((o) => { const i = o.indexOf(c), j = i + d; if (j < 0 || j >= o.length) return o; const n = [...o]; [n[i], n[j]] = [n[j], n[i]]; return n; })}
+          onNotify={notify} catOrder={ordine} onMoveCat={(c, d) => setOrdine((o) => { const i = o.indexOf(c), j = i + d; if (j < 0 || j >= o.length) return o; const n = [...o]; [n[i], n[j]] = [n[j], n[i]]; return n; })}
           onLogout={chiudi} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
         />

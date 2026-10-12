@@ -262,6 +262,8 @@ svg.lucide {
 .su-blu input::placeholder { color: rgb(255 255 255 / 0.7); }
 .su-blu .border-riga,
 .su-blu .divide-riga > :not([hidden]) ~ :not([hidden]) { border-color: rgb(255 255 255 / 0.35); }
+/* La campanella rosa resta nera (tondo pieno, come nelle altre due app). */
+.su-blu .tondo.bg-rosa { border-color: #0a0a0a; color: #0a0a0a; }
 /* Dentro i riquadri chiari (bianchi, gialli) si torna al nero. */
 .su-blu :is(.bg-white, .bg-giallo) { color: #0a0a0a; }
 .su-blu :is(.bg-white, .bg-giallo) .text-ink { color: #0a0a0a; }

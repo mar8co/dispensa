@@ -1,88 +1,72 @@
 // Pezzi del Profilo che riguardano "come si comporta l'app":
-//  - NotificationsSection: le notifiche di QUESTO dispositivo (un solo
-//    interruttore per tutte: scadenze, pasti del calendario, promemoria);
+//  - NotificationBell: la campanella rosa in alto a destra, un solo
+//    interruttore per tutte le notifiche di QUESTO dispositivo;
 //  - SettingsSection (default): la chiusura del menu — "Esci" (con conferma) e
 //    il footer legale (privacy / elimina account, con dietro "Voglio solo
 //    svuotare la dispensa").
-// Sono due componenti perché nel Profilo stanno in punti diversi: le notifiche
-// in alto tra le cose che si usano, l'uscita in fondo.
+// Sono due componenti perché nel Profilo stanno in punti diversi: la
+// campanella in testata, l'uscita in fondo.
 import { useState, useEffect } from "react";
-import { Loader2, Bell } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import IconaEsci from "./IconaEsci.jsx";
 import { pushSupported, isIosNotInstalled, getPushState, enablePush, disablePush } from "../lib/push.js";
 
 const nome = "block text-[1rem] font-bold tracking-[-0.01em] text-ink";
-const stato = "block text-[0.8rem] font-medium leading-snug text-tenue";
 
-export function NotificationsSection() {
-  // Notifiche push: stato per QUESTO dispositivo.
-  const [pushOn, setPushOn] = useState(false);
-  const [pushBusy, setPushBusy] = useState(false);
-  const [pushErr, setPushErr] = useState("");
+// Campanella (come in Expense Track e Wishlist): disegnata piena quando le
+// notifiche sono accese, barrata quando sono spente.
+function BellIcon({ on }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={on ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
+      <path d="M10 21h4" fill="none" />
+      {!on && <path d="M3.5 3.5l17 17" fill="none" />}
+    </svg>
+  );
+}
+
+// Tondo rosa in alto a destra nel Profilo (al posto della X e della riga
+// "Notifiche", dal 12/10): un tocco accende o spegne TUTTE le notifiche di
+// questo dispositivo (scadenze, pasti del calendario, cosa manca per domani,
+// lista della spesa, promemoria dopo i pasti). `onNotify(testo)` = avviso.
+export function NotificationBell({ onNotify }) {
+  const [on, setOn] = useState(false);
+  const [busy, setBusy] = useState(false);
   const canPush = pushSupported();
-  const iosHint = isIosNotInstalled();
 
-  // Legge se le notifiche sono già attive su questo dispositivo (esiste una
-  // subscription registrata nel browser).
+  // Sono già attive su questo dispositivo?
   useEffect(() => {
     if (!canPush) return;
-    getPushState().then((s) => setPushOn(s.enabled)).catch(() => {});
+    getPushState().then((s) => setOn(s.enabled)).catch(() => {});
   }, [canPush]);
 
-  // Attiva (chiede permesso + iscrive) o disattiva.
-  async function togglePush() {
-    if (pushBusy) return;
-    setPushErr(""); setPushBusy(true);
+  async function toggle() {
+    if (busy) return;
+    if (isIosNotInstalled()) { onNotify?.("Per le notifiche installa Dispensa sulla Home (Condividi → Aggiungi a Home)"); return; }
+    if (!canPush) { onNotify?.("Questo browser non riceve notifiche"); return; }
+    setBusy(true);
     try {
-      if (pushOn) { await disablePush(); setPushOn(false); }
-      else { await enablePush(); setPushOn(true); }
+      if (on) { await disablePush(); setOn(false); onNotify?.("Notifiche spente"); }
+      else { await enablePush(); setOn(true); onNotify?.("Notifiche attive: scadenze, pasti e lista della spesa"); }
     } catch (e) {
-      if (e?.code === "denied") {
-        setPushErr("Permesso negato. Abilita le notifiche per Dispensa dalle impostazioni del telefono.");
-      } else {
-        console.error(e);
-        setPushErr("Operazione non riuscita. Riprova.");
-      }
+      if (e?.code === "denied") onNotify?.("Permesso negato: abilita le notifiche per Dispensa dalle impostazioni del telefono");
+      else { console.error(e); onNotify?.("Operazione non riuscita. Riprova."); }
     } finally {
-      setPushBusy(false);
+      setBusy(false);
     }
   }
 
-  // Dove le push non esistono (browser senza supporto) la sezione non c'è.
-  if (!canPush && !iosHint) return null;
-
-  // "Attiva" = pillola piena (invito), "Disattiva" = solo bordo.
-  const attiva = "pillola min-h-[34px] bg-ink px-3.5 text-[0.84rem] text-white";
-  const disattiva = "pillola min-h-[34px] px-3.5 text-[0.84rem]";
-
   return (
-    <>
-      <div className="sezione mt-6">Notifiche</div>
-      {/* Niente riquadro bianco (nel Profilo lo ha solo il campo delle
-          esigenze alimentari, che è l'unico in cui si scrive): riga sul blu. */}
-      <div className="py-3">
-        <div className="flex items-start gap-3">
-          <Bell className="mt-0.5 h-[18px] w-[18px] shrink-0 text-ink" />
-          <span className="min-w-0 flex-1">
-            <span className={nome}>Promemoria e avvisi</span>
-            {/* Cosa arriva davvero (server/push.js): si dice qui, per esteso. */}
-            <span className={stato}>
-              {iosHint
-                ? "Installa Dispensa sulla Home (Condividi → «Aggiungi a Home») per riceverli."
-                : "Scadenze, pasti del calendario, cosa manca per domani, la lista della spesa e un promemoria dopo i pasti."}
-            </span>
-          </span>
-          {canPush && (pushBusy ? (
-            <Loader2 className="mt-1.5 h-4 w-4 shrink-0 animate-spin text-ink" />
-          ) : pushOn ? (
-            <button onClick={togglePush} className={`${disattiva} shrink-0`}>Disattiva</button>
-          ) : (
-            <button onClick={togglePush} className={`${attiva} shrink-0`}>Attiva</button>
-          ))}
-        </div>
-        {pushErr && <p className="mt-2 text-[0.86rem] font-bold text-ink">{pushErr}</p>}
-      </div>
-    </>
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={on}
+      aria-busy={busy}
+      aria-label={on ? "Notifiche attive: tocca per spegnerle" : "Attiva le notifiche"}
+      className={`tondo bg-rosa transition active:scale-90 ${busy ? "opacity-60" : ""}`}
+    >
+      <BellIcon on={on} />
+    </button>
   );
 }
 

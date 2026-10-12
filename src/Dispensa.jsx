@@ -1318,6 +1318,7 @@ export default function Dispensa({ session }) {
           onSaveFoodPrefs={setFoodPrefs}
           catOrder={catOrder}
           onMoveCat={moveCatInOrder}
+          onNotify={showToast}
           onClose={() => { setProfileOpen(false); openPendingSheet(); }}
           onDeleteAccount={deleteAccount}
           onLogout={logout}
