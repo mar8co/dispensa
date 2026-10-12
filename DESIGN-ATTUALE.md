@@ -185,6 +185,9 @@
   campanella nera (stesso disegno di Expense Track: piena = notifiche accese, barrata = spente). Un
   tocco accende/spegne tutte le notifiche; l'esito arriva come avviso in alto. La sezione
   "Notifiche" nel pannello non c'è più; il Profilo si chiude toccando fuori o trascinandolo.
+- **Ordine delle pillole (12/10)**: prima quelle senza ingrediente — Fresco, Caldo, Sostanzioso,
+  Proteico, Pochi ingredienti, Senza cottura, Piccante, Insalata, Zuppa — poi quelle con
+  l'ingrediente: Pasta, Riso, Carne, Pollo, Uova.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

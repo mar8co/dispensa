@@ -209,16 +209,8 @@ export const MODES = [
 // le considera (oltre alla stagione corrente, iniettata automaticamente) PRIMA
 // di proporre le idee per l'occasione scelta. `hint` = frase messa nel prompt.
 export const RECIPE_CONTEXTS = [
-  // Ordine (11/10): prima COSA si mangia (il tipo di piatto, dal più comune),
-  // poi COME lo si vuole, in fondo i vincoli. Tolte Legumi e Al forno.
-  { id: "pasta", icon: "🍝", label: "Pasta", hint: "il piatto deve essere una pasta" },
-  // Carne e Pollo: una sola alla volta (vedi CONTEXT_CONFLICTS in useRecipes).
-  { id: "carne", icon: "🥩", label: "Carne", hint: "l'ingrediente principale del piatto deve essere la carne" },
-  { id: "pollo", icon: "🍗", label: "Pollo", hint: "l'ingrediente principale deve essere il pollo; proponi modi DIVERSI tra loro di cucinarlo (tagli, cotture e condimenti differenti)" },
-  { id: "uova", icon: "🥚", label: "Uova", hint: "il piatto deve essere a base di uova" },
-  { id: "riso", icon: "🍚", label: "Riso", hint: "il piatto deve essere a base di riso" },
-  { id: "insalata", icon: "🥗", label: "Insalata", hint: "il piatto deve essere un'insalata o un piatto unico freddo" },
-  { id: "zuppa", icon: "🥣", label: "Zuppa", hint: "il piatto deve essere una zuppa, una minestra o una vellutata" },
+  // Ordine (12/10, scelta dell'utente): prima le pillole che NON legano a un
+  // ingrediente (come lo si vuole, i vincoli, il tipo di piatto)…
   { id: "fresco", icon: "🥒", label: "Fresco", hint: "il piatto deve essere fresco, anche freddo o a temperatura ambiente" },
   { id: "caldo", icon: "🍜", label: "Caldo", hint: "il piatto deve essere caldo e confortante" },
   { id: "sostanzioso", icon: "🔋", label: "Sostanzioso", hint: "il piatto deve essere sostanzioso e saziante" },
@@ -226,6 +218,15 @@ export const RECIPE_CONTEXTS = [
   { id: "pochi", icon: "🖐️", label: "Pochi ingredienti", hint: "la ricetta deve usare al massimo 5 ingredienti, esclusi olio, sale e pepe" },
   { id: "senzacottura", icon: "🌯", label: "Senza cottura", hint: "la ricetta NON deve richiedere alcuna cottura, né fornelli né forno: solo ingredienti crudi o già pronti da assemblare (insalate, piatti freddi, ecc.)" },
   { id: "piccante", icon: "🌶️", label: "Piccante", hint: "il piatto deve essere piccante" },
+  { id: "insalata", icon: "🥗", label: "Insalata", hint: "il piatto deve essere un'insalata o un piatto unico freddo" },
+  { id: "zuppa", icon: "🥣", label: "Zuppa", hint: "il piatto deve essere una zuppa, una minestra o una vellutata" },
+  // …poi quelle con l'ingrediente. Carne e Pollo: una sola alla volta (vedi
+  // CONTEXT_CONFLICTS in useRecipes).
+  { id: "pasta", icon: "🍝", label: "Pasta", hint: "il piatto deve essere una pasta" },
+  { id: "riso", icon: "🍚", label: "Riso", hint: "il piatto deve essere a base di riso" },
+  { id: "carne", icon: "🥩", label: "Carne", hint: "l'ingrediente principale del piatto deve essere la carne" },
+  { id: "pollo", icon: "🍗", label: "Pollo", hint: "l'ingrediente principale deve essere il pollo; proponi modi DIVERSI tra loro di cucinarlo (tagli, cotture e condimenti differenti)" },
+  { id: "uova", icon: "🥚", label: "Uova", hint: "il piatto deve essere a base di uova" },
 ];
 
 // Regole condivise per ottenere il NOME GENERICO dell'alimento (usate da
