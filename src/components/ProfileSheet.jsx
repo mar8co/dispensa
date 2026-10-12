@@ -102,8 +102,8 @@ export default function ProfileSheet({
           {foodPrefs.trim() && (
             <p className="mt-2 text-[0.8rem] font-medium leading-snug text-tenue">
               {understood.length
-                ? <>Nel calendario e nelle ricette senza AI escludo: <strong>{understood.join(", ")}</strong>.</>
-                : <>Qui non ho trovato cibi da escludere: di questo testo terrà conto solo l&rsquo;AI. Capisco frasi come «no peperoni», «senza glutine», «vegetariano».</>}
+                ? <>Nelle ricette e nel calendario alimentare escludo: <strong>{understood.join(", ")}</strong>.</>
+                : <>Ne tengo conto nelle ricette. Per escludere un cibo anche dal calendario alimentare scrivi frasi come «no peperoni», «senza glutine», «vegetariano».</>}
             </p>
           )}
 
