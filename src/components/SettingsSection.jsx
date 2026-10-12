@@ -82,7 +82,7 @@ export default function SettingsSection({ close, onDeleteAccount, onOpenPrivacy,
 
   return (
     // In FONDO al pannello (mt-auto: il Profilo è una colonna alta quanto lo
-    // schermo): una riga sola di azioni rare — Esci · Privacy · Elimina account.
+    // schermo): una riga sola di azioni rare — Elimina account · Privacy · Esci.
     <div className="mt-auto pt-8">
       {/* Esci: conferma in linea, sopra la riga. */}
       {confirmLogout && (
@@ -97,25 +97,26 @@ export default function SettingsSection({ close, onDeleteAccount, onOpenPrivacy,
       )}
       {!confirmDelete ? (
         <div className="flex flex-wrap items-center justify-center gap-x-2.5 text-[0.8rem] font-semibold text-tenue">
-          {onLogout && (
-            <>
-              <button onClick={() => setConfirmLogout(true)} className="py-2 underline underline-offset-2">
-                Esci
-              </button>
-              <span aria-hidden="true">·</span>
-            </>
-          )}
-          {onOpenPrivacy && (
-            <>
-              <button onClick={() => { close(); onOpenPrivacy(); }} className="py-2 underline underline-offset-2">
-                Privacy Policy
-              </button>
-              <span aria-hidden="true">·</span>
-            </>
-          )}
+          {/* Ordine (12/10): l'azione più rischiosa a sinistra, "Esci" a destra. */}
           <button onClick={() => { setDelErr(""); setConfirmLogout(false); setConfirmDelete(true); }} className="py-2 underline underline-offset-2">
             Elimina account
           </button>
+          {onOpenPrivacy && (
+            <>
+              <span aria-hidden="true">·</span>
+              <button onClick={() => { close(); onOpenPrivacy(); }} className="py-2 underline underline-offset-2">
+                Privacy Policy
+              </button>
+            </>
+          )}
+          {onLogout && (
+            <>
+              <span aria-hidden="true">·</span>
+              <button onClick={() => setConfirmLogout(true)} className="py-2 underline underline-offset-2">
+                Esci
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <div className="mt-3 rounded-card bg-giallo p-3.5 text-center">
