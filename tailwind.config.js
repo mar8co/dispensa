@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 // Veste "manifesto svizzero" (stessa di Wishlist Viaggi ed Expense Track):
 // colori pieni, inchiostro nero, righe sottili, pillole. Un solo tema, chiaro.
-// Guida completa: Downloads/APP/wishlist-viaggi/docs/LINEE-GUIDA-DESIGN.md.
+// Guida completa: Downloads/APP/_LINEE-GUIDA-DESIGN/LINEE-GUIDA-DESIGN.md.
 
 // Colore pieno della schermata aperta: lo imposta setPageColor (terna RGB in
 // --sfondo), così `bg-sfondo` segue la pagina senza toccare i componenti.

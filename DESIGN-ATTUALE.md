@@ -1,7 +1,7 @@
 # DESIGN-ATTUALE — Dispensa ("manifesto svizzero", dal 30/09/2026; aggiornato all'08/10/2026)
 
 > Veste grafica di oggi, la stessa di Wishlist Viaggi ed Expense Track (guida completa:
-> `Downloads/APP/wishlist-viaggi/docs/LINEE-GUIDA-DESIGN.md`). Separa **cosa è solo aspetto**
+> `Downloads/APP/_LINEE-GUIDA-DESIGN/LINEE-GUIDA-DESIGN.md`, comune a tutte le app). Separa **cosa è solo aspetto**
 > (si può cambiare) da **cosa è comportamento** (da conservare: è frutto di prove sull'iPhone
 > dell'utente). Prima c'era la veste "editoriale" (avorio, rosso pomodoro, Hanken Grotesk, tema
 > chiaro/scuro). Collegati: `CLAUDE.md` · `HANDOFF.md` · `ARCHITECTURE.md`.
@@ -175,7 +175,7 @@
   il giorno per esteso e due righe senza bordo, Pranzo e Cena, con "Libero" / "C'è già: …" e a destra
   l'azione in giallo ("Aggiungi" / "Sostituisci"). Niente più 14 pillole col bordo.
 - **Coerenza con Expense Track e Wishlist (10/10)**: le tre app condividono tavolozza e regole (guida
-  madre: `Downloads/APP/wandelister/docs/LINEE-GUIDA-DESIGN.md`). Allineati: sabbia `#dccdb2` (prima
+  madre: `Downloads/APP/_LINEE-GUIDA-DESIGN/LINEE-GUIDA-DESIGN.md`). Allineati: sabbia `#dccdb2` (prima
   `#dcceb3`; le icone PNG e lo splash NON sono stati rigenerati, differenza invisibile); **sul blu
   tutto bianco** nel Profilo (classe `.su-blu` in `index.css`: testi, fili, bordi bianchi; nero solo
   dentro i riquadri bianchi e gialli; i pulsanti pieni neri restano neri); **avvisi sempre a pillola
