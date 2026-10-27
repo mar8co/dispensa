@@ -170,7 +170,7 @@ export default function Anteprima() {
             onSetExpiry={(it, expiry) => autoSave(it, { expiry: expiry || null })}
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={() => {}} isOut={isOut} onToShopping={() => notify("In lista spesa")}
-            onFinish={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> finito: è in lista</>, onUndo: () => setToast(null) }); }}
+            onFinish={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> finito: è nella lista</>, onUndo: () => setToast(null) }); }}
             onCookWith={() => {}}
             todayMeals={[{ label: "Pranzo", icon: "🥗", title: "Spaghetti al limone" }, { label: "Cena", icon: "🍳", title: "Frittata di zucchine" }]}
             onOpenMeal={() => {}} expiring={items.filter((x) => { const d = daysUntilExpiry(x.expiry); return d !== null && d <= 7; })}

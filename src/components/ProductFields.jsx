@@ -206,13 +206,14 @@ export default function ProductFields({
               ))}
             </div>
             {/* "Finito" è l'azione principale del prodotto (dal 27/10, al posto
-                del cestino): bottone pieno nero a tutta larghezza, il più
-                visibile del pannello. Il prodotto esce dalla dispensa e va in
+                del cestino): bottone BIANCO col bordo nero a tutta larghezza (non nero: il nero
+                è già della pillola scelta; né a colori: troppi colori), il più
+                grande del pannello. Il prodotto esce dalla dispensa e va in
                 lista (lo fa il chiamante, con gli avvisi "Non serve" / "Annulla"). */}
             <button
               type="button"
               onClick={() => onState("out")}
-              className="bottone mt-2 min-h-[52px] w-full text-[1.05rem]"
+              className="bottone-chiaro mt-2 min-h-[52px] w-full border-2 bg-white text-[1.05rem]"
             >
               <PackageX className="h-5 w-5" /> Finito
             </button>

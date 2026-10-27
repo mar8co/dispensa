@@ -204,19 +204,27 @@ function TopControls({ byAisle, setByAisle, allSelected, onSelectAll }) {
 function BottomBar({ cartCount, allInCart, moving, onMove, onRemove }) {
   if (cartCount === 0) return null;
   return (
-    <div className="mt-5">
+    <div className="mt-4">
+      {/* Compatta (dal 27/10, "troppo grande rispetto al contorno"): una
+          pillola nera di 40px, larga quanto il testo, col barattolo piccolo, e
+          accanto il cestino in un tondo da 40px. A sinistra, come le righe. */}
       <div className="flex items-center gap-2">
-        <Button variant="primary" className="flex-1" onClick={onMove} disabled={moving}>
+        <button
+          type="button"
+          onClick={onMove}
+          disabled={moving}
+          className="bottone min-h-[40px] gap-2 px-4 py-0 text-[0.92rem] disabled:opacity-60"
+        >
           {moving
             ? <Loader2 className="h-4 w-4 animate-spin" />
-            : <><Barattoli size={26} className="-my-1 text-crema" /> {allInCart ? "Sposta tutto in dispensa" : `Sposta ${cartCount} in dispensa`}</>}
-        </Button>
+            : <><Barattoli size={20} className="-my-0.5 text-crema" /> {allInCart ? "Sposta tutto in dispensa" : `Sposta ${cartCount} in dispensa`}</>}
+        </button>
         <button
           onClick={onRemove}
           aria-label="Rimuovi dal carrello"
-          className="tondo h-[50px] w-[50px]"
+          className="tondo h-10 w-10"
         >
-          <Trash2 className="h-5 w-5" />
+          <Trash2 className="h-[18px] w-[18px]" />
         </button>
       </div>
     </div>
@@ -386,7 +394,7 @@ export default function ShoppingTab({
     const clean = String(n ?? name).trim();
     if (!clean) return;
     const res = await onAdd(clean, "1");
-    if (res?.merged) onNotify(<><strong>{clean}</strong> era già in lista: quantità aumentata</>);
+    if (res?.merged) onNotify(<><strong>{clean}</strong> era già nella lista: quantità aumentata</>);
     setName("");
     inputRef.current?.focus();
   }

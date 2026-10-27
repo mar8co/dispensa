@@ -1,8 +1,8 @@
 // Avviso breve: pillola nera con l'eventuale azione in giallo ("Annulla" per
 // gli undo, oppure un'etichetta personalizzata, es. "Stop").
 //
-// Posizione: IN ALTO, fisso, all'altezza della testata (dall'11/10, scelta
-// dell'utente). Dal 27/10 è MOLTO più grande — quasi tutta la larghezza dello
+// Posizione: IN ALTO, fisso, un po' sotto la testata (dal 27/10, più
+// raggiungibile col pollice; dall'11/10 stava all'altezza della testata). Dal 27/10 è MOLTO più grande — quasi tutta la larghezza dello
 // schermo (16px di margine per lato), testo 1.1rem, pallino e "Annulla" in
 // proporzione — così si vede e si legge al volo; per i pochi secondi in cui è
 // aperto copre avatar e azioni della testata. Non tocca il bordo alto (iOS
@@ -16,7 +16,7 @@ export default function Toast({ message, onUndo, actionLabel = "Annulla", tone }
   return (
     <div
       className="pointer-events-none fixed inset-x-0 z-[60] mx-auto flex max-w-md justify-center px-4"
-      style={{ top: "calc(env(safe-area-inset-top) + 14px)" }}
+      style={{ top: "calc(env(safe-area-inset-top) + 56px)" }}
     >
       {/* Larga quanto serve fino al bordo (max-w-full), alta almeno 60px;
           raggio 30px: su una riga è una pillola, se il testo va a capo resta

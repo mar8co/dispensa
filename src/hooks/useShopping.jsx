@@ -69,8 +69,19 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
   };
 
   // Aggiunge alla lista fondendo i duplicati per nome (le quantità si
-  // sommano) e registrando lo storico. entries: [{ name, qty }]
+  // sommano) e registrando lo storico. entries: [{ name, qty, category?, noSum? }]
+  //  - `category`: il reparto che il prodotto aveva in dispensa. Prima si
+  //    perdeva e la lista lo indovinava dal solo nome ("Altro" per ciò che il
+  //    dizionario non conosce): ora viene ricordato (come correzione manuale).
+  //  - `noSum`: se il prodotto è già in lista NON si somma (due "finito" dello
+  //    stesso prodotto non devono diventare "2").
   async function addToShoppingMerged(entries) {
+    const cats = {};
+    for (const e of entries || []) {
+      const k = norm(String(e?.name || ""));
+      if (k && CATEGORIES.includes(e.category) && e.category !== "Altro" && !CATEGORIES.includes(shopCats[k])) cats[k] = e.category;
+    }
+    if (Object.keys(cats).length) setShopCats((prev) => ({ ...prev, ...cats }));
     // Il merge punta SOLO alle righe NON barrate (ancora da comprare). Se
     // l'unica corrispondenza è nel carrello (già acquistato), ri-aggiungere
     // NON la tocca: crea una riga NUOVA in lista, perché è un bisogno
@@ -89,7 +100,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
       const qty = normalizeWeight(String(e.qty || "1").trim() || "1");
       const k = norm(name);
       const ex = byNorm.get(k);
-      if (ex && !ex.checked) updates.set(ex.id, normalizeWeight(mergeQty(updates.get(ex.id) ?? ex.qty, qty)));
+      if (ex && !ex.checked) { if (!e.noSum) updates.set(ex.id, normalizeWeight(mergeQty(updates.get(ex.id) ?? ex.qty, qty))); }
       else if (inserts.has(k)) inserts.get(k).qty = normalizeWeight(mergeQty(inserts.get(k).qty, qty));
       else inserts.set(k, { name, qty });
     }
@@ -202,7 +213,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
     // nel carrello, "Rimesso in lista" quando torna indietro. "Annulla" rimette
     // com'era. (Tolto il 09/10, rimesso l'11/10 ora che gli avvisi stanno in alto.)
     const it = shopping.find((x) => x.id === id);
-    if (it) showToast(<>{checked ? "Preso" : "Rimesso in lista"}: <strong>{it.name}</strong></>, () => {
+    if (it) showToast(<>{checked ? "Preso" : "Rimesso nella lista"}: <strong>{it.name}</strong></>, () => {
       setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked: !checked } : x)));
       persistUpdate(id, { checked: !checked });
       dismissToast();
@@ -276,7 +287,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
 
   // "Finito → in lista": dalla riga del prodotto esaurito in dispensa.
   async function finishedToShopping(it) {
-    await addToShoppingMerged([{ name: it.name, qty: "1" }]);
+    await addToShoppingMerged([{ name: it.name, qty: "1", category: it.category, noSum: true }]);
     showToast(<><strong>{it.name}</strong> aggiunto alla lista della spesa</>);
   }
 

@@ -216,8 +216,8 @@ export function usePantry({
   async function finishItem(it) {
     setItems((prev) => prev.filter((x) => x.id !== it.id));
     persistDelete(it.id);
-    const res = await addToShoppingMerged([{ name: it.name, qty: "1" }]);
-    showToast(<><strong>{it.name}</strong> finito: è in lista</>, () => {
+    const res = await addToShoppingMerged([{ name: it.name, qty: "1", category: it.category, noSum: true }]);
+    showToast(<><strong>{it.name}</strong> finito: è nella lista</>, () => {
       res?.undo?.();
       // Secondo avviso, come quando si elimina un prodotto: "Annulla" lo
       // rimette in dispensa (rimedio a un "Finito" toccato per sbaglio).

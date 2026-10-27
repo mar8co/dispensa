@@ -1093,11 +1093,11 @@ export default function Dispensa({ session }) {
     // avviso con "Annulla" che li rimette in dispensa.
     if (out.length) {
       const gone = items.filter((x) => removals.has(x.id));
-      const res = await addToShoppingMerged(out.map((r) => ({ name: r.name, qty: "1" })));
+      const res = await addToShoppingMerged(out.map((r) => ({ name: r.name, qty: "1", category: gone.find((x) => x.id === r.itemId)?.category, noSum: true })));
       const uno = out.length === 1;
       showToast(uno
-        ? <><strong>{out[0].name}</strong> finito: è in lista</>
-        : `${out.length} prodotti finiti: sono in lista`,
+        ? <><strong>{out[0].name}</strong> finito: è nella lista</>
+        : `${out.length} prodotti finiti: sono nella lista`,
       () => {
         res?.undo?.();
         showToast(uno ? <><strong>{out[0].name}</strong> eliminato</> : `${out.length} prodotti eliminati`, () => {

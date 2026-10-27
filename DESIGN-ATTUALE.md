@@ -203,6 +203,11 @@
   larghezza della card, alto 48px, giallo col bordo nero, carrello + "Metti nella lista della spesa".
   Dopo il tocco diventa grigio, spento, con la spunta e "In lista"; torna attivo solo se si cambia
   stato e si ritorna a "Sta finendo".
+- **Ritocchi del 27/10 sera**: "Sposta in dispensa" è una pillola nera compatta (40px, larga quanto il
+  testo, barattolo da 20px) a sinistra col cestino in un tondo da 40px; "Finito" in Dispensa è BIANCO
+  col bordo nero da 2px (stessa misura di prima); l'avviso sta più in basso (56px sotto la zona sicura
+  in alto) per arrivarci col pollice; nei testi degli avvisi si scrive "nella lista" ("finito: è nella
+  lista", "Rimesso nella lista").
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un
