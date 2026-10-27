@@ -5,7 +5,7 @@
 import { onOutsideTap } from "../lib/outsideTap.js";
 import { useState, useRef, useEffect } from "react";
 import {
-  X, Search, ShoppingCart,
+  X, Search, ShoppingCart, Check,
   SlidersHorizontal, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
@@ -157,6 +157,9 @@ export default function PantryTab({
   const [openId, setOpenId] = useState(null); // pannello prodotto aperto
   const [sortOpen, setSortOpen] = useState(false); // chips ordinamento a comparsa
   const [expDraft, setExpDraft] = useState(""); // valore della scadenza nel pannello
+  // Prodotti "sta finendo" già messi in lista dal pannello: il bottone diventa
+  // grigio e non si può ripremere (ogni tocco aumenterebbe la quantità in lista).
+  const [listed, setListed] = useState(() => new Set());
   // Barra sticky: espansione verticale di tutti i reparti (niente swipe).
   const [catsExpanded, setCatsExpanded] = useState(false);
   // Altezza reale della ricerca fissa: la barra dei reparti si aggancia
@@ -269,6 +272,8 @@ export default function PantryTab({
     if (!it) return;
     if (s === "out") { closePanel(false); onFinish?.(it); return; }
     if (s === qtyState(qtyDraft)) return;
+    // Cambiato stato: se tornerà "sta finendo" il bottone è di nuovo attivo.
+    setListed((prev) => { const n = new Set(prev); n.delete(it.id); return n; });
     setQty(s === "low" ? LOW_QTY : String(pieces(qtyDraft)));
   }
 
@@ -512,14 +517,31 @@ export default function PantryTab({
                         expiry={expDraft}
                         onExpiry={(v) => (v ? scheduleExpiry(v) : clearExpiry())}
                       >
-                        {low && (
-                          <button
-                            onClick={() => onToShopping(it)}
-                            className="pillola mt-3 min-h-[32px] px-3 text-[0.8rem]"
-                          >
-                            <ShoppingCart className="h-3.5 w-3.5" /> Sta finendo · Metti in lista
-                          </button>
-                        )}
+                        {low && (() => {
+                          const done = listed.has(it.id);
+                          // A tutta larghezza della card; gialla (il colore delle
+                          // azioni) con bordo nero. Dopo il tocco: grigia, spenta
+                          // e con la spunta ("In lista").
+                          return (
+                            <button
+                              type="button"
+                              disabled={done}
+                              onClick={() => {
+                                setListed((prev) => new Set(prev).add(it.id));
+                                onToShopping(it);
+                              }}
+                              className={`mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full border-[1.5px] px-4 text-[1rem] font-bold tracking-[-0.01em] transition active:scale-[0.98] ${
+                                done
+                                  ? "pointer-events-none border-ink/15 bg-ink/10 text-ink/40"
+                                  : "border-ink bg-giallo text-ink"
+                              }`}
+                            >
+                              {done
+                                ? <><Check className="h-[18px] w-[18px]" /> In lista</>
+                                : <><ShoppingCart className="h-[18px] w-[18px]" /> Metti nella lista della spesa</>}
+                            </button>
+                          );
+                        })()}
                       </ProductFields>
 
                       {/* "Cosa ci cucino?": apre le Ricette con proposte basate su

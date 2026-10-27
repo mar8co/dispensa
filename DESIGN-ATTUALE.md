@@ -199,6 +199,10 @@
   diviso a metà (sinistra modifica, destra carrello), cerchio carrello 24px con area di tocco
   44×32; (3) gli avvisi (`Toast.jsx`) sono grandi: larghi quasi quanto lo schermo (16px di margine),
   alti almeno 60px, testo e "Annulla" a 1.1rem, pallino 14px; stesso stile di prima.
+- **"Sta finendo" → lista (27/10)**: con "Sta finendo" compare, subito sotto il nome, un bottone a TUTTA
+  larghezza della card, alto 48px, giallo col bordo nero, carrello + "Metti nella lista della spesa".
+  Dopo il tocco diventa grigio, spento, con la spunta e "In lista"; torna attivo solo se si cambia
+  stato e si ritorna a "Sta finendo".
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un
