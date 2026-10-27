@@ -142,7 +142,7 @@ export default function PantryTab({
   shared = false,
   search, setSearch, sort, setSort,
   grouped, cardRefs,
-  onAutoSave, onSetExpiry, removeItem,
+  onAutoSave, onSetExpiry,
   expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
   onFinish,
   todayMeals = [], onOpenMeal, expiring = [],
@@ -501,7 +501,6 @@ export default function PantryTab({
                         onNameBlur={commitNameNow}
                         category={it.category}
                         onCategory={chooseCategory}
-                        onDelete={() => { closePanel(false); removeItem(it); }}
                         qtyValue={String(n)}
                         onQtyInput={(v) => { const d = parseInt(v.replace(/\D/g, ""), 10); if (d > 0) setQty(String(d)); }}
                         onMinus={() => setQty(String(n - 1))}

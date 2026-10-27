@@ -168,7 +168,6 @@ export default function Anteprima() {
             onMoveCat={() => {}}
             onAutoSave={autoSave}
             onSetExpiry={(it, expiry) => autoSave(it, { expiry: expiry || null })}
-            removeItem={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> eliminato</>, onUndo: () => setToast(null) }); }}
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={() => {}} isOut={isOut} onToShopping={() => notify("In lista spesa")}
             onFinish={(it) => { setItems((l) => l.filter((x) => x.id !== it.id)); setToast({ message: <><strong>{it.name}</strong> finito: è in lista</>, onUndo: () => setToast(null) }); }}

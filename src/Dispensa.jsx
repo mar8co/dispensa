@@ -222,7 +222,7 @@ export default function Dispensa({ session }) {
     search, setSearch, sort, setSort, expFilter, setExpFilter,
     confirmClear, setConfirmClear,
     grouped, expiringItems, expiredCount, expiringSoonCount, isOut, hasIngredient,
-    mergeItems, addManual, submitManual, removeItem, clearPantry,
+    mergeItems, addManual, submitManual, clearPantry,
     autoSaveItem, setItemExpiry, finishItem,
   } = usePantry({
     session, showToast, dismissToast, catOrder,
@@ -1156,7 +1156,7 @@ export default function Dispensa({ session }) {
             shared={sharedHousehold}
             search={search} setSearch={setSearch} sort={sort} setSort={setSort}
             grouped={grouped} cardRefs={cardRefs}
-            onAutoSave={autoSaveItem} onSetExpiry={setItemExpiry} removeItem={removeItem}
+            onAutoSave={autoSaveItem} onSetExpiry={setItemExpiry}
             expiredCount={expiredCount} expiringSoonCount={expiringSoonCount} expFilter={expFilter} setExpFilter={setExpFilter}
             onCookExpiring={cookWithExpiring} isOut={isOut} onToShopping={finishedToShopping}
             // Riga scorsa verso sinistra o pillola "Finito": via dalla dispensa, in lista.

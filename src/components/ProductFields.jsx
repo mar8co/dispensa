@@ -8,7 +8,7 @@
 //   pillole categoria (si aprono toccando l'emoji, come in Spesa)
 //   {children: contenuto del contesto, es. suggerimenti dell'aggiunta a mano}
 //   riga 2   [scadenza?] ............ [−  qty  +]
-//   riga 3   [C'è] [Sta finendo] [Finito]   (solo in Dispensa, se c'è onState)
+//   riga 3   [C'è] [Sta finendo] + [Finito] grande   (solo in Dispensa, se c'è onState)
 // Tutti i comandi sono alti 44px. Dal 09/10 niente unità (g/kg/ml/l): in
 // dispensa si contano i pezzi e si dice lo stato; in lista la quantità resta
 // quella scritta (es. "600 g" messi dal piano).
@@ -21,14 +21,14 @@
 // categoria nel cerchio, elimina nel tondo, stepper a cerchi, unità a pillole
 // (scelta = piena nera).
 import { useState } from "react";
-import { Calendar, Trash2, X } from "lucide-react";
+import { Calendar, PackageX, Trash2, X } from "lucide-react";
 import { PICKER_CATS, CAT_ICON } from "../constants.js";
 import { formatExpiry } from "../lib/pantry.js";
 import ExpiryCalendar from "./ExpiryCalendar.jsx";
 
 // testo-grande: sopra i 16px iOS non zooma, quindi il minimo globale dei
 // campi (index.css) qui non serve.
-const STATES = [["ok", "C'è"], ["low", "Sta finendo"], ["out", "Finito"]];
+const STATES = [["ok", "C'è"], ["low", "Sta finendo"], ["out", "Finito"]]; // "out" ha il suo bottone grande
 
 const inputCls =
   "testo-grande min-w-0 flex-1 rounded-none border-0 border-b-[1.5px] border-ink bg-transparent py-1.5 text-[1.2rem] font-bold tracking-[-0.03em] text-ink outline-none placeholder:text-ink/40 focus:border-b-[3px] focus:pb-[4.5px]";
@@ -190,19 +190,33 @@ export default function ProductFields({
         {/* Riga 3 (solo in Dispensa): com'è messo il prodotto. "Finito" lo
             toglie dalla dispensa e lo mette in lista (lo fa il chiamante). */}
         {onState && (
-          <div className="mt-2 grid grid-cols-3 gap-1.5">
-            {STATES.map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => onState(id)}
-                aria-pressed={stateActive === id}
-                className="pillola h-11 min-h-0 px-0 text-[0.9rem]"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <>
+            {/* C'è / Sta finendo: due pillole. */}
+            <div className="mt-2 grid grid-cols-2 gap-1.5">
+              {STATES.filter(([id]) => id !== "out").map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onState(id)}
+                  aria-pressed={stateActive === id}
+                  className="pillola h-11 min-h-0 px-0 text-[0.9rem]"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {/* "Finito" è l'azione principale del prodotto (dal 27/10, al posto
+                del cestino): bottone pieno nero a tutta larghezza, il più
+                visibile del pannello. Il prodotto esce dalla dispensa e va in
+                lista (lo fa il chiamante, con gli avvisi "Non serve" / "Annulla"). */}
+            <button
+              type="button"
+              onClick={() => onState("out")}
+              className="bottone mt-2 min-h-[52px] w-full text-[1.05rem]"
+            >
+              <PackageX className="h-5 w-5" /> Finito
+            </button>
+          </>
         )}
       </div>
 

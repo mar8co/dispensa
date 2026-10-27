@@ -71,7 +71,7 @@
   Dispensa e Spesa. Non sostituirle con icone lineari.
 - **Bottom sheet**: sempre via `Sheet.jsx` (Vaul). Non creare modali ad-hoc.
 - **Vista prodotto**: sempre via `ProductFields.jsx` (nome · categoria-emoji →
-  pillole · elimina / box scadenza → `ExpiryCalendar` in-app · stepper dei
+  pillole · elimina (non in Dispensa dal 27/10: lì c'è il bottone grande "Finito") / box scadenza → `ExpiryCalendar` in-app · stepper dei
   pezzi · in Dispensa la riga dello stato C'è / Sta finendo / Finito) ovunque
   si mostri o modifichi un prodotto. Non ricreare quei campi a mano.
 - **Quantità semplici (dal 09/10 sera, scelta dell'utente "di prova")**: in

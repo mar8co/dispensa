@@ -132,11 +132,11 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
           transform: `translateX(${dx}px)`,
           transition: dragging ? "none" : "transform 0.2s ease",
         }}
-        className="relative flex min-h-[50px] cursor-pointer select-none items-center gap-3 bg-sfondo py-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
+        className="relative flex min-h-[30px] cursor-pointer select-none items-center gap-3 bg-sfondo outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
       >
         {/* Il nome sta nella metà sinistra (che apre la modifica) e può
             andare a capo su due righe, ma non oltre metà riga. */}
-        <span className={`min-w-0 max-w-[calc(50%-12px)] line-clamp-2 break-words py-2 text-[1.06rem] leading-tight font-[650] tracking-[-0.02em] ${selected ? "text-tenue line-through" : "text-ink"}`}>
+        <span className={`min-w-0 max-w-[calc(50%-12px)] line-clamp-2 break-words py-1 text-[1rem] leading-tight font-[650] tracking-[-0.02em] ${selected ? "text-tenue line-through" : "text-ink"}`}>
           {it.name}
         </span>
         <span aria-hidden="true" className="flex-1 self-stretch" />
@@ -146,7 +146,7 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
             {qtyLabel(it.qty)}
           </span>
         )}
-        {/* Cerchio carrello: bottone REALE (area di tocco 44px, cerchio 28px
+        {/* Cerchio carrello: bottone REALE (area di tocco 44×32px, cerchio 24px
             centrato). stopPropagation così il tocco non apre la modifica e non
             avvia lo swipe. */}
         <button
@@ -155,15 +155,15 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
           onClick={(e) => { e.stopPropagation(); onSelect(it); }}
           aria-pressed={selected}
           aria-label={selected ? "Rimetti in lista" : "Metti nel carrello"}
-          className="-mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center"
+          className="-mr-1.5 -my-1 flex h-8 w-11 shrink-0 items-center justify-center"
         >
           <span
             aria-hidden="true"
-            className={`flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-ink transition ${
+            className={`flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] border-ink transition ${
               selected ? "bg-ink text-white" : "text-transparent"
             }`}
           >
-            <Check className="h-4 w-4" />
+            <Check className="h-3.5 w-3.5" />
           </span>
         </button>
       </div>

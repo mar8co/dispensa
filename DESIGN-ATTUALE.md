@@ -192,6 +192,13 @@
   una riga sola di link piccoli sottolineati: "Esci · Privacy Policy · Elimina account" ("Esci" non è
   più una riga grande). Nella dispensa condivisa niente titolo "La tua dispensa" e niente pillole:
   "Entra con codice" (a sinistra) e "Invita" (a destra) sono testo sottolineato con l'icona.
+- **Giro del 27/10**: (1) pannello prodotto in Dispensa senza cestino: sotto scadenza e stepper, due
+  pillole "C'è" / "Sta finendo" e un bottone nero a tutta larghezza, alto 52px, "Finito" con
+  l'icona (è l'azione principale: via dalla dispensa, in lista, con gli avvisi "Non serve" /
+  "Annulla"); (2) righe della Spesa e del Carrello alte 30px (prima 50), stesso componente, tocco
+  diviso a metà (sinistra modifica, destra carrello), cerchio carrello 24px con area di tocco
+  44×32; (3) gli avvisi (`Toast.jsx`) sono grandi: larghi quasi quanto lo schermo (16px di margine),
+  alti almeno 60px, testo e "Annulla" a 1.1rem, pallino 14px; stesso stile di prima.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un
