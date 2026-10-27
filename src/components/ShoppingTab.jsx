@@ -24,8 +24,8 @@ import ProductFields from "./ProductFields.jsx";
 import Barattoli from "./Barattoli.jsx";
 
 // --- Riga prodotto. Gesti:
-// • tap sul nome = apre la modifica;
-// • tap sul resto della riga (o sul pallino a destra) = mette/toglie dal carrello;
+// • la riga è divisa a METÀ (dal 18/10): tap sulla metà sinistra = apre la
+//   modifica, tap sulla metà destra (o sul pallino) = mette/toglie dal carrello;
 // • swipe ← (verso sinistra) = elimina;
 // • swipe → (verso destra) = apre la modifica.
 // Accessibile (role=button, tastiera = modifica; il pallino è un bottone reale). ---
@@ -35,7 +35,7 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
   const [dragging, setDragging] = useState(false);
   const start = useRef(null);
   const axis = useRef(null); // "h" | "v" | null
-  const nameRef = useRef(null); // zona "modifica" della riga
+  const rowRef = useRef(null); // la riga, per trovarne la metà
   const THRESHOLD = 72; // px oltre cui scatta l'azione
   const MAX = 104;      // limite visivo (oltre, resistenza elastica)
 
@@ -79,9 +79,12 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
       setDx(0); // sotto soglia: torna a posto
       return;
     }
-    // Tocco: sul nome = modifica; sul resto della riga = carrello (30/09).
+    // Tocco: metà sinistra = modifica, metà destra = carrello. La metà si
+    // misura sulla riga com'è ora a schermo (a riposo non è traslata).
     if (wasTap) {
-      if (nameRef.current?.contains(e.target)) onEdit(it);
+      const r = rowRef.current?.getBoundingClientRect();
+      const left = r ? e.clientX < r.left + r.width / 2 : false;
+      if (left) onEdit(it);
       else onSelect(it);
     }
   }
@@ -114,8 +117,9 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
       </div>
 
       {/* Riga in primo piano, traslata dallo swipe (sfondo opaco = copre gli
-          hint). Tap sul nome = modifica, altrove = carrello (vedi up()). */}
+          hint). Tap a sinistra = modifica, a destra = carrello (vedi up()). */}
       <div
+        ref={rowRef}
         role="button"
         tabIndex={0}
         onPointerDown={down}
@@ -130,9 +134,9 @@ function ShoppingRow({ it, onSelect, onEdit, onDelete }) {
         }}
         className="relative flex min-h-[50px] cursor-pointer select-none items-center gap-3 bg-sfondo py-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
       >
-        {/* Il nome (con un filo d'aria in più per il dito) apre la modifica; il
-            resto della riga, spazio vuoto compreso, mette nel carrello. */}
-        <span ref={nameRef} className={`min-w-0 truncate py-2 pr-4 text-[1.06rem] font-[650] tracking-[-0.02em] ${selected ? "text-tenue line-through" : "text-ink"}`}>
+        {/* Il nome sta nella metà sinistra (che apre la modifica) e può
+            andare a capo su due righe, ma non oltre metà riga. */}
+        <span className={`min-w-0 max-w-[calc(50%-12px)] line-clamp-2 break-words py-2 text-[1.06rem] leading-tight font-[650] tracking-[-0.02em] ${selected ? "text-tenue line-through" : "text-ink"}`}>
           {it.name}
         </span>
         <span aria-hidden="true" className="flex-1 self-stretch" />

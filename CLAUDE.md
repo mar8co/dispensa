@@ -307,7 +307,7 @@ una regola locale basta.
   **Restano, per scelta**: filtri di ordinamento, "Cucina con questo
   prodotto", Barcode, "Seleziona tutto", foto dei piatti, Piano dentro Ricette.
   **Scelte dell'utente da non rimettere in discussione**: riga della Spesa con
-  tocco sul nome = modifica (resta così) e "+" su tutte le schede (resta).
+  riga divisa a METÀ (dal 18/10): tocco a sinistra = modifica, a destra = carrello (resta così) e "+" su tutte le schede (resta).
 - **Prossimo lavoro grande**: resta la Fase 3 (prodotti su App Store Connect,
   firma, TestFlight): vedi `HANDOFF.md`.
 
