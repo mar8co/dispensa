@@ -97,8 +97,11 @@
 - **Posizioni sopra la barra** (variabili in `src/index.css`: `--nav-bottom`
   12px + zona sicura, `--nav-h` 52px, `--sopra-nav`): il "+"
   (su tutte le schede) sta sulla riga della barra (slot `addSlot` di `BottomNav`);
-  l'**avviso** (`Toast.jsx`) dall'11/10 sta IN ALTO, fisso, nello spazio vuoto
-  della testata tra avatar e azioni (scelta dell'utente: lì non dà fastidio);
+  l'**avviso** (`Toast.jsx` + `.brindisi` in `index.css`) dal 06/11 è IDENTICO
+  a quello di Second Brain (specifica incollata dall'utente): pillola nera in
+  alto a `safe-area + 76px`, 2,4 s (5 s con azione), swipe verso l'alto per
+  chiuderlo, azione gialla, nessun pallino; le conferme sono `Domanda.jsx`
+  (Esci, Elimina account, Svuota dispensa), mai `confirm()` né conferme in linea;
   con quello è tornato "Modifica salvata · Annulla" per le modifiche ai
   prodotti di Dispensa e Spesa. I timer attivi stanno a `--sopra-nav`
   ("Sposta in dispensa" + cestino della Spesa stanno tra la lista e "Nel

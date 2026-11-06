@@ -155,7 +155,7 @@ export function useRecipes({
     // Dispensa vuota (o solo prodotti finiti): l'AI inventerebbe piatti con
     // cose che non hai. Meglio dirlo, senza spendere una richiesta.
     if (!pantryStr.trim()) {
-      showToast("La dispensa è vuota: aggiungi qualche prodotto e ti propongo cosa cucinare", undefined, undefined, undefined, 4000);
+      showToast("La dispensa è vuota: aggiungi qualche prodotto e ti propongo cosa cucinare");
       return;
     }
     const gen = newGen(); // invalida le richieste precedenti ancora in volo
@@ -233,7 +233,7 @@ export function useRecipes({
     setPrefServings(v);
     if (!servingsNoticeRef.current) {
       servingsNoticeRef.current = true;
-      showToast("Me lo ricorderò per le prossime ricette 👍", undefined, undefined, undefined, 3500);
+      showToast("Me lo ricorderò per le prossime ricette 👍");
     }
   }
 

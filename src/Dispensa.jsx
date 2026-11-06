@@ -42,6 +42,7 @@ import AddFab from "./components/AddFab.jsx";
 import ManualAddModal from "./components/ManualAddModal.jsx";
 import CookModal from "./components/CookModal.jsx";
 import ConfirmClearModal from "./components/ConfirmClearModal.jsx";
+import Domanda from "./components/Domanda.jsx";
 import ReviewScanModal from "./components/ReviewScanModal.jsx";
 import VoiceAddModal from "./components/VoiceAddModal.jsx";
 import ProfileSheet from "./components/ProfileSheet.jsx";
@@ -191,11 +192,29 @@ export default function Dispensa({ session }) {
   // si apre solo QUANDO il precedente ha finito l'animazione di chiusura
   // (onClose). Due drawer Vaul sovrapposti lasciavano residui Radix
   // (pointer-events sul body) che mangiavano il primo tap dopo la chiusura.
-  const pendingSheetRef = useRef(null); // "privacy" | null
+  const pendingSheetRef = useRef(null); // "privacy" | "logout" | "delete" | null
+  const [ask, setAsk] = useState(null);  // Domanda aperta (Esci / Elimina account)
   function openPendingSheet() {
     const next = pendingSheetRef.current;
     pendingSheetRef.current = null;
     if (next === "privacy") { bumpModal("privacy"); setPrivacyOpen(true); }
+    else if (next === "logout") {
+      bumpModal("ask");
+      setAsk({ titolo: "Uscire dall'account?", testo: "Potrai rientrare quando vuoi.", si: "Esci", onSi: logout });
+    } else if (next === "delete") {
+      bumpModal("ask");
+      setAsk({
+        titolo: "Eliminare l'account?",
+        testo: "Verranno eliminati l'account e tutti i dati. L'azione è definitiva e non recuperabile.",
+        si: "Elimina tutto",
+        rosso: true,
+        extra: { label: "Voglio solo svuotare la dispensa", run: () => { bumpModal("confirmClear"); setConfirmClear(true); } },
+        onSi: async () => {
+          try { await deleteAccount(); }
+          catch { showToast("Eliminazione non riuscita. Riprova."); }
+        },
+      });
+    }
   }
 
   // Lista della spesa: stato (articoli, storico, voce) e logica (aggiunta con
@@ -401,18 +420,20 @@ export default function Dispensa({ session }) {
       if (localStorage.getItem("dispensa-finito-hint")) return;
       localStorage.setItem("dispensa-finito-hint", "1");
     } catch { return; }
-    showToast("Quando finisci un prodotto scorri la riga verso sinistra: va nella lista della spesa", undefined, undefined, undefined, 5000);
+    showToast("Quando finisci un prodotto scorri la riga verso sinistra: va nella lista della spesa");
   }, [loaded, hasItems, view]);
 
   // Pulisce il timer del toast allo smontaggio.
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
-  // Mostra un toast per ~6 secondi, con eventuale azione ("Annulla" di
-  // default, oppure un'etichetta personalizzata es. "metti nella lista").
-  function showToast(message, onUndo, actionLabel, actionTone, duration = 6000) {
+  // Mostra un avviso (come in Second Brain): 2,4 secondi, 5 se ha un'azione
+  // ("Annulla" di default, oppure un'etichetta personalizzata es. "Non serve").
+  // Un nuovo avviso sostituisce il precedente. `_tono` non serve più: l'avviso
+  // ha un solo aspetto (resta nella firma perché i chiamanti lo passano).
+  function showToast(message, onUndo, actionLabel, _tono) {
     clearTimeout(toastTimer.current);
-    setToast({ message, onUndo, actionLabel, actionTone });
-    toastTimer.current = setTimeout(() => setToast(null), duration);
+    setToast({ message, onUndo, actionLabel, key: Date.now() });
+    toastTimer.current = setTimeout(() => setToast(null), onUndo ? 5000 : 2400);
   }
   function dismissToast() {
     clearTimeout(toastTimer.current);
@@ -1320,12 +1341,13 @@ export default function Dispensa({ session }) {
           onMoveCat={moveCatInOrder}
           onNotify={showToast}
           onClose={() => { setProfileOpen(false); openPendingSheet(); }}
-          onDeleteAccount={deleteAccount}
-          onLogout={logout}
+          onDeleteAccount={() => { pendingSheetRef.current = "delete"; }}
+          onLogout={() => { pendingSheetRef.current = "logout"; }}
           onOpenPrivacy={() => { pendingSheetRef.current = "privacy"; }}
-          onClearPantry={() => { bumpModal("confirmClear"); setConfirmClear(true); }}
         />
       )}
+
+      {ask && <Domanda key={modalEpoch.current.ask} {...ask} onClose={() => setAsk(null)} />}
 
       {privacyOpen && <PrivacySheet key={modalEpoch.current.privacy} onClose={() => setPrivacyOpen(false)} />}
 
@@ -1404,7 +1426,9 @@ export default function Dispensa({ session }) {
       )}
 
       {/* Avviso: in alto, nello spazio vuoto della testata (vedi Toast.jsx). */}
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} tone={toast.actionTone} />}
+      <div role="status" aria-live="polite">
+        {toast && <Toast key={toast.key} message={toast.message} onUndo={toast.onUndo} actionLabel={toast.actionLabel} onDismiss={dismissToast} />}
+      </div>
     </div>
   );
 }

@@ -208,6 +208,14 @@
   col bordo nero da 2px (stessa misura di prima); l'avviso sta più in basso (56px sotto la zona sicura
   in alto) per arrivarci col pollice; nei testi degli avvisi si scrive "nella lista" ("finito: è nella
   lista", "Rimesso nella lista").
+- **Popup come Second Brain (06/11)**: l'avviso (`.brindisi`) è la copia esatta di quello di Second Brain
+  — nero, in alto a 76px sotto la zona sicura, 16px di margine, max 448px, alto 60px, testo 1.1rem 650,
+  azione gialla 800 a destra, 2,4 s / 5 s, swipe verso l'alto per chiuderlo, `role="status"`. Le
+  schede dal basso hanno le misure di Second Brain (max 560px, alte fino al 94%, maniglia 44×5, raggio
+  3px). Le conferme sono `Domanda`: scheda gialla, titolo 2.3rem, Annulla a sinistra e conferma a
+  destra (rossa se elimina). Esci ed Elimina account aprono una Domanda (il Profilo si chiude prima);
+  "Voglio solo svuotare la dispensa" è il link sotto la Domanda di Elimina account. Il menu a tendina
+  dal "+" di Second Brain NON è stato copiato: il "+" di Dispensa resta il ventaglio di tondi.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un

@@ -217,7 +217,7 @@ export function useShopping({ session, showToast, dismissToast, shopCats, setSho
       setShopping((prev) => prev.map((x) => (x.id === id ? { ...x, checked: !checked } : x)));
       persistUpdate(id, { checked: !checked });
       dismissToast();
-    }, undefined, "giallo", 2500);
+    });
   }
   async function removeShoppingItem(id) {
     const it = shopping.find((x) => x.id === id);

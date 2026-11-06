@@ -68,85 +68,38 @@ export function NotificationBell({ onNotify }) {
   );
 }
 
-export default function SettingsSection({ close, onDeleteAccount, onOpenPrivacy, onLogout, onClearPantry }) {
-  const [confirmLogout, setConfirmLogout] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [delErr, setDelErr] = useState("");
-
-  async function runDelete() {
-    setDeleting(true); setDelErr("");
-    try { await onDeleteAccount?.(); }
-    catch { setDeleting(false); setDelErr("Eliminazione non riuscita. Riprova."); }
-  }
-
+// In FONDO al pannello (mt-auto: il Profilo è una colonna alta quanto lo
+// schermo): una riga sola di azioni rare — Elimina account · Privacy · Esci.
+// Dal 06/11 le conferme non sono più in linea: ogni azione chiude il Profilo e
+// apre una Domanda (Domanda.jsx), come in Second Brain. Lo fa Dispensa.jsx
+// (`onLogout` / `onDeleteAccount` qui sono le funzioni che chiedono).
+export default function SettingsSection({ close, onDeleteAccount, onOpenPrivacy, onLogout }) {
   return (
-    // In FONDO al pannello (mt-auto: il Profilo è una colonna alta quanto lo
-    // schermo): una riga sola di azioni rare — Elimina account · Privacy · Esci.
     <div className="mt-auto pt-8">
-      {/* Esci: conferma in linea, sopra la riga. */}
-      {confirmLogout && (
-        <div className="mb-2 flex gap-2">
-          <button onClick={() => setConfirmLogout(false)} className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]">
-            Annulla
-          </button>
-          <button onClick={onLogout} className="bottone-rosso min-h-[44px] flex-1 py-2 text-[0.92rem]">
-            Sì, esci
-          </button>
-        </div>
-      )}
-      {!confirmDelete ? (
-        <div className="flex flex-wrap items-center justify-center gap-x-2.5 text-[0.8rem] font-semibold text-tenue">
-          {/* Ordine (12/10): l'azione più rischiosa a sinistra, "Esci" a destra. */}
-          <button onClick={() => { setDelErr(""); setConfirmLogout(false); setConfirmDelete(true); }} className="py-2 underline underline-offset-2">
+      <div className="flex flex-wrap items-center justify-center gap-x-2.5 text-[0.8rem] font-semibold text-tenue">
+        {/* Ordine (12/10): l'azione più rischiosa a sinistra, "Esci" a destra. */}
+        {onDeleteAccount && (
+          <button onClick={() => { close(); onDeleteAccount(); }} className="py-2 underline underline-offset-2">
             Elimina account
           </button>
-          {onOpenPrivacy && (
-            <>
-              <span aria-hidden="true">·</span>
-              <button onClick={() => { close(); onOpenPrivacy(); }} className="py-2 underline underline-offset-2">
-                Privacy Policy
-              </button>
-            </>
-          )}
-          {onLogout && (
-            <>
-              <span aria-hidden="true">·</span>
-              <button onClick={() => setConfirmLogout(true)} className="py-2 underline underline-offset-2">
-                Esci
-              </button>
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="mt-3 rounded-card bg-giallo p-3.5 text-center">
-          <p className="text-[0.95rem] font-semibold leading-snug text-ink">Eliminare account e tutti i dati? L&rsquo;azione è definitiva e non recuperabile.</p>
-          {/* "Svuota dispensa" sta qui dietro (dal 09/10): si usa di rado
-              e non deve stare tra le righe di tutti i giorni. */}
-          {onClearPantry && (
-            <button onClick={onClearPantry} disabled={deleting} className="mt-1.5 py-1.5 text-[0.86rem] font-bold text-ink underline underline-offset-2">
-              Voglio solo svuotare la dispensa
+        )}
+        {onOpenPrivacy && (
+          <>
+            <span aria-hidden="true">·</span>
+            <button onClick={() => { close(); onOpenPrivacy(); }} className="py-2 underline underline-offset-2">
+              Privacy Policy
             </button>
-          )}
-          {delErr && <p className="mt-1.5 text-[0.86rem] font-bold text-ink">{delErr}</p>}
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={() => setConfirmDelete(false)}
-              disabled={deleting}
-              className="bottone-chiaro min-h-[44px] flex-1 py-2 text-[0.92rem]"
-            >
-              Annulla
+          </>
+        )}
+        {onLogout && (
+          <>
+            <span aria-hidden="true">·</span>
+            <button onClick={() => { close(); onLogout(); }} className="py-2 underline underline-offset-2">
+              Esci
             </button>
-            <button
-              onClick={runDelete}
-              disabled={deleting}
-              className="bottone-rosso min-h-[44px] flex-1 py-2 text-[0.92rem]"
-            >
-              {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Elimina tutto"}
-            </button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

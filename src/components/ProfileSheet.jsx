@@ -16,7 +16,7 @@ import { getMyUsername, setUsername as saveUsername } from "../lib/db.js";
 import { parsePrefs } from "../lib/prefs.js";
 
 export default function ProfileSheet({
-  email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose, onClearPantry,
+  email, itemCount, shared = false, foodPrefs, onSaveFoodPrefs, onClose,
   catOrder = [], onMoveCat, onNotify,
   households, activeHouseholdId, onSwitchHousehold, onHouseholdsChanged,
   onDeleteAccount, onLogout, onOpenPrivacy,
@@ -158,7 +158,6 @@ export default function ProfileSheet({
             onDeleteAccount={onDeleteAccount}
             onLogout={onLogout}
             onOpenPrivacy={onOpenPrivacy}
-            onClearPantry={() => { close(); onClearPantry(); }}
           />
         </div>
       )}

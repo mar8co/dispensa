@@ -119,14 +119,14 @@ export default function Sheet({ onClose, locked = false, side = false, panelClas
             : { paddingBottom: "env(safe-area-inset-bottom)" }}
           className={side
             ? `fixed bottom-0 z-50 flex w-[88%] max-w-sm flex-col outline-none ${lato === "left" ? "left-0 rounded-tr-[28px] rounded-br-[28px]" : "right-0 rounded-tl-[28px] rounded-bl-[28px]"} ${panelClass}`
-            : `fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-foglio outline-none ${panelClass}`}
+            : `fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[min(94dvh,calc(100%-10px))] w-full max-w-[560px] flex-col rounded-t-foglio outline-none ${panelClass}`}
         >
           {/* Titolo nascosto: soddisfa l'accessibilità di Radix (il titolo
               visibile è dentro ogni foglio). */}
           <Drawer.Title className="sr-only">Pannello</Drawer.Title>
           {!side && (
             <div className="flex shrink-0 cursor-grab justify-center pb-1.5 pt-2.5 active:cursor-grabbing" aria-hidden="true">
-              <div className={`h-[5px] w-11 rounded-full ${handleClass}`} />
+              <div className={`h-[5px] w-11 rounded-[3px] ${handleClass}`} />
             </div>
           )}
           {/* Area scorrevole interna: se il contenuto supera l'altezza del

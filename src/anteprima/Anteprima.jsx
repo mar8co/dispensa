@@ -112,7 +112,7 @@ export default function Anteprima() {
   const [expFilter, setExpFilter] = useState(false);
   const [byAisle, setByAisle] = useState(true);
   const [addMenuOpen, setAddMenuOpen] = useState(q.get("menu") === "1");
-  const [toast, setToast] = useState(q.get("toast") === "1" ? { message: <><strong>Zucchine</strong>: modifica salvata</>, onUndo: () => setToast(null), actionTone: "ink" } : null);
+  const [toast, setToast] = useState(q.get("toast") === "1" ? { message: <><strong>Zucchine</strong>: modifica salvata</>, onUndo: () => setToast(null) } : null);
   const [mode, setMode] = useState(["proposte", "ricetta"].includes(PARAM_VISTA) ? MODES[0] : null);
   const [recipe, setRecipe] = useState(PARAM_VISTA === "ricetta" ? RECIPE : null);
   const [servings, setServings] = useState(2);
@@ -259,7 +259,7 @@ export default function Anteprima() {
       {(foglio === "profilo" || foglio === "impostazioni") && (
         <ProfileSheet
           email="marco@esempio.it" itemCount={items.length} shared foodPrefs={PARAM_ESIGENZE} onSaveFoodPrefs={() => {}}
-          onClose={chiudi} onClearPantry={() => setFoglio("svuota")}
+          onClose={chiudi}
           onNotify={notify} catOrder={ordine} onMoveCat={(c, d) => setOrdine((o) => { const i = o.indexOf(c), j = i + d; if (j < 0 || j >= o.length) return o; const n = [...o]; [n[i], n[j]] = [n[j], n[i]]; return n; })}
           onLogout={chiudi} onDeleteAccount={async () => {}} onOpenPrivacy={() => setFoglio("privacy")}
           households={[{ id: "h1", name: "Casa" }]} activeHouseholdId="h1" onSwitchHousehold={() => {}} onHouseholdsChanged={() => {}}
@@ -301,8 +301,7 @@ export default function Anteprima() {
         <Toast
           message={toast.message}
           onUndo={toast.onUndo}
-          tone={toast.actionTone}
-          bottom="var(--sopra-nav)"
+          onDismiss={() => setToast(null)}
         />
       )}
     </div>
