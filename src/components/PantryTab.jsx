@@ -5,7 +5,7 @@
 import { onOutsideTap } from "../lib/outsideTap.js";
 import { useState, useRef, useEffect } from "react";
 import {
-  X, Search, ShoppingCart, Check,
+  X, Search, ShoppingCart, Check, Trash2,
   SlidersHorizontal, ChevronDown, Sparkles,
 } from "lucide-react";
 import { CAT_ICON } from "../constants.js";
@@ -42,11 +42,14 @@ function ExpiryBadge({ date, onlyUrgent = false }) {
 
 // --- Riga prodotto a riposo. Gesti:
 // • tocco = apre il pannello di modifica;
-// • scorrimento ← oltre la soglia = "finito": via dalla dispensa e in lista
-//   della spesa (lo fa `onFinish`, con "Annulla" nell'avviso).
-// Stessa soglia e stessa resa delle righe della Spesa (là a sinistra si
-// elimina, qui non si elimina nulla: il fondo è nero, non rosso).
-function PantryRow({ it, out, low, onOpen, onFinish }) {
+// • scorrimento → (dal 07/11) = mette il prodotto nella LISTA della spesa: fondo
+//   giallo, "Nella lista" e carrello neri; la riga torna a posto (il prodotto
+//   resta in dispensa);
+// • scorrimento ← = ELIMINA: fondo rosso, la riga scivola fuori e compare
+//   l'avviso "eliminato · Annulla" (come nelle righe della Spesa). "Finito"
+//   non è più un gesto: è il bottone grande del pannello del prodotto.
+// Stessa soglia e stessa resa delle righe della Spesa.
+function PantryRow({ it, out, low, onOpen, onDelete, onToList }) {
   const label = piecesLabel(it.qty); // "×3" da due pezzi in su, altrimenti niente
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -75,16 +78,21 @@ function PantryRow({ it, out, low, onOpen, onFinish }) {
     }
     if (axis.current !== "h") return;
     swiped.current = true;
-    // Solo verso sinistra; oltre MAX la riga "tira" sempre meno.
-    setDx(ddx >= 0 ? 0 : ddx < -MAX ? -MAX + (ddx + MAX) * 0.25 : ddx);
+    // Nei due versi; oltre MAX la riga "tira" sempre meno.
+    setDx(ddx > MAX ? MAX + (ddx - MAX) * 0.25 : ddx < -MAX ? -MAX + (ddx + MAX) * 0.25 : ddx);
   }
   function up(e) {
     const ddx = start.current ? e.clientX - start.current.x : 0;
     const wasH = axis.current === "h";
     start.current = null;
     setDragging(false);
+    if (wasH && ddx <= -THRESHOLD) { // ← : elimina (scivola fuori, poi rimosso)
+      setDx(-(typeof window !== "undefined" ? window.innerWidth : 400));
+      setTimeout(() => onDelete?.(it), 200);
+      return;
+    }
     setDx(0);
-    if (wasH && ddx <= -THRESHOLD) onFinish?.(it);
+    if (wasH && ddx >= THRESHOLD) onToList?.(it); // → : nella lista (la riga torna a posto)
   }
   function cancel() {
     start.current = null;
@@ -98,9 +106,16 @@ function PantryRow({ it, out, low, onOpen, onFinish }) {
       {/* Fondo dell'azione, visibile solo mentre la riga è spostata. */}
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute inset-0 flex items-center justify-end gap-1.5 pr-3 text-[0.9rem] font-extrabold tracking-[-0.01em] ${dx < -4 ? "bg-ink text-crema" : "opacity-0"}`}
+        className={`pointer-events-none absolute inset-0 flex items-center justify-between text-[0.95rem] font-extrabold tracking-[-0.01em] ${
+          dx > 4 ? "bg-giallo text-black" : dx < -4 ? "bg-rosso-elimina text-white" : ""
+        }`}
       >
-        Finito · in lista <ShoppingCart className="h-4 w-4" />
+        <span className={`flex items-center gap-1.5 pl-4 transition-opacity ${dx > 4 ? "opacity-100" : "opacity-0"}`}>
+          <ShoppingCart className="h-4 w-4 text-black" /> Nella lista
+        </span>
+        <span className={`flex items-center gap-1.5 pr-4 transition-opacity ${dx < -4 ? "opacity-100" : "opacity-0"}`}>
+          Elimina <Trash2 className="h-4 w-4" />
+        </span>
       </div>
       <button
         onPointerDown={down}
@@ -142,7 +157,7 @@ export default function PantryTab({
   shared = false,
   search, setSearch, sort, setSort,
   grouped, cardRefs,
-  onAutoSave, onSetExpiry,
+  onAutoSave, onSetExpiry, removeItem,
   expiredCount, expiringSoonCount, expFilter, setExpFilter, onCookExpiring, isOut, onToShopping, onCookWith,
   onFinish,
   todayMeals = [], onOpenMeal, expiring = [],
@@ -555,7 +570,7 @@ export default function PantryTab({
 
                 // A riposo: nome ……… quantità (puntini di guida); scorrendola
                 // verso sinistra il prodotto è "finito" (vedi PantryRow).
-                return <PantryRow key={it.id} it={it} out={out} low={low} onOpen={openPanel} onFinish={onFinish} />;
+                return <PantryRow key={it.id} it={it} out={out} low={low} onOpen={openPanel} onDelete={removeItem} onToList={onToShopping} />;
               })}
             </ul>
           </section>

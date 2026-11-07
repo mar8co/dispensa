@@ -216,6 +216,11 @@
   destra (rossa se elimina). Esci ed Elimina account aprono una Domanda (il Profilo si chiude prima);
   "Voglio solo svuotare la dispensa" è il link sotto la Domanda di Elimina account. Il menu a tendina
   dal "+" di Second Brain NON è stato copiato: il "+" di Dispensa resta il ventaglio di tondi.
+- **Swipe sulle righe della Dispensa (07/11)**: a DESTRA = nella lista della spesa (fondo giallo,
+  carrello e "Nella lista" neri; la riga torna a posto, il prodotto resta); a SINISTRA = elimina (fondo
+  rosso `#d8241a`, "Elimina" bianco, la riga scivola fuori, avviso "eliminato · Annulla"). Stessa
+  soglia (72px) e stessa resa delle righe della Spesa. "Finito" non è più un gesto: è il bottone
+  grande del pannello del prodotto.
 - **Sotto-pagine delle Ricette** (proposte di un'occasione, ricetta aperta): la testata con l'avatar non
   c'è; in alto resta solo la riga con la freccia per tornare indietro (09/10).
 - **"Aggiungi al piano"** (`PlanDaySheet.jsx`, foglio nero): sotto il titolo il nome della ricetta; un
